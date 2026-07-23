@@ -1,0 +1,1401 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agent Finder — Australian Seniors Property Advisors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+<style>
+:root{
+  /* ASPA palette from design.md */
+  --navy: #010A44;
+  --navy-2: #0B1556;
+  --navy-soft: #1D242E;
+  --blue: #6EC1E4;
+  --blue-deep: #4FA9D1;
+  --blue-tint: #6EC1E41A;     /* semi-transparent primary */
+  --blue-wash: #EAF4FB;       /* soft pale blue surface */
+  --blue-wash-2: #F5FAFD;
+  --green: #61CE70;
+  --text: #2B3140;
+  --text-mid: #5A6275;
+  --text-soft: #7A7A7A;
+  --line: #E4ECF3;
+  --line-soft: #EEF3F8;
+  --white: #FFFFFF;
+  --cream: #FBF8F3;
+
+  --radius-sm: 10px;
+  --radius: 18px;
+  --radius-lg: 28px;
+  --radius-xl: 40px;
+  --shadow-sm: 0 1px 2px rgba(2, 14, 60, 0.04), 0 2px 8px rgba(2, 14, 60, 0.04);
+  --shadow: 0 8px 30px rgba(2, 14, 60, 0.08);
+  --shadow-lg: 0 24px 60px rgba(2, 14, 60, 0.14);
+
+  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "DM Serif Display", "DM Sans", Georgia, serif;
+
+  --container: 1240px;
+  --gutter: 32px;
+}
+
+*,*::before,*::after{ box-sizing: border-box; }
+html,body{ margin:0; padding:0; }
+html{ scroll-behavior: smooth; }
+body{
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img{ max-width:100%; display:block; }
+a{ color: inherit; text-decoration: none; }
+button{ font-family: inherit; cursor:pointer; border:none; background:none; color: inherit; }
+
+.container{
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* ===================== Top notice ===================== */
+.topbar{
+  background: var(--navy);
+  color: #DDE6F4;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+}
+.topbar .container{
+  display:flex; align-items:center; justify-content:space-between;
+  height: 42px;
+}
+.topbar a.notice{
+  display:inline-flex; align-items:center; gap: 10px;
+  color: var(--blue);
+}
+.topbar a.notice::before{
+  content: "";
+  width: 18px; height: 18px;
+  background:
+    radial-gradient(circle at 50% 50%, var(--blue) 0 6px, transparent 7px),
+    radial-gradient(circle at 50% 50%, rgba(110,193,228,0.18) 0 9px, transparent 10px);
+  border-radius: 50%;
+}
+.topbar .meta{ display:flex; gap: 28px; opacity:0.85; }
+.topbar .meta span::before{ content:"·"; margin-right: 10px; opacity:0.5; }
+.topbar .meta span:first-child::before{ content:""; margin:0; }
+
+/* ===================== Nav ===================== */
+.nav-wrap{
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.nav{
+  display:flex; align-items:center; justify-content:space-between;
+  height: 84px;
+}
+.brand{
+  display:flex; align-items:center; gap: 12px;
+}
+.brand .mark{
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 30% 30%, var(--blue) 0 8px, transparent 9px),
+    linear-gradient(135deg, var(--navy), var(--navy-2));
+  display:grid; place-items:center;
+  position: relative;
+  box-shadow: 0 6px 16px rgba(1,10,68,0.25);
+}
+.brand .mark::after{
+  content:"";
+  width: 16px; height: 16px;
+  border: 2px solid var(--blue);
+  border-radius: 4px;
+  transform: translate(3px, 3px);
+}
+.brand .word{
+  display:flex; flex-direction: column; line-height: 1.05;
+}
+.brand .word b{
+  font-weight: 600; letter-spacing: 0.01em; color: var(--navy);
+  font-size: 16px; white-space: nowrap;
+}
+.brand .word small{
+  font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-mid);
+}
+.nav ul{
+  display:flex; list-style: none; gap: 36px; padding: 0; margin: 0;
+}
+.nav ul a{
+  color: var(--navy);
+  font-size: 15px; font-weight: 500;
+  position: relative;
+}
+.nav ul a:hover{ color: var(--blue-deep); }
+.nav ul a.active::after{
+  content:""; position:absolute; left: 0; right: 0; bottom: -28px;
+  height: 2px; background: var(--blue); border-radius: 2px;
+}
+.nav .right{ display:flex; align-items:center; gap: 18px; }
+.nav .phone{ color: var(--navy); font-weight: 600; font-size: 15px; display:flex; align-items:center; gap: 8px;}
+.nav .phone .ico{
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--blue-tint); display:grid; place-items:center;
+}
+.nav .phone .ico::after{
+  content:""; width: 12px; height:12px;
+  background: var(--blue-deep); -webkit-mask: var(--m-phone); mask: var(--m-phone);
+}
+
+/* ===================== Buttons ===================== */
+.btn{
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 56px; padding: 0 28px;
+  border-radius: 999px;
+  font-size: 16px; font-weight: 600;
+  letter-spacing: 0.005em;
+  transition: transform .18s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  white-space: nowrap;
+}
+.btn .arr{
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(255,255,255,0.18); display:grid; place-items:center;
+  font-size: 12px; transition: transform .25s ease;
+}
+.btn:hover .arr{ transform: translateX(4px); }
+.btn.primary{
+  background: var(--navy); color: var(--white);
+  box-shadow: 0 8px 20px rgba(1,10,68,0.22);
+}
+.btn.primary:hover{ background: var(--navy-2); box-shadow: 0 12px 28px rgba(1,10,68,0.28); }
+.btn.secondary{
+  background: var(--blue); color: var(--navy);
+  box-shadow: 0 8px 20px rgba(110,193,228,0.35);
+}
+.btn.secondary:hover{ background: #82CDEC; }
+.btn.ghost{
+  background: transparent; color: var(--navy);
+  border: 1.5px solid rgba(1,10,68,0.18);
+}
+.btn.ghost:hover{ border-color: var(--navy); background: rgba(1,10,68,0.04); }
+.btn.sm{ height: 44px; padding: 0 20px; font-size: 14.5px; }
+.btn.lg{ height: 64px; padding: 0 36px; font-size: 17px; }
+
+/* ===================== Hero ===================== */
+.hero{
+  position: relative;
+  padding: 56px 0 100px;
+  overflow: hidden;
+}
+.hero::before{
+  content:""; position:absolute; inset: 0;
+  background:
+    radial-gradient(900px 600px at 90% 10%, rgba(110,193,228,0.18), transparent 60%),
+    radial-gradient(600px 400px at -10% 90%, rgba(110,193,228,0.10), transparent 60%);
+  z-index: 0;
+}
+.hero .container{ position:relative; z-index: 1;}
+.hero-grid{
+  display: grid; grid-template-columns: 1.05fr 1fr; gap: 72px;
+  align-items: center;
+}
+.eyebrow{
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  background: var(--blue-tint);
+  color: var(--navy);
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.eyebrow .dot{
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 0 4px rgba(97,206,112,0.18);
+}
+h1.headline{
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(40px, 4.6vw, 64px);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  color: var(--navy);
+  margin: 22px 0 18px;
+}
+h1.headline em{
+  font-style: italic;
+  color: var(--blue-deep);
+  font-family: var(--font-display);
+}
+.lead{
+  color: var(--text-mid);
+  font-size: 19px; line-height: 1.6;
+  max-width: 540px;
+  margin: 0 0 36px;
+}
+.hero-ctas{ display:flex; gap: 14px; flex-wrap: wrap; }
+.hero-trust{
+  display:flex; align-items:center; gap: 22px;
+  margin-top: 46px;
+}
+.avatars{ display:flex; }
+.avatars span{
+  width: 42px; height: 42px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  border: 3px solid var(--white);
+  margin-left: -12px;
+  box-shadow: 0 2px 6px rgba(2,14,60,0.18);
+}
+.avatars span:first-child{ margin-left: 0; }
+.hero-trust .stars{ color: #E9A23B; letter-spacing: 2px; font-size: 14px;}
+.hero-trust b{ color: var(--navy); font-weight: 600;}
+.hero-trust small{ color: var(--text-mid); display:block; font-size: 13.5px; }
+
+/* Hero visual */
+.hero-visual{
+  position: relative;
+  aspect-ratio: 5/6;
+  border-radius: 36px;
+  overflow: visible;
+}
+.hero-visual .photo{
+  position: absolute; inset: 0;
+  border-radius: 36px;
+  background-image: url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1100&q=80');
+  background-size: cover; background-position: center;
+  box-shadow: var(--shadow-lg);
+}
+.hero-visual .photo::after{
+  content:""; position:absolute; inset:0; border-radius: 36px;
+  background: linear-gradient(180deg, rgba(1,10,68,0.0) 30%, rgba(1,10,68,0.35) 100%);
+}
+.hero-visual .blob{
+  position:absolute;
+  width: 220px; height: 220px;
+  background: var(--blue);
+  border-radius: 50%;
+  top: -48px; left: -56px;
+  z-index: -1;
+  opacity: 0.5;
+  filter: blur(2px);
+}
+.hero-visual .blob.b2{
+  width: 160px; height: 160px;
+  top: auto; left: auto; bottom: -32px; right: -24px;
+  background: var(--navy);
+  opacity: 0.10;
+  filter: blur(0);
+}
+
+/* Floating card on hero */
+.hero-card{
+  position: absolute;
+  bottom: 28px; left: -36px;
+  background: var(--white);
+  border-radius: 22px;
+  padding: 18px 22px;
+  width: 320px;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 14px;
+}
+.hero-card .ico{
+  width: 46px; height: 46px; border-radius: 14px;
+  background: var(--blue-tint); display:grid; place-items:center;
+  flex-shrink: 0;
+}
+.hero-card .ico svg{ color: var(--blue-deep); }
+.hero-card b{ display:block; color: var(--navy); font-size: 15px; }
+.hero-card small{ color: var(--text-mid); font-size: 13px; }
+
+.hero-card.tr{
+  bottom: auto; left: auto;
+  top: 36px; right: -28px;
+  width: 220px;
+  flex-direction: column; align-items: flex-start; gap: 6px;
+}
+.hero-card.tr .row{ display:flex; align-items: baseline; gap: 8px; }
+.hero-card.tr .big{ font-family: var(--font-display); font-size: 32px; color: var(--navy); line-height: 1; }
+.hero-card.tr small{ font-size: 12.5px; letter-spacing: 0.02em;}
+.hero-card.tr .bar{ height: 4px; width: 100%; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.hero-card.tr .bar i{ display:block; height: 100%; width: 78%; background: var(--blue); border-radius: 99px; }
+
+/* ===================== Section base ===================== */
+section{ padding: 120px 0; position: relative; }
+section.tight{ padding: 96px 0; }
+.eyebrow-line{
+  display:flex; align-items:center; gap: 14px;
+  font-size: 12.5px; font-weight: 600; letter-spacing: 0.18em;
+  color: var(--blue-deep); text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.eyebrow-line::before{
+  content:""; width: 32px; height: 1.5px; background: var(--blue-deep);
+}
+h2{
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(32px, 3.4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+  margin: 0 0 18px;
+  text-wrap: pretty;
+}
+h2 em{ font-style: italic; color: var(--blue-deep); }
+.section-lead{ color: var(--text-mid); font-size: 18px; line-height: 1.6; max-width: 640px; }
+
+.section-head{ display:flex; align-items:flex-end; justify-content:space-between; gap: 40px; margin-bottom: 56px; }
+.section-head .left{ max-width: 640px; }
+
+/* ===================== Trust section ===================== */
+.trust{
+  background: var(--blue-wash-2);
+}
+.trust .cards{
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.card{
+  background: var(--white);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  transition: transform .25s ease, box-shadow .25s ease;
+  position: relative;
+}
+.card:hover{ transform: translateY(-4px); box-shadow: var(--shadow); }
+.card .ico{
+  width: 56px; height: 56px;
+  border-radius: 18px;
+  background: var(--blue-tint);
+  display:grid; place-items:center;
+  margin-bottom: 22px;
+  color: var(--blue-deep);
+}
+.card h3{
+  font-size: 21px; color: var(--navy);
+  font-weight: 600; margin: 0 0 10px; letter-spacing: -0.005em;
+}
+.card p{ color: var(--text-mid); margin: 0; font-size: 15.5px; line-height: 1.6; }
+
+/* ===================== How it works ===================== */
+.how{ background: var(--white); }
+.steps{
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  counter-reset: step;
+  position: relative;
+}
+.steps::before{
+  content:""; position:absolute; top: 38px; left: 8%; right: 8%; height: 1.5px;
+  background: repeating-linear-gradient(90deg, var(--blue) 0 6px, transparent 6px 12px);
+  opacity: 0.6;
+  z-index: 0;
+}
+.step{
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 8px 8px 28px;
+  text-align: left;
+  position: relative; z-index: 1;
+}
+.step .num{
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1.5px solid var(--blue);
+  color: var(--navy);
+  display:grid; place-items:center;
+  font-family: var(--font-display);
+  font-size: 32px;
+  margin-bottom: 22px;
+  position: relative;
+}
+.step .num::after{
+  content:""; position:absolute; inset: 6px;
+  border-radius: 50%; border: 1px dashed rgba(110,193,228,0.45);
+}
+.step h4{ font-size: 19px; color: var(--navy); font-weight: 600; margin: 0 0 8px; letter-spacing: -0.005em;}
+.step p{ color: var(--text-mid); margin: 0; font-size: 15px; line-height: 1.6;}
+
+/* ===================== Why use ===================== */
+.why{ background: var(--navy); color: #DDE6F4; overflow: hidden; }
+.why::before{
+  content:""; position:absolute; top: -30%; right: -10%;
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(110,193,228,0.18), transparent 60%);
+  z-index: 0;
+}
+.why .container{ position: relative; z-index: 1;}
+.why h2{ color: var(--white); }
+.why h2 em{ color: var(--blue); }
+.why .eyebrow-line{ color: var(--blue);}
+.why .eyebrow-line::before{ background: var(--blue);}
+.why .section-lead{ color: #B6C2DB; }
+.why-grid{
+  display:grid; grid-template-columns: 1fr 1.05fr; gap: 72px;
+  align-items: center;
+}
+.why-list{ list-style: none; padding: 0; margin: 36px 0 0; }
+.why-list li{
+  display:flex; align-items:flex-start; gap: 18px;
+  padding: 22px 0;
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+.why-list li:last-child{ border-bottom: 1px solid rgba(255,255,255,0.10);}
+.why-list .check{
+  flex-shrink:0; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--blue); color: var(--navy);
+  display:grid; place-items:center;
+  font-size: 15px; font-weight: 700;
+}
+.why-list b{ color: var(--white); display:block; font-size: 17px; font-weight: 600; margin-bottom: 2px; letter-spacing: -0.005em;}
+.why-list span{ color: #B6C2DB; font-size: 14.5px;}
+
+.why-visual{
+  position: relative;
+  aspect-ratio: 4/5;
+  border-radius: 36px;
+  overflow: visible;
+}
+.why-visual .ph{
+  position:absolute; inset:0; border-radius: 32px;
+  background-image: url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1100&q=80');
+  background-size: cover; background-position: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+}
+.why-visual .stamp{
+  position: absolute; bottom: -34px; left: -34px;
+  background: var(--blue);
+  color: var(--navy);
+  padding: 26px 28px;
+  border-radius: 24px;
+  width: 220px;
+  box-shadow: var(--shadow-lg);
+}
+.why-visual .stamp .big{ font-family: var(--font-display); font-size: 42px; line-height: 1; }
+.why-visual .stamp small{ display:block; margin-top: 6px; font-size: 13px; color: var(--navy); opacity:0.85;}
+
+/* ===================== Agent comparison ===================== */
+.compare{ background: var(--blue-wash-2);}
+.compare-shell{
+  background: var(--white);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(2,14,60,0.06);
+  overflow: hidden;
+}
+.compare-toolbar{
+  display:flex; align-items:center; justify-content: space-between;
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, #FCFDFE, #F7FAFD);
+}
+.compare-toolbar .left{ display:flex; align-items:center; gap: 14px; flex-wrap: wrap;}
+.chip{
+  display:inline-flex; align-items:center; gap: 8px;
+  height: 36px; padding: 0 14px; border-radius: 999px;
+  background: var(--white); border: 1px solid var(--line);
+  font-size: 13.5px; color: var(--text-mid); font-weight: 500;
+}
+.chip.active{ background: var(--navy); color: var(--white); border-color: var(--navy);}
+.chip .x{ color: rgba(255,255,255,0.7); font-size: 14px;}
+
+.compare-grid{
+  display:grid; grid-template-columns: 1.4fr repeat(3, 1fr);
+  border-top: 1px solid var(--line-soft);
+}
+.cmp-row{ display: contents; }
+.cmp-cell{
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 14.5px; color: var(--text);
+}
+.cmp-cell.label{
+  color: var(--text-soft); font-size: 12.5px;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+  background: #FAFCFE;
+}
+.cmp-cell.head{
+  padding: 28px 24px; background: var(--white);
+}
+.cmp-cell.head.best{
+  background: linear-gradient(180deg, var(--blue-tint), transparent);
+  position: relative;
+}
+.cmp-cell.head.best::before{
+  content: "Advisor pick"; position: absolute; top: 14px; right: 14px;
+  background: var(--navy); color: var(--white);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+  padding: 4px 10px; border-radius: 99px; text-transform: uppercase;
+}
+.agent-head{ display:flex; flex-direction: column; gap: 10px; }
+.agent-head .av{
+  width: 56px; height: 56px; border-radius: 50%;
+  background-size: cover; background-position: center;
+  box-shadow: 0 6px 14px rgba(2,14,60,0.16);
+}
+.agent-head b{ color: var(--navy); font-size: 17px; font-weight: 600;}
+.agent-head small{ color: var(--text-mid); font-size: 13.5px;}
+.cmp-cell strong{ color: var(--navy); font-weight: 600;}
+.cmp-cell .price{
+  font-family: var(--font-display); font-size: 22px; color: var(--navy); line-height: 1.1;
+}
+.cmp-cell .sub{ font-size: 12.5px; color: var(--text-mid);}
+.cmp-cell .meter{ height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; margin-top: 8px;}
+.cmp-cell .meter i{ display:block; height:100%; background: var(--blue); border-radius: 99px;}
+.cmp-cell.note{ font-size: 14px; color: var(--text-mid); line-height: 1.55; font-style: italic;}
+.cmp-cell.cta{ padding: 24px; }
+.cmp-cell.first-label{
+  display:flex; align-items: flex-end;
+  font-family: var(--font-display); font-size: 22px; color: var(--navy);
+  text-transform: none; letter-spacing: 0; font-weight: 400; font-style: italic;
+  padding-bottom: 24px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* ===================== Family ===================== */
+.family{ background: var(--blue-wash);}
+.family-grid{
+  display:grid; grid-template-columns: 1fr 1fr; gap: 80px;
+  align-items: center;
+}
+.family-visual{
+  position: relative;
+  aspect-ratio: 6/5;
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.family-visual .ph{
+  position:absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1581579186913-45ac9e9aa6c6?auto=format&fit=crop&w=1200&q=80');
+  background-size: cover; background-position: center;
+}
+.family-visual .quote{
+  position: absolute; left: 22px; right: 22px; bottom: 22px;
+  background: rgba(255,255,255,0.96);
+  border-radius: 18px;
+  padding: 18px 22px;
+  display: flex; align-items: center; gap: 14px;
+}
+.family-visual .quote .av{
+  width: 44px; height: 44px; border-radius: 50%;
+  background-size:cover; background-position: center;
+  flex-shrink: 0;
+}
+.family-visual .quote p{ font-size: 14px; color: var(--text); margin: 0; line-height: 1.5;}
+.family-visual .quote small{ color: var(--text-mid); font-size: 12.5px;}
+
+.checks{ list-style: none; padding: 0; margin: 30px 0 36px; display:grid; gap: 14px;}
+.checks li{ display:flex; align-items:flex-start; gap: 14px; color: var(--text);}
+.checks .c{
+  flex-shrink:0; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--blue-tint); color: var(--blue-deep);
+  display:grid; place-items:center; font-size: 12px; font-weight: 700;
+  margin-top: 2px;
+}
+
+/* ===================== Final CTA ===================== */
+.cta{
+  background: var(--navy);
+  position: relative; overflow: hidden;
+}
+.cta::before{
+  content:""; position:absolute; inset: 0;
+  background:
+    radial-gradient(800px 500px at 80% 0%, rgba(110,193,228,0.22), transparent 60%),
+    radial-gradient(600px 400px at 0% 100%, rgba(110,193,228,0.10), transparent 60%);
+}
+.cta .container{ position:relative; text-align: center;}
+.cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
+.cta h2 em{ color: var(--blue);}
+.cta p{ color: #B6C2DB; max-width: 540px; margin: 0 auto 36px; font-size: 19px;}
+.cta .row{ display:flex; gap: 14px; justify-content:center; flex-wrap: wrap;}
+.cta .marks{
+  margin-top: 56px;
+  display:flex; gap: 48px; justify-content:center; align-items:center;
+  color: rgba(255,255,255,0.55);
+  font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+  flex-wrap: wrap;
+}
+.cta .marks span{ display:flex; align-items:center; gap: 10px;}
+.cta .marks span::before{ content:""; width: 8px; height: 8px; border-radius:50%; background: var(--blue); opacity:0.5;}
+
+/* ===================== Footer ===================== */
+footer{
+  background: var(--navy-soft);
+  color: #B6C2DB;
+  padding: 80px 0 36px;
+}
+.foot-grid{
+  display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 56px;
+}
+.foot-grid h5{
+  color: var(--white); font-size: 14px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin: 0 0 18px;
+}
+.foot-grid ul{ list-style: none; padding: 0; margin: 0; display:grid; gap: 10px;}
+.foot-grid a:hover{ color: var(--blue);}
+.foot-brand p{ margin: 14px 0 24px; font-size: 14.5px; line-height: 1.6; max-width: 320px; opacity: 0.8;}
+.foot-bottom{
+  border-top: 1px solid rgba(255,255,255,0.10);
+  margin-top: 64px; padding-top: 24px;
+  display:flex; justify-content:space-between; flex-wrap: wrap; gap: 12px;
+  font-size: 13px; opacity: 0.7;
+}
+
+/* ===================== Find My Agent modal ===================== */
+.modal-back{
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(2,14,60,0.45);
+  backdrop-filter: blur(8px);
+  display: grid; place-items: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s ease;
+  padding: 24px;
+}
+.modal-back.open{ opacity: 1; pointer-events: auto;}
+.modal{
+  width: min(560px, 100%);
+  background: var(--white);
+  border-radius: 28px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.3);
+  padding: 36px;
+  position: relative;
+  transform: translateY(20px);
+  transition: transform .3s ease;
+}
+.modal-back.open .modal{ transform: translateY(0);}
+.modal .close{
+  position: absolute; top: 18px; right: 18px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--blue-wash); color: var(--navy);
+  display:grid; place-items:center; font-size: 18px;
+}
+.modal .close:hover{ background: var(--blue-tint);}
+.modal .progress{ display:flex; gap: 6px; margin-bottom: 18px;}
+.modal .progress i{ flex: 1; height: 4px; border-radius: 99px; background: var(--line);}
+.modal .progress i.on{ background: var(--blue);}
+.modal h3{ font-family: var(--font-display); font-weight: 400; font-size: 28px; color: var(--navy); margin: 0 0 8px; letter-spacing: -0.005em;}
+.modal p.help{ color: var(--text-mid); margin: 0 0 22px; font-size: 15px;}
+.field{ display:block; margin-bottom: 14px; }
+.field label{ display:block; font-size: 13.5px; color: var(--navy); font-weight: 600; margin-bottom: 6px;}
+.field input, .field select{
+  width: 100%; height: 52px; padding: 0 18px;
+  border-radius: 14px; border: 1.5px solid var(--line);
+  font-family: inherit; font-size: 15px; color: var(--navy);
+  background: var(--white);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.field input:focus, .field select:focus{
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-tint);
+}
+.opt-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+.opt-grid.three{ grid-template-columns: 1fr 1fr 1fr;}
+.opt{
+  padding: 16px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+  font-size: 14.5px; color: var(--navy); font-weight: 500;
+  text-align: left;
+  transition: all .2s ease;
+  display:flex; flex-direction: column; gap: 4px;
+}
+.opt small{ color: var(--text-mid); font-size: 12.5px; font-weight: 400; }
+.opt:hover{ border-color: var(--blue);}
+.opt.on{ border-color: var(--blue); background: var(--blue-tint); }
+.modal-actions{
+  display:flex; justify-content: space-between; margin-top: 28px; align-items: center;
+}
+.modal-actions .step-count{ font-size: 13px; color: var(--text-mid);}
+.success{
+  text-align: center; padding: 12px 0;
+}
+.success .ring{
+  width: 86px; height: 86px; border-radius: 50%;
+  background: var(--blue-tint); color: var(--blue-deep);
+  display:grid; place-items:center; margin: 0 auto 18px;
+  font-size: 38px;
+}
+
+/* ===================== Responsive ===================== */
+@media (max-width: 1080px){
+  .hero-grid{ grid-template-columns: 1fr; gap: 56px;}
+  .hero-visual{ max-width: 520px; margin: 0 auto;}
+  .why-grid, .family-grid{ grid-template-columns: 1fr; gap: 56px;}
+  .steps{ grid-template-columns: 1fr 1fr; }
+  .steps::before{ display: none;}
+  .trust .cards{ grid-template-columns: 1fr;}
+  .compare-grid{ grid-template-columns: 1fr; }
+  .cmp-cell.label{ display: none;}
+  .cmp-cell.head{ border-bottom: none; }
+  .foot-grid{ grid-template-columns: 1fr 1fr; gap: 40px;}
+  .nav ul{ display: none;}
+}
+@media (max-width: 640px){
+  section{ padding: 80px 0;}
+  .hero{ padding: 32px 0 72px;}
+  .topbar .meta{ display: none;}
+  .hero-card{ display: none;}
+  .hero-card.tr{ display: none;}
+  .steps{ grid-template-columns: 1fr;}
+  .foot-grid{ grid-template-columns: 1fr;}
+  .section-head{ flex-direction: column; align-items: flex-start;}
+  h1.headline{ font-size: 38px;}
+  .nav .phone span{ display: none;}
+}
+
+/* tweaks helpers */
+.dim-bg .hero, .dim-bg .trust, .dim-bg .how, .dim-bg .compare, .dim-bg .family{
+  background-color: var(--surface-override, transparent);
+}
+</style>
+</head>
+<body>
+
+<!-- ============ TOP NOTICE ============ -->
+<div class="topbar" data-screen-label="Top Notice">
+  <div class="container">
+    <a class="notice" href="#">Free guide — “8 questions to ask before choosing an agent” →</a>
+    <div class="meta">
+      <span>1300 ASPA AU</span>
+      <span>Mon–Fri 8am – 6pm AEST</span>
+      <span>Servicing all of Australia</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NAV ============ -->
+<div class="nav-wrap" data-screen-label="Navigation">
+  <div class="container nav">
+    <a href="#" class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="word"><b>Agent Finder</b><small>by ASPA</small></span>
+    </a>
+    <ul>
+      <li><a href="#how" class="active">How it works</a></li>
+      <li><a href="#why">Why Agent Finder</a></li>
+      <li><a href="#compare">Compare agents</a></li>
+      <li><a href="#family">For families</a></li>
+      <li><a href="#">Resources</a></li>
+    </ul>
+    <div class="right">
+      <a href="tel:1300277228" class="phone">
+        <span class="ico" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92Z"/></svg>
+        </span>
+        <span>1300 277 228</span>
+      </a>
+      <button class="btn primary sm" data-open-finder>Find My Agent<span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HERO ============ -->
+<section class="hero" data-screen-label="Hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow"><span class="dot"></span>Independent advice · No agent commissions to us</span>
+        <h1 class="headline">Find the right real estate agent, <em>without the stress.</em></h1>
+        <p class="lead">We help Australian homeowners compare trusted local agents, understand their options, and make confident selling decisions — guided by an independent property advisor, not a salesperson.</p>
+        <div class="hero-ctas">
+          <button class="btn primary lg" data-open-finder>Find My Agent <span class="arr">→</span></button>
+          <a href="#" class="btn ghost lg">Speak to an Advisor</a>
+        </div>
+        <div class="hero-trust">
+          <div class="avatars" aria-hidden="true">
+            <span style="background-image:url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80')"></span>
+            <span style="background-image:url('https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&q=80')"></span>
+            <span style="background-image:url('https://images.unsplash.com/photo-1545167622-3a6ac756afa4?auto=format&fit=crop&w=160&q=80')"></span>
+            <span style="background-image:url('https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=160&q=80')"></span>
+          </div>
+          <div>
+            <div class="stars">★★★★★</div>
+            <b>Rated 4.9 / 5</b>
+            <small>by more than 1,800 Australian homeowners</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="blob"></div>
+        <div class="blob b2"></div>
+        <div class="photo" role="img" aria-label="Senior Australian couple in front of their home"></div>
+
+        <div class="hero-card">
+          <div class="ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <b>Your dedicated advisor</b>
+            <small>Independent, no commission, no pressure.</small>
+          </div>
+        </div>
+
+        <div class="hero-card tr">
+          <small>AVERAGE SAVING</small>
+          <div class="row"><span class="big">$11.4k</span></div>
+          <small>vs. choosing the first agent met</small>
+          <div class="bar"><i></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRUST ============ -->
+<section class="trust" id="how" data-screen-label="Trust intro">
+  <div class="container">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow-line">Why Agent Finder exists</div>
+        <h2>Choosing an agent shouldn’t feel <em>overwhelming.</em></h2>
+        <p class="section-lead">Picking the wrong agent can cost homeowners tens of thousands — in commission, marketing, and a price that falls short. Agent Finder gives you a calm, guided way to compare your options before you commit.</p>
+      </div>
+      <a href="#" class="btn ghost">Read our approach <span class="arr">→</span></a>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="ico">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21H3"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+        </div>
+        <h3>Compare trusted local agents</h3>
+        <p>We shortlist agents who actually work — and recently sold — in your suburb, not just anyone willing to pay for leads.</p>
+      </div>
+      <div class="card">
+        <div class="ico">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Understand fees &amp; marketing</h3>
+        <p>See realistic commission and marketing costs side‑by‑side, with plain‑English notes on what’s reasonable for your area.</p>
+      </div>
+      <div class="card">
+        <div class="ico">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <h3>Get independent support</h3>
+        <p>A real property advisor stays beside you — from the first conversation to signing the agreement. No agent pressure.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="how" data-screen-label="How it works">
+  <div class="container">
+    <div class="section-head" style="justify-content: center; text-align: center; flex-direction: column; align-items: center; margin-bottom: 72px;">
+      <div class="eyebrow-line" style="justify-content:center;">How it works</div>
+      <h2 style="text-align:center;">A simple, supported process — <em>start to sold.</em></h2>
+      <p class="section-lead" style="text-align:center; margin: 0 auto;">Four calm steps, with an advisor walking with you the whole way.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="num">01</div>
+        <h4>Tell us about your property</h4>
+        <p>A short conversation about your home, your timeline and what matters most to you in this move.</p>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <h4>We research suitable agents</h4>
+        <p>We review recent sales, listing prices and seller reviews to shortlist agents who genuinely fit your suburb.</p>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <h4>You compare your options</h4>
+        <p>Receive a clear comparison — experience, recent sales, fees and marketing — with notes from your advisor.</p>
+      </div>
+      <div class="step">
+        <div class="num">04</div>
+        <h4>Choose the agent that fits</h4>
+        <p>Meet your shortlist on your terms, with our advisor present if you’d like. Decide in your own time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY USE ============ -->
+<section class="why" id="why" data-screen-label="Why Agent Finder">
+  <div class="container">
+    <div class="why-grid">
+      <div>
+        <div class="eyebrow-line">Why use Agent Finder</div>
+        <h2>Confidence before you ever <em>sign anything.</em></h2>
+        <p class="section-lead">Selling the family home is one of life’s biggest financial decisions. Agent Finder gives you the time, the information and the independent support to make it feel calm — not pressured.</p>
+
+        <ul class="why-list">
+          <li>
+            <div class="check">✓</div>
+            <div><b>Save time researching agents</b><span>We do the long‑listing, vetting and reference checks for you.</span></div>
+          </li>
+          <li>
+            <div class="check">✓</div>
+            <div><b>Avoid pressure from sales calls</b><span>You stay in control. Agents only contact you when you’re ready.</span></div>
+          </li>
+          <li>
+            <div class="check">✓</div>
+            <div><b>Understand commission and marketing</b><span>Plain‑English breakdowns so you can compare like for like.</span></div>
+          </li>
+          <li>
+            <div class="check">✓</div>
+            <div><b>Guidance from experienced advisors</b><span>30+ years of negotiating, listing and selling experience on your side.</span></div>
+          </li>
+          <li>
+            <div class="check">✓</div>
+            <div><b>Feel confident before listing</b><span>Go to market with a clear plan, a fair price and an agent you trust.</span></div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="why-visual">
+        <div class="ph" role="img" aria-label="Charming Australian home exterior"></div>
+        <div class="stamp">
+          <div class="big">30+</div>
+          <small>years of property advisory experience guiding Australian families.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AGENT COMPARISON ============ -->
+<section class="compare" id="compare" data-screen-label="Agent comparison">
+  <div class="container">
+    <div class="section-head">
+      <div class="left">
+        <div class="eyebrow-line">Compare your shortlist</div>
+        <h2>A clear, honest view of <em>every option.</em></h2>
+        <p class="section-lead">Below is the kind of comparison you’ll receive — three real local agents, side‑by‑side, with your advisor’s notes added in.</p>
+      </div>
+      <a href="#" class="btn ghost">See a sample report <span class="arr">→</span></a>
+    </div>
+
+    <div class="compare-shell">
+      <div class="compare-toolbar">
+        <div class="left">
+          <span class="chip active">Mosman, NSW 2088 <span class="x">×</span></span>
+          <span class="chip">4‑bed home</span>
+          <span class="chip">Sell in 3 – 6 months</span>
+          <span class="chip" style="background:var(--blue-tint); border-color: transparent; color: var(--navy); font-weight: 600;">3 agents shortlisted</span>
+        </div>
+        <div class="right" style="display:flex; gap: 10px;">
+          <button class="chip" style="cursor:pointer">Sort: Advisor pick ▾</button>
+        </div>
+      </div>
+
+      <div class="compare-grid">
+        <!-- Header row -->
+        <div class="cmp-cell first-label">Your shortlist</div>
+        <div class="cmp-cell head">
+          <div class="agent-head">
+            <span class="av" style="background-image:url('https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=160&q=80')"></span>
+            <b>Sarah Whitford</b>
+            <small>Whitford &amp; Co · Mosman</small>
+          </div>
+        </div>
+        <div class="cmp-cell head best">
+          <div class="agent-head">
+            <span class="av" style="background-image:url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=160&q=80')"></span>
+            <b>James Patel</b>
+            <small>Harbour Realty · Cremorne</small>
+          </div>
+        </div>
+        <div class="cmp-cell head">
+          <div class="agent-head">
+            <span class="av" style="background-image:url('https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=160&q=80')"></span>
+            <b>Elaine Murray</b>
+            <small>Coastline Group · Neutral Bay</small>
+          </div>
+        </div>
+
+        <!-- Local experience -->
+        <div class="cmp-cell label">Local experience</div>
+        <div class="cmp-cell">
+          <strong>12 years</strong> in Mosman &amp; Beauty Point
+          <div class="meter"><i style="width:70%"></i></div>
+        </div>
+        <div class="cmp-cell">
+          <strong>18 years</strong> across Lower North Shore
+          <div class="meter"><i style="width:92%"></i></div>
+        </div>
+        <div class="cmp-cell">
+          <strong>9 years</strong> in Neutral Bay &amp; Mosman
+          <div class="meter"><i style="width:55%"></i></div>
+        </div>
+
+        <!-- Recent sales -->
+        <div class="cmp-cell label">Recent sales (12 mo)</div>
+        <div class="cmp-cell"><strong>24 sold</strong><br/><span class="sub">Median $3.4M · 98% of guide</span></div>
+        <div class="cmp-cell"><strong>41 sold</strong><br/><span class="sub">Median $3.7M · 104% of guide</span></div>
+        <div class="cmp-cell"><strong>17 sold</strong><br/><span class="sub">Median $2.9M · 96% of guide</span></div>
+
+        <!-- Commission -->
+        <div class="cmp-cell label">Commission estimate</div>
+        <div class="cmp-cell"><span class="price">2.20%</span><div class="sub">~ $77,000 on $3.5M sale</div></div>
+        <div class="cmp-cell"><span class="price">1.95%</span><div class="sub">~ $68,250 on $3.5M sale</div></div>
+        <div class="cmp-cell"><span class="price">2.35%</span><div class="sub">~ $82,250 on $3.5M sale</div></div>
+
+        <!-- Marketing -->
+        <div class="cmp-cell label">Marketing budget</div>
+        <div class="cmp-cell"><strong>$8,400</strong><div class="sub">Print + digital, 4‑week campaign</div></div>
+        <div class="cmp-cell"><strong>$6,900</strong><div class="sub">Digital‑led, includes premium listing</div></div>
+        <div class="cmp-cell"><strong>$11,200</strong><div class="sub">Includes magazine &amp; video tour</div></div>
+
+        <!-- Notes -->
+        <div class="cmp-cell label">Advisor notes</div>
+        <div class="cmp-cell note">“Warm, careful communicator. Strong with downsizers but fewer recent prestige sales.”</div>
+        <div class="cmp-cell note">“Best fit for your home and timeline. Consistent results, fair fee, calm style.”</div>
+        <div class="cmp-cell note">“Polished but marketing budget is on the higher side — push back if you shortlist.”</div>
+
+        <!-- CTA -->
+        <div class="cmp-cell label">Next step</div>
+        <div class="cmp-cell cta"><button class="btn ghost sm" style="width:100%; justify-content:center;">View profile</button></div>
+        <div class="cmp-cell cta"><button class="btn primary sm" style="width:100%; justify-content:center;">Book intro call <span class="arr">→</span></button></div>
+        <div class="cmp-cell cta"><button class="btn ghost sm" style="width:100%; justify-content:center;">View profile</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAMILY ============ -->
+<section class="family" id="family" data-screen-label="Support for families">
+  <div class="container">
+    <div class="family-grid">
+      <div class="family-visual">
+        <div class="ph" role="img" aria-label="Adult daughter sitting with her mother going through paperwork"></div>
+        <div class="quote">
+          <span class="av" style="background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80')"></span>
+          <div>
+            <p>“Mum felt heard the whole way through. We finally had a plan we all agreed on.”</p>
+            <small>— Rachel, helping her mother sell in Glenelg, SA</small>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="eyebrow-line">For families</div>
+        <h2>Helping a parent sell <em>their home?</em></h2>
+        <p class="section-lead">Many of the people we help aren’t selling themselves — they’re adult children supporting a parent through a downsize, a move closer to family, or the next chapter of care. Agent Finder is designed for these conversations.</p>
+
+        <ul class="checks">
+          <li><span class="c">✓</span><span>Loop the whole family in — your advisor speaks with everyone, at a pace that suits.</span></li>
+          <li><span class="c">✓</span><span>Plain explanations of contracts, commission, marketing and timelines.</span></li>
+          <li><span class="c">✓</span><span>Time to think — no agent contact until your parent feels ready.</span></li>
+          <li><span class="c">✓</span><span>Support for the practical side too: stylists, conveyancers, moving services.</span></li>
+        </ul>
+
+        <div style="display:flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn primary" data-open-finder>Start as a family <span class="arr">→</span></button>
+          <a href="#" class="btn ghost">Family guide (PDF)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="cta" data-screen-label="Final CTA">
+  <div class="container">
+    <div class="eyebrow-line" style="justify-content:center; color: var(--blue);"><span style="background: var(--blue) !important;"></span>Ready when you are</div>
+    <h2>Ready to find <em>the right agent?</em></h2>
+    <p>Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.</p>
+    <div class="row">
+      <button class="btn secondary lg" data-open-finder>Get Started <span class="arr">→</span></button>
+      <a href="tel:1300277228" class="btn ghost lg" style="color:#fff; border-color: rgba(255,255,255,0.3);">Call 1300 277 228</a>
+    </div>
+    <div class="marks">
+      <span>Independent advice</span>
+      <span>No agent commissions</span>
+      <span>Australian owned</span>
+      <span>Member, REIA</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer data-screen-label="Footer">
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#" class="brand" style="color: var(--white);">
+          <span class="mark"></span>
+          <span class="word"><b style="color:#fff">Agent Finder</b><small style="color: rgba(255,255,255,0.7)">by ASPA</small></span>
+        </a>
+        <p>An independent service from Australian Seniors Property Advisors, helping homeowners and their families sell with confidence.</p>
+        <p style="opacity:0.7;">Level 14, 50 Carrington St,<br/>Sydney NSW 2000</p>
+      </div>
+      <div>
+        <h5>Service</h5>
+        <ul>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#compare">Compare agents</a></li>
+          <li><a href="#family">For families</a></li>
+          <li><a href="#">Pricing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="#">Free guide</a></li>
+          <li><a href="#">Selling checklist</a></li>
+          <li><a href="#">Glossary</a></li>
+          <li><a href="#">FAQs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Contact</h5>
+        <ul>
+          <li><a href="tel:1300277228">1300 277 228</a></li>
+          <li><a href="mailto:hello@aspa.com.au">hello@aspa.com.au</a></li>
+          <li>Mon–Fri, 8am – 6pm AEST</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Australian Seniors Property Advisors Pty Ltd · ABN 12 345 678 901</span>
+      <span style="display:flex; gap: 18px;">
+        <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Complaints</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ FIND MY AGENT MODAL ============ -->
+<div id="modal" class="modal-back" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button class="close" data-close-finder aria-label="Close">×</button>
+    <div class="progress" id="prog"><i class="on"></i><i></i><i></i><i></i></div>
+
+    <div data-step="1">
+      <h3 id="modal-title">Let’s start with where you live</h3>
+      <p class="help">Your suburb helps us shortlist the right local agents — not generic state‑wide lists.</p>
+      <div class="field">
+        <label>Postcode or suburb</label>
+        <input type="text" placeholder="e.g. Mosman, NSW 2088" />
+      </div>
+      <div class="field">
+        <label>Property type</label>
+        <div class="opt-grid">
+          <div class="opt on">House <small>Free standing</small></div>
+          <div class="opt">Townhouse <small>Attached / villa</small></div>
+          <div class="opt">Apartment <small>Unit / strata</small></div>
+          <div class="opt">Acreage <small>Rural / lifestyle</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-step="2" hidden>
+      <h3>When are you hoping to sell?</h3>
+      <p class="help">There’s no wrong answer — even “just thinking” is the right time to call.</p>
+      <div class="opt-grid">
+        <div class="opt">Within 3 months</div>
+        <div class="opt on">In 3 – 6 months</div>
+        <div class="opt">In 6 – 12 months</div>
+        <div class="opt">Just exploring</div>
+      </div>
+      <div class="field" style="margin-top: 18px;">
+        <label>Anything we should know? <span style="font-weight:400; color: var(--text-mid)">(optional)</span></label>
+        <input type="text" placeholder="e.g. We’re helping Mum downsize" />
+      </div>
+    </div>
+
+    <div data-step="3" hidden>
+      <h3>How would you like us to reach you?</h3>
+      <p class="help">A quick 15‑minute conversation with your advisor — at a time that suits.</p>
+      <div class="field">
+        <label>Full name</label>
+        <input type="text" placeholder="Jane Wilson" />
+      </div>
+      <div class="opt-grid">
+        <div class="field" style="margin:0;">
+          <label>Phone</label>
+          <input type="tel" placeholder="0412 345 678" />
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Email</label>
+          <input type="email" placeholder="jane@email.com" />
+        </div>
+      </div>
+      <div class="field" style="margin-top: 14px;">
+        <label>Best time to chat</label>
+        <div class="opt-grid three">
+          <div class="opt on">Morning</div>
+          <div class="opt">Afternoon</div>
+          <div class="opt">Evening</div>
+        </div>
+      </div>
+    </div>
+
+    <div data-step="4" hidden>
+      <div class="success">
+        <div class="ring">✓</div>
+        <h3>Thank you, Jane.</h3>
+        <p class="help" style="max-width: 360px; margin: 0 auto 10px;">An advisor will be in touch within one business day. We’ll send a confirmation to your email shortly.</p>
+        <p style="font-size: 13.5px; color: var(--text-mid);">Reference: <strong style="color:var(--navy);">AF‑2026‑00482</strong></p>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost sm" id="back" hidden>← Back</button>
+      <span class="step-count" id="stepCount">Step 1 of 3</span>
+      <button class="btn primary sm" id="next">Continue <span class="arr">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Scripts ============ -->
+<script>
+  // Modal open/close
+  const modal = document.getElementById('modal');
+  document.querySelectorAll('[data-open-finder]').forEach(b => b.addEventListener('click', () => {
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }));
+  document.querySelectorAll('[data-close-finder]').forEach(b => b.addEventListener('click', () => {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }));
+  modal.addEventListener('click', (e) => { if (e.target === modal) { modal.classList.remove('open'); document.body.style.overflow = ''; } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { modal.classList.remove('open'); document.body.style.overflow = ''; } });
+
+  // Multi-step
+  let step = 1;
+  const steps = document.querySelectorAll('[data-step]');
+  const prog = document.querySelectorAll('#prog i');
+  const back = document.getElementById('back');
+  const next = document.getElementById('next');
+  const count = document.getElementById('stepCount');
+
+  function render(){
+    steps.forEach(s => s.hidden = (Number(s.dataset.step) !== step));
+    prog.forEach((p, i) => p.classList.toggle('on', i < step));
+    back.hidden = (step === 1 || step === 4);
+    if (step === 4){ next.textContent = 'Close'; count.textContent = ''; }
+    else if (step === 3){ next.innerHTML = 'Submit <span class="arr">→</span>'; count.textContent = `Step ${step} of 3`; }
+    else { next.innerHTML = 'Continue <span class="arr">→</span>'; count.textContent = `Step ${step} of 3`; }
+  }
+  next.addEventListener('click', () => {
+    if (step === 4){ modal.classList.remove('open'); document.body.style.overflow=''; step = 1; render(); return; }
+    step = Math.min(4, step + 1); render();
+  });
+  back.addEventListener('click', () => { step = Math.max(1, step - 1); render(); });
+
+  // Toggle .opt selection (single within its grid)
+  document.querySelectorAll('.opt-grid').forEach(grid => {
+    grid.addEventListener('click', (e) => {
+      const o = e.target.closest('.opt'); if (!o) return;
+      grid.querySelectorAll('.opt').forEach(x => x.classList.remove('on'));
+      o.classList.add('on');
+    });
+  });
+</script>
+
+<!-- Tweaks panel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<div id="tweaks-root"></div>
+<script type="text/babel">
+const AF_TWEAKS = /*EDITMODE-BEGIN*/{
+  "accent": "#8BA9D9",
+  "navy": "#0E2A5C",
+  "surface": "#F5FAFD",
+  "headlineStyle": "serif-italic",
+  "heroLayout": "image-right",
+  "showFloatingCards": true,
+  "buttonShape": "square"
+}/*EDITMODE-END*/;
+
+function AFTweaks(){
+  const [t, setTweak] = useTweaks(AF_TWEAKS);
+
+  React.useEffect(() => {
+    const r = document.documentElement.style;
+    r.setProperty('--blue', t.accent);
+    r.setProperty('--navy', t.navy);
+    r.setProperty('--blue-wash-2', t.surface);
+    // Headline style
+    document.querySelectorAll('h1.headline, h2').forEach(h => {
+      h.style.fontFamily = t.headlineStyle === 'sans-light'
+        ? 'var(--font-sans)'
+        : 'var(--font-display)';
+      h.style.fontWeight = t.headlineStyle === 'sans-light' ? '300' : '400';
+    });
+    // Floating cards
+    document.querySelectorAll('.hero-card').forEach(c => c.style.display = t.showFloatingCards ? '' : 'none');
+    // Hero layout
+    const grid = document.querySelector('.hero-grid');
+    if (grid) grid.style.direction = (t.heroLayout === 'image-left') ? 'rtl' : 'ltr';
+    document.querySelectorAll('.hero-grid > *').forEach(c => c.style.direction = 'ltr');
+    // Button shape
+    document.querySelectorAll('.btn').forEach(b => {
+      b.style.borderRadius = t.buttonShape === 'pill' ? '999px'
+        : t.buttonShape === 'rounded' ? '14px'
+        : '4px';
+    });
+  }, [t]);
+
+  return (
+    <TweaksPanel title="Tweaks">
+      <TweakSection label="Brand">
+        <TweakColor label="Accent (light blue)" value={t.accent}
+          options={['#6EC1E4', '#8BA9D9', '#9FC9A8', '#D6B27A']}
+          onChange={v => setTweak('accent', v)} />
+        <TweakColor label="Primary (navy)" value={t.navy}
+          options={['#010A44', '#0E2A5C', '#1E1B3A', '#1F2A37']}
+          onChange={v => setTweak('navy', v)} />
+        <TweakColor label="Section surface" value={t.surface}
+          options={['#F5FAFD', '#FAF7F1', '#F4F5F8', '#FFFFFF']}
+          onChange={v => setTweak('surface', v)} />
+      </TweakSection>
+
+      <TweakSection label="Type & shape">
+        <TweakRadio label="Headline style" value={t.headlineStyle}
+          options={[
+            {value:'serif-italic', label:'Serif'},
+            {value:'sans-light', label:'Sans light'}
+          ]}
+          onChange={v => setTweak('headlineStyle', v)} />
+        <TweakRadio label="Button shape" value={t.buttonShape}
+          options={[
+            {value:'pill', label:'Pill'},
+            {value:'rounded', label:'Rounded'},
+            {value:'square', label:'Square'}
+          ]}
+          onChange={v => setTweak('buttonShape', v)} />
+      </TweakSection>
+
+      <TweakSection label="Hero">
+        <TweakRadio label="Layout" value={t.heroLayout}
+          options={[
+            {value:'image-right', label:'Image right'},
+            {value:'image-left', label:'Image left'}
+          ]}
+          onChange={v => setTweak('heroLayout', v)} />
+        <TweakToggle label="Show floating cards" value={t.showFloatingCards}
+          onChange={v => setTweak('showFloatingCards', v)} />
+      </TweakSection>
+    </TweaksPanel>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<AFTweaks/>);
+</script>
+</body>
+</html>
