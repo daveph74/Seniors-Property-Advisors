@@ -3,10 +3,11 @@ import { Head } from '@inertiajs/react';
 import FindMyAgentModal from '../components/FindMyAgentModal';
 import {
     PhoneIcon,
-    UserIcon,
     HomeIcon,
     DollarIcon,
     ShieldIcon,
+    StarIcon,
+    GiftIcon,
 } from '../components/icons';
 
 const NAV_LINKS = [
@@ -144,13 +145,9 @@ export default function AgentFinder() {
             <div className="topbar">
                 <div className="container">
                     <a className="notice" href="#">
-                        Free guide — “8 questions to ask before choosing an agent” →
+                        <GiftIcon />
+                        Free guide — 8 questions to ask before choosing an agent
                     </a>
-                    <div className="meta">
-                        <span>1300 SPA AUS</span>
-                        <span>Mon–Fri 8am – 6pm AEST</span>
-                        <span>Servicing all of Australia</span>
-                    </div>
                 </div>
             </div>
 
@@ -158,11 +155,11 @@ export default function AgentFinder() {
             <div className="nav-wrap">
                 <div className="container nav">
                     <a href="#" className="brand">
-                        <span className="mark" aria-hidden="true" />
-                        <span className="word">
-                            <b>Agent Finder</b>
-                            <small>by Seniors Property Advisors</small>
-                        </span>
+                        <img
+                            className="mark"
+                            src="/Seniors_Property_Advisors_Logo.svg"
+                            alt="Seniors Property Advisors"
+                        />
                     </a>
                     <ul>
                         {NAV_LINKS.map((l) => (
@@ -193,16 +190,20 @@ export default function AgentFinder() {
                     <div className="hero-grid">
                         <div>
                             <span className="eyebrow">
-                                <span className="dot" />
-                                Independent advice · No agent commissions to us
+                                <span className="ico" aria-hidden="true">
+                                    <ShieldIcon size={12} />
+                                </span>
+                                Personal Guidance · Compare Trusted local agents
                             </span>
                             <h1 className="headline">
-                                Find the right real estate agent, <em>without the stress.</em>
+                                Independent advice. <em>Better selling decisions.</em>
                             </h1>
+                            <p className="subhead">
+                                Find the right local agent and sell with confidence.
+                            </p>
                             <p className="lead">
-                                We help Australian homeowners compare trusted local agents,
-                                understand their options, and make confident selling decisions —
-                                guided by an independent property advisor, not a salesperson.
+                                Compare trusted local agents, understand your options and sell
+                                with confidence—with independent guidance at every step.
                             </p>
                             <div className="hero-ctas">
                                 <button className="btn primary lg" onClick={openFinder}>
@@ -222,45 +223,55 @@ export default function AgentFinder() {
                                     ))}
                                 </div>
                                 <div>
-                                    <div className="stars">★★★★★</div>
-                                    <b>Rated 4.9 / 5</b>
+                                    <div className="row">
+                                        <span className="stars">★★★★★</span>
+                                        <b>Rated 4.9 / 5</b>
+                                    </div>
                                     <small>by more than 1,800 Australian homeowners</small>
                                 </div>
                             </div>
                         </div>
 
                         <div className="hero-visual">
-                            <div className="blob" />
-                            <div className="blob b2" />
                             <div
                                 className="photo"
                                 role="img"
-                                aria-label="Senior Australian couple in front of their home"
+                                aria-label="Property advisor with a tablet guiding a senior couple"
                             />
 
-                            <div className="hero-card">
+                            <div className="hero-card rating">
                                 <div className="ico">
-                                    <UserIcon />
+                                    <StarIcon />
                                 </div>
                                 <div>
-                                    <b>Your dedicated advisor</b>
-                                    <small>Independent, no commission, no pressure.</small>
+                                    <b>Rated 4.9 / 5</b>
+                                    <small>Trusted by 1,800+ homeowners</small>
                                 </div>
                             </div>
 
-                            <div className="hero-card tr">
-                                <small>AVERAGE SAVING</small>
-                                <div className="row">
-                                    <span className="big">$11.4k</span>
-                                </div>
-                                <small>vs. choosing the first agent met</small>
-                                <div className="bar">
-                                    <i />
-                                </div>
+                            <div className="hero-card saving">
+                                <b>Average client saving</b>
+                                <span className="big">$11.4k</span>
+                                <small>Based on clients who compared multiple agents.</small>
                             </div>
                         </div>
                     </div>
+
+                    <div className="hero-steps">
+                        {[
+                            ['1', 'Tell us about your property'],
+                            ['2', 'Compare suitable agents'],
+                            ['3', 'Choose with confidence'],
+                        ].map(([n, label]) => (
+                            <div className="hs-item" key={n}>
+                                <span className="hs-num">{n}</span>
+                                <b>{label}</b>
+                            </div>
+                        ))}
+                    </div>
                 </div>
+
+                <div className="hero-pentagon" aria-hidden="true" />
             </section>
 
             {/* ============ TRUST ============ */}
@@ -584,10 +595,13 @@ export default function AgentFinder() {
                     <div className="foot-grid">
                         <div className="foot-brand">
                             <a href="#" className="brand">
-                                <span className="mark" />
+                                <img
+                                    className="mark"
+                                    src="/Seniors_Property_Advisors_Logo.svg"
+                                    alt="Seniors Property Advisors"
+                                />
                                 <span className="word">
                                     <b>Agent Finder</b>
-                                    <small>by Seniors Property Advisors</small>
                                 </span>
                             </a>
                             <p>
