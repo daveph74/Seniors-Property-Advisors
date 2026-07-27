@@ -1,5 +1,13 @@
-export default function BlockRenderer({ block }) {
+import { resolveSection } from '../../sections/registry';
+
+export default function BlockRenderer({ block, useRegistry = false }) {
     const { type, data } = block;
+
+    const Section = useRegistry ? resolveSection(type) : null;
+
+    if (Section) {
+        return <Section data={data || {}} actions={{}} />;
+    }
 
     if (type === 'hero') {
         return (

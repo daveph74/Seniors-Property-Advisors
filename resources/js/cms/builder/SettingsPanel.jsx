@@ -1,6 +1,6 @@
-import { Toggle } from '../components/ui';
+import { Toggle, AccordionSection } from '../components/ui';
 
-const TABS = [
+const PANELS = [
     ['content', 'Content'],
     ['layout', 'Layout'],
     ['style', 'Style'],
@@ -8,7 +8,7 @@ const TABS = [
     ['advanced', 'Advanced'],
 ];
 
-export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSaveReusable, onOpenMediaPicker }) {
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, onSaveReusable, onOpenMediaPicker }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -27,9 +27,15 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
     const hasEyebrow = 'eyebrow' in data;
     const hasBody = 'body' in data;
     const hasButtons = 'primary' in data;
-    const isHero = type === 'hero';
+    const hasHeadingEm = 'headingEm' in data;
+    const hasSubhead = 'subhead' in data;
+    const hasLead = 'lead' in data;
+    const isHero = type === 'hero' && 'secondary' in data;
     const isTestimonials = type === 'testimonials';
     const isFaqs = type === 'faqs';
+
+    const collections = ['items', 'agents', 'checks', 'steps', 'ctas', 'buttons', 'trustMarks', 'filters', 'avatars']
+        .filter((key) => Array.isArray(data[key]) && data[key].length);
 
     return (
         <>
@@ -38,22 +44,10 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
                     <div className="cms-builder-right__title">{block.label}</div>
                     <span className="cms-builder-right__type">{type}</span>
                 </div>
-                <div className="cms-panel-tabs">
-                    {TABS.map(([id, label]) => (
-                        <button
-                            key={id}
-                            type="button"
-                            className={`cms-panel-tab ${tab === id ? 'cms-panel-tab--active' : ''}`}
-                            onClick={() => onTab(id)}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
             </div>
 
             <div className="cms-builder-right__body">
-                {tab === 'content' && (
+                <AccordionSection id="content" title={PANELS[0][1]} open={openPanels.has('content')} onToggle={onTogglePanel}>
                     <>
                         {hasEyebrow && (
                             <div className="cms-field">
@@ -66,6 +60,27 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
                             <label className="cms-field-label">Heading</label>
                             <textarea className="cms-textarea" rows={2} value={data.heading || ''} onChange={(e) => patch('heading', e.target.value)} />
                         </div>
+
+                        {hasHeadingEm && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Highlighted heading</label>
+                                <input className="cms-input" value={data.headingEm || ''} onChange={(e) => patch('headingEm', e.target.value)} />
+                            </div>
+                        )}
+
+                        {hasSubhead && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Subheading</label>
+                                <input className="cms-input" value={data.subhead || ''} onChange={(e) => patch('subhead', e.target.value)} />
+                            </div>
+                        )}
+
+                        {hasLead && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Intro text</label>
+                                <textarea className="cms-textarea" rows={4} value={data.lead || ''} onChange={(e) => patch('lead', e.target.value)} />
+                            </div>
+                        )}
 
                         {hasBody && (
                             <div className="cms-field">
@@ -151,10 +166,24 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
                                 </div>
                             </>
                         )}
-                    </>
-                )}
 
-                {tab === 'layout' && (
+                        {collections.length > 0 && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Repeating content</label>
+                                {collections.map((key) => (
+                                    <div key={key} className="cms-nav-item-row">
+                                        <span className="cms-nav-item-row__label">{key}</span>
+                                        <span className="cms-nav-item-row__target" style={{ marginLeft: 'auto' }}>
+                                            {data[key].length} items · edit in JSON
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                </AccordionSection>
+
+                <AccordionSection id="layout" title={PANELS[1][1]} open={openPanels.has('layout')} onToggle={onTogglePanel}>
                     <>
                         <div className="cms-field">
                             <label className="cms-field-label">Section width</label>
@@ -186,9 +215,9 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
                             <option>Large</option>
                         </select>
                     </>
-                )}
+                </AccordionSection>
 
-                {tab === 'style' && (
+                <AccordionSection id="style" title={PANELS[2][1]} open={openPanels.has('style')} onToggle={onTogglePanel}>
                     <>
                         <label className="cms-field-label" style={{ marginBottom: 7 }}>Background</label>
                         <div className="cms-swatch-row">
@@ -213,9 +242,9 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
                         </div>
                         <div className="cms-panel-note">Style options are limited to the Seniors Property Advisors brand kit so pages stay consistent.</div>
                     </>
-                )}
+                </AccordionSection>
 
-                {tab === 'responsive' && (
+                <AccordionSection id="responsive" title={PANELS[3][1]} open={openPanels.has('responsive')} onToggle={onTogglePanel}>
                     <>
                         <div className="cms-align-row">
                             <button type="button" className="cms-align-btn cms-align-btn--active">Desktop</button>
@@ -234,9 +263,9 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
                             <Toggle on={false} onChange={() => {}} />
                         </div>
                     </>
-                )}
+                </AccordionSection>
 
-                {tab === 'advanced' && (
+                <AccordionSection id="advanced" title={PANELS[4][1]} open={openPanels.has('advanced')} onToggle={onTogglePanel}>
                     <>
                         <div className="cms-field">
                             <label className="cms-field-label">Component label</label>
@@ -252,7 +281,7 @@ export default function SettingsPanel({ block, tab, onTab, patch, setLabel, onSa
                             <button type="button" className="cms-btn cms-btn--sm" onClick={onSaveReusable}>Save as reusable</button>
                         </div>
                     </>
-                )}
+                </AccordionSection>
             </div>
         </>
     );

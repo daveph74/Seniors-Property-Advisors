@@ -3,6 +3,9 @@ import { Head, router } from '@inertiajs/react';
 import '../../../../css/cms.css';
 import { ToastProvider, useCmsToast } from '../../../cms/ToastContext';
 import { PAGES, DEFAULT_BLOCKS, defaultBlockData } from '../../../cms/data/mockData';
+import { defaultSectionData } from '../../../sections/defaults';
+import SiteHeader from '../../../sections/SiteHeader';
+import SiteFooter from '../../../sections/SiteFooter';
 import BlockRenderer from '../../../cms/builder/BlockRenderer';
 import ComponentPanel from '../../../cms/builder/ComponentPanel';
 import LayersPanel from '../../../cms/builder/LayersPanel';
@@ -15,8 +18,8 @@ import {
     MoveIcon, DuplicateIcon, ReusableIcon, HideIcon, TrashIcon, PlusIcon,
 } from '../../../cms/components/icons';
 
-const DEVICE_WIDTH = { desktop: '1180px', tablet: '820px', mobile: '420px' };
-const DEVICE_LABEL = { desktop: 'Desktop · 1180px', tablet: 'Tablet · 820px', mobile: 'Mobile · 420px' };
+const DEVICE_WIDTH = { desktop: '1240px', tablet: '820px', mobile: '420px' };
+const DEVICE_LABEL = { desktop: 'Desktop · 1240px', tablet: 'Tablet · 820px', mobile: 'Mobile · 420px' };
 
 let uid = 0;
 function nextId(type) {
@@ -24,13 +27,22 @@ function nextId(type) {
     return `${type}-${uid}`;
 }
 
-function BuilderInner({ page }) {
+function firstError(errors, fallback) {
+    const keys = Object.keys(errors || {});
+
+    return keys.length ? errors[keys[0]] : fallback;
+}
+
+function BuilderInner({ page, pageId, sections, revisions, globals }) {
     const flash = useCmsToast();
-    const [blocks, setBlocks] = useState(() => DEFAULT_BLOCKS.map((b) => ({ ...b, data: { ...b.data } })));
+    const contentBacked = Array.isArray(sections);
+    const [blocks, setBlocks] = useState(() =>
+        (contentBacked ? sections : DEFAULT_BLOCKS).map((b) => ({ ...b, data: { ...b.data } })),
+    );
     const [selectedId, setSelectedId] = useState('hero');
     const [device, setDevice] = useState('desktop');
     const [leftPanel, setLeftPanel] = useState('components');
-    const [tab, setTab] = useState('content');
+    const [openPanels, setOpenPanels] = useState(() => new Set(['content']));
     const [saveState, setSaveState] = useState('saved');
     const [historyOpen, setHistoryOpen] = useState(false);
     const [publishOpen, setPublishOpen] = useState(false);
@@ -42,16 +54,31 @@ function BuilderInner({ page }) {
 
     const markUnsaved = () => setSaveState('unsaved');
 
+    const togglePanel = (id) => setOpenPanels((prev) => {
+        const next = new Set(prev);
+
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+
+        return next;
+    });
+
     const insertBlock = (type, label, index) => {
         const id = nextId(type);
-        const block = { id, type, label, data: defaultBlockData(type) };
+        const block = {
+            id,
+            type,
+            label,
+            active: true,
+            data: defaultSectionData(type) || defaultBlockData(type),
+        };
         setBlocks((prev) => {
             const next = prev.slice();
             next.splice(index == null ? next.length : index, 0, block);
             return next;
         });
         setSelectedId(id);
-        setTab('content');
+        setOpenPanels((prev) => new Set(prev).add('content'));
         markUnsaved();
         setDropIndex(null);
         drag.current = { dragKind: null, dragLabel: null, dragId: null };
@@ -144,15 +171,54 @@ function BuilderInner({ page }) {
         else setDropIndex(null);
     };
 
+    const toggleActive = (id, label) => {
+        setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, active: b.active === false } : b)));
+        markUnsaved();
+        flash(`${label} ${blocks.find((b) => b.id === id)?.active === false ? 'shown' : 'hidden'} on this page`);
+    };
+
+    const payload = () => ({
+        sections: blocks.map((b) => ({
+            id: b.id,
+            type: b.type,
+            label: b.label,
+            active: b.active !== false,
+            anchor: b.anchor ?? null,
+            data: b.data,
+        })),
+    });
+
     const saveDraft = () => {
+        if (! contentBacked) {
+            setSaveState('saving');
+            setTimeout(() => { setSaveState('saved'); flash('Draft saved'); }, 900);
+            return;
+        }
+
         setSaveState('saving');
-        setTimeout(() => { setSaveState('saved'); flash('Draft saved'); }, 900);
+        router.post(`/cms/pages/${pageId}/draft`, payload(), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => { setSaveState('saved'); flash('Draft saved'); },
+            onError: (errors) => { setSaveState('unsaved'); flash(firstError(errors, 'Could not save draft')); },
+        });
     };
 
     const confirmPublish = () => {
         setPublishOpen(false);
-        setSaveState('saved');
-        flash(`${page.title} is now live`);
+
+        if (! contentBacked) {
+            setSaveState('saved');
+            flash(`${page.title} is now live`);
+            return;
+        }
+
+        router.post(`/cms/pages/${pageId}/publish`, payload(), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => { setSaveState('saved'); flash(`${page.title} is now live`); },
+            onError: (errors) => { setSaveState('unsaved'); flash(firstError(errors, 'Could not publish')); },
+        });
     };
 
     const restoreVersion = (n) => {
@@ -179,22 +245,22 @@ function BuilderInner({ page }) {
 
                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div className="cms-segmented cms-segmented--tint">
-                            <button type="button" title="Undo" className="cms-segmented__btn" style={{ width: 30 }} onClick={() => flash('Undo')}>
+                            <button type="button" title="Undo" className="cms-segmented__btn cms-segmented__btn--icon" onClick={() => flash('Undo')}>
                                 <UndoIcon size={15} stroke="#415064" />
                             </button>
-                            <button type="button" title="Redo" className="cms-segmented__btn" style={{ width: 30 }} onClick={() => flash('Redo')}>
+                            <button type="button" title="Redo" className="cms-segmented__btn cms-segmented__btn--icon" onClick={() => flash('Redo')}>
                                 <RedoIcon size={15} stroke="#415064" />
                             </button>
                         </div>
 
                         <div className="cms-segmented cms-segmented--tint">
-                            <button type="button" title="Desktop" className={`cms-segmented__btn ${device === 'desktop' ? 'cms-segmented__btn--active' : ''}`} style={{ width: 32 }} onClick={() => setDevice('desktop')}>
+                            <button type="button" title="Desktop" className={`cms-segmented__btn cms-segmented__btn--icon ${device === 'desktop' ? 'cms-segmented__btn--active' : ''}`} onClick={() => setDevice('desktop')}>
                                 <DesktopIcon size={15} />
                             </button>
-                            <button type="button" title="Tablet" className={`cms-segmented__btn ${device === 'tablet' ? 'cms-segmented__btn--active' : ''}`} style={{ width: 32 }} onClick={() => setDevice('tablet')}>
+                            <button type="button" title="Tablet" className={`cms-segmented__btn cms-segmented__btn--icon ${device === 'tablet' ? 'cms-segmented__btn--active' : ''}`} onClick={() => setDevice('tablet')}>
                                 <TabletIcon size={15} />
                             </button>
-                            <button type="button" title="Mobile" className={`cms-segmented__btn ${device === 'mobile' ? 'cms-segmented__btn--active' : ''}`} style={{ width: 32 }} onClick={() => setDevice('mobile')}>
+                            <button type="button" title="Mobile" className={`cms-segmented__btn cms-segmented__btn--icon ${device === 'mobile' ? 'cms-segmented__btn--active' : ''}`} onClick={() => setDevice('mobile')}>
                                 <MobileIcon size={15} />
                             </button>
                         </div>
@@ -240,19 +306,26 @@ function BuilderInner({ page }) {
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => performDrop(blocks.length)}
                     >
-                        <div className="cms-canvas-frame" style={{ maxWidth: DEVICE_WIDTH[device] }}>
+                        <div className="cms-canvas-frame" style={{ width: DEVICE_WIDTH[device] }}>
                             <div className="cms-canvas-caption">
                                 <span>{DEVICE_LABEL[device]}</span>
                                 <span>seniorspropertyadvisors.com.au/{page.slug}</span>
                             </div>
                             <div className="cms-canvas-page">
-                                <div className="cms-canvas-page__header">
-                                    <div className="cms-canvas-page__header-logo">Seniors Property Advisors</div>
-                                    <div className="cms-canvas-page__header-links">
-                                        <span>Downsizing</span><span>Retirement living</span><span>About</span><span>FAQs</span>
+                                {globals ? (
+                                    <div className="cms-canvas-chrome">
+                                        <SiteHeader globals={globals} />
+                                        <span className="cms-global-tag cms-canvas-chrome__tag">Global header</span>
                                     </div>
-                                    <span className="cms-global-tag">Global header</span>
-                                </div>
+                                ) : (
+                                    <div className="cms-canvas-page__header">
+                                        <div className="cms-canvas-page__header-logo">Seniors Property Advisors</div>
+                                        <div className="cms-canvas-page__header-links">
+                                            <span>Downsizing</span><span>Retirement living</span><span>About</span><span>FAQs</span>
+                                        </div>
+                                        <span className="cms-global-tag">Global header</span>
+                                    </div>
+                                )}
 
                                 {blocks.length === 0 ? (
                                     <EmptyState
@@ -277,8 +350,9 @@ function BuilderInner({ page }) {
                                             onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(i); }}
                                             onClick={() => setSelectedId(b.id)}
                                             className={`cms-block ${b.id === selectedId ? 'cms-block--selected' : ''}`}
+                                            style={b.active === false ? { opacity: 0.4 } : undefined}
                                         >
-                                            <BlockRenderer block={b} />
+                                            <BlockRenderer block={b} useRegistry={contentBacked} />
                                             {b.id === selectedId && (
                                                 <>
                                                     <div className="cms-block__label-tag">{b.label}</div>
@@ -292,7 +366,7 @@ function BuilderInner({ page }) {
                                                         <button type="button" title="Save as reusable section" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); flash('Saved to reusable sections'); }}>
                                                             <ReusableIcon />
                                                         </button>
-                                                        <button type="button" title="Hide on page" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); flash(`${b.label} hidden on this page`); }}>
+                                                        <button type="button" title={b.active === false ? 'Show on page' : 'Hide on page'} className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); toggleActive(b.id, b.label); }}>
                                                             <HideIcon />
                                                         </button>
                                                         <button type="button" title="Delete" className="cms-block__toolbar-btn cms-block__toolbar-btn--danger" onClick={(e) => { e.stopPropagation(); removeBlock(b.id, b.label); }}>
@@ -309,10 +383,17 @@ function BuilderInner({ page }) {
                                     <div className="cms-drop-line"><div className="cms-drop-line__bar" /></div>
                                 )}
 
-                                <div className="cms-canvas-page__footer">
-                                    <span>© Seniors Property Advisors</span><span>Privacy</span><span>Terms</span>
-                                    <span className="cms-global-tag cms-global-tag--dark">Global footer</span>
-                                </div>
+                                {globals ? (
+                                    <div className="cms-canvas-chrome">
+                                        <SiteFooter globals={globals} />
+                                        <span className="cms-global-tag cms-global-tag--dark cms-canvas-chrome__tag">Global footer</span>
+                                    </div>
+                                ) : (
+                                    <div className="cms-canvas-page__footer">
+                                        <span>© Seniors Property Advisors</span><span>Privacy</span><span>Terms</span>
+                                        <span className="cms-global-tag cms-global-tag--dark">Global footer</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div
@@ -328,8 +409,8 @@ function BuilderInner({ page }) {
                     <div className="cms-builder-right">
                         <SettingsPanel
                             block={selected}
-                            tab={tab}
-                            onTab={setTab}
+                            openPanels={openPanels}
+                            onTogglePanel={togglePanel}
                             patch={patchSelected}
                             setLabel={setSelectedLabel}
                             onSaveReusable={() => flash('Saved to reusable sections')}
@@ -343,6 +424,7 @@ function BuilderInner({ page }) {
                     onClose={() => setHistoryOpen(false)}
                     pageTitle={page.title}
                     onRestore={restoreVersion}
+                    revisions={contentBacked ? revisions : null}
                 />
                 <PublishModal
                     open={publishOpen}
@@ -356,15 +438,19 @@ function BuilderInner({ page }) {
     );
 }
 
-export default function Builder({ pageId }) {
-    const page = useMemo(() => {
-        const found = PAGES.find((p) => String(p.id) === String(pageId));
-        return found || { id: pageId, title: 'New page', slug: String(pageId) };
-    }, [pageId]);
+export default function Builder({ pageId, sections = null, page = null, revisions = [], globals = null }) {
+    const meta = useMemo(() => {
+        if (page) return { id: pageId, ...page };
+
+        const found = PAGES.find((p) => String(p.id) === String(pageId))
+            || { id: pageId, title: 'New page', slug: String(pageId) };
+
+        return { ...found, slug: found.url ? found.url.replace(/^\//, '') : found.slug };
+    }, [page, pageId]);
 
     return (
         <ToastProvider>
-            <BuilderInner page={{ ...page, slug: page.url ? page.url.replace(/^\//, '') : page.slug }} />
+            <BuilderInner page={meta} pageId={pageId} sections={sections} revisions={revisions} globals={globals} />
         </ToastProvider>
     );
 }

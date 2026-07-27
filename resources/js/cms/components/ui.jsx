@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ChevronDownSmallIcon } from './icons';
 
 const STATUS_CLASS = {
     success: 'cms-badge--success',
@@ -13,6 +14,30 @@ export function Badge({ tone = 'neutral', small, children }) {
         <span className={`cms-badge ${STATUS_CLASS[tone] || STATUS_CLASS.neutral} ${small ? 'cms-badge--sm' : ''}`}>
             {children}
         </span>
+    );
+}
+
+export function AccordionSection({ id, title, open, onToggle, children }) {
+    return (
+        <div className={`cms-accordion ${open ? 'cms-accordion--open' : ''}`}>
+            <button
+                type="button"
+                className="cms-accordion__head"
+                aria-expanded={open}
+                aria-controls={`cms-panel-${id}`}
+                onClick={() => onToggle(id)}
+            >
+                <span className="cms-accordion__title">{title}</span>
+                <span className="cms-accordion__chevron" aria-hidden="true">
+                    <ChevronDownSmallIcon />
+                </span>
+            </button>
+            {open && (
+                <div id={`cms-panel-${id}`} role="region" className="cms-accordion__body cms-anim-rise">
+                    {children}
+                </div>
+            )}
+        </div>
     );
 }
 

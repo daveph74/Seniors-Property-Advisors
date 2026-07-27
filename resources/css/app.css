@@ -129,7 +129,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   height: 84px;
 }
 .brand{
-  display:flex; align-items:center; gap: 12px;
+  display:flex; align-items:center; gap: 12px; flex: none;
 }
 .brand .mark{
   height: 46px; width: auto;
