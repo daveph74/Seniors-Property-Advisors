@@ -5,7 +5,8 @@
    unprefixed names like .btn, .card, .modal).
    ========================================================================= */
 
-.cms-shell{
+.cms-shell,
+.cms-builder{
   --cms-bg: #F4F6F8;
   --cms-surface: #FFFFFF;
   --cms-ink: #0F1B2D;
@@ -57,7 +58,9 @@
   --cms-shadow-toast: 0 16px 40px rgba(16,32,58,0.3);
   --cms-font-sans: 'Instrument Sans', system-ui, sans-serif;
   --cms-font-serif: 'Instrument Serif', Georgia, serif;
+}
 
+.cms-shell{
   height: 100vh;
   width: 100%;
   display: flex;
@@ -68,6 +71,8 @@
   background: var(--cms-bg);
 }
 
+.cms-builder{ font-family: var(--cms-font-sans); color: var(--cms-ink); font-size: 14px; }
+.cms-builder *{ box-sizing: border-box; }
 .cms-shell *{ box-sizing: border-box; }
 .cms-shell a{ color: var(--cms-navy); text-decoration: none; }
 .cms-shell a:hover{ color: var(--cms-navy-hover); }
@@ -158,7 +163,7 @@
   height: 30px; padding: 0 12px; border: none; border-radius: 6px;
   font: 500 12.5px/1 var(--cms-font-sans); cursor: pointer; background: transparent; color: var(--cms-text-mid);
 }
-.cms-segmented__btn--active{ background: var(--cms-navy); color: #fff; }
+.cms-segmented__btn--active{ background: var(--cms-navy); color: #ffffffbf; }
 
 /* ---------- Badges ---------- */
 .cms-badge{
@@ -264,9 +269,9 @@
 }
 .cms-nav-item:hover{ background: #F1F4F8; color: var(--cms-navy); }
 .cms-nav-item svg{ opacity: .85; }
-.cms-nav-item--active{ background: var(--cms-navy); color: #fff; }
+.cms-shell a.cms-nav-item--active{ background: var(--cms-navy); color: #ffffffbf; }
 .cms-nav-item--active svg{ opacity: 1; }
-.cms-nav-item--active:hover{ background: var(--cms-navy); color: #fff; }
+.cms-shell a.cms-nav-item--active:hover{ background: var(--cms-navy); color: #ffffffbf; }
 .cms-nav-item__count{ margin-left: auto; font-size: 11.5px; color: var(--cms-text-mid); font-variant-numeric: tabular-nums; }
 .cms-nav-item--active .cms-nav-item__count{ color: rgba(255,255,255,0.75); }
 .cms-sidebar__footer{ margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
