@@ -1,0 +1,63 @@
+{
+  "notice": {
+    "text": "Free guide — 8 questions to ask before choosing an agent",
+    "href": "#"
+  },
+  "logo": {
+    "src": "/Seniors_Property_Advisors_Logo.svg",
+    "alt": "Seniors Property Advisors"
+  },
+  "phone": {
+    "label": "1300 277 228",
+    "href": "tel:1300277228"
+  },
+  "nav": {
+    "links": [
+      { "href": "#how", "label": "How it works", "active": true },
+      { "href": "#why", "label": "Why Agent Finder" },
+      { "href": "#compare", "label": "Compare agents" },
+      { "href": "#family", "label": "For families" },
+      { "href": "#", "label": "Resources" }
+    ],
+    "cta": { "label": "Find My Agent", "action": "open-finder", "arrow": true }
+  },
+  "footer": {
+    "word": "Agent Finder",
+    "blurb": "An independent service from Seniors Property Advisors, helping homeowners and their families sell with confidence.",
+    "address": ["Level 14, 50 Carrington St,", "Sydney NSW 2000"],
+    "columns": [
+      {
+        "heading": "Service",
+        "links": [
+          { "href": "#how", "label": "How it works" },
+          { "href": "#compare", "label": "Compare agents" },
+          { "href": "#family", "label": "For families" },
+          { "href": "#", "label": "Pricing" }
+        ]
+      },
+      {
+        "heading": "Resources",
+        "links": [
+          { "href": "#", "label": "Free guide" },
+          { "href": "#", "label": "Selling checklist" },
+          { "href": "#", "label": "Glossary" },
+          { "href": "#", "label": "FAQs" }
+        ]
+      },
+      {
+        "heading": "Contact",
+        "links": [
+          { "href": "tel:1300277228", "label": "1300 277 228" },
+          { "href": "mailto:hello@aspa.com.au", "label": "hello@aspa.com.au" },
+          { "label": "Mon–Fri, 8am – 6pm AEST" }
+        ]
+      }
+    ],
+    "legal": "© 2026 Seniors Property Advisors Pty Ltd · ABN 12 345 678 901",
+    "links": [
+      { "href": "#", "label": "Privacy" },
+      { "href": "#", "label": "Terms" },
+      { "href": "#", "label": "Complaints" }
+    ]
+  }
+}

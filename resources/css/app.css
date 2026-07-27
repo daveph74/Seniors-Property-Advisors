@@ -288,7 +288,6 @@ h1.headline em{
 .hero-visual .photo{
   position: absolute; inset: 0;
   border-radius: 26px;
-  background-image: url('/images/hero-advisor.jpg');
   background-size: cover; background-position: center;
   box-shadow: var(--shadow-lg);
 }
@@ -510,7 +509,6 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
 }
 .why-visual .ph{
   position:absolute; inset:0; border-radius: 32px;
-  background-image: url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1100&q=80');
   background-size: cover; background-position: center;
   box-shadow: 0 30px 80px rgba(0,0,0,0.4);
 }
@@ -622,7 +620,6 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
 }
 .family-visual .ph{
   position:absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=80');
   background-size: cover; background-position: center;
 }
 .family-visual .quote{

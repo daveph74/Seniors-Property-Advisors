@@ -1,9 +1,10 @@
 <?php
 
+use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn () => Inertia::render('AgentFinder'))->name('agent-finder');
+Route::get('/', [PageController::class, 'home'])->name('agent-finder');
 
 /*
 |--------------------------------------------------------------------------
