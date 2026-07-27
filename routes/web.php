@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Cms\CmsPageController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,7 +18,9 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('/', fn () => Inertia::render('Cms/Dashboard'))->name('dashboard');
 
     Route::get('/pages', fn () => Inertia::render('Cms/Pages/Index'))->name('pages.index');
-    Route::get('/pages/{page}/edit', fn ($page) => Inertia::render('Cms/Pages/Builder', ['pageId' => $page]))->name('pages.edit');
+    Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
+    Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->name('pages.draft');
+    Route::post('/pages/{page}/publish', [CmsPageController::class, 'publish'])->name('pages.publish');
 
     Route::get('/blog', fn () => Inertia::render('Cms/Blog/Index'))->name('blog.index');
     Route::get('/faqs', fn () => Inertia::render('Cms/Faqs/Index'))->name('faqs.index');

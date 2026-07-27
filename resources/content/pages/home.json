@@ -1,5 +1,7 @@
 {
   "slug": "home",
+  "url": "/",
+  "cmsId": 1,
   "title": "Agent Finder — Seniors Property Advisors",
   "status": "published",
   "seo": {
