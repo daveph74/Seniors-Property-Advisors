@@ -54,4 +54,201 @@ class HomePageTest extends TestCase
 
         $this->assertSame([['type' => 'hero', 'active' => true]], $sections);
     }
+
+    public function test_it_filters_children_and_reindexes_them(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [
+                ['type' => 'cta', 'active' => false],
+                ['type' => 'hero', 'active' => true],
+                ['type' => 'raw-html', 'active' => true],
+                ['type' => 'column', 'active' => true],
+            ],
+        ]]))->call($store);
+
+        $this->assertSame([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [['type' => 'hero', 'active' => true]],
+        ]], $sections);
+    }
+
+    public function test_it_filters_row_children_to_columns(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [[
+                'type' => 'row',
+                'active' => true,
+                'children' => [
+                    ['type' => 'hero', 'active' => true],
+                    [
+                        'type' => 'column',
+                        'active' => true,
+                        'children' => [
+                            ['type' => 'cta', 'active' => false],
+                            ['type' => 'heading', 'active' => true],
+                            ['type' => 'column', 'active' => true],
+                        ],
+                    ],
+                ],
+            ]],
+        ]]))->call($store);
+
+        $this->assertSame([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [[
+                'type' => 'row',
+                'active' => true,
+                'children' => [[
+                    'type' => 'column',
+                    'active' => true,
+                    'children' => [['type' => 'heading', 'active' => true]],
+                ]],
+            ]],
+        ]], $sections);
+    }
+
+    public function test_it_drops_a_row_at_page_level(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([['type' => 'row', 'active' => true]]))->call($store);
+
+        $this->assertSame([], $sections);
+    }
+
+    public function test_a_seeded_section_keeps_its_row_and_column(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [[
+                'type' => 'row',
+                'active' => true,
+                'children' => [[
+                    'type' => 'column',
+                    'active' => true,
+                    'children' => [
+                        ['type' => 'eyebrow', 'active' => true],
+                        ['type' => 'heading', 'active' => true],
+                        ['type' => 'button', 'active' => true],
+                    ],
+                ]],
+            ]],
+        ]]))->call($store);
+
+        $this->assertSame([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [[
+                'type' => 'row',
+                'active' => true,
+                'children' => [[
+                    'type' => 'column',
+                    'active' => true,
+                    'children' => [
+                        ['type' => 'eyebrow', 'active' => true],
+                        ['type' => 'heading', 'active' => true],
+                        ['type' => 'button', 'active' => true],
+                    ],
+                ]],
+            ]],
+        ]], $sections);
+    }
+
+    public function test_it_keeps_a_row_nested_two_deep(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [[
+                'type' => 'row',
+                'active' => true,
+                'children' => [[
+                    'type' => 'column',
+                    'active' => true,
+                    'children' => [['type' => 'row', 'active' => true, 'children' => []]],
+                ]],
+            ]],
+        ]]))->call($store);
+
+        $this->assertSame([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [[
+                'type' => 'row',
+                'active' => true,
+                'children' => [[
+                    'type' => 'column',
+                    'active' => true,
+                    'children' => [['type' => 'row', 'active' => true, 'children' => []]],
+                ]],
+            ]],
+        ]], $sections);
+    }
+
+    public function test_it_drops_a_row_nested_three_deep(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([[
+            'type' => 'section',
+            'active' => true,
+            'children' => [[
+                'type' => 'row',
+                'active' => true,
+                'children' => [[
+                    'type' => 'column',
+                    'active' => true,
+                    'children' => [[
+                        'type' => 'row',
+                        'active' => true,
+                        'children' => [[
+                            'type' => 'column',
+                            'active' => true,
+                            'children' => [
+                                ['type' => 'heading', 'active' => true],
+                                ['type' => 'row', 'active' => true, 'children' => []],
+                            ],
+                        ]],
+                    ]],
+                ]],
+            ]],
+        ]]))->call($store);
+
+        $innerColumn = $sections[0]['children'][0]['children'][0]['children'][0]['children'][0];
+
+        $this->assertSame([['type' => 'heading', 'active' => true]], $innerColumn['children']);
+    }
+
+    public function test_it_drops_a_column_at_page_level(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([['type' => 'column', 'active' => true]]))->call($store);
+
+        $this->assertSame([], $sections);
+    }
+
+    public function test_leaf_sections_gain_no_children_key(): void
+    {
+        $store = new PageContentStore;
+
+        $sections = (fn () => $this->renderable([['type' => 'hero', 'active' => true]]))->call($store);
+
+        $this->assertArrayNotHasKey('children', $sections[0]);
+    }
 }

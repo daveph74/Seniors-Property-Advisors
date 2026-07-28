@@ -1,9 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import '../../../../css/cms.css';
 import { ToastProvider, useCmsToast } from '../../../cms/ToastContext';
-import { PAGES, DEFAULT_BLOCKS, defaultBlockData } from '../../../cms/data/mockData';
+import { PAGES } from '../../../cms/data/mockData';
 import { defaultSectionData } from '../../../sections/defaults';
+import { canContain, isContainerType, MAX_ROW_DEPTH } from '../../../sections/childTypes';
+import { SECTION_LABELS } from '../../../sections/registry';
 import SiteHeader from '../../../sections/SiteHeader';
 import SiteFooter from '../../../sections/SiteFooter';
 import BlockRenderer from '../../../cms/builder/BlockRenderer';
@@ -12,14 +14,27 @@ import LayersPanel from '../../../cms/builder/LayersPanel';
 import SettingsPanel from '../../../cms/builder/SettingsPanel';
 import HistoryDrawer from '../../../cms/builder/HistoryDrawer';
 import PublishModal from '../../../cms/builder/PublishModal';
-import { EmptyState } from '../../../cms/components/ui';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
-    MoveIcon, DuplicateIcon, ReusableIcon, HideIcon, TrashIcon, PlusIcon,
+    MoveIcon, DuplicateIcon, ReusableIcon, HideIcon, TrashIcon, PlusIcon, ChevronUpSmallIcon,
 } from '../../../cms/components/icons';
 
 const DEVICE_WIDTH = { desktop: '1240px', tablet: '820px', mobile: '420px' };
 const DEVICE_LABEL = { desktop: 'Desktop · 1240px', tablet: 'Tablet · 820px', mobile: 'Mobile · 420px' };
+
+const EMPTY_COPY = {
+    section: 'Drop a component or a row into this section',
+    row: 'Set a column count in the panel on the right',
+    column: 'Drop text, an image or a button here',
+};
+
+const BLOCKED_COPY = {
+    section: 'That cannot go inside a section',
+    row: 'A row can only contain columns',
+    column: 'That cannot go inside a column',
+};
+
+const CONTENT_KEY = { eyebrow: 'eyebrow', heading: 'heading', 'rich-text': 'body', image: 'src', button: 'label' };
 
 let uid = 0;
 function nextId(type) {
@@ -33,13 +48,101 @@ function firstError(errors, fallback) {
     return keys.length ? errors[keys[0]] : fallback;
 }
 
+function makeBlock(type, label) {
+    const children = type === 'section'
+        ? [makeBlock('row', 'Row')]
+        : type === 'row'
+            ? [makeBlock('column', 'Column 1')]
+            : isContainerType(type) ? [] : null;
+
+    return {
+        id: nextId(type),
+        type,
+        label,
+        active: true,
+        data: defaultSectionData(type) || {},
+        ...(children ? { children } : {}),
+    };
+}
+
+function reid(b) {
+    return {
+        ...b,
+        id: nextId(b.type),
+        ...(Array.isArray(b.children) ? { children: b.children.map(reid) } : {}),
+    };
+}
+
+function hydrate(list) {
+    return list.map((b) => ({
+        ...b,
+        data: { ...b.data },
+        ...(Array.isArray(b.children) ? { children: hydrate(b.children) } : {}),
+    }));
+}
+
+function serialise(b) {
+    return {
+        id: b.id,
+        type: b.type,
+        label: b.label,
+        active: b.active !== false,
+        anchor: b.anchor ?? null,
+        data: b.data,
+        ...(Array.isArray(b.children) ? { children: b.children.map(serialise) } : {}),
+    };
+}
+
+function withList(blocks, parentId, fn) {
+    if (parentId == null) return fn(blocks);
+
+    return blocks.map((b) => {
+        if (b.id === parentId) return { ...b, children: fn(b.children || []) };
+        if (Array.isArray(b.children)) return { ...b, children: withList(b.children, parentId, fn) };
+
+        return b;
+    });
+}
+
+function locate(blocks, id, parentId = null, depth = 0) {
+    for (let i = 0; i < blocks.length; i += 1) {
+        const b = blocks[i];
+        const next = b.type === 'row' ? depth + 1 : depth;
+
+        if (b.id === id) return { block: b, parentId, index: i, depth: next };
+
+        const found = Array.isArray(b.children) ? locate(b.children, id, b.id, next) : null;
+
+        if (found) return found;
+    }
+
+    return null;
+}
+
+function rowHeight(block) {
+    const own = block.type === 'row' ? 1 : 0;
+
+    return own + (block.children || []).reduce((m, c) => Math.max(m, rowHeight(c)), 0);
+}
+
+function mapTree(blocks, id, fn) {
+    return blocks.map((b) => {
+        if (b.id === id) return fn(b);
+        if (Array.isArray(b.children)) return { ...b, children: mapTree(b.children, id, fn) };
+
+        return b;
+    });
+}
+
+function isDescendant(block, id) {
+    return (block.children || []).some((c) => c.id === id || isDescendant(c, id));
+}
+
 function BuilderInner({ page, pageId, sections, revisions, globals }) {
     const flash = useCmsToast();
     const contentBacked = Array.isArray(sections);
-    const [blocks, setBlocks] = useState(() =>
-        (contentBacked ? sections : DEFAULT_BLOCKS).map((b) => ({ ...b, data: { ...b.data } })),
-    );
-    const [selectedId, setSelectedId] = useState('hero');
+    const [blocks, setBlocks] = useState(() => hydrate(contentBacked ? sections : []));
+    const [selectedId, setSelectedId] = useState(null);
     const [device, setDevice] = useState('desktop');
     const [leftPanel, setLeftPanel] = useState('components');
     const [openPanels, setOpenPanels] = useState(() => new Set(['content']));
@@ -48,11 +151,31 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
     const [publishOpen, setPublishOpen] = useState(false);
     const [compSearch, setCompSearch] = useState('');
     const drag = useRef({ dragKind: null, dragLabel: null, dragId: null });
-    const [dropIndex, setDropIndex] = useState(null);
+    const [dragType, setDragType] = useState(null);
+    const [dropAt, setDropAt] = useState(null);
 
-    const selected = blocks.find((b) => b.id === selectedId) || null;
+    const selected = locate(blocks, selectedId)?.block ?? null;
+
+    const parentInfo = (list, parentId) => {
+        if (parentId == null) return { type: null, depth: 0, found: true };
+
+        const loc = locate(list, parentId);
+
+        return loc
+            ? { type: loc.block.type, depth: loc.depth, found: true }
+            : { type: null, depth: 0, found: false };
+    };
+    const isDropAt = (parentId, index) => dropAt !== null
+        && dropAt.parentId === parentId
+        && dropAt.index === index;
 
     const markUnsaved = () => setSaveState('unsaved');
+
+    const endDrag = () => {
+        drag.current = { dragKind: null, dragLabel: null, dragId: null };
+        setDragType(null);
+        setDropAt(null);
+    };
 
     const togglePanel = (id) => setOpenPanels((prev) => {
         const next = new Set(prev);
@@ -63,135 +186,213 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         return next;
     });
 
-    const insertBlock = (type, label, index) => {
-        const id = nextId(type);
-        const block = {
-            id,
-            type,
-            label,
-            active: true,
-            data: defaultSectionData(type) || defaultBlockData(type),
-        };
-        setBlocks((prev) => {
-            const next = prev.slice();
-            next.splice(index == null ? next.length : index, 0, block);
+    const insertBlock = (type, label, at) => {
+        const block = makeBlock(type, label);
+
+        setBlocks((prev) => withList(prev, at?.parentId ?? null, (list) => {
+            const next = list.slice();
+            next.splice(at?.index == null ? next.length : at.index, 0, block);
+
             return next;
-        });
-        setSelectedId(id);
+        }));
+
+        setSelectedId(block.id);
         setOpenPanels((prev) => new Set(prev).add('content'));
         markUnsaved();
-        setDropIndex(null);
-        drag.current = { dragKind: null, dragLabel: null, dragId: null };
+        endDrag();
         flash(`${label} added`);
     };
 
     const moveBlock = (id, dir) => {
         setBlocks((prev) => {
-            const i = prev.findIndex((b) => b.id === id);
-            const j = i + dir;
-            if (i < 0 || j < 0 || j >= prev.length) return prev;
-            const next = prev.slice();
-            const [b] = next.splice(i, 1);
-            next.splice(j, 0, b);
-            return next;
+            const loc = locate(prev, id);
+
+            if (!loc) return prev;
+
+            return withList(prev, loc.parentId, (list) => {
+                const j = loc.index + dir;
+
+                if (j < 0 || j >= list.length) return list;
+
+                const next = list.slice();
+                const [b] = next.splice(loc.index, 1);
+                next.splice(j, 0, b);
+
+                return next;
+            });
         });
         markUnsaved();
     };
 
-    const moveTo = (id, index) => {
+    const moveTo = (id, at) => {
         setBlocks((prev) => {
-            const i = prev.findIndex((b) => b.id === id);
-            if (i < 0) return prev;
-            const next = prev.slice();
-            const [b] = next.splice(i, 1);
-            const target = index > i ? index - 1 : index;
-            next.splice(Math.max(0, Math.min(next.length, target)), 0, b);
-            return next;
+            const loc = locate(prev, id);
+
+            if (!loc || id === at.parentId) return prev;
+            if (at.parentId != null && isDescendant(loc.block, at.parentId)) return prev;
+
+            const dest = parentInfo(prev, at.parentId);
+
+            if (!dest.found) return prev;
+            if (!canContain(dest.type, dest.depth, loc.block.type)) return prev;
+            if (dest.depth + rowHeight(loc.block) > MAX_ROW_DEPTH) return prev;
+
+            const removed = withList(prev, loc.parentId, (list) => list.filter((b) => b.id !== id));
+            const sameList = (loc.parentId ?? null) === (at.parentId ?? null);
+            const target = sameList && at.index > loc.index ? at.index - 1 : at.index;
+
+            return withList(removed, at.parentId, (list) => {
+                const next = list.slice();
+                next.splice(Math.max(0, Math.min(next.length, target)), 0, loc.block);
+
+                return next;
+            });
         });
-        setDropIndex(null);
-        drag.current.dragId = null;
+        endDrag();
         markUnsaved();
     };
 
     const duplicateBlock = (id) => {
         setBlocks((prev) => {
-            const i = prev.findIndex((b) => b.id === id);
-            if (i < 0) return prev;
-            const copy = { ...prev[i], id: nextId(prev[i].type), data: JSON.parse(JSON.stringify(prev[i].data)) };
-            const next = prev.slice();
-            next.splice(i + 1, 0, copy);
+            const loc = locate(prev, id);
+
+            if (!loc) return prev;
+
+            const copy = reid(JSON.parse(JSON.stringify(loc.block)));
+
             setSelectedId(copy.id);
-            return next;
+
+            return withList(prev, loc.parentId, (list) => {
+                const next = list.slice();
+                next.splice(loc.index + 1, 0, copy);
+
+                return next;
+            });
         });
         markUnsaved();
         flash('Section duplicated');
     };
 
     const removeBlock = (id, label) => {
-        setBlocks((prev) => prev.filter((b) => b.id !== id));
+        setBlocks((prev) => {
+            const loc = locate(prev, id);
+
+            if (!loc) return prev;
+
+            return withList(prev, loc.parentId, (list) => list.filter((b) => b.id !== id));
+        });
+
         if (selectedId === id) setSelectedId(null);
+
         markUnsaved();
         flash(`${label} deleted`);
     };
 
+    const setColumnCount = (id, next) => {
+        const target = Math.max(1, Math.min(6, Number(next)));
+
+        if (!Number.isFinite(target)) return;
+
+        const loc = locate(blocks, id);
+
+        if (!loc) return;
+
+        const row = loc.block.type === 'row'
+            ? loc.block
+            : (loc.block.children || []).find((c) => c.type === 'row');
+
+        if (!row) return;
+
+        const children = row.children || [];
+
+        if (target === children.length) return;
+
+        if (target < children.length && children.slice(target).some((c) => (c.children || []).length > 0)) {
+            flash('Empty the last column before removing it.');
+            return;
+        }
+
+        setBlocks((prev) => withList(prev, row.id, (list) => (
+            target > list.length
+                ? [...list, ...Array.from({ length: target - list.length }, (_, k) => makeBlock('column', `Column ${list.length + k + 1}`))]
+                : list.slice(0, target)
+        )));
+        markUnsaved();
+    };
+
     const patchSelected = (key, value) => {
         if (!selected) return;
-        setBlocks((prev) => prev.map((b) => (b.id === selected.id ? { ...b, data: { ...b.data, [key]: value } } : b)));
+
+        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, data: { ...b.data, [key]: value } })));
         markUnsaved();
     };
 
     const setSelectedLabel = (value) => {
         if (!selected) return;
-        setBlocks((prev) => prev.map((b) => (b.id === selected.id ? { ...b, label: value } : b)));
+
+        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, label: value })));
         markUnsaved();
+    };
+
+    const toggleActive = (id, label) => {
+        const wasHidden = locate(blocks, id)?.block.active === false;
+
+        setBlocks((prev) => mapTree(prev, id, (b) => ({ ...b, active: b.active === false })));
+        markUnsaved();
+        flash(`${label} ${wasHidden ? 'shown' : 'hidden'} on this page`);
     };
 
     const onLibraryDragStart = (e, type, label) => {
         if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy';
+
         drag.current = { dragKind: type, dragLabel: label, dragId: null };
+        setDragType(type);
     };
 
-    const onBlockDragStart = (e, id) => {
+    const onBlockDragStart = (e, id, type) => {
+        e.stopPropagation();
+
         if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+
         drag.current = { dragKind: null, dragLabel: null, dragId: id };
+        setDragType(type);
     };
 
-    const onBlockDragOver = (e, index) => {
+    const onBlockDragOver = (e, parentId, index, parentType, parentDepth) => {
         e.preventDefault();
+        e.stopPropagation();
+
+        if (!canContain(parentType, parentDepth, dragType)) return;
+
         const rect = e.currentTarget.getBoundingClientRect();
-        const idx = e.clientY < rect.top + rect.height / 2 ? index : index + 1;
-        if (dropIndex !== idx) setDropIndex(idx);
+        const before = parentType === 'row'
+            ? e.clientX < rect.left + rect.width / 2
+            : e.clientY < rect.top + rect.height / 2;
+        const idx = before ? index : index + 1;
+
+        if (!isDropAt(parentId, idx)) setDropAt({ parentId, index: idx });
     };
 
-    const performDrop = (fallbackIndex) => {
-        const at = dropIndex == null ? fallbackIndex : dropIndex;
+    const performDrop = (fallbackAt) => {
+        const at = dropAt ?? fallbackAt;
         const { dragId, dragKind, dragLabel } = drag.current;
+        const type = dragId ? locate(blocks, dragId)?.block.type : dragKind;
+        const target = parentInfo(blocks, at.parentId);
+
+        if (!canContain(target.type, target.depth, type)) {
+            endDrag();
+            return;
+        }
+
         if (dragId) moveTo(dragId, at);
-        else if (dragKind) insertBlock(dragKind, dragLabel || 'Section', at);
-        else setDropIndex(null);
+        else insertBlock(dragKind, dragLabel || 'Section', at);
     };
 
-    const toggleActive = (id, label) => {
-        setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, active: b.active === false } : b)));
-        markUnsaved();
-        flash(`${label} ${blocks.find((b) => b.id === id)?.active === false ? 'shown' : 'hidden'} on this page`);
-    };
-
-    const payload = () => ({
-        sections: blocks.map((b) => ({
-            id: b.id,
-            type: b.type,
-            label: b.label,
-            active: b.active !== false,
-            anchor: b.anchor ?? null,
-            data: b.data,
-        })),
-    });
+    const payload = () => ({ sections: blocks.map(serialise) });
 
     const saveDraft = () => {
         if (! contentBacked) {
-            setSaveState('saving');
-            setTimeout(() => { setSaveState('saved'); flash('Draft saved'); }, 900);
+            flash('This page has no content file yet, so it cannot be saved.');
             return;
         }
 
@@ -208,8 +409,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         setPublishOpen(false);
 
         if (! contentBacked) {
-            setSaveState('saved');
-            flash(`${page.title} is now live`);
+            flash('This page has no content file yet, so it cannot be published.');
             return;
         }
 
@@ -226,6 +426,147 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
     };
 
     const saveLabel = { saved: 'All changes saved', saving: 'Saving…', unsaved: 'Unsaved changes' }[saveState];
+
+    const dropLine = (parentId, index, label) => (
+        isDropAt(parentId, index) ? (
+            <div className="cms-drop-line">
+                <div className="cms-drop-line__bar" />
+                {label ? <div className="cms-drop-line__label">{label}</div> : null}
+            </div>
+        ) : null
+    );
+
+    const emptyZone = (b, depth) => {
+        const allowed = canContain(b.type, depth, dragType);
+        const blocked = dragType !== null && !allowed;
+
+        return (
+            <div
+                className={[
+                    'cms-nest-drop',
+                    b.type === 'column' ? 'cms-nest-drop--column' : '',
+                    isDropAt(b.id, 0) ? 'cms-nest-drop--active' : '',
+                    blocked ? 'cms-nest-drop--blocked' : '',
+                ].filter(Boolean).join(' ')}
+                onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (allowed && !isDropAt(b.id, 0)) setDropAt({ parentId: b.id, index: 0 });
+                }}
+                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId: b.id, index: 0 }); }}
+            >
+                <PlusIcon size={16} stroke="currentColor" />
+                <span>{blocked ? BLOCKED_COPY[b.type] : EMPTY_COPY[b.type]}</span>
+            </div>
+        );
+    };
+
+    const renderChildren = (b, depth) => {
+        const children = b.children || [];
+
+        if (b.type === 'row') {
+            return (
+                <>
+                    {children.map((c, j) => (
+                        <div className="cms-col-cell" key={c.id}>
+                            {isDropAt(b.id, j) ? <div className="cms-drop-line--v cms-drop-line--before" /> : null}
+                            {renderBlock(c, j, b.id, 'row', depth)}
+                            {j === children.length - 1 && isDropAt(b.id, j + 1)
+                                ? <div className="cms-drop-line--v cms-drop-line--after" />
+                                : null}
+                        </div>
+                    ))}
+                    {children.length === 0 ? emptyZone(b, depth) : null}
+                </>
+            );
+        }
+
+        const appendAt = { parentId: b.id, index: children.length };
+
+        return (
+            <div
+                className={`cms-section-shell ${children.length === 0 ? 'cms-section-shell--empty' : ''}`}
+                onDragOver={(e) => {
+                    if (children.length === 0 || !canContain(b.type, depth, dragType)) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isDropAt(b.id, children.length)) setDropAt(appendAt);
+                }}
+                onDrop={(e) => {
+                    if (children.length === 0) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    performDrop(appendAt);
+                }}
+            >
+                {children.map((c, j) => renderRow(c, j, b.id, b.type, depth))}
+                {children.length > 0 ? dropLine(b.id, children.length, null) : emptyZone(b, depth)}
+            </div>
+        );
+    };
+
+    const renderBlock = (b, i, parentId, parentType, parentDepth) => (
+        <div
+            draggable
+            onDragStart={(e) => onBlockDragStart(e, b.id, b.type)}
+            onDragEnd={endDrag}
+            onDragOver={(e) => onBlockDragOver(e, parentId, i, parentType, parentDepth)}
+            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId, index: i }); }}
+            onClick={(e) => { e.stopPropagation(); setSelectedId(b.id); }}
+            className={`cms-block ${b.id === selectedId ? 'cms-block--selected' : ''}`}
+            style={b.active === false ? { opacity: 0.4 } : undefined}
+        >
+            {CONTENT_KEY[b.type] && !b.data[CONTENT_KEY[b.type]] ? (
+                <div className="cms-block-placeholder">{SECTION_LABELS[b.type]} — no content yet</div>
+            ) : (
+                <BlockRenderer block={b}>
+                    {isContainerType(b.type)
+                        ? renderChildren(b, b.type === 'row' ? parentDepth + 1 : parentDepth)
+                        : null}
+                </BlockRenderer>
+            )}
+
+            {b.id === selectedId && (
+                <>
+                    <div className="cms-block__label-tag">{b.label}</div>
+                    <div className="cms-block__toolbar">
+                        {parentId ? (
+                            <button
+                                type="button"
+                                title={`Select the ${SECTION_LABELS[parentType] || 'parent'}`}
+                                className="cms-block__toolbar-btn"
+                                onClick={(e) => { e.stopPropagation(); setSelectedId(parentId); }}
+                            >
+                                <ChevronUpSmallIcon />
+                            </button>
+                        ) : null}
+                        <span title="Drag to move" className="cms-block__toolbar-btn" style={{ cursor: 'grab' }}>
+                            <MoveIcon />
+                        </span>
+                        <button type="button" title="Duplicate" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); duplicateBlock(b.id); }}>
+                            <DuplicateIcon />
+                        </button>
+                        <button type="button" title="Save as reusable section" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); flash('Saved to reusable sections'); }}>
+                            <ReusableIcon />
+                        </button>
+                        <button type="button" title={b.active === false ? 'Show on page' : 'Hide on page'} className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); toggleActive(b.id, b.label); }}>
+                            <HideIcon />
+                        </button>
+                        <button type="button" title="Delete" className="cms-block__toolbar-btn cms-block__toolbar-btn--danger" onClick={(e) => { e.stopPropagation(); removeBlock(b.id, b.label); }}>
+                            <TrashIcon />
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+
+    const renderRow = (b, i, parentId, parentType, parentDepth) => (
+        <Fragment key={b.id}>
+            {dropLine(parentId, i, 'Drop here')}
+            {renderBlock(b, i, parentId, parentType, parentDepth)}
+        </Fragment>
+    );
 
     return (
         <>
@@ -288,6 +629,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                                 search={compSearch}
                                 onSearch={setCompSearch}
                                 onDragStart={onLibraryDragStart}
+                                onDragEnd={endDrag}
                                 onAdd={(type, label) => insertBlock(type, label, null)}
                             />
                         ) : (
@@ -303,8 +645,11 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
 
                     <div
                         className="cms-canvas-outer"
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => performDrop(blocks.length)}
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            if (!isDropAt(null, blocks.length)) setDropAt({ parentId: null, index: blocks.length });
+                        }}
+                        onDrop={(e) => { e.preventDefault(); performDrop({ parentId: null, index: blocks.length }); }}
                     >
                         <div className="cms-canvas-frame" style={{ width: DEVICE_WIDTH[device] }}>
                             <div className="cms-canvas-caption">
@@ -320,68 +665,22 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                                 ) : (
                                     <div className="cms-canvas-page__header">
                                         <div className="cms-canvas-page__header-logo">Seniors Property Advisors</div>
-                                        <div className="cms-canvas-page__header-links">
-                                            <span>Downsizing</span><span>Retirement living</span><span>About</span><span>FAQs</span>
-                                        </div>
                                         <span className="cms-global-tag">Global header</span>
                                     </div>
                                 )}
 
                                 {blocks.length === 0 ? (
-                                    <EmptyState
-                                        icon={<PlusIcon size={20} stroke="#12294C" />}
-                                        title="This page is empty"
-                                        body="Start from a starter template, or drag a component in from the left panel."
-                                        actionLabel="Start from a template"
-                                        onAction={() => flash('Starter templates open in the create-page flow')}
-                                    />
-                                ) : blocks.map((b, i) => (
-                                    <div key={b.id}>
-                                        {dropIndex === i && (
-                                            <div className="cms-drop-line">
-                                                <div className="cms-drop-line__bar" />
-                                                <div className="cms-drop-line__label">Drop here</div>
-                                            </div>
-                                        )}
-                                        <div
-                                            draggable
-                                            onDragStart={(e) => onBlockDragStart(e, b.id)}
-                                            onDragOver={(e) => onBlockDragOver(e, i)}
-                                            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(i); }}
-                                            onClick={() => setSelectedId(b.id)}
-                                            className={`cms-block ${b.id === selectedId ? 'cms-block--selected' : ''}`}
-                                            style={b.active === false ? { opacity: 0.4 } : undefined}
-                                        >
-                                            <BlockRenderer block={b} useRegistry={contentBacked} />
-                                            {b.id === selectedId && (
-                                                <>
-                                                    <div className="cms-block__label-tag">{b.label}</div>
-                                                    <div className="cms-block__toolbar">
-                                                        <span title="Drag to move" className="cms-block__toolbar-btn" style={{ cursor: 'grab' }}>
-                                                            <MoveIcon />
-                                                        </span>
-                                                        <button type="button" title="Duplicate" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); duplicateBlock(b.id); }}>
-                                                            <DuplicateIcon />
-                                                        </button>
-                                                        <button type="button" title="Save as reusable section" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); flash('Saved to reusable sections'); }}>
-                                                            <ReusableIcon />
-                                                        </button>
-                                                        <button type="button" title={b.active === false ? 'Show on page' : 'Hide on page'} className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); toggleActive(b.id, b.label); }}>
-                                                            <HideIcon />
-                                                        </button>
-                                                        <button type="button" title="Delete" className="cms-block__toolbar-btn cms-block__toolbar-btn--danger" onClick={(e) => { e.stopPropagation(); removeBlock(b.id, b.label); }}>
-                                                            <TrashIcon />
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
+                                    <div
+                                        className={`cms-nest-drop cms-nest-drop--page ${isDropAt(null, 0) ? 'cms-nest-drop--active' : ''}`}
+                                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isDropAt(null, 0)) setDropAt({ parentId: null, index: 0 }); }}
+                                        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId: null, index: 0 }); }}
+                                    >
+                                        <PlusIcon size={16} stroke="currentColor" />
+                                        <span>This page is empty — drag a component in from the left panel</span>
                                     </div>
-                                ))}
+                                ) : blocks.map((b, i) => renderRow(b, i, null, null, 0))}
 
-                                {dropIndex === blocks.length && blocks.length > 0 && (
-                                    <div className="cms-drop-line"><div className="cms-drop-line__bar" /></div>
-                                )}
+                                {blocks.length > 0 ? dropLine(null, blocks.length, null) : null}
 
                                 {globals ? (
                                     <div className="cms-canvas-chrome">
@@ -390,16 +689,16 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                                     </div>
                                 ) : (
                                     <div className="cms-canvas-page__footer">
-                                        <span>© Seniors Property Advisors</span><span>Privacy</span><span>Terms</span>
+                                        <span>© Seniors Property Advisors</span>
                                         <span className="cms-global-tag cms-global-tag--dark">Global footer</span>
                                     </div>
                                 )}
                             </div>
 
                             <div
-                                className="cms-canvas-drop-end"
-                                onDragOver={(e) => { e.preventDefault(); if (dropIndex !== blocks.length) setDropIndex(blocks.length); }}
-                                onDrop={(e) => { e.preventDefault(); performDrop(blocks.length); }}
+                                className={`cms-canvas-drop-end ${isDropAt(null, blocks.length) ? 'cms-canvas-drop-end--active' : ''}`}
+                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isDropAt(null, blocks.length)) setDropAt({ parentId: null, index: blocks.length }); }}
+                                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId: null, index: blocks.length }); }}
                             >
                                 Drop a component here to add it to the end of the page
                             </div>
@@ -413,6 +712,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                             onTogglePanel={togglePanel}
                             patch={patchSelected}
                             setLabel={setSelectedLabel}
+                            onColumnCount={(n) => setColumnCount(selectedId, n)}
                             onSaveReusable={() => flash('Saved to reusable sections')}
                             onOpenMediaPicker={() => flash('Media picker opens over the builder')}
                         />

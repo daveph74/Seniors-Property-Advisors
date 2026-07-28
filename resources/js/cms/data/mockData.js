@@ -191,102 +191,26 @@ export const VERSIONS = [
     { n: 14, tag: null, when: '3 days ago', who: 'Helen Marsh · draft', changes: ['FAQ component added'] },
 ];
 
-export function defaultBlockData(type) {
-    const d = {
-        hero: { eyebrow: 'Seniors Property Advisors', heading: 'A new heading for this section', body: 'Supporting text that explains the service in plain language.', primary: 'Request a consultation', secondary: 'Learn more' },
-        services: { heading: 'How we support you', items: [
-            { title: 'Plan the move', text: 'Describe the first part of your service here.' },
-            { title: 'Prepare the home', text: 'Describe the second part of your service here.' },
-            { title: 'Sell with confidence', text: 'Describe the third part of your service here.' },
-        ] },
-        stats: { heading: 'By the numbers', items: [
-            { n: '640+', label: 'Families guided' }, { n: '18 yrs', label: 'Advising seniors' },
-            { n: '$4.2m', label: 'Extra value achieved' }, { n: '4.9', label: 'Average rating' },
-        ] },
-        testimonials: { heading: 'What our clients say', items: [
-            { quote: 'Clear, patient advice at a difficult time. We would recommend them to any family.', name: 'Margaret W.', loc: 'Brighton' },
-            { quote: 'They compared three agents for us and saved us thousands in fees.', name: 'Peter H.', loc: 'Ballarat' },
-        ] },
-        faqs: { heading: 'Common questions', items: [
-            { q: 'When is the right time to start planning a downsize?' },
-            { q: 'Do we need to sell before buying?' },
-            { q: 'What does your service cost?' },
-        ] },
-        cta: { heading: 'Talk it through with an advisor', body: 'A free 30 minute conversation, in your home or over the phone.', primary: 'Request a consultation' },
-        rich: { heading: 'About this service', body: 'Write here in plain language. Short paragraphs and clear headings are easiest for our clients to read.' },
-    };
-    return JSON.parse(JSON.stringify(d[type] || d.rich));
-}
-
-export const DEFAULT_BLOCKS = [
-    { id: 'hero', type: 'hero', label: 'Hero banner', data: {
-        eyebrow: 'Downsizing support',
-        heading: 'Independent property advice for the move that matters most',
-        body: 'We help older Australians and their families plan, prepare and sell the family home with clear advice and no pressure — from first conversation to settlement day.',
-        primary: 'Request a consultation', secondary: 'How we help',
-    } },
-    { id: 'services', type: 'services', label: 'Services', data: {
-        heading: 'How we support you',
-        items: [
-            { title: 'Plan the move', text: 'A written downsizing plan covering timing, costs and the options open to you.' },
-            { title: 'Prepare the home', text: 'Trusted trades, decluttering support and preparation that adds value without overspending.' },
-            { title: 'Sell with confidence', text: 'We review agents, appraisals and offers on your behalf so nothing is missed.' },
-        ],
-    } },
-    { id: 'stats', type: 'stats', label: 'Statistics', data: {
-        heading: 'Trusted by families across the state',
-        items: [
-            { n: '640+', label: 'Families guided' }, { n: '18 yrs', label: 'Advising seniors' },
-            { n: '$4.2m', label: 'Extra value achieved' }, { n: '4.9', label: 'Average client rating' },
-        ],
-    } },
-    { id: 'testimonials', type: 'testimonials', label: 'Featured testimonials', data: {
-        heading: 'What our clients say',
-        items: [
-            { quote: 'They took the worry out of selling Mum’s house. Everything was explained twice, calmly, and never rushed.', name: 'Janet R.', loc: 'Glen Iris' },
-            { quote: 'Honest advice with nothing to sell us. We felt looked after from the first phone call to settlement.', name: 'Brian and Lorraine T.', loc: 'Geelong' },
-        ],
-    } },
-    { id: 'faqs', type: 'faqs', label: 'Featured FAQs', data: {
-        heading: 'Common questions about downsizing',
-        items: [
-            { q: 'When is the right time to start planning a downsize?' },
-            { q: 'Should we sell before we buy into a retirement village?' },
-            { q: 'How will downsizing affect the age pension?' },
-            { q: 'What does your service cost?' },
-        ],
-    } },
-    { id: 'cta', type: 'cta', label: 'Call to action', data: {
-        heading: 'Talk it through with an advisor',
-        body: 'A free 30 minute conversation, in your home or over the phone. No obligation.',
-        primary: 'Request a consultation',
-    } },
-];
-
 export const COMPONENT_LIBRARY = [
     { name: 'Layout', items: [
         { type: 'section', label: 'Section', d: 'M3 4h18v16H3zM3 10h18' },
-        { type: 'columns', label: 'Columns', d: 'M3 4h18v16H3zM12 4v16' },
-        { type: 'rich', label: 'Spacer', d: 'M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4' },
-        { type: 'rich', label: 'Divider', d: 'M3 12h18' },
+        { type: 'row', label: 'Row', d: 'M3 5h18v14H3zM9 5v14M15 5v14' },
     ] },
-    { name: 'Content', items: [
-        { type: 'rich', label: 'Heading', d: 'M5 5v14M19 5v14M5 12h14' },
-        { type: 'rich', label: 'Rich text', d: 'M4 6h16M4 11h16M4 16h9' },
-        { type: 'rich', label: 'Image', d: 'M3 5h18v14H3zM8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M21 16l-5-5-9 8' },
-        { type: 'stats', label: 'Statistics', d: 'M5 20V10M12 20V4M19 20v-7' },
+    { name: 'Content elements', items: [
+        { type: 'eyebrow', label: 'Pre-heading', d: 'M3 12h6M13 12h8' },
+        { type: 'heading', label: 'Heading', d: 'M5 5v14M19 5v14M5 12h14' },
+        { type: 'rich-text', label: 'Rich text', d: 'M4 6h16M4 11h16M4 16h9' },
+        { type: 'image', label: 'Image', d: 'M3 5h18v14H3zM8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M21 16l-5-5-9 8' },
+        { type: 'button', label: 'Button', d: 'M4 8h16v8H4zM9 12h6' },
     ] },
     { name: 'Website sections', items: [
         { type: 'hero', label: 'Hero banner', d: 'M3 4h18v9H3zM6 17h8M6 20h5' },
-        { type: 'services', label: 'Services', d: 'M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z' },
-        { type: 'services', label: 'Process steps', d: 'M5 6h14M5 12h14M5 18h14' },
+        { type: 'trust-cards', label: 'Trust cards', d: 'M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z' },
+        { type: 'process-steps', label: 'Process steps', d: 'M5 6h14M5 12h14M5 18h14' },
+        { type: 'why-list', label: 'Why list', d: 'M4 6h16M4 12h16M4 18h9' },
+        { type: 'agent-compare', label: 'Agent comparison', d: 'M3 5h18v14H3zM9 5v14M15 5v14' },
+        { type: 'family', label: 'For families', d: 'M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M5 20v-1a5 5 0 0 1 14 0v1' },
         { type: 'cta', label: 'Call to action', d: 'M4 7h16v10H4zM9 12h6' },
-    ] },
-    { name: 'Dynamic content', items: [
-        { type: 'testimonials', label: 'Testimonials', d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
-        { type: 'faqs', label: 'FAQ list', d: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 17h.01M9.6 9.4a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1.1 1-1.1 1.8' },
-        { type: 'rich', label: 'Latest articles', d: 'M4 5h16v14H4zM8 9h8M8 13h8M8 17h5' },
-        { type: 'rich', label: 'Lead enquiry form', d: 'M4 4h16v16H4zM8 9h8M8 13h8M8 17h4' },
     ] },
 ];
 

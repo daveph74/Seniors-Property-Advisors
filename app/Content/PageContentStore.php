@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Cache;
 
 class PageContentStore
 {
-    public const SECTION_TYPES = [
+    public const BLOCK_TYPES = [
         'hero',
         'trust-cards',
         'process-steps',
@@ -14,7 +14,31 @@ class PageContentStore
         'agent-compare',
         'family',
         'cta',
+        'eyebrow',
+        'heading',
+        'rich-text',
+        'image',
+        'button',
     ];
+
+    public const CONTAINER_TYPES = [
+        'section',
+        'row',
+        'column',
+    ];
+
+    public const SECTION_TYPES = [
+        ...self::BLOCK_TYPES,
+        'section',
+    ];
+
+    public const CHILD_TYPES = [
+        'section' => [...self::BLOCK_TYPES, 'row'],
+        'row' => ['column'],
+        'column' => [...self::BLOCK_TYPES, 'row'],
+    ];
+
+    public const MAX_ROW_DEPTH = 2;
 
     public function resolve(string $slug): ?array
     {
@@ -134,14 +158,40 @@ class PageContentStore
         $this->putJson(storage_path("app/content/revisions/{$slug}.json"), $revisions);
     }
 
-    private function renderable(array $sections): array
+    private function renderable(array $sections, ?array $allowed = null, int $depth = 0): array
     {
-        $visible = array_filter($sections, function ($section) {
-            return ($section['active'] ?? true) !== false
-                && in_array($section['type'] ?? '', self::SECTION_TYPES, true);
-        });
+        $allowed ??= self::SECTION_TYPES;
+        $visible = [];
 
-        return array_values($visible);
+        foreach ($sections as $section) {
+            if (($section['active'] ?? true) === false) {
+                continue;
+            }
+
+            $type = $section['type'] ?? '';
+
+            if (! in_array($type, $allowed, true)) {
+                continue;
+            }
+
+            $next = $type === 'row' ? $depth + 1 : $depth;
+
+            if ($next > self::MAX_ROW_DEPTH) {
+                continue;
+            }
+
+            if (array_key_exists('children', $section)) {
+                $section['children'] = $this->renderable(
+                    $section['children'] ?? [],
+                    self::CHILD_TYPES[$type] ?? [],
+                    $next,
+                );
+            }
+
+            $visible[] = $section;
+        }
+
+        return $visible;
     }
 
     private function slugs(): array

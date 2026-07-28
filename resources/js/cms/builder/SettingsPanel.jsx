@@ -8,7 +8,7 @@ const PANELS = [
     ['advanced', 'Advanced'],
 ];
 
-export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, onSaveReusable, onOpenMediaPicker }) {
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, onColumnCount, onSaveReusable, onOpenMediaPicker }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -24,15 +24,18 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
     }
 
     const { type, data } = block;
-    const hasEyebrow = 'eyebrow' in data;
-    const hasBody = 'body' in data;
-    const hasButtons = 'primary' in data;
-    const hasHeadingEm = 'headingEm' in data;
-    const hasSubhead = 'subhead' in data;
-    const hasLead = 'lead' in data;
-    const isHero = type === 'hero' && 'secondary' in data;
-    const isTestimonials = type === 'testimonials';
-    const isFaqs = type === 'faqs';
+    const has = (key) => key in data;
+    const hasEyebrow = has('eyebrow');
+    const hasHeading = has('heading');
+    const hasBody = has('body');
+    const hasButtons = has('primary');
+    const hasHeadingEm = has('headingEm');
+    const hasSubhead = has('subhead');
+    const hasLead = has('lead');
+    const isHero = type === 'hero' && has('secondary');
+    const columnRow = type === 'row'
+        ? block
+        : (block.children || []).find((c) => c.type === 'row');
 
     const collections = ['items', 'agents', 'checks', 'steps', 'ctas', 'buttons', 'trustMarks', 'filters', 'avatars']
         .filter((key) => Array.isArray(data[key]) && data[key].length);
@@ -51,15 +54,54 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                     <>
                         {hasEyebrow && (
                             <div className="cms-field">
-                                <label className="cms-field-label">Eyebrow text</label>
+                                <label className="cms-field-label">Pre-heading</label>
                                 <input className="cms-input" value={data.eyebrow} onChange={(e) => patch('eyebrow', e.target.value)} />
                             </div>
                         )}
 
-                        <div className="cms-field">
-                            <label className="cms-field-label">Heading</label>
-                            <textarea className="cms-textarea" rows={2} value={data.heading || ''} onChange={(e) => patch('heading', e.target.value)} />
-                        </div>
+                        {columnRow && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Columns</label>
+                                <input
+                                    className="cms-input"
+                                    type="number"
+                                    min="1"
+                                    max="6"
+                                    value={columnRow.children?.length ?? 0}
+                                    onChange={(e) => {
+                                        const next = Number(e.target.value);
+
+                                        if (Number.isFinite(next) && e.target.value !== '') onColumnCount(next);
+                                    }}
+                                />
+                                <div className="cms-hint">One column stacks everything. Two or more sit side by side.</div>
+                            </div>
+                        )}
+
+                        {hasHeading && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Heading</label>
+                                <textarea className="cms-textarea" rows={2} value={data.heading || ''} onChange={(e) => patch('heading', e.target.value)} />
+                            </div>
+                        )}
+
+                        {has('level') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Heading level</label>
+                                <div className="cms-align-row">
+                                    {['h2', 'h3', 'h4'].map((level) => (
+                                        <button
+                                            key={level}
+                                            type="button"
+                                            className={`cms-align-btn ${(data.level || 'h2') === level ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patch('level', level)}
+                                        >
+                                            {level.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {hasHeadingEm && (
                             <div className="cms-field">
@@ -119,52 +161,75 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </>
                         )}
 
-                        {isTestimonials && (
-                            <>
-                                <div className="cms-field">
-                                    <label className="cms-field-label">Data source</label>
-                                    <select className="cms-select">
-                                        <option>Featured testimonials</option>
-                                        <option>Selected testimonials</option>
-                                        <option>Most recent</option>
-                                    </select>
-                                </div>
-                                <label className="cms-field-label">Layout</label>
-                                <div className="cms-align-row">
-                                    <button type="button" className={`cms-align-btn ${(data.layout || 'grid') === 'grid' ? 'cms-align-btn--active' : ''}`} onClick={() => patch('layout', 'grid')}>Grid</button>
-                                    <button type="button" className={`cms-align-btn ${data.layout === 'slider' ? 'cms-align-btn--active' : ''}`} onClick={() => patch('layout', 'slider')}>Slider</button>
-                                </div>
-                                <div className="cms-toggle-row">
-                                    <span className="cms-toggle-row__label">Show client photo</span>
-                                    <Toggle on={data.showPhoto !== false} onChange={(v) => patch('showPhoto', v)} />
-                                </div>
-                                <div className="cms-toggle-row">
-                                    <span className="cms-toggle-row__label">Show rating</span>
-                                    <Toggle on={!!data.showRating} onChange={(v) => patch('showRating', v)} />
-                                </div>
-                            </>
+                        {has('src') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Image URL</label>
+                                <input className="cms-input" value={data.src || ''} onChange={(e) => patch('src', e.target.value)} />
+                            </div>
                         )}
 
-                        {isFaqs && (
-                            <>
-                                <div className="cms-field">
-                                    <label className="cms-field-label">FAQ category</label>
-                                    <select className="cms-select">
-                                        <option>Downsizing</option>
-                                        <option>Selling a home</option>
-                                        <option>Retirement living</option>
-                                        <option>Fees and process</option>
-                                    </select>
+                        {has('alt') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Alt text</label>
+                                <input className="cms-input" value={data.alt || ''} onChange={(e) => patch('alt', e.target.value)} />
+                            </div>
+                        )}
+
+                        {has('caption') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Caption</label>
+                                <input className="cms-input" value={data.caption || ''} onChange={(e) => patch('caption', e.target.value)} />
+                            </div>
+                        )}
+
+                        {has('label') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Button label</label>
+                                <input className="cms-input" value={data.label || ''} onChange={(e) => patch('label', e.target.value)} />
+                            </div>
+                        )}
+
+                        {has('href') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Link URL</label>
+                                <input className="cms-input" value={data.href || ''} onChange={(e) => patch('href', e.target.value)} />
+                            </div>
+                        )}
+
+                        {has('variant') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Button style</label>
+                                <div className="cms-align-row">
+                                    {[['primary', 'Primary'], ['secondary', 'Secondary'], ['ghost', 'Ghost']].map(([value, text]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            className={`cms-align-btn ${(data.variant || 'primary') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patch('variant', value)}
+                                        >
+                                            {text}
+                                        </button>
+                                    ))}
                                 </div>
-                                <div className="cms-field">
-                                    <label className="cms-field-label">Number of items</label>
-                                    <input className="cms-input" value={data.items?.length ?? 4} readOnly />
+                            </div>
+                        )}
+
+                        {has('align') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Alignment</label>
+                                <div className="cms-align-row">
+                                    {[['left', 'Left'], ['center', 'Centre'], ['right', 'Right']].map(([value, text]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            className={`cms-align-btn ${(data.align || 'left') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patch('align', value)}
+                                        >
+                                            {text}
+                                        </button>
+                                    ))}
                                 </div>
-                                <div className="cms-toggle-row" style={{ borderTop: '1px solid var(--cms-border-softer)' }}>
-                                    <span className="cms-toggle-row__label">Expand first item</span>
-                                    <Toggle on={data.expandFirst !== false} onChange={(v) => patch('expandFirst', v)} />
-                                </div>
-                            </>
+                            </div>
                         )}
 
                         {collections.length > 0 && (
@@ -185,15 +250,18 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
 
                 <AccordionSection id="layout" title={PANELS[1][1]} open={openPanels.has('layout')} onToggle={onTogglePanel}>
                     <>
-                        <div className="cms-field">
-                            <label className="cms-field-label">Section width</label>
-                            <select className="cms-select">
-                                <option>Standard (1140px)</option>
-                                <option>Wide (1320px)</option>
-                                <option>Narrow (860px)</option>
-                                <option>Full bleed</option>
-                            </select>
-                        </div>
+                        {has('width') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Section width</label>
+                                <select className="cms-select" value={data.width || 'standard'} onChange={(e) => patch('width', e.target.value)}>
+                                    <option value="standard">Standard (1240px)</option>
+                                    <option value="wide">Wide (1440px)</option>
+                                    <option value="narrow">Narrow (860px)</option>
+                                    <option value="full">Full bleed</option>
+                                </select>
+                                <div className="cms-hint">Nested sections inherit the parent width.</div>
+                            </div>
+                        )}
                         <label className="cms-field-label">Content alignment</label>
                         <div className="cms-align-row">
                             <button type="button" className="cms-align-btn cms-align-btn--active">Left</button>

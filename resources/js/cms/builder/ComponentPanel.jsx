@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { SearchInput } from '../components/ui';
 import { COMPONENT_LIBRARY } from '../data/mockData';
 
-export default function ComponentPanel({ search, onSearch, onDragStart, onAdd }) {
+export default function ComponentPanel({ search, onSearch, onDragStart, onDragEnd, onAdd }) {
     const groups = useMemo(() => {
         const q = search.trim().toLowerCase();
         return COMPONENT_LIBRARY
@@ -30,6 +30,7 @@ export default function ComponentPanel({ search, onSearch, onDragStart, onAdd })
                                 type="button"
                                 draggable
                                 onDragStart={(e) => onDragStart(e, c.type, c.label)}
+                                onDragEnd={onDragEnd}
                                 onClick={() => onAdd(c.type, c.label)}
                                 className="cms-component-card"
                             >

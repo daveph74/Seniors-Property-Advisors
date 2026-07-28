@@ -60,32 +60,32 @@ export default function AgentCompareSection({ data, actions, anchor }) {
 
                         {row(labels.experience, (a) => (
                             <div className="cmp-cell" key={a.name}>
-                                <strong>{a.experience.strong}</strong> {a.experience.rest}
+                                <strong>{(a.experience || {}).strong}</strong> {(a.experience || {}).rest}
                                 <div className="meter">
-                                    <i style={{ width: `${a.experience.meter}%` }} />
+                                    <i style={{ width: `${(a.experience || {}).meter || 0}%` }} />
                                 </div>
                             </div>
                         ))}
 
                         {row(labels.sales, (a) => (
                             <div className="cmp-cell" key={a.name}>
-                                <strong>{a.sales.strong}</strong>
+                                <strong>{(a.sales || {}).strong}</strong>
                                 <br />
-                                <span className="sub">{a.sales.sub}</span>
+                                <span className="sub">{(a.sales || {}).sub}</span>
                             </div>
                         ))}
 
                         {row(labels.commission, (a) => (
                             <div className="cmp-cell" key={a.name}>
-                                <span className="price">{a.commission.price}</span>
-                                <div className="sub">{a.commission.sub}</div>
+                                <span className="price">{(a.commission || {}).price}</span>
+                                <div className="sub">{(a.commission || {}).sub}</div>
                             </div>
                         ))}
 
                         {row(labels.marketing, (a) => (
                             <div className="cmp-cell" key={a.name}>
-                                <strong>{a.marketing.strong}</strong>
-                                <div className="sub">{a.marketing.sub}</div>
+                                <strong>{(a.marketing || {}).strong}</strong>
+                                <div className="sub">{(a.marketing || {}).sub}</div>
                             </div>
                         ))}
 
@@ -101,7 +101,7 @@ export default function AgentCompareSection({ data, actions, anchor }) {
                                     cta={a.cta}
                                     actions={actions}
                                     tight
-                                    className={`btn ${a.cta.variant} sm block`}
+                                    className={`btn ${(a.cta || {}).variant} sm block`}
                                 />
                             </div>
                         ))}
