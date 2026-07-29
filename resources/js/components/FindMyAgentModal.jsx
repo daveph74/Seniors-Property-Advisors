@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SuburbAutocomplete from './SuburbAutocomplete';
 
 const PROPERTY_TYPES = [
     { label: 'House', note: 'Free standing' },
@@ -28,6 +29,7 @@ function OptGrid({ options, value, onChange, className = '', render }) {
 
 export default function FindMyAgentModal({ open, onClose }) {
     const [step, setStep] = useState(1);
+    const [location, setLocation] = useState(null);
     const [propertyType, setPropertyType] = useState(0);
     const [timeline, setTimeline] = useState(1);
     const [bestTime, setBestTime] = useState(0);
@@ -37,8 +39,12 @@ export default function FindMyAgentModal({ open, onClose }) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
-            // Reset to first step after the close transition.
-            const t = setTimeout(() => setStep(1), 250);
+            // The modal never unmounts (visibility is CSS), so clear the answers
+            // after the close transition or a reopened form shows stale input.
+            const t = setTimeout(() => {
+                setStep(1);
+                setLocation(null);
+            }, 250);
             return () => clearTimeout(t);
         }
     }, [open]);
@@ -88,8 +94,14 @@ export default function FindMyAgentModal({ open, onClose }) {
                             state‑wide lists.
                         </p>
                         <div className="field">
-                            <label>Postcode or suburb</label>
-                            <input type="text" placeholder="e.g. Mosman, NSW 2088" />
+                            <label htmlFor="fma-suburb">Suburb</label>
+                            <SuburbAutocomplete
+                                id="fma-suburb"
+                                value={location}
+                                onChange={setLocation}
+                                placeholder="e.g. Mosman NSW"
+                                active={open}
+                            />
                         </div>
                         <div className="field">
                             <label>Property type</label>

@@ -1,9 +1,16 @@
 <?php
 
+use App\Http\Controllers\SuburbLookupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', fn () => Inertia::render('AgentFinder'))->name('agent-finder');
+
+// Suburb autocomplete for the Find My Agent modal. Throttled because an
+// unbounded autocomplete endpoint is a billing amplifier.
+Route::get('/api/suburbs', SuburbLookupController::class)
+    ->middleware('throttle:60,1')
+    ->name('suburbs.lookup');
 
 /*
 |--------------------------------------------------------------------------
