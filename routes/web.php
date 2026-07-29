@@ -4,7 +4,18 @@ use App\Http\Controllers\SuburbLookupController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn () => Inertia::render('AgentFinder'))->name('agent-finder');
+/*
+|--------------------------------------------------------------------------
+| Public site
+|--------------------------------------------------------------------------
+| One page per section rather than a single long scroll. `/` is the short
+| landing page; each nav item below is its own route.
+*/
+Route::get('/', fn () => Inertia::render('Home'))->name('agent-finder');
+Route::get('/how-it-works', fn () => Inertia::render('HowItWorks'))->name('how-it-works');
+Route::get('/why-agent-finder', fn () => Inertia::render('WhyAgentFinder'))->name('why-agent-finder');
+Route::get('/compare-agents', fn () => Inertia::render('CompareAgents'))->name('compare-agents');
+Route::get('/for-families', fn () => Inertia::render('ForFamilies'))->name('for-families');
 
 // Suburb autocomplete for the Find My Agent modal. Throttled because an
 // unbounded autocomplete endpoint is a billing amplifier.

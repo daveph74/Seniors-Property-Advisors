@@ -18,6 +18,9 @@ export default function SuburbAutocomplete({
     placeholder,
     active = true,
     disabled = false,
+    invalid = false,
+    describedBy,
+    inputRef,
 }) {
     const listId = `${useId()}-suburbs`;
     // Seeded from the current selection: step 1 unmounts when the wizard
@@ -219,10 +222,14 @@ export default function SuburbAutocomplete({
                 type="text"
                 role="combobox"
                 autoComplete="off"
+                ref={inputRef}
                 aria-expanded={showList}
                 aria-controls={listId}
                 aria-autocomplete="list"
                 aria-activedescendant={activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
+                aria-required="true"
+                aria-invalid={invalid ? 'true' : undefined}
+                aria-describedby={describedBy}
                 placeholder={placeholder}
                 disabled={disabled}
                 value={query}

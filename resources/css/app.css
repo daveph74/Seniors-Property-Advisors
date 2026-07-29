@@ -48,6 +48,11 @@
   --blue-pale: #8FC2F7;       /* style-guide pale blue */
 
   --green: #61CE70;
+  /* Error state. --danger clears 4.5:1 on white for body text, so error copy
+     never depends on colour perception alone. */
+  --danger: #B3261E;
+  --danger-line: #D98D88;
+  --danger-wash: #FDF4F3;
   --text: #2B3140;
   --text-mid: #5A6275;
   --text-soft: #7A7A7A;
@@ -77,7 +82,6 @@
 
 *,*::before,*::after{ box-sizing: border-box; }
 html,body{ margin:0; padding:0; }
-html{ scroll-behavior: smooth; }
 body{
   font-family: var(--font-sans);
   font-size: 17px;
@@ -161,6 +165,74 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   width: 30px; height: 30px; border-radius: 50%;
   background: var(--blue-tint); display:grid; place-items:center;
   color: var(--blue-deep);
+}
+
+/* ===================== Mobile nav ===================== */
+/* Hidden on desktop; the 1220px breakpoint below swaps the two navs over. */
+.nav-toggle{
+  display: none;
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  place-items: center;
+  border: 1.5px solid rgba(1,10,68,0.18);
+  color: var(--navy);
+}
+.nav-toggle:hover{ border-color: var(--navy); background: rgba(1,10,68,0.04); }
+.nav-toggle .bars{
+  display: grid; gap: 5px; width: 20px;
+}
+.nav-toggle .bars i{
+  display: block; height: 2px; border-radius: 2px;
+  background: currentColor;
+  transition: transform .22s ease, opacity .18s ease;
+}
+.nav-toggle .bars.open i:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+.nav-toggle .bars.open i:nth-child(2){ opacity: 0; }
+.nav-toggle .bars.open i:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+
+.nav-mobile{ display: none; }
+.nav-mobile.open{
+  background: var(--white);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: 0 18px 40px rgba(2,14,60,0.10);
+  animation: nav-mobile-in .2s ease;
+}
+.nav-mobile .container{ padding-top: 8px; padding-bottom: 24px; }
+.nav-mobile ul{
+  list-style: none; padding: 0; margin: 0 0 20px;
+  display: grid;
+}
+.nav-mobile ul a{
+  display: block;
+  padding: 15px 14px;
+  color: var(--navy);
+  font-size: 17px; font-weight: 500;
+  border-bottom: 1px solid var(--line-soft);
+}
+.nav-mobile ul li:last-child a{ border-bottom: none; }
+.nav-mobile ul a:hover{ background: var(--blue-tint); color: var(--blue-deep); }
+.nav-mobile ul a.active{
+  color: var(--blue-deep); font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+.nav-mobile-foot{ display: grid; gap: 16px; }
+.nav-mobile-foot .phone{
+  color: var(--navy); font-weight: 600; font-size: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-mobile-foot .phone .ico{
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--blue-tint); display: grid; place-items: center;
+  color: var(--blue-deep); flex-shrink: 0;
+}
+
+@keyframes nav-mobile-in{
+  from{ opacity: 0; transform: translateY(-8px); }
+  to{ opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .nav-mobile.open{ animation: none; }
+  .nav-toggle .bars i{ transition: none; }
 }
 
 /* ===================== Buttons ===================== */
@@ -378,7 +450,7 @@ section.tight{ padding: 96px 0; }
 .eyebrow-line::before{
   content:""; width: 32px; height: 1.5px; background: var(--blue-deep);
 }
-h2{
+h2, h1.section-title{
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(32px, 3.4vw, 48px);
@@ -388,14 +460,14 @@ h2{
   margin: 0 0 18px;
   text-wrap: pretty;
 }
-h2 em{ font-style: normal; color: var(--blue-deep); }
+h2 em, h1.section-title em{ font-style: normal; color: var(--blue-deep); }
 .section-lead{ color: var(--text-mid); font-size: 18px; line-height: 1.6; max-width: 640px; }
 
 .section-head{ display:flex; align-items:flex-end; justify-content:space-between; gap: 40px; margin-bottom: 56px; }
 .section-head .left{ max-width: 640px; }
 .section-head.center{ justify-content: center; text-align: center; flex-direction: column; align-items: center; margin-bottom: 72px; }
 .section-head.center .eyebrow-line{ justify-content:center; }
-.section-head.center h2{ text-align:center; }
+.section-head.center h2, .section-head.center h1.section-title{ text-align:center; }
 .section-head.center .section-lead{ text-align:center; margin: 0 auto; }
 
 /* ===================== Trust section ===================== */
@@ -477,8 +549,8 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
   z-index: 0;
 }
 .why .container{ position: relative; z-index: 1;}
-.why h2{ color: var(--white); }
-.why h2 em{ color: var(--blue); }
+.why h2, .why h1.section-title{ color: var(--white); }
+.why h2 em, .why h1.section-title em{ color: var(--blue); }
 .why .eyebrow-line{ color: var(--blue);}
 .why .eyebrow-line::before{ background: var(--blue);}
 .why .section-lead{ color: #B6C2DB; }
@@ -651,32 +723,35 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
 .btn-row{ display:flex; gap: 12px; flex-wrap: wrap; }
 
 /* ===================== Final CTA ===================== */
-.cta{
+/* Scoped to `section.cta` on purpose: the comparison table's "Next step" cells
+   are `.cmp-cell.cta`, so a bare `.cta` selector painted them navy and laid the
+   ::before overlay over their buttons, making them unclickable. */
+section.cta{
   background: var(--navy);
   position: relative; overflow: hidden;
 }
-.cta::before{
+section.cta::before{
   content:""; position:absolute; inset: 0;
   background:
     radial-gradient(800px 500px at 80% 0%, rgba(88,148,213,0.22), transparent 60%),
     radial-gradient(600px 400px at 0% 100%, rgba(88,148,213,0.10), transparent 60%);
 }
-.cta .container{ position:relative; text-align: center;}
-.cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
-.cta h2 em{ color: var(--blue);}
-.cta p{ color: #B6C2DB; max-width: 540px; margin: 0 auto 36px; font-size: 19px;}
-.cta .row{ display:flex; gap: 14px; justify-content:center; flex-wrap: wrap;}
-.cta .eyebrow-line{ justify-content:center; color: var(--blue); }
-.cta .eyebrow-line::before{ background: var(--blue); }
-.cta .marks{
+section.cta .container{ position:relative; text-align: center;}
+section.cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
+section.cta h2 em{ color: var(--blue);}
+section.cta p{ color: #B6C2DB; max-width: 540px; margin: 0 auto 36px; font-size: 19px;}
+section.cta .row{ display:flex; gap: 14px; justify-content:center; flex-wrap: wrap;}
+section.cta .eyebrow-line{ justify-content:center; color: var(--blue); }
+section.cta .eyebrow-line::before{ background: var(--blue); }
+section.cta .marks{
   margin-top: 56px;
   display:flex; gap: 48px; justify-content:center; align-items:center;
   color: rgba(255,255,255,0.55);
   font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
   flex-wrap: wrap;
 }
-.cta .marks span{ display:flex; align-items:center; gap: 10px;}
-.cta .marks span::before{ content:""; width: 8px; height: 8px; border-radius:50%; background: var(--blue); opacity:0.5;}
+section.cta .marks span{ display:flex; align-items:center; gap: 10px;}
+section.cta .marks span::before{ content:""; width: 8px; height: 8px; border-radius:50%; background: var(--blue); opacity:0.5;}
 
 /* ===================== Footer ===================== */
 footer{
@@ -757,8 +832,47 @@ footer{
 .field.flush{ margin: 0; }
 .field.top-gap{ margin-top: 18px; }
 .field.top-gap-sm{ margin-top: 14px; }
-.field label{ display:block; font-size: 13.5px; color: var(--navy); font-weight: 600; margin-bottom: 6px;}
-.field label .opt-note{ font-weight:400; color: var(--text-mid); }
+/* Labels sit on a row so the Required badge reads as part of the question.
+   15px, not the old 13.5px — this audience is the reason. */
+.field label, .field .label{
+  display:flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 15px; color: var(--navy); font-weight: 600; margin-bottom: 6px;
+}
+.field label .opt-note, .field .label .opt-note{ font-weight:400; color: var(--text-mid); font-size: 13.5px; }
+
+/* ===== Required / optional marking =====
+   The literal word, not an asterisk: symbols are routinely missed or misread
+   by older users, and a legend forces them to hold a key in working memory. */
+.req{
+  font-size: 13px; font-weight: 700; letter-spacing: 0.01em;
+  color: var(--blue-deep); background: var(--blue-tint);
+  padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+}
+.field.has-error .req{ color: var(--danger); background: var(--danger-wash); }
+/* Stated once per step as well — a per-field badge answers "is this one needed",
+   the note answers "how much of this form do I have to fill in". */
+.req-note{
+  font-size: 14.5px; color: var(--text-mid);
+  margin: -10px 0 20px; display: flex; align-items: center; gap: 8px;
+}
+
+/* ===== Error messaging ===== */
+.err-msg{
+  display: flex; align-items: flex-start; gap: 7px;
+  margin-top: 7px; font-size: 14.5px; line-height: 1.45;
+  color: var(--danger); font-weight: 500;
+}
+.err-msg .err-icon{ flex: none; font-weight: 700; }
+.field.has-error input{ border-color: var(--danger); }
+.field.has-error input:focus{
+  border-color: var(--danger); box-shadow: 0 0 0 4px rgba(179,38,30,0.14);
+}
+.opt-grid.has-error .opt{ border-color: var(--danger-line); }
+.opt-grid.has-error .opt.on{ border-color: var(--blue); }
+
+/* No error summary block: a failed Continue moves focus to the first
+   unanswered field instead, which carries its own inline message. */
+
 .field input, .field select{
   width: 100%; height: 52px; padding: 0 18px;
   border-radius: 14px; border: 1.5px solid var(--line);
@@ -817,9 +931,24 @@ footer{
   transition: all .2s ease;
   display:flex; flex-direction: column; gap: 4px;
 }
-.opt small{ color: var(--text-mid); font-size: 12.5px; font-weight: 400; }
+.opt small{ color: var(--text-mid); font-size: 13px; font-weight: 400; }
 .opt:hover{ border-color: var(--blue);}
-.opt.on{ border-color: var(--blue); background: var(--blue-tint); }
+/* Nothing is pre-selected, so "chosen" has to be unmistakable: heavier border,
+   filled background, and a tick — shape and symbol, not colour alone. */
+.opt.on{
+  border-color: var(--blue); border-width: 2.5px;
+  background: var(--blue-tint);
+  padding: 14.5px 12.5px; /* offsets the thicker border so cards don't shift */
+}
+.opt .opt-tick{
+  position: absolute; top: 10px; right: 12px;
+  color: var(--blue-deep); font-weight: 700; font-size: 15px;
+}
+.opt{ position: relative; }
+.opt:focus-visible{ outline: 3px solid var(--navy); outline-offset: 2px; }
+.modal .btn:focus-visible, .modal .close:focus-visible{
+  outline: 3px solid var(--navy); outline-offset: 3px;
+}
 .modal-actions{
   display:flex; justify-content: space-between; margin-top: 28px; align-items: center;
 }
@@ -843,6 +972,8 @@ footer{
 }
 @media (max-width: 1220px){
   .nav ul{ display: none; }
+  .nav-toggle{ display: grid; }
+  .nav-mobile.open{ display: block; }
 }
 @media (max-width: 1080px){
   .hero-grid{ grid-template-columns: 1fr; gap: 56px;}
@@ -872,4 +1003,6 @@ footer{
   .section-head{ flex-direction: column; align-items: flex-start;}
   h1.headline{ font-size: 38px;}
   .nav .phone span{ display: none;}
+  /* The mobile panel carries the CTA, so drop it from the cramped bar. */
+  .nav .right > .btn.primary{ display: none;}
 }
