@@ -2,6 +2,9 @@
 
 namespace App\Content;
 
+use App\Models\Page;
+use App\Models\PageRevision;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 
 class PageContentStore
@@ -70,25 +73,21 @@ class PageContentStore
 
     public function globals(): array
     {
-        return $this->remember('content:globals', fn () => $this->read('globals') ?? []);
+        return Setting::find('globals')?->value ?? [];
     }
 
     public function document(string $slug): ?array
     {
-        return $this->read("pages/{$slug}");
+        return $this->page($slug)?->toDocument();
     }
 
     public function findByCmsId(int|string $id): ?string
     {
-        foreach ($this->slugs() as $slug) {
-            $document = $this->document($slug);
-
-            if ($document !== null && (string) ($document['cmsId'] ?? '') === (string) $id) {
-                return $slug;
-            }
+        if (! ctype_digit((string) $id)) {
+            return null;
         }
 
-        return null;
+        return Page::where('cms_id', (int) $id)->value('slug');
     }
 
     public function editable(string $slug): ?array
@@ -104,49 +103,43 @@ class PageContentStore
 
     public function saveDraft(string $slug, array $sections, string $by): void
     {
-        $document = $this->document($slug);
-
-        if ($document === null) {
-            return;
-        }
-
-        $document['draft'] = $sections;
-        $document['last_updated_by'] = $by;
-        $document['updated_at'] = now()->toIso8601String();
-
-        $this->write($slug, $document);
+        $this->page($slug)?->forceFill([
+            'draft' => $sections,
+            'last_updated_by' => $by,
+        ])->save();
     }
 
     public function publish(string $slug, string $by): void
     {
-        $document = $this->document($slug);
+        $page = $this->page($slug);
 
-        if ($document === null) {
+        if ($page === null) {
             return;
         }
 
-        $sections = $document['draft'] ?? $document['published'] ?? [];
+        $sections = $page->draft ?? $page->published ?? [];
 
-        $document['published'] = $sections;
-        $document['draft'] = null;
-        $document['status'] = 'published';
-        $document['published_by'] = $by;
-        $document['published_at'] = now()->toIso8601String();
+        $page->forceFill([
+            'published' => $sections,
+            'draft' => null,
+            'status' => 'published',
+            'published_by' => $by,
+            'published_at' => now(),
+        ])->save();
 
-        $this->write($slug, $document);
-        $this->addRevision($slug, $sections, $by);
+        $this->addRevision($page, $sections, $by);
         $this->forget($slug);
     }
 
     public function revisions(string $slug): array
     {
-        $path = storage_path("app/content/revisions/{$slug}.json");
+        $page = $this->page($slug);
 
-        if (! is_file($path)) {
+        if ($page === null) {
             return [];
         }
 
-        return json_decode(file_get_contents($path), true) ?: [];
+        return $page->revisions->map->toSummaryRow()->all();
     }
 
     public function forget(string $slug): void
@@ -154,19 +147,22 @@ class PageContentStore
         Cache::forget("page:{$slug}:published");
     }
 
-    private function addRevision(string $slug, array $sections, string $by): void
+    private function page(string $slug): ?Page
     {
-        $revisions = $this->revisions($slug);
+        return Page::where('slug', $slug)->first();
+    }
 
-        array_unshift($revisions, [
-            'n' => count($revisions) + 1,
+    private function addRevision(Page $page, array $sections, string $by): void
+    {
+        PageRevision::create([
+            'page_id' => $page->id,
+            'n' => (int) $page->revisions()->max('n') + 1,
             'action' => 'publish',
             'by' => $by,
-            'at' => now()->toIso8601String(),
             'sections' => $sections,
         ]);
 
-        $this->putJson(storage_path("app/content/revisions/{$slug}.json"), $revisions);
+        $page->unsetRelation('revisions');
     }
 
     private function renderable(array $sections, ?array $allowed = null, int $depth = 0): array
@@ -203,61 +199,6 @@ class PageContentStore
         }
 
         return $visible;
-    }
-
-    private function slugs(): array
-    {
-        $slugs = [];
-
-        foreach ([storage_path('app/content/pages'), resource_path('content/pages')] as $directory) {
-            foreach (glob("{$directory}/*.json") ?: [] as $path) {
-                $slugs[basename($path, '.json')] = true;
-            }
-        }
-
-        return array_keys($slugs);
-    }
-
-    private function read(string $name): ?array
-    {
-        if (! preg_match('#^[a-z0-9\-/]+$#', $name) || str_contains($name, '..')) {
-            return null;
-        }
-
-        $candidates = [
-            storage_path("app/content/{$name}.json"),
-            resource_path("content/{$name}.json"),
-        ];
-
-        foreach ($candidates as $path) {
-            if (is_file($path)) {
-                return json_decode(file_get_contents($path), true);
-            }
-        }
-
-        return null;
-    }
-
-    private function write(string $slug, array $document): void
-    {
-        if (! preg_match('#^[a-z0-9\-]+$#', $slug)) {
-            return;
-        }
-
-        $this->putJson(storage_path("app/content/pages/{$slug}.json"), $document);
-    }
-
-    private function putJson(string $path, array $payload): void
-    {
-        $directory = dirname($path);
-
-        if (! is_dir($directory)) {
-            mkdir($directory, 0777, true);
-        }
-
-        $flags = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
-
-        file_put_contents($path, json_encode($payload, $flags).PHP_EOL);
     }
 
     private function remember(string $key, callable $callback)

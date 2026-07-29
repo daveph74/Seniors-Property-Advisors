@@ -3,25 +3,10 @@
 namespace Tests\Feature;
 
 use App\Content\PageContentStore;
-use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class CmsBuilderTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        File::deleteDirectory(storage_path('app/content'));
-    }
-
-    protected function tearDown(): void
-    {
-        File::deleteDirectory(storage_path('app/content'));
-
-        parent::tearDown();
-    }
-
     private function sections(string $heading = 'Edited heading'): array
     {
         return [[
