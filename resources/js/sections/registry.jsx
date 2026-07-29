@@ -13,6 +13,17 @@ import HeadingBlock from './HeadingBlock';
 import RichTextBlock from './RichTextBlock';
 import ImageBlock from './ImageBlock';
 import ButtonBlock from './ButtonBlock';
+import StepsStripBlock from './StepsStripBlock';
+import AvatarRowBlock from './AvatarRowBlock';
+import RatingStarsBlock from './RatingStarsBlock';
+import CardGridBlock from './CardGridBlock';
+import StepGridBlock from './StepGridBlock';
+import ChecklistBlock from './ChecklistBlock';
+import BenefitListBlock from './BenefitListBlock';
+import TrustMarksBlock from './TrustMarksBlock';
+import StatStampBlock from './StatStampBlock';
+import QuoteCardBlock from './QuoteCardBlock';
+import InfoCardBlock from './InfoCardBlock';
 
 export const SECTIONS = {
     section: SectionContainer,
@@ -30,6 +41,17 @@ export const SECTIONS = {
     'rich-text': RichTextBlock,
     image: ImageBlock,
     button: ButtonBlock,
+    'steps-strip': StepsStripBlock,
+    'avatar-row': AvatarRowBlock,
+    'rating-stars': RatingStarsBlock,
+    'card-grid': CardGridBlock,
+    'step-grid': StepGridBlock,
+    checklist: ChecklistBlock,
+    'benefit-list': BenefitListBlock,
+    'trust-marks': TrustMarksBlock,
+    'stat-stamp': StatStampBlock,
+    'quote-card': QuoteCardBlock,
+    'info-card': InfoCardBlock,
 };
 
 export const SECTION_LABELS = {
@@ -48,6 +70,17 @@ export const SECTION_LABELS = {
     'rich-text': 'Rich text',
     image: 'Image',
     button: 'Button',
+    'steps-strip': 'Steps strip',
+    'avatar-row': 'Avatar row',
+    'rating-stars': 'Star rating',
+    'card-grid': 'Icon card grid',
+    'step-grid': 'Numbered steps',
+    checklist: 'Checklist',
+    'benefit-list': 'Benefits list',
+    'trust-marks': 'Trust marks',
+    'stat-stamp': 'Stat badge',
+    'quote-card': 'Quote card',
+    'info-card': 'Info card',
 };
 
 export function resolveSection(type) {

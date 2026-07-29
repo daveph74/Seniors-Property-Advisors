@@ -9,6 +9,15 @@ const BACKGROUNDS = [
     { value: 'navy', colour: '#0D223F', dark: true },
 ];
 
+const SPACE_STEPS = [['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']];
+
+const FIELDS = {
+    'rating-stars': [['stars', 'Stars'], ['ratingLabel', 'Headline'], ['note', 'Sub-note']],
+    'stat-stamp': [['value', 'Big number'], ['text', 'Caption']],
+    'quote-card': [['quote', 'Quote', 'area'], ['by', 'Attribution'], ['avatar', 'Photo URL']],
+    'info-card': [['title', 'Title'], ['value', 'Big value'], ['note', 'Sub-note']],
+};
+
 const PANELS = [
     ['content', 'Content'],
     ['layout', 'Layout'],
@@ -241,6 +250,17 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
+                        {(FIELDS[type] || []).map(([key, label, kind]) => (
+                            <div key={key} className="cms-field">
+                                <label className="cms-field-label">{label}</label>
+                                {kind === 'area' ? (
+                                    <textarea className="cms-textarea" rows={3} value={data[key] || ''} onChange={(e) => patch(key, e.target.value)} />
+                                ) : (
+                                    <input className="cms-input" value={data[key] || ''} onChange={(e) => patch(key, e.target.value)} />
+                                )}
+                            </div>
+                        ))}
+
                         {repeaters.map((collection) => (
                             <RepeaterEditor
                                 key={collection.key}
@@ -292,6 +312,54 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     <option value="compact">Compact</option>
                                     <option value="tall">Tall</option>
                                 </select>
+                            </div>
+                        )}
+
+                        {has('alignAcross') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Align across</label>
+                                <select className="cms-select" value={data.alignAcross || 'fill'} onChange={(e) => patch('alignAcross', e.target.value)}>
+                                    <option value="fill">Fill the width</option>
+                                    <option value="left">Left</option>
+                                    <option value="center">Centre</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                        )}
+
+                        {has('alignDown') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Align down</label>
+                                <select className="cms-select" value={data.alignDown || 'top'} onChange={(e) => patch('alignDown', e.target.value)}>
+                                    <option value="top">Top</option>
+                                    <option value="middle">Middle</option>
+                                    <option value="bottom">Bottom</option>
+                                    <option value="spread">Spread out</option>
+                                </select>
+                                <div className="cms-hint">Only visible when this column is shorter than the one beside it.</div>
+                            </div>
+                        )}
+
+                        {has('spaceAbove') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Space above</label>
+                                <select className="cms-select" value={data.spaceAbove || 'none'} onChange={(e) => patch('spaceAbove', e.target.value)}>
+                                    {SPACE_STEPS.map(([value, text]) => (
+                                        <option key={value} value={value}>{text}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {has('spaceBelow') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Space below</label>
+                                <select className="cms-select" value={data.spaceBelow || 'none'} onChange={(e) => patch('spaceBelow', e.target.value)}>
+                                    {SPACE_STEPS.map(([value, text]) => (
+                                        <option key={value} value={value}>{text}</option>
+                                    ))}
+                                </select>
+                                <div className="cms-hint">Added on top of the spacing the section already applies.</div>
                             </div>
                         )}
 

@@ -19,6 +19,17 @@ class PageContentStore
         'rich-text',
         'image',
         'button',
+        'steps-strip',
+        'avatar-row',
+        'rating-stars',
+        'card-grid',
+        'step-grid',
+        'checklist',
+        'benefit-list',
+        'trust-marks',
+        'stat-stamp',
+        'quote-card',
+        'info-card',
     ];
 
     public const CONTAINER_TYPES = [

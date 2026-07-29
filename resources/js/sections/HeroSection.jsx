@@ -32,8 +32,8 @@ export default function HeroSection({ data, actions, anchor }) {
                         </div>
                         <div className="hero-trust">
                             <div className="avatars" aria-hidden="true">
-                                {(data.avatars || []).map((src) => (
-                                    <span key={src} style={{ backgroundImage: `url('${src}')` }} />
+                                {(data.avatars || []).map((src, i) => (
+                                    <span key={i} style={{ backgroundImage: `url('${src}')` }} />
                                 ))}
                             </div>
                             <div>
@@ -73,8 +73,8 @@ export default function HeroSection({ data, actions, anchor }) {
                 </div>
 
                 <div className="hero-steps">
-                    {(data.steps || []).map((s) => (
-                        <div className="hs-item" key={s.n}>
+                    {(data.steps || []).map((s, i) => (
+                        <div className="hs-item" key={i}>
                             <span className="hs-num">{s.n}</span>
                             <b>{s.label}</b>
                         </div>

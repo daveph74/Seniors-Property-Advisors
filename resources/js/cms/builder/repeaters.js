@@ -16,6 +16,33 @@ const BUTTON_FIELDS = [
 ];
 
 const SCHEMAS = {
+    'steps-strip': {
+        steps: { title: 'Steps', fields: [TEXT('n', 'Number'), TEXT('label', 'Label')] },
+    },
+    'avatar-row': {
+        avatars: { title: 'Avatars', fields: [TEXT('', 'Image URL')] },
+    },
+    'card-grid': {
+        items: {
+            title: 'Cards',
+            fields: [PICK('icon', 'Icon', ICONS), TEXT('title', 'Title'), AREA('body', 'Body')],
+        },
+    },
+    'step-grid': {
+        items: {
+            title: 'Steps',
+            fields: [TEXT('num', 'Number'), TEXT('title', 'Title'), AREA('body', 'Body')],
+        },
+    },
+    checklist: {
+        checks: { title: 'Checklist', fields: [TEXT('', 'Text')] },
+    },
+    'benefit-list': {
+        items: { title: 'Benefits', fields: [TEXT('title', 'Title'), AREA('body', 'Body')] },
+    },
+    'trust-marks': {
+        trustMarks: { title: 'Trust marks', fields: [TEXT('', 'Text')] },
+    },
     hero: {
         ctas: { title: 'Buttons', fields: BUTTON_FIELDS },
         avatars: { title: 'Avatars', fields: [TEXT('', 'Image URL')] },

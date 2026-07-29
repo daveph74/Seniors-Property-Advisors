@@ -34,7 +34,26 @@ const BLOCKED_COPY = {
     column: 'That cannot go inside a column',
 };
 
-const CONTENT_KEY = { eyebrow: 'eyebrow', heading: 'heading', 'rich-text': 'body', image: 'src', button: 'label' };
+const CONTENT_KEY = {
+    eyebrow: 'eyebrow',
+    heading: 'heading',
+    'rich-text': 'body',
+    image: 'src',
+    button: 'label',
+    'steps-strip': 'steps',
+    'avatar-row': 'avatars',
+    'rating-stars': 'stars',
+    'card-grid': 'items',
+    'step-grid': 'items',
+    'benefit-list': 'items',
+    checklist: 'checks',
+    'trust-marks': 'trustMarks',
+    'stat-stamp': 'value',
+    'quote-card': 'quote',
+    'info-card': 'title',
+};
+
+const isBlank = (v) => (Array.isArray(v) ? v.length === 0 : !v);
 
 let uid = 0;
 function nextId(type) {
@@ -500,13 +519,12 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
             <div
                 className={`cms-section-shell ${children.length === 0 ? 'cms-section-shell--empty' : ''}`}
                 onDragOver={(e) => {
-                    if (children.length === 0 || !canContain(b.type, depth, dragType)) return;
+                    if (!canContain(b.type, depth, dragType)) return;
                     e.preventDefault();
                     e.stopPropagation();
                     if (!isDropAt(b.id, children.length)) setDropAt(appendAt);
                 }}
                 onDrop={(e) => {
-                    if (children.length === 0) return;
                     e.preventDefault();
                     e.stopPropagation();
                     performDrop(appendAt);
@@ -529,7 +547,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
             className={`cms-block ${b.id === selectedId ? 'cms-block--selected' : ''}`}
             style={b.active === false || b.data?.hidden?.[device] ? { opacity: 0.4 } : undefined}
         >
-            {CONTENT_KEY[b.type] && !b.data[CONTENT_KEY[b.type]] ? (
+            {CONTENT_KEY[b.type] && isBlank(b.data[CONTENT_KEY[b.type]]) ? (
                 <div className="cms-block-placeholder">{SECTION_LABELS[b.type]} — no content yet</div>
             ) : (
                 <BlockRenderer block={b}>

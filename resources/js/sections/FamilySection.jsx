@@ -34,8 +34,8 @@ export default function FamilySection({ data, actions, anchor }) {
                         <p className="section-lead">{data.lead}</p>
 
                         <ul className="checks">
-                            {(data.checks || []).map((c) => (
-                                <li key={c}>
+                            {(data.checks || []).map((c, i) => (
+                                <li key={i}>
                                     <span className="c">✓</span>
                                     <span>{c}</span>
                                 </li>

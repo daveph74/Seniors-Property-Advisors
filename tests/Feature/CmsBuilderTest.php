@@ -353,6 +353,126 @@ class CmsBuilderTest extends TestCase
         $this->assertNull((new PageContentStore)->document('home')['draft']);
     }
 
+    private const NEW_ELEMENTS = [
+        'steps-strip', 'avatar-row', 'rating-stars', 'card-grid', 'step-grid',
+        'checklist', 'benefit-list', 'trust-marks', 'stat-stamp', 'quote-card', 'info-card',
+    ];
+
+    public function test_the_new_elements_are_registered_block_types(): void
+    {
+        foreach (self::NEW_ELEMENTS as $type) {
+            $this->assertContains($type, PageContentStore::BLOCK_TYPES, "{$type} is missing");
+        }
+
+        $this->assertCount(23, PageContentStore::BLOCK_TYPES);
+    }
+
+    public function test_the_new_elements_are_allowed_in_sections_and_columns_but_not_rows(): void
+    {
+        foreach (self::NEW_ELEMENTS as $type) {
+            $this->assertContains($type, PageContentStore::CHILD_TYPES['section']);
+            $this->assertContains($type, PageContentStore::CHILD_TYPES['column']);
+            $this->assertNotContains($type, PageContentStore::CHILD_TYPES['row']);
+        }
+    }
+
+    public function test_the_js_type_mirror_matches_php(): void
+    {
+        $js = file_get_contents(resource_path('js/sections/childTypes.js'));
+
+        preg_match('/const BLOCK_TYPES = \[(.*?)\];/s', $js, $m);
+        preg_match_all("/'([a-z-]+)'/", $m[1] ?? '', $found);
+
+        $this->assertSame(
+            PageContentStore::BLOCK_TYPES,
+            $found[1],
+            'childTypes.js has drifted from PageContentStore::BLOCK_TYPES',
+        );
+    }
+
+    public function test_it_publishes_a_new_element_nested_in_a_column(): void
+    {
+        $this->post('/cms/pages/1/publish', ['sections' => $this->rowTree([[
+            'id' => 'column-3',
+            'type' => 'column',
+            'label' => 'Column 1',
+            'active' => true,
+            'data' => [],
+            'children' => [[
+                'id' => 'card-grid-4',
+                'type' => 'card-grid',
+                'label' => 'Icon card grid',
+                'active' => true,
+                'data' => ['items' => [['icon' => 'shield', 'title' => 'Independent', 'body' => 'No commissions.']]],
+            ]],
+        ]])])->assertRedirect();
+
+        $this->get('/')->assertInertia(function ($page) {
+            $leaf = $page->toArray()['props']['sections'][0]['children'][0]['children'][0]['children'][0];
+
+            $this->assertSame('card-grid', $leaf['type']);
+            $this->assertSame('Independent', $leaf['data']['items'][0]['title']);
+        });
+    }
+
+    public function test_a_near_miss_element_type_is_rejected(): void
+    {
+        $this->post('/cms/pages/1/draft', ['sections' => $this->section([[
+            'id' => 'x-1',
+            'type' => 'trust-card',
+            'label' => 'Nope',
+            'active' => true,
+            'data' => [],
+        ]])])->assertSessionHasErrors('sections.0.children.0.type');
+
+        $this->assertNull((new PageContentStore)->document('home')['draft']);
+    }
+
+    public function test_a_column_persists_its_alignment(): void
+    {
+        $sections = $this->rowTree();
+        $sections[0]['children'][0]['children'][0]['data'] = ['alignAcross' => 'center', 'alignDown' => 'spread'];
+
+        $this->post('/cms/pages/1/publish', ['sections' => $sections])->assertRedirect();
+
+        $column = (new PageContentStore)->document('home')['published'][0]['children'][0]['children'][0];
+
+        $this->assertSame('center', $column['data']['alignAcross']);
+        $this->assertSame('spread', $column['data']['alignDown']);
+
+        $this->get('/')->assertInertia(function ($page) {
+            $data = $page->toArray()['props']['sections'][0]['children'][0]['children'][0]['data'];
+
+            $this->assertSame('center', $data['alignAcross']);
+            $this->assertSame('spread', $data['alignDown']);
+        });
+    }
+
+    public function test_an_element_persists_its_spacing(): void
+    {
+        $this->post('/cms/pages/1/publish', [
+            'sections' => $this->section([[
+                'id' => 'heading-2',
+                'type' => 'heading',
+                'label' => 'Heading',
+                'active' => true,
+                'data' => ['heading' => 'Spaced out', 'spaceAbove' => 'large', 'spaceBelow' => 'small'],
+            ]]),
+        ])->assertRedirect();
+
+        $leaf = (new PageContentStore)->document('home')['published'][0]['children'][0];
+
+        $this->assertSame('large', $leaf['data']['spaceAbove']);
+        $this->assertSame('small', $leaf['data']['spaceBelow']);
+
+        $this->get('/')->assertInertia(function ($page) {
+            $data = $page->toArray()['props']['sections'][0]['children'][0]['data'];
+
+            $this->assertSame('large', $data['spaceAbove']);
+            $this->assertSame('small', $data['spaceBelow']);
+        });
+    }
+
     public function test_a_section_persists_its_anchor(): void
     {
         $sections = $this->section([[

@@ -23,8 +23,8 @@ export default function CtaSection({ data, actions, anchor }) {
                     ))}
                 </div>
                 <div className="marks">
-                    {(data.trustMarks || []).map((m) => (
-                        <span key={m}>{m}</span>
+                    {(data.trustMarks || []).map((m, i) => (
+                        <span key={i}>{m}</span>
                     ))}
                 </div>
             </div>

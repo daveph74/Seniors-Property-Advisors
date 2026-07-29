@@ -196,12 +196,29 @@ export const COMPONENT_LIBRARY = [
         { type: 'section', label: 'Section', d: 'M3 4h18v16H3zM3 10h18' },
         { type: 'row', label: 'Row', d: 'M3 5h18v14H3zM9 5v14M15 5v14' },
     ] },
-    { name: 'Content elements', items: [
+    { name: 'Text', items: [
         { type: 'eyebrow', label: 'Pre-heading', d: 'M3 12h6M13 12h8' },
         { type: 'heading', label: 'Heading', d: 'M5 5v14M19 5v14M5 12h14' },
         { type: 'rich-text', label: 'Rich text', d: 'M4 6h16M4 11h16M4 16h9' },
-        { type: 'image', label: 'Image', d: 'M3 5h18v14H3zM8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M21 16l-5-5-9 8' },
         { type: 'button', label: 'Button', d: 'M4 8h16v8H4zM9 12h6' },
+    ] },
+    { name: 'Media', items: [
+        { type: 'image', label: 'Image', d: 'M3 5h18v14H3zM8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M21 16l-5-5-9 8' },
+        { type: 'quote-card', label: 'Quote card', d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
+        { type: 'avatar-row', label: 'Avatar row', d: 'M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M16 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M3 19a5 5 0 0 1 10 0M11 19a5 5 0 0 1 10 0' },
+    ] },
+    { name: 'Lists & grids', items: [
+        { type: 'card-grid', label: 'Icon card grid', d: 'M3 4h7v7H3zM14 4h7v7h-7zM3 13h7v7H3zM14 13h7v7h-7z' },
+        { type: 'step-grid', label: 'Numbered steps', d: 'M4 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4M10 6h10M4 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4M10 18h10' },
+        { type: 'checklist', label: 'Checklist', d: 'm3 7 2 2 3-3M11 8h10M3 17l2 2 3-3M11 18h10' },
+        { type: 'steps-strip', label: 'Steps strip', d: 'M3 8h18v8H3zM9 8v8M15 8v8' },
+        { type: 'benefit-list', label: 'Benefits list', d: 'M4 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4M10 5h11M4 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4M10 12h11M4 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4M10 19h11' },
+    ] },
+    { name: 'Badges & callouts', items: [
+        { type: 'rating-stars', label: 'Star rating', d: 'm12 3 2.6 5.6 6.4.8-4.7 4.3 1.2 6.3L12 17l-5.5 3 1.2-6.3L3 9.4l6.4-.8z' },
+        { type: 'trust-marks', label: 'Trust marks', d: 'M4 12h.01M9 12h.01M14 12h.01M19 12h.01' },
+        { type: 'stat-stamp', label: 'Stat badge', d: 'M4 5h16v14H4zM8 15h8M8 10h4' },
+        { type: 'info-card', label: 'Info card', d: 'M3 6h18v12H3zM7 12h2M12 10h5M12 14h5' },
     ] },
     { name: 'Website sections', items: [
         { type: 'hero', label: 'Hero banner', d: 'M3 4h18v9H3zM6 17h8M6 20h5' },
