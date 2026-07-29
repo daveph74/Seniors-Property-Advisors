@@ -13,9 +13,9 @@ export default function CtaSection({ data, actions, anchor }) {
                 </h2>
                 <p>{data.body}</p>
                 <div className="row">
-                    {(data.buttons || []).map((cta) => (
+                    {(data.buttons || []).map((cta, i) => (
                         <ActionButton
-                            key={cta.label}
+                            key={i}
                             cta={cta}
                             actions={actions}
                             className={`btn ${cta.variant} lg${cta.onNavy ? ' on-navy' : ''}`}

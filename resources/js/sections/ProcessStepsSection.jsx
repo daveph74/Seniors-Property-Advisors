@@ -11,8 +11,8 @@ export default function ProcessStepsSection({ data, anchor }) {
                 </div>
 
                 <div className="steps">
-                    {(data.items || []).map((s) => (
-                        <div className="step" key={s.num}>
+                    {(data.items || []).map((s, i) => (
+                        <div className="step" key={i}>
                             <div className="num">{s.num}</div>
                             <h4>{s.title}</h4>
                             <p>{s.body}</p>

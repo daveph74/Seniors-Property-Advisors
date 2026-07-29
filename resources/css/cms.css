@@ -581,8 +581,19 @@
 .cms-align-row{ display: flex; gap: 6px; margin-bottom: 14px; }
 .cms-align-btn{ flex: 1; height: 32px; border: 1px solid var(--cms-border-input); border-radius: 7px; background: #fff; color: var(--cms-text-mid); font: 500 12.5px/1 var(--cms-font-sans); cursor: pointer; }
 .cms-align-btn--active{ border-color: var(--cms-navy); background: var(--cms-accent-bg); color: var(--cms-navy); }
+.cms-rep__item{ border: 1px solid var(--cms-border); border-radius: 8px; background: var(--cms-surface); margin-bottom: 6px; overflow: hidden; }
+.cms-rep__item--open{ border-color: var(--cms-accent-border); box-shadow: var(--cms-shadow-card); }
+.cms-rep__head{ display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 8px; cursor: pointer; }
+.cms-rep__head:hover{ background: var(--cms-tint); }
+.cms-rep__num{ flex: none; width: 18px; height: 18px; border-radius: 5px; background: var(--cms-neutral-bg); color: var(--cms-text-mid); font-size: 10.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.cms-rep__summary{ flex: 1; min-width: 0; font-size: 12.5px; color: var(--cms-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cms-rep__summary em{ color: var(--cms-text-quiet); font-style: normal; }
+.cms-rep__head .cms-icon-btn-sm{ width: 24px; height: 24px; flex: none; }
+.cms-rep__head .cms-icon-btn-sm:disabled{ opacity: .3; cursor: not-allowed; }
+.cms-rep__body{ padding: 10px 10px 12px; border-top: 1px solid var(--cms-border-softer); background: var(--cms-tint); }
+
 .cms-swatch-row{ display: flex; gap: 8px; margin-bottom: 16px; }
-.cms-swatch{ width: 32px; height: 32px; border-radius: 7px; border: 1px solid var(--cms-border-input); cursor: pointer; }
+.cms-swatch{ width: 32px; height: 32px; padding: 0; border-radius: 7px; border: 1px solid var(--cms-border-input); cursor: pointer; }
 .cms-swatch--active{ box-shadow: 0 0 0 2px #C9DAF5; }
 .cms-toggle-row{ display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--cms-border-softer); }
 .cms-toggle-row__label{ font-size: 12.5px; color: var(--cms-text); }

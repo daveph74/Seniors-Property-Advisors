@@ -353,6 +353,26 @@ class CmsBuilderTest extends TestCase
         $this->assertNull((new PageContentStore)->document('home')['draft']);
     }
 
+    public function test_a_section_persists_its_anchor(): void
+    {
+        $sections = $this->section([[
+            'id' => 'heading-2',
+            'type' => 'heading',
+            'label' => 'Heading',
+            'active' => true,
+            'data' => ['heading' => 'How it works'],
+        ]]);
+        $sections[0]['anchor'] = 'how';
+
+        $this->post('/cms/pages/1/publish', ['sections' => $sections])->assertRedirect();
+
+        $this->assertSame('how', (new PageContentStore)->document('home')['published'][0]['anchor']);
+
+        $this->get('/')->assertInertia(function ($page) {
+            $this->assertSame('how', $page->toArray()['props']['sections'][0]['anchor']);
+        });
+    }
+
     public function test_a_section_persists_its_width(): void
     {
         $this->post('/cms/pages/1/publish', [

@@ -334,6 +334,19 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         markUnsaved();
     };
 
+    const setSelectedAnchor = (value) => {
+        if (!selected) return;
+
+        const anchor = value
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-');
+
+        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, anchor: anchor || null })));
+        markUnsaved();
+    };
+
     const toggleActive = (id, label) => {
         const wasHidden = locate(blocks, id)?.block.active === false;
 
@@ -514,7 +527,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
             onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId, index: i }); }}
             onClick={(e) => { e.stopPropagation(); setSelectedId(b.id); }}
             className={`cms-block ${b.id === selectedId ? 'cms-block--selected' : ''}`}
-            style={b.active === false ? { opacity: 0.4 } : undefined}
+            style={b.active === false || b.data?.hidden?.[device] ? { opacity: 0.4 } : undefined}
         >
             {CONTENT_KEY[b.type] && !b.data[CONTENT_KEY[b.type]] ? (
                 <div className="cms-block-placeholder">{SECTION_LABELS[b.type]} — no content yet</div>
@@ -712,6 +725,9 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                             onTogglePanel={togglePanel}
                             patch={patchSelected}
                             setLabel={setSelectedLabel}
+                            setAnchor={setSelectedAnchor}
+                            device={device}
+                            onDevice={setDevice}
                             onColumnCount={(n) => setColumnCount(selectedId, n)}
                             onSaveReusable={() => flash('Saved to reusable sections')}
                             onOpenMediaPicker={() => flash('Media picker opens over the builder')}

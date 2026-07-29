@@ -13,8 +13,8 @@ export default function WhyListSection({ data, anchor }) {
                         <p className="section-lead">{data.lead}</p>
 
                         <ul className="why-list">
-                            {(data.items || []).map((w) => (
-                                <li key={w.title}>
+                            {(data.items || []).map((w, i) => (
+                                <li key={i}>
                                     <div className="check">✓</div>
                                     <div>
                                         <b>{w.title}</b>

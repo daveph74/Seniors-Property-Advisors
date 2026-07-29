@@ -1,6 +1,10 @@
-export default function RowContainer({ anchor, children }) {
+export default function RowContainer({ data = {}, anchor, children }) {
+    const classes = ['row-container', data.stack === 'never' ? 'row-container--no-stack' : '']
+        .filter(Boolean)
+        .join(' ');
+
     return (
-        <div className="row-container" id={anchor}>
+        <div className={classes} id={anchor}>
             {children}
         </div>
     );

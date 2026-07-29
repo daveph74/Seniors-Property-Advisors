@@ -7,7 +7,7 @@ export default function AgentCompareSection({ data, actions, anchor }) {
     const row = (label, render) => (
         <>
             <div className="cmp-cell label">{label}</div>
-            {agents.map((a) => render(a))}
+            {agents.map((a, i) => render(a, i))}
         </>
     );
 
@@ -28,9 +28,9 @@ export default function AgentCompareSection({ data, actions, anchor }) {
                 <div className="compare-shell">
                     <div className="compare-toolbar">
                         <div className="left">
-                            {(data.filters || []).map((f) => (
+                            {(data.filters || []).map((f, i) => (
                                 <span
-                                    key={f.label}
+                                    key={i}
                                     className={`chip${f.active ? ' active' : ''}${f.count ? ' count' : ''}`}
                                 >
                                     {f.label}
@@ -45,8 +45,8 @@ export default function AgentCompareSection({ data, actions, anchor }) {
 
                     <div className="compare-grid">
                         <div className="cmp-cell first-label">{labels.shortlist}</div>
-                        {agents.map((a) => (
-                            <div key={a.name} className={`cmp-cell head${a.best ? ' best' : ''}`}>
+                        {agents.map((a, i) => (
+                            <div key={i} className={`cmp-cell head${a.best ? ' best' : ''}`}>
                                 <div className="agent-head">
                                     <span
                                         className="av"
@@ -58,8 +58,8 @@ export default function AgentCompareSection({ data, actions, anchor }) {
                             </div>
                         ))}
 
-                        {row(labels.experience, (a) => (
-                            <div className="cmp-cell" key={a.name}>
+                        {row(labels.experience, (a, i) => (
+                            <div className="cmp-cell" key={i}>
                                 <strong>{(a.experience || {}).strong}</strong> {(a.experience || {}).rest}
                                 <div className="meter">
                                     <i style={{ width: `${(a.experience || {}).meter || 0}%` }} />
@@ -67,36 +67,36 @@ export default function AgentCompareSection({ data, actions, anchor }) {
                             </div>
                         ))}
 
-                        {row(labels.sales, (a) => (
-                            <div className="cmp-cell" key={a.name}>
+                        {row(labels.sales, (a, i) => (
+                            <div className="cmp-cell" key={i}>
                                 <strong>{(a.sales || {}).strong}</strong>
                                 <br />
                                 <span className="sub">{(a.sales || {}).sub}</span>
                             </div>
                         ))}
 
-                        {row(labels.commission, (a) => (
-                            <div className="cmp-cell" key={a.name}>
+                        {row(labels.commission, (a, i) => (
+                            <div className="cmp-cell" key={i}>
                                 <span className="price">{(a.commission || {}).price}</span>
                                 <div className="sub">{(a.commission || {}).sub}</div>
                             </div>
                         ))}
 
-                        {row(labels.marketing, (a) => (
-                            <div className="cmp-cell" key={a.name}>
+                        {row(labels.marketing, (a, i) => (
+                            <div className="cmp-cell" key={i}>
                                 <strong>{(a.marketing || {}).strong}</strong>
                                 <div className="sub">{(a.marketing || {}).sub}</div>
                             </div>
                         ))}
 
-                        {row(labels.notes, (a) => (
-                            <div className="cmp-cell note" key={a.name}>
+                        {row(labels.notes, (a, i) => (
+                            <div className="cmp-cell note" key={i}>
                                 {a.note}
                             </div>
                         ))}
 
-                        {row(labels.next, (a) => (
-                            <div className="cmp-cell cta" key={a.name}>
+                        {row(labels.next, (a, i) => (
+                            <div className="cmp-cell cta" key={i}>
                                 <ActionButton
                                     cta={a.cta}
                                     actions={actions}

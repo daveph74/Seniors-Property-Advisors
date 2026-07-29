@@ -21,9 +21,9 @@ export default function HeroSection({ data, actions, anchor }) {
                         <p className="subhead">{data.subhead}</p>
                         <p className="lead">{data.lead}</p>
                         <div className="hero-ctas">
-                            {(data.ctas || []).map((cta) => (
+                            {(data.ctas || []).map((cta, i) => (
                                 <ActionButton
-                                    key={cta.label}
+                                    key={i}
                                     cta={cta}
                                     actions={actions}
                                     className={`btn ${cta.variant} lg`}

@@ -1,4 +1,13 @@
 import { Toggle, AccordionSection } from '../components/ui';
+import RepeaterEditor from './RepeaterEditor';
+import { repeatersFor } from './repeaters';
+
+const BACKGROUNDS = [
+    { value: 'white', colour: '#FFFFFF' },
+    { value: 'wash-2', colour: '#F5FAFD' },
+    { value: 'wash', colour: '#EAF2FB' },
+    { value: 'navy', colour: '#0D223F', dark: true },
+];
 
 const PANELS = [
     ['content', 'Content'],
@@ -8,7 +17,7 @@ const PANELS = [
     ['advanced', 'Advanced'],
 ];
 
-export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, onColumnCount, onSaveReusable, onOpenMediaPicker }) {
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, onSaveReusable, onOpenMediaPicker }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -36,9 +45,9 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
     const columnRow = type === 'row'
         ? block
         : (block.children || []).find((c) => c.type === 'row');
+    const hiddenOn = ['desktop', 'tablet', 'mobile'].filter((bp) => (data.hidden || {})[bp]);
 
-    const collections = ['items', 'agents', 'checks', 'steps', 'ctas', 'buttons', 'trustMarks', 'filters', 'avatars']
-        .filter((key) => Array.isArray(data[key]) && data[key].length);
+    const repeaters = repeatersFor(type, data);
 
     return (
         <>
@@ -232,19 +241,14 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
-                        {collections.length > 0 && (
-                            <div className="cms-field">
-                                <label className="cms-field-label">Repeating content</label>
-                                {collections.map((key) => (
-                                    <div key={key} className="cms-nav-item-row">
-                                        <span className="cms-nav-item-row__label">{key}</span>
-                                        <span className="cms-nav-item-row__target" style={{ marginLeft: 'auto' }}>
-                                            {data[key].length} items · edit in JSON
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        {repeaters.map((collection) => (
+                            <RepeaterEditor
+                                key={collection.key}
+                                collection={collection}
+                                items={data[collection.key]}
+                                onChange={(next) => patch(collection.key, next)}
+                            />
+                        ))}
                     </>
                 </AccordionSection>
 
@@ -262,52 +266,83 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                 <div className="cms-hint">Nested sections inherit the parent width.</div>
                             </div>
                         )}
-                        <label className="cms-field-label">Content alignment</label>
-                        <div className="cms-align-row">
-                            <button type="button" className="cms-align-btn cms-align-btn--active">Left</button>
-                            <button type="button" className="cms-align-btn">Centre</button>
-                            <button type="button" className="cms-align-btn">Right</button>
-                        </div>
-                        <div className="cms-field">
-                            <label className="cms-field-label">Section height</label>
-                            <select className="cms-select">
-                                <option>Comfortable</option>
-                                <option>Compact</option>
-                                <option>Tall</option>
-                            </select>
-                        </div>
-                        <label className="cms-field-label">Item spacing</label>
-                        <select className="cms-select">
-                            <option>Medium</option>
-                            <option>Small</option>
-                            <option>Large</option>
-                        </select>
+                        {has('contentAlign') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Content alignment</label>
+                                <div className="cms-align-row">
+                                    {[['left', 'Left'], ['center', 'Centre'], ['right', 'Right']].map(([value, text]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            className={`cms-align-btn ${(data.contentAlign || 'left') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patch('contentAlign', value)}
+                                        >
+                                            {text}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {has('height') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Section height</label>
+                                <select className="cms-select" value={data.height || 'comfortable'} onChange={(e) => patch('height', e.target.value)}>
+                                    <option value="comfortable">Comfortable</option>
+                                    <option value="compact">Compact</option>
+                                    <option value="tall">Tall</option>
+                                </select>
+                            </div>
+                        )}
+
+                        {has('spacing') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Item spacing</label>
+                                <select className="cms-select" value={data.spacing || 'medium'} onChange={(e) => patch('spacing', e.target.value)}>
+                                    <option value="medium">Medium</option>
+                                    <option value="small">Small</option>
+                                    <option value="large">Large</option>
+                                </select>
+                                <div className="cms-hint">Space between the blocks stacked inside this section.</div>
+                            </div>
+                        )}
                     </>
                 </AccordionSection>
 
                 <AccordionSection id="style" title={PANELS[2][1]} open={openPanels.has('style')} onToggle={onTogglePanel}>
                     <>
-                        <label className="cms-field-label" style={{ marginBottom: 7 }}>Background</label>
-                        <div className="cms-swatch-row">
-                            <span className="cms-swatch" style={{ background: '#FFFFFF', borderWidth: 2 }} />
-                            <span className="cms-swatch" style={{ background: '#F5F8FC' }} />
-                            <span className="cms-swatch cms-swatch--active" style={{ background: '#12294C', borderColor: '#12294C', borderWidth: 2 }} />
-                            <span className="cms-swatch" style={{ background: '#0C1B31', borderColor: '#0C1B31' }} />
-                        </div>
-                        <div className="cms-field">
-                            <label className="cms-field-label">Text theme</label>
-                            <select className="cms-select">
-                                <option>Light text on dark</option>
-                                <option>Dark text on light</option>
-                            </select>
-                        </div>
-                        <label className="cms-field-label">Padding preset</label>
-                        <div className="cms-align-row">
-                            <button type="button" className="cms-align-btn">S</button>
-                            <button type="button" className="cms-align-btn cms-align-btn--active">M</button>
-                            <button type="button" className="cms-align-btn">L</button>
-                            <button type="button" className="cms-align-btn">XL</button>
-                        </div>
+                        {has('background') ? (
+                            <>
+                                <label className="cms-field-label" style={{ marginBottom: 7 }}>Background</label>
+                                <div className="cms-swatch-row">
+                                    {BACKGROUNDS.map(({ value, colour, dark }) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            title={value}
+                                            className={`cms-swatch ${(data.background || 'white') === value ? 'cms-swatch--active' : ''}`}
+                                            style={{ background: colour, borderColor: dark ? colour : undefined }}
+                                            onClick={() => {
+                                                patch('background', value);
+                                                patch('textTheme', dark ? 'light' : 'dark');
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        ) : null}
+
+                        {has('textTheme') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Text theme</label>
+                                <select className="cms-select" value={data.textTheme || 'dark'} onChange={(e) => patch('textTheme', e.target.value)}>
+                                    <option value="dark">Dark text on light</option>
+                                    <option value="light">Light text on dark</option>
+                                </select>
+                                <div className="cms-hint">Set automatically by the background, but you can override it.</div>
+                            </div>
+                        )}
+
                         <div className="cms-panel-note">Style options are limited to the Seniors Property Advisors brand kit so pages stay consistent.</div>
                     </>
                 </AccordionSection>
@@ -315,20 +350,39 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                 <AccordionSection id="responsive" title={PANELS[3][1]} open={openPanels.has('responsive')} onToggle={onTogglePanel}>
                     <>
                         <div className="cms-align-row">
-                            <button type="button" className="cms-align-btn cms-align-btn--active">Desktop</button>
-                            <button type="button" className="cms-align-btn">Tablet</button>
-                            <button type="button" className="cms-align-btn">Mobile</button>
+                            {[['desktop', 'Desktop'], ['tablet', 'Tablet'], ['mobile', 'Mobile']].map(([value, text]) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    className={`cms-align-btn ${device === value ? 'cms-align-btn--active' : ''}`}
+                                    onClick={() => onDevice(value)}
+                                >
+                                    {text}
+                                </button>
+                            ))}
                         </div>
-                        <div className="cms-field">
-                            <label className="cms-field-label">Stack direction</label>
-                            <select className="cms-select">
-                                <option>Stack vertically on mobile</option>
-                                <option>Keep side by side</option>
-                            </select>
-                        </div>
+
+                        {type === 'row' && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Stack direction</label>
+                                <select className="cms-select" value={data.stack || 'mobile'} onChange={(e) => patch('stack', e.target.value)}>
+                                    <option value="mobile">Stack vertically on mobile</option>
+                                    <option value="never">Keep side by side</option>
+                                </select>
+                            </div>
+                        )}
+
                         <div className="cms-toggle-row" style={{ borderTop: '1px solid var(--cms-border-softer)' }}>
-                            <span className="cms-toggle-row__label">Hide on this breakpoint</span>
-                            <Toggle on={false} onChange={() => {}} />
+                            <span className="cms-toggle-row__label">Hide on {device}</span>
+                            <Toggle
+                                on={!!(data.hidden || {})[device]}
+                                onChange={(v) => patch('hidden', { ...(data.hidden || {}), [device]: v })}
+                            />
+                        </div>
+                        <div className="cms-hint">
+                            {hiddenOn.length
+                                ? `Hidden on ${hiddenOn.join(', ')}. The canvas dims it so you can still select it.`
+                                : 'Visible on every breakpoint.'}
                         </div>
                     </>
                 </AccordionSection>
@@ -341,7 +395,17 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                         </div>
                         <div className="cms-field">
                             <label className="cms-field-label">Anchor ID</label>
-                            <input className="cms-input" defaultValue={`${block.type}-${block.id}`} />
+                            <input
+                                className="cms-input"
+                                value={block.anchor || ''}
+                                placeholder="how"
+                                onChange={(e) => setAnchor(e.target.value)}
+                            />
+                            <div className="cms-hint">
+                                {block.anchor
+                                    ? `Menu links can point at #${block.anchor}`
+                                    : 'Give this a name to link to it from the menu, e.g. #how'}
+                            </div>
                         </div>
                         <div className="cms-reusable-box">
                             <div className="cms-reusable-box__title">Reusable section</div>

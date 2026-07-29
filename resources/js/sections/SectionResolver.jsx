@@ -1,4 +1,7 @@
+import { Fragment } from 'react';
 import { resolveSection } from './registry';
+
+const BREAKPOINTS = ['desktop', 'tablet', 'mobile'];
 
 export default function SectionResolver({ sections = [], actions = {}, depth = 0 }) {
     return sections.map((section) => {
@@ -10,15 +13,27 @@ export default function SectionResolver({ sections = [], actions = {}, depth = 0
             ? <SectionResolver sections={section.children} actions={actions} depth={depth + 1} />
             : null;
 
-        return (
+        const rendered = (
             <Section
-                key={section.id}
                 data={section.data || {}}
                 anchor={section.anchor}
                 actions={actions}
             >
                 {nested}
             </Section>
+        );
+
+        const hidden = section.data?.hidden || {};
+        const hideOn = BREAKPOINTS.filter((bp) => hidden[bp]);
+
+        if (hideOn.length === 0) {
+            return <Fragment key={section.id}>{rendered}</Fragment>;
+        }
+
+        return (
+            <div key={section.id} className={`u-hide-wrap ${hideOn.map((bp) => `u-hide-${bp}`).join(' ')}`}>
+                {rendered}
+            </div>
         );
     });
 }

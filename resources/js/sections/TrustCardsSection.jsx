@@ -17,10 +17,10 @@ export default function TrustCardsSection({ data, actions, anchor }) {
                 </div>
 
                 <div className="cards">
-                    {(data.items || []).map((c) => {
+                    {(data.items || []).map((c, i) => {
                         const Icon = ICON_MAP[c.icon];
                         return (
-                            <div className="card" key={c.title}>
+                            <div className="card" key={i}>
                                 <div className="ico">{Icon ? <Icon /> : null}</div>
                                 <h3>{c.title}</h3>
                                 <p>{c.body}</p>

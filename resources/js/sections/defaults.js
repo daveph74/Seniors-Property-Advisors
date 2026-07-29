@@ -1,6 +1,11 @@
 const TEMPLATES = {
     section: {
         width: 'standard',
+        contentAlign: 'left',
+        height: 'comfortable',
+        spacing: 'medium',
+        background: 'white',
+        textTheme: 'dark',
     },
     row: {},
     column: {},

@@ -43,9 +43,9 @@ export default function FamilySection({ data, actions, anchor }) {
                         </ul>
 
                         <div className="btn-row">
-                            {(data.ctas || []).map((cta) => (
+                            {(data.ctas || []).map((cta, i) => (
                                 <ActionButton
-                                    key={cta.label}
+                                    key={i}
                                     cta={cta}
                                     actions={actions}
                                     className={`btn ${cta.variant}`}
