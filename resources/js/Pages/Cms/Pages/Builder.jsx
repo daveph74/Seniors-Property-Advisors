@@ -17,6 +17,7 @@ import PublishModal from '../../../cms/builder/PublishModal';
 import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
 import PageSettingsPanel from '../../../cms/builder/PageSettingsPanel';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
+import { writePath } from '../../../cms/builder/repeaters';
 import { relative } from '../../../cms/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
@@ -431,10 +432,13 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
         markUnsaved();
     };
 
-    const patchSelected = (key, value) => {
+    const patchSelected = (path, value, tag = path) => {
         if (!selected) return;
 
-        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, data: { ...b.data, [key]: value } })), `patch:${selected.id}`);
+        setBlocks(
+            (prev) => mapTree(prev, selected.id, (b) => ({ ...b, data: writePath(b.data, path, value) })),
+            `patch:${selected.id}:${tag}`,
+        );
         markUnsaved();
     };
 
@@ -976,7 +980,6 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                                 onDevice={setDevice}
                                 onColumnCount={(n) => setColumnCount(selectedId, n)}
                                 onSaveReusable={() => saveReusable(selected)}
-                                onOpenMediaPicker={() => flash('Media picker opens over the builder')}
                             />
                         ) : (
                             <>

@@ -10,7 +10,7 @@ export default function ButtonBlock({ data, anchor, actions }) {
     return (
         <div id={anchor} className={`block-button ${ALIGN[data.align] || ''} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
             <ActionButton
-                cta={{ label: data.label, href: data.href, arrow: true }}
+                cta={{ label: data.label, href: data.href, action: data.action, arrow: data.arrow !== false }}
                 className={`btn ${VARIANTS[data.variant] || 'primary'}`}
                 actions={actions}
             />

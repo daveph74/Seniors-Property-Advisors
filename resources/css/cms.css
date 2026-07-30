@@ -265,6 +265,12 @@
 .cms-modal__lead{ margin: 0 0 18px; font-size: 13.5px; color: var(--cms-text-mid); line-height: 1.55; }
 .cms-modal__actions{ display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
 .cms-field-error{ margin-top: 5px; font-size: 12.5px; color: var(--cms-danger-text); }
+.cms-fieldgroup{ margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--cms-border-soft); }
+.cms-fieldgroup__title{
+  margin-bottom: 10px; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--cms-text-quiet);
+}
+.cms-media-pick-row__thumb--img{ object-fit: cover; }
 .cms-confirm-detail{
   margin: 0 0 18px; padding: 11px 13px; border: 1px solid var(--cms-border-soft);
   border-radius: var(--cms-radius); background: var(--cms-tint-2);

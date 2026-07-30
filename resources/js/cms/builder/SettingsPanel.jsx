@@ -1,6 +1,8 @@
 import { Toggle, AccordionSection } from '../components/ui';
 import RepeaterEditor from './RepeaterEditor';
-import { repeatersFor } from './repeaters';
+import ImageField from './ImageField';
+import { repeatersFor, readPath } from './repeaters';
+import { contentFieldsFor } from './contentFields';
 
 const BACKGROUNDS = [
     { value: 'white', colour: '#FFFFFF' },
@@ -15,7 +17,6 @@ const FIELDS = {
     'rating-stars': [['stars', 'Stars'], ['ratingLabel', 'Headline'], ['note', 'Sub-note']],
     'stat-stamp': [['value', 'Big number'], ['text', 'Caption']],
     'quote-card': [['quote', 'Quote', 'area'], ['by', 'Attribution'], ['avatar', 'Photo URL']],
-    'info-card': [['title', 'Title'], ['value', 'Big value'], ['note', 'Sub-note']],
 };
 
 const PANELS = [
@@ -26,7 +27,7 @@ const PANELS = [
     ['advanced', 'Advanced'],
 ];
 
-export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, onSaveReusable, onOpenMediaPicker }) {
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, onSaveReusable }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -46,17 +47,71 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
     const hasEyebrow = has('eyebrow');
     const hasHeading = has('heading');
     const hasBody = has('body');
-    const hasButtons = has('primary');
     const hasHeadingEm = has('headingEm');
     const hasSubhead = has('subhead');
     const hasLead = has('lead');
-    const isHero = type === 'hero' && has('secondary');
+    const schema = contentFieldsFor(type);
     const columnRow = type === 'row'
         ? block
         : (block.children || []).find((c) => c.type === 'row');
     const hiddenOn = ['desktop', 'tablet', 'mobile'].filter((bp) => (data.hidden || {})[bp]);
 
     const repeaters = repeatersFor(type, data);
+
+    const renderField = (f) => {
+        const value = readPath(data, f.path);
+        const set = (v) => patch(f.path, v);
+
+        if (f.group) {
+            return (
+                <div key={f.title} className="cms-fieldgroup">
+                    <div className="cms-fieldgroup__title">{f.title}</div>
+                    {f.fields.map(renderField)}
+                </div>
+            );
+        }
+
+        if (f.type === 'image') {
+            return (
+                <ImageField
+                    key={f.path}
+                    label={f.label}
+                    value={value}
+                    alt={f.altPath ? readPath(data, f.altPath) : null}
+                    onChange={set}
+                    onAltChange={f.altPath ? (v) => patch(f.altPath, v) : null}
+                />
+            );
+        }
+
+        if (f.type === 'toggle') {
+            return (
+                <div key={f.path} className="cms-toggle-row">
+                    <span className="cms-toggle-row__label">{f.label}</span>
+                    <Toggle on={f.whenAbsent ? value !== false : !!value} onChange={set} />
+                </div>
+            );
+        }
+
+        return (
+            <div key={f.path} className="cms-field">
+                <label className="cms-field-label">{f.label}</label>
+                {f.type === 'textarea' && (
+                    <textarea className="cms-textarea" rows={3} value={value} onChange={(e) => set(e.target.value)} />
+                )}
+                {f.type === 'select' && (
+                    <select className="cms-select" value={value || f.options[0]} onChange={(e) => set(e.target.value)}>
+                        {f.options.map((o) => (
+                            <option key={o} value={o}>{o === '' ? 'Nothing' : o}</option>
+                        ))}
+                    </select>
+                )}
+                {f.type === 'text' && (
+                    <input className="cms-input" value={value} onChange={(e) => set(e.target.value)} />
+                )}
+            </div>
+        );
+    };
 
     return (
         <>
@@ -70,13 +125,6 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
             <div className="cms-builder-right__body">
                 <AccordionSection id="content" title={PANELS[0][1]} open={openPanels.has('content')} onToggle={onTogglePanel}>
                     <>
-                        {hasEyebrow && (
-                            <div className="cms-field">
-                                <label className="cms-field-label">Pre-heading</label>
-                                <input className="cms-input" value={data.eyebrow} onChange={(e) => patch('eyebrow', e.target.value)} />
-                            </div>
-                        )}
-
                         {columnRow && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Columns</label>
@@ -93,6 +141,14 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     }}
                                 />
                                 <div className="cms-hint">One column stacks everything. Two or more sit side by side.</div>
+                            </div>
+                        )}
+
+                        {schema ? schema.map(renderField) : (<>
+                        {hasEyebrow && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Pre-heading</label>
+                                <input className="cms-input" value={data.eyebrow} onChange={(e) => patch('eyebrow', e.target.value)} />
                             </div>
                         )}
 
@@ -147,36 +203,6 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                 <label className="cms-field-label">Supporting text</label>
                                 <textarea className="cms-textarea" rows={4} value={data.body || ''} onChange={(e) => patch('body', e.target.value)} />
                             </div>
-                        )}
-
-                        {hasButtons && (
-                            <div className="cms-field">
-                                <label className="cms-field-label">Primary button</label>
-                                <input className="cms-input" style={{ marginBottom: 8 }} value={data.primary} onChange={(e) => patch('primary', e.target.value)} />
-                                <select className="cms-select">
-                                    <option>Links to: Request a Consultation</option>
-                                    <option>Links to: Downsizing Support</option>
-                                    <option>Links to: external URL</option>
-                                </select>
-                            </div>
-                        )}
-
-                        {isHero && (
-                            <>
-                                <div className="cms-field">
-                                    <label className="cms-field-label">Secondary button</label>
-                                    <input className="cms-input" value={data.secondary || ''} onChange={(e) => patch('secondary', e.target.value)} />
-                                </div>
-                                <label className="cms-field-label">Background image</label>
-                                <div className="cms-media-pick-row">
-                                    <div className="cms-media-pick-row__thumb" />
-                                    <div style={{ minWidth: 0, flex: 1 }}>
-                                        <div className="cms-media-pick-row__name">couple-garden-home.jpg</div>
-                                        <div className="cms-media-pick-row__dims">2400 × 1350</div>
-                                    </div>
-                                    <button type="button" className="cms-btn cms-btn--xs" onClick={onOpenMediaPicker}>Replace</button>
-                                </div>
-                            </>
                         )}
 
                         {has('src') && (
@@ -250,6 +276,22 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
+                        {type === 'button' && (
+                            <>
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Opens</label>
+                                    <select className="cms-select" value={data.action || ''} onChange={(e) => patch('action', e.target.value)}>
+                                        <option value="">The link address above</option>
+                                        <option value="open-finder">The Find My Agent form</option>
+                                    </select>
+                                </div>
+                                <div className="cms-toggle-row">
+                                    <span className="cms-toggle-row__label">Show arrow</span>
+                                    <Toggle on={data.arrow !== false} onChange={(v) => patch('arrow', v)} />
+                                </div>
+                            </>
+                        )}
+
                         {(FIELDS[type] || []).map(([key, label, kind]) => (
                             <div key={key} className="cms-field">
                                 <label className="cms-field-label">{label}</label>
@@ -260,6 +302,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                 )}
                             </div>
                         ))}
+                        </>)}
 
                         {repeaters.map((collection) => (
                             <RepeaterEditor
@@ -391,8 +434,8 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                             className={`cms-swatch ${(data.background || 'white') === value ? 'cms-swatch--active' : ''}`}
                                             style={{ background: colour, borderColor: dark ? colour : undefined }}
                                             onClick={() => {
-                                                patch('background', value);
-                                                patch('textTheme', dark ? 'light' : 'dark');
+                                                patch('background', value, 'background');
+                                                patch('textTheme', dark ? 'light' : 'dark', 'background');
                                             }}
                                         />
                                     ))}

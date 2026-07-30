@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { Toggle } from '../components/ui';
 import { ChevronUpSmallIcon, ChevronDownSmallIcon, TrashIcon, PlusIcon } from '../components/icons';
 import { readPath, writePath, blankItem } from './repeaters';
+import ImageField from './ImageField';
+
+const SUMMARY_KINDS = ['text', 'textarea', 'image'];
 
 function summarise(item, fields) {
     if (typeof item === 'string') return item;
 
-    const first = fields.find((f) => f.type === 'text' || f.type === 'textarea');
+    const first = fields.find((f) => SUMMARY_KINDS.includes(f.type));
 
     return first ? String(readPath(item, first.path) || '') : '';
 }
@@ -63,8 +66,21 @@ export default function RepeaterEditor({ collection, items, onChange }) {
                                     return (
                                         <div key={f.path} className="cms-toggle-row">
                                             <span className="cms-toggle-row__label">{f.label}</span>
-                                            <Toggle on={!!value} onChange={set} />
+                                            <Toggle on={f.whenAbsent ? value !== false : !!value} onChange={set} />
                                         </div>
+                                    );
+                                }
+
+                                if (f.type === 'image') {
+                                    return (
+                                        <ImageField
+                                            key={f.path}
+                                            label={f.label}
+                                            value={value}
+                                            alt={f.altPath ? readPath(item, f.altPath) : null}
+                                            onChange={set}
+                                            onAltChange={f.altPath ? (v) => replace(index, writePath(item, f.altPath, v)) : null}
+                                        />
                                     );
                                 }
 
@@ -83,6 +99,14 @@ export default function RepeaterEditor({ collection, items, onChange }) {
                                         )}
                                         {f.type === 'text' && (
                                             <input className="cms-input" value={value} onChange={(e) => set(e.target.value)} />
+                                        )}
+                                        {f.type === 'number' && (
+                                            <input
+                                                className="cms-input"
+                                                type="number"
+                                                value={value}
+                                                onChange={(e) => set(e.target.value === '' ? '' : Number(e.target.value))}
+                                            />
                                         )}
                                     </div>
                                 );

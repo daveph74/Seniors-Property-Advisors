@@ -1,11 +1,14 @@
-const ICONS = ['home', 'dollar', 'shield', 'star', 'phone', 'gift', 'user'];
-const VARIANTS = ['primary', 'secondary', 'ghost'];
-const ACTIONS = ['', 'open-finder'];
+export const ICONS = ['home', 'dollar', 'shield', 'star', 'phone', 'gift', 'user'];
+export const VARIANTS = ['primary', 'secondary', 'ghost'];
+export const ACTIONS = ['', 'open-finder'];
 
-const TEXT = (path, label) => ({ path, label, type: 'text' });
-const AREA = (path, label) => ({ path, label, type: 'textarea' });
-const PICK = (path, label, options) => ({ path, label, type: 'select', options });
-const FLAG = (path, label) => ({ path, label, type: 'toggle' });
+export const TEXT = (path, label) => ({ path, label, type: 'text' });
+export const AREA = (path, label) => ({ path, label, type: 'textarea' });
+export const PICK = (path, label, options) => ({ path, label, type: 'select', options });
+export const FLAG = (path, label) => ({ path, label, type: 'toggle' });
+export const FLAGON = (path, label) => ({ path, label, type: 'toggle', whenAbsent: true });
+export const NUM = (path, label) => ({ path, label, type: 'number' });
+export const IMG = (path, label, altPath = null) => ({ path, label, type: 'image', altPath });
 
 const BUTTON_FIELDS = [
     TEXT('label', 'Label'),
@@ -15,12 +18,14 @@ const BUTTON_FIELDS = [
     FLAG('arrow', 'Show arrow'),
 ];
 
+const CTA_BUTTON_FIELDS = [...BUTTON_FIELDS, FLAG('onNavy', 'Style for dark background')];
+
 const SCHEMAS = {
     'steps-strip': {
         steps: { title: 'Steps', fields: [TEXT('n', 'Number'), TEXT('label', 'Label')] },
     },
     'avatar-row': {
-        avatars: { title: 'Avatars', fields: [TEXT('', 'Image URL')] },
+        avatars: { title: 'Avatars', fields: [IMG('', 'Image URL')] },
     },
     'card-grid': {
         items: {
@@ -45,7 +50,7 @@ const SCHEMAS = {
     },
     hero: {
         ctas: { title: 'Buttons', fields: BUTTON_FIELDS },
-        avatars: { title: 'Avatars', fields: [TEXT('', 'Image URL')] },
+        avatars: { title: 'Avatars', fields: [IMG('', 'Image URL')] },
         steps: { title: 'Steps', fields: [TEXT('n', 'Number'), TEXT('label', 'Label')] },
     },
     'trust-cards': {
@@ -66,18 +71,23 @@ const SCHEMAS = {
     'agent-compare': {
         filters: {
             title: 'Filters',
-            fields: [TEXT('label', 'Label'), FLAG('active', 'Active'), FLAG('removable', 'Removable')],
+            fields: [
+                TEXT('label', 'Label'),
+                FLAG('active', 'Active'),
+                FLAG('removable', 'Removable'),
+                FLAG('count', 'Show as a count chip'),
+            ],
         },
         agents: {
             title: 'Agents',
             fields: [
                 TEXT('name', 'Name'),
                 TEXT('firm', 'Agency'),
-                TEXT('avatar', 'Photo URL'),
+                IMG('avatar', 'Photo'),
                 FLAG('best', 'Advisor pick'),
                 TEXT('experience.strong', 'Experience — bold'),
                 TEXT('experience.rest', 'Experience — rest'),
-                TEXT('experience.meter', 'Experience — meter %'),
+                NUM('experience.meter', 'Experience — meter %'),
                 TEXT('sales.strong', 'Sales — bold'),
                 TEXT('sales.sub', 'Sales — sub'),
                 TEXT('commission.price', 'Commission — price'),
@@ -96,7 +106,7 @@ const SCHEMAS = {
         ctas: { title: 'Buttons', fields: BUTTON_FIELDS },
     },
     cta: {
-        buttons: { title: 'Buttons', fields: BUTTON_FIELDS },
+        buttons: { title: 'Buttons', fields: CTA_BUTTON_FIELDS },
         trustMarks: { title: 'Trust marks', fields: [TEXT('', 'Text')] },
     },
 };

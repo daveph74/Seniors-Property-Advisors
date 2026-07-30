@@ -42,6 +42,8 @@ const TEMPLATES = {
     button: {
         label: '',
         href: '',
+        action: '',
+        arrow: true,
         variant: 'primary',
         align: 'left',
         spaceAbove: 'none',
