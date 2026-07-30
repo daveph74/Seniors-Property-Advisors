@@ -1023,3 +1023,17 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .preview-banner__dot{ width: 8px; height: 8px; border-radius: 50%; background: #ffc24a; flex: none; }
 .preview-banner__label{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .preview-banner__link{ color: #ffc24a; text-decoration: underline; white-space: nowrap; }
+
+/* Editors type line breaks into the multi-line fields; preserve them wherever
+   those fields are rendered. pre-line keeps newlines and still collapses runs
+   of spaces, so nothing else about the typography changes. */
+.hero h1, .hero .lead,
+.trust h2, .how h2, .why h2, .compare h2, .family h2, .cta h2,
+.section-lead,
+.cta > .container > p,
+.trust .card p, .how .step p, .why li span, .family li span,
+.compare .cmp-cell.note,
+.block-card-grid p, .block-step-grid p, .block-benefit-list span,
+.block-quote-card p, .block-info-card small, .block-checklist li{
+  white-space: pre-line;
+}
