@@ -16,6 +16,11 @@ class CmsPageController extends Controller
 {
     public function __construct(private readonly PageContentStore $store) {}
 
+    public function index(): Response
+    {
+        return Inertia::render('Cms/Pages/Index', ['pages' => $this->store->all()]);
+    }
+
     public function edit(string $page): Response
     {
         $slug = $this->store->findByCmsId($page);

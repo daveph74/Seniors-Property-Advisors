@@ -4,10 +4,11 @@ import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, DropdownMenu, MenuItem, MenuSeparator } from '../../../cms/components/ui';
 import CreatePageModal from '../../../cms/components/CreatePageModal';
 import { useCmsToast } from '../../../cms/ToastContext';
-import { PAGES, STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
+import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
+import { relative } from '../../../cms/relativeTime';
 import { DotsVerticalIcon, FileIcon, PlusIcon } from '../../../cms/components/icons';
 
-export default function PagesIndex() {
+export default function PagesIndex({ pages = [] }) {
     const flash = useCmsToast();
     const [view, setView] = useState('list');
     const [search, setSearch] = useState('');
@@ -15,12 +16,12 @@ export default function PagesIndex() {
     const [menuFor, setMenuFor] = useState(null);
     const [createOpen, setCreateOpen] = useState(false);
 
-    const filtered = useMemo(() => PAGES.filter((p) => {
+    const filtered = useMemo(() => pages.filter((p) => {
         const q = search.trim().toLowerCase();
         if (q && !p.title.toLowerCase().includes(q) && !p.url.toLowerCase().includes(q)) return false;
         if (statusFilter !== 'all' && p.status !== statusFilter) return false;
         return true;
-    }), [search, statusFilter]);
+    }), [pages, search, statusFilter]);
 
     const editPage = (p) => router.visit(`/cms/pages/${p.id}/edit`);
 
@@ -33,18 +34,6 @@ export default function PagesIndex() {
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
                     <option value="changes">Unpublished changes</option>
-                    <option value="archived">Archived</option>
-                </select>
-                <select className="cms-select" style={{ width: 160 }}>
-                    <option>All templates</option>
-                    <option>Service page</option>
-                    <option>Landing page</option>
-                    <option>Legal page</option>
-                </select>
-                <select className="cms-select" style={{ width: 180 }}>
-                    <option>Sort: Last updated</option>
-                    <option>Sort: Title A–Z</option>
-                    <option>Sort: Published date</option>
                 </select>
                 <div className="cms-spacer" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div className="cms-segmented">
@@ -61,7 +50,7 @@ export default function PagesIndex() {
             {view === 'list' ? (
                 <div className="cms-table">
                     <div className="cms-table__head-row cms-table__row--pages">
-                        <div>Page</div><div>Template</div><div>Status</div><div>Last updated</div><div>Updated by</div><div />
+                        <div>Page</div><div>Sections</div><div>Status</div><div>Last updated</div><div>Updated by</div><div />
                     </div>
                     {filtered.map((p) => (
                         <div key={p.id} className="cms-table__row cms-table__row--pages">
@@ -72,10 +61,10 @@ export default function PagesIndex() {
                                     <div className="cms-table__cell-sub">{p.url}</div>
                                 </div>
                             </div>
-                            <div className="cms-table__cell">{p.template}</div>
+                            <div className="cms-table__cell">{p.sectionCount}</div>
                             <div><Badge tone={STATUS_TONE[p.status]}>{STATUS_LABEL[p.status]}</Badge></div>
-                            <div className="cms-table__cell">{p.updated}</div>
-                            <div className="cms-table__cell">{p.by}</div>
+                            <div className="cms-table__cell">{p.updatedAt ? relative(p.updatedAt) : '—'}</div>
+                            <div className="cms-table__cell">{p.by || '—'}</div>
                             <div className="cms-table__cell-menu">
                                 <button type="button" className="cms-icon-btn-sm" onClick={() => setMenuFor(menuFor === p.id ? null : p.id)}>
                                     <DotsVerticalIcon />
@@ -93,6 +82,13 @@ export default function PagesIndex() {
                             </div>
                         </div>
                     ))}
+                    {filtered.length === 0 && (
+                        <div className="cms-table__row" style={{ display: 'block', padding: '18px 14px' }}>
+                            <span className="cms-table__cell">
+                                {pages.length === 0 ? 'No pages yet.' : 'No pages match those filters.'}
+                            </span>
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="cms-tree">

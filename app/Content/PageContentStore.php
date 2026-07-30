@@ -115,6 +115,20 @@ class PageContentStore
         return Setting::find('globals')?->value ?? [];
     }
 
+    public function all(): array
+    {
+        return Page::orderBy('cms_id')->get()->map(fn (Page $page) => [
+            'id' => $page->cms_id,
+            'title' => $page->title,
+            'url' => $page->url,
+            'status' => $page->draft !== null && $page->status === 'published' ? 'changes' : $page->status,
+            'sectionCount' => count($page->published ?? []),
+            'updatedAt' => $page->updated_at?->toIso8601String(),
+            'by' => $page->last_updated_by ?? $page->published_by,
+            'depth' => max(0, substr_count(rtrim($page->url, '/'), '/') - 1),
+        ])->all();
+    }
+
     public function document(string $slug): ?array
     {
         return $this->page($slug)?->toDocument();

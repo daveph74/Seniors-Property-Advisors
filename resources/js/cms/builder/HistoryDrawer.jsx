@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Drawer, Badge } from '../components/ui';
-import { relative, exact } from './relativeTime';
+import { relative, exact } from '../relativeTime';
 
 const LINES = [
     ['added', 'added'],

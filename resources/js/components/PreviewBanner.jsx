@@ -1,4 +1,4 @@
-import { relative, exact } from '../cms/builder/relativeTime';
+import { relative, exact } from '../cms/relativeTime';
 
 export default function PreviewBanner({ mode, by, at, editUrl }) {
     const label = mode === 'revision'

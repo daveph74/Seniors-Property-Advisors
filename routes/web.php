@@ -18,7 +18,7 @@ Route::get('/', [PageController::class, 'home'])->name('agent-finder');
 Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('/', fn () => Inertia::render('Cms/Dashboard'))->name('dashboard');
 
-    Route::get('/pages', fn () => Inertia::render('Cms/Pages/Index'))->name('pages.index');
+    Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
     Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
     Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->name('pages.draft');
     Route::post('/pages/{page}/publish', [CmsPageController::class, 'publish'])->name('pages.publish');

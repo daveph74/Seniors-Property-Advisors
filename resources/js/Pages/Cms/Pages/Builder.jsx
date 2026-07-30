@@ -16,7 +16,7 @@ import HistoryDrawer from '../../../cms/builder/HistoryDrawer';
 import PublishModal from '../../../cms/builder/PublishModal';
 import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
-import { relative } from '../../../cms/builder/relativeTime';
+import { relative } from '../../../cms/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
     MoveIcon, DuplicateIcon, ReusableIcon, HideIcon, TrashIcon, PlusIcon, ChevronUpSmallIcon,
