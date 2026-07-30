@@ -6,7 +6,8 @@
    ========================================================================= */
 
 .cms-shell,
-.cms-builder{
+.cms-builder,
+.cms-portal{
   --cms-bg: #F4F6F8;
   --cms-surface: #FFFFFF;
   --cms-ink: #0F1B2D;
@@ -209,6 +210,7 @@
 .cms-empty__body{ margin: 0 0 16px; font-size: 13.5px; color: var(--cms-text-mid); line-height: 1.55; }
 
 /* ---------- Dropdown menu ---------- */
+.cms-portal{ font-family: var(--cms-font-sans); color: var(--cms-ink); font-size: 14px; }
 .cms-menu{
   position: absolute; z-index: 40; width: 190px; background: var(--cms-surface);
   border: 1px solid var(--cms-border-input-2); border-radius: 10px; box-shadow: var(--cms-shadow-menu);

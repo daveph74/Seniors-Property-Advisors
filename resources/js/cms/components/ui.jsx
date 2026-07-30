@@ -131,12 +131,14 @@ export function DropdownMenu({ open, onClose, children, align = 'right' }) {
         <>
             <span ref={anchor} hidden />
             {createPortal(
-                <div
-                    ref={menu}
-                    className="cms-menu cms-anim-rise"
-                    style={{ position: 'fixed', top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
-                >
-                    {children}
+                <div className="cms-portal">
+                    <div
+                        ref={menu}
+                        className="cms-menu cms-anim-rise"
+                        style={{ position: 'fixed', top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+                    >
+                        {children}
+                    </div>
                 </div>,
                 document.body,
             )}
