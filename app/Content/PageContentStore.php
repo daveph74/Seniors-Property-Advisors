@@ -167,11 +167,16 @@ class PageContentStore
 
     private function renderable(array $sections, ?array $allowed = null, int $depth = 0): array
     {
+        return $this->legal($sections, $allowed, $depth, true);
+    }
+
+    private function legal(array $sections, ?array $allowed = null, int $depth = 0, bool $dropInactive = false): array
+    {
         $allowed ??= self::SECTION_TYPES;
         $visible = [];
 
         foreach ($sections as $section) {
-            if (($section['active'] ?? true) === false) {
+            if ($dropInactive && ($section['active'] ?? true) === false) {
                 continue;
             }
 
@@ -188,10 +193,11 @@ class PageContentStore
             }
 
             if (array_key_exists('children', $section)) {
-                $section['children'] = $this->renderable(
+                $section['children'] = $this->legal(
                     $section['children'] ?? [],
                     self::CHILD_TYPES[$type] ?? [],
                     $next,
+                    $dropInactive,
                 );
             }
 

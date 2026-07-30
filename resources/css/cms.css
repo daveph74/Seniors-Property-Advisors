@@ -166,6 +166,7 @@
 }
 .cms-segmented__btn--icon{ width: 30px; padding: 0; flex: none; }
 .cms-segmented__btn--active{ background: var(--cms-navy); color: #ffffffbf; }
+.cms-segmented__btn:disabled{ opacity: .35; cursor: not-allowed; }
 
 /* ---------- Badges ---------- */
 .cms-badge{

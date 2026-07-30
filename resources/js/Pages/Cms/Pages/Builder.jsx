@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import '../../../../css/cms.css';
 import { ToastProvider, useCmsToast } from '../../../cms/ToastContext';
@@ -14,6 +14,7 @@ import LayersPanel from '../../../cms/builder/LayersPanel';
 import SettingsPanel from '../../../cms/builder/SettingsPanel';
 import HistoryDrawer from '../../../cms/builder/HistoryDrawer';
 import PublishModal from '../../../cms/builder/PublishModal';
+import useTreeHistory from '../../../cms/builder/useTreeHistory';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
     MoveIcon, DuplicateIcon, ReusableIcon, HideIcon, TrashIcon, PlusIcon, ChevronUpSmallIcon,
@@ -160,8 +161,12 @@ function isDescendant(block, id) {
 function BuilderInner({ page, pageId, sections, revisions, globals }) {
     const flash = useCmsToast();
     const contentBacked = Array.isArray(sections);
-    const [blocks, setBlocks] = useState(() => hydrate(contentBacked ? sections : []));
     const [selectedId, setSelectedId] = useState(null);
+    const selectionRef = useRef(null);
+    selectionRef.current = selectedId;
+    const {
+        blocks, commit: setBlocks, undo, redo, canUndo, canRedo,
+    } = useTreeHistory(() => hydrate(contentBacked ? sections : []), selectionRef, setSelectedId);
     const [device, setDevice] = useState('desktop');
     const [leftPanel, setLeftPanel] = useState('components');
     const [openPanels, setOpenPanels] = useState(() => new Set(['content']));
@@ -189,6 +194,35 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         && dropAt.index === index;
 
     const markUnsaved = () => setSaveState('unsaved');
+
+    const doUndo = () => { if (undo()) markUnsaved(); else flash('Nothing to undo'); };
+    const doRedo = () => { if (redo()) markUnsaved(); else flash('Nothing to redo'); };
+
+    useEffect(() => {
+        const isEditing = (el) => !!el
+            && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+
+        const onKeyDown = (e) => {
+            if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+            if (isEditing(e.target)) return;
+
+            const key = e.key.toLowerCase();
+
+            if (key === 'z') {
+                e.preventDefault();
+
+                if (e.shiftKey ? redo() : undo()) setSaveState('unsaved');
+            } else if (key === 'y' && !e.shiftKey) {
+                e.preventDefault();
+
+                if (redo()) setSaveState('unsaved');
+            }
+        };
+
+        window.addEventListener('keydown', onKeyDown);
+
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [undo, redo]);
 
     const endDrag = () => {
         drag.current = { dragKind: null, dragLabel: null, dragId: null };
@@ -342,14 +376,14 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
     const patchSelected = (key, value) => {
         if (!selected) return;
 
-        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, data: { ...b.data, [key]: value } })));
+        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, data: { ...b.data, [key]: value } })), `patch:${selected.id}`);
         markUnsaved();
     };
 
     const setSelectedLabel = (value) => {
         if (!selected) return;
 
-        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, label: value })));
+        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, label: value })), `label:${selected.id}`);
         markUnsaved();
     };
 
@@ -362,7 +396,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
             .trim()
             .replace(/\s+/g, '-');
 
-        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, anchor: anchor || null })));
+        setBlocks((prev) => mapTree(prev, selected.id, (b) => ({ ...b, anchor: anchor || null })), `anchor:${selected.id}`);
         markUnsaved();
     };
 
@@ -617,10 +651,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
 
                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div className="cms-segmented cms-segmented--tint">
-                            <button type="button" title="Undo" className="cms-segmented__btn cms-segmented__btn--icon" onClick={() => flash('Undo')}>
+                            <button type="button" title="Undo" disabled={!canUndo} className="cms-segmented__btn cms-segmented__btn--icon" onClick={doUndo}>
                                 <UndoIcon size={15} stroke="#415064" />
                             </button>
-                            <button type="button" title="Redo" className="cms-segmented__btn cms-segmented__btn--icon" onClick={() => flash('Redo')}>
+                            <button type="button" title="Redo" disabled={!canRedo} className="cms-segmented__btn cms-segmented__btn--icon" onClick={doRedo}>
                                 <RedoIcon size={15} stroke="#415064" />
                             </button>
                         </div>
