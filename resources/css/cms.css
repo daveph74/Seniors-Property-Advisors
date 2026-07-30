@@ -87,6 +87,32 @@
 @keyframes cms-spin{ to{ transform: rotate(360deg); } }
 .cms-anim-rise{ animation: cms-rise 150ms ease-out; }
 
+/* Elements that carry their own centring transform need keyframes that keep it:
+   animating to `transform: none` drops the centring mid-flight, so the element
+   plays from an offset position and then snaps into place when the animation ends. */
+@keyframes cms-modal-in{
+  from{ opacity: 0; transform: translate(-50%, calc(-50% + 10px)) scale(.985); }
+  to{ opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes cms-toast-in{
+  from{ opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to{ opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes cms-drawer-in{
+  from{ opacity: 0; transform: translateX(24px); }
+  to{ opacity: 1; transform: translateX(0); }
+}
+@keyframes cms-fade-in{ from{ opacity: 0; } to{ opacity: 1; } }
+
+.cms-anim-modal{ animation: cms-modal-in 160ms cubic-bezier(.2,.7,.4,1); }
+.cms-anim-toast{ animation: cms-toast-in 160ms cubic-bezier(.2,.7,.4,1); }
+.cms-anim-drawer{ animation: cms-drawer-in 180ms cubic-bezier(.2,.7,.4,1); }
+.cms-anim-fade{ animation: cms-fade-in 160ms ease-out; }
+
+@media (prefers-reduced-motion: reduce){
+  .cms-anim-rise, .cms-anim-modal, .cms-anim-toast, .cms-anim-drawer, .cms-anim-fade{ animation: none; }
+}
+
 /* ---------- Buttons ---------- */
 .cms-btn{
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;

@@ -193,7 +193,7 @@ export function ToastStack({ toasts }) {
     const last = toasts[toasts.length - 1];
     if (!last) return null;
     return (
-        <div className="cms-toast cms-anim-rise">
+        <div className="cms-toast cms-anim-toast">
             <span className="cms-toast__check">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m4 12 5.5 5.5L20 7" />
@@ -222,8 +222,8 @@ export function Modal({ open, onClose, small, children }) {
     if (!open) return null;
     return (
         <>
-            <div className="cms-overlay" onClick={onClose} />
-            <div className={`cms-modal cms-anim-rise ${small ? 'cms-modal--sm' : ''}`}>
+            <div className="cms-overlay cms-anim-fade" onClick={onClose} />
+            <div className={`cms-modal cms-anim-modal ${small ? 'cms-modal--sm' : ''}`}>
                 {children}
             </div>
         </>
@@ -236,8 +236,8 @@ export function Drawer({ open, onClose, title, subtitle, children }) {
     if (!open) return null;
     return (
         <>
-            <div className="cms-drawer-overlay" onClick={onClose} />
-            <div className="cms-drawer cms-anim-rise">
+            <div className="cms-drawer-overlay cms-anim-fade" onClick={onClose} />
+            <div className="cms-drawer cms-anim-drawer">
                 <div className="cms-drawer__header">
                     <div>
                         <div className="cms-drawer__title">{title}</div>
