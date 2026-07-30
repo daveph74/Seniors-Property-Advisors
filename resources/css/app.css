@@ -1011,3 +1011,15 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   .section-block--compact{ padding: 48px 0; }
   .section-block--tall{ padding: 112px 0; }
 }
+
+.preview-banner{
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 999;
+  display: flex; align-items: center; gap: 10px;
+  max-width: calc(100vw - 32px); padding: 10px 14px;
+  border-radius: 999px; background: #12294c; color: #fff;
+  box-shadow: 0 8px 28px rgba(12,27,49,0.28);
+  font: 500 13px/1.2 var(--font-sans, system-ui, sans-serif);
+}
+.preview-banner__dot{ width: 8px; height: 8px; border-radius: 50%; background: #ffc24a; flex: none; }
+.preview-banner__label{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.preview-banner__link{ color: #ffc24a; text-decoration: underline; white-space: nowrap; }

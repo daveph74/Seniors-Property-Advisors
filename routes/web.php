@@ -21,6 +21,11 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
     Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->name('pages.draft');
     Route::post('/pages/{page}/publish', [CmsPageController::class, 'publish'])->name('pages.publish');
+    Route::get('/pages/{page}/preview', [CmsPageController::class, 'preview'])->name('pages.preview');
+    Route::get('/pages/{page}/preview/{n}', [CmsPageController::class, 'previewRevision'])
+        ->whereNumber('n')->name('pages.preview.revision');
+    Route::post('/pages/{page}/restore/{n}', [CmsPageController::class, 'restore'])
+        ->whereNumber('n')->name('pages.restore');
 
     Route::get('/blog', fn () => Inertia::render('Cms/Blog/Index'))->name('blog.index');
     Route::get('/faqs', fn () => Inertia::render('Cms/Faqs/Index'))->name('faqs.index');

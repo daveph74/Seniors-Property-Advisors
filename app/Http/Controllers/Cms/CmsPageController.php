@@ -58,6 +58,44 @@ class CmsPageController extends Controller
         return back();
     }
 
+    public function preview(string $page): Response
+    {
+        return $this->renderPreview($page, $this->store->preview($this->resolveSlug($page)));
+    }
+
+    public function previewRevision(string $page, int $n): Response
+    {
+        return $this->renderPreview($page, $this->store->previewRevision($this->resolveSlug($page), $n));
+    }
+
+    public function restore(string $page, int $n): RedirectResponse
+    {
+        $slug = $this->resolveSlug($page);
+
+        abort_if(! $this->store->restore($slug, $n, $this->author()), 404);
+
+        return back();
+    }
+
+    private function renderPreview(string $page, ?array $data): Response
+    {
+        abort_if($data === null, 404);
+
+        return Inertia::render('AgentFinder', [
+            'title' => $data['title'],
+            'seo' => $data['seo'],
+            'sections' => $data['sections'],
+            'globals' => $this->store->globals(),
+            'preview' => [
+                'mode' => $data['source'],
+                'n' => $data['n'] ?? null,
+                'by' => $data['by'] ?? null,
+                'at' => $data['at'] ?? null,
+                'editUrl' => route('cms.pages.edit', $page),
+            ],
+        ]);
+    }
+
     private function resolveSlug(string $page): string
     {
         $slug = $this->store->findByCmsId($page);

@@ -71,6 +71,44 @@ class PageContentStore
         });
     }
 
+    public function preview(string $slug): ?array
+    {
+        $document = $this->document($slug);
+
+        if ($document === null) {
+            return null;
+        }
+
+        $draft = $document['draft'] ?? null;
+
+        return [
+            'title' => $document['title'] ?? '',
+            'seo' => $document['seo'] ?? [],
+            'sections' => $this->legal($draft ?? $document['published'] ?? [], null, 0, true),
+            'source' => $draft !== null ? 'draft' : 'published',
+        ];
+    }
+
+    public function previewRevision(string $slug, int $n): ?array
+    {
+        $page = $this->page($slug);
+        $revision = $page?->revisions()->where('n', $n)->first();
+
+        if ($revision === null) {
+            return null;
+        }
+
+        return [
+            'title' => $page->title ?? '',
+            'seo' => $page->seo ?? [],
+            'sections' => $this->legal($revision->sections ?? [], null, 0, true),
+            'source' => 'revision',
+            'n' => $revision->n,
+            'at' => $revision->created_at?->toIso8601String(),
+            'by' => $revision->by,
+        ];
+    }
+
     public function globals(): array
     {
         return Setting::find('globals')?->value ?? [];
@@ -129,6 +167,23 @@ class PageContentStore
 
         $this->addRevision($page, $sections, $by);
         $this->forget($slug);
+    }
+
+    public function restore(string $slug, int $n, string $by): bool
+    {
+        $page = $this->page($slug);
+        $revision = $page?->revisions()->where('n', $n)->first();
+
+        if ($revision === null) {
+            return false;
+        }
+
+        $page->forceFill([
+            'draft' => $this->legal($revision->sections ?? []),
+            'last_updated_by' => $by,
+        ])->save();
+
+        return true;
     }
 
     public function revisions(string $slug): array

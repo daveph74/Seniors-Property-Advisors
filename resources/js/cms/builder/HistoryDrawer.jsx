@@ -1,5 +1,4 @@
 import { Drawer, Badge } from '../components/ui';
-import { VERSIONS } from '../data/mockData';
 
 function fromRevisions(revisions) {
     return revisions.map((r, i) => ({
@@ -11,12 +10,12 @@ function fromRevisions(revisions) {
     }));
 }
 
-export default function HistoryDrawer({ open, onClose, pageTitle, onRestore, revisions = null }) {
-    const versions = revisions ? fromRevisions(revisions) : VERSIONS;
+export default function HistoryDrawer({ open, onClose, pageTitle, onRestore, onPreview, revisions = null }) {
+    const versions = fromRevisions(revisions ?? []);
 
     return (
         <Drawer open={open} onClose={onClose} title="Version history" subtitle={pageTitle}>
-            {revisions && versions.length === 0 && (
+            {versions.length === 0 && (
                 <p className="cms-no-selection__body">No versions yet — publish this page to create the first snapshot.</p>
             )}
             {versions.map((v) => (
@@ -32,8 +31,7 @@ export default function HistoryDrawer({ open, onClose, pageTitle, onRestore, rev
                         {v.changes.map((c, i) => <li key={i}>{c}</li>)}
                     </ul>
                     <div className="cms-version-item__actions">
-                        <button type="button" className="cms-btn cms-btn--xs">Preview</button>
-                        <button type="button" className="cms-btn cms-btn--xs">Compare</button>
+                        <button type="button" className="cms-btn cms-btn--xs" onClick={() => onPreview(v.n)}>Preview</button>
                         <button type="button" className="cms-btn cms-btn--primary cms-btn--xs" onClick={() => onRestore(v.n)}>Restore</button>
                     </div>
                 </div>

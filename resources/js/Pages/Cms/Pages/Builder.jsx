@@ -14,6 +14,7 @@ import LayersPanel from '../../../cms/builder/LayersPanel';
 import SettingsPanel from '../../../cms/builder/SettingsPanel';
 import HistoryDrawer from '../../../cms/builder/HistoryDrawer';
 import PublishModal from '../../../cms/builder/PublishModal';
+import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
@@ -173,6 +174,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
     const [saveState, setSaveState] = useState('saved');
     const [historyOpen, setHistoryOpen] = useState(false);
     const [publishOpen, setPublishOpen] = useState(false);
+    const [previewPromptOpen, setPreviewPromptOpen] = useState(false);
     const [compSearch, setCompSearch] = useState('');
     const drag = useRef({ dragKind: null, dragLabel: null, dragId: null });
     const [dragType, setDragType] = useState(null);
@@ -487,6 +489,36 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         });
     };
 
+    const previewUrl = (n) => (n == null
+        ? `/cms/pages/${pageId}/preview`
+        : `/cms/pages/${pageId}/preview/${n}`);
+
+    const openPreviewTab = (n) => window.open(previewUrl(n), 'spa-preview');
+
+    const openPreview = () => {
+        if (! contentBacked) {
+            flash('This page has no content file yet, so it cannot be previewed.');
+            return;
+        }
+
+        if (saveState === 'saved') openPreviewTab();
+        else setPreviewPromptOpen(true);
+    };
+
+    const saveAndPreview = () => {
+        setPreviewPromptOpen(false);
+
+        const tab = window.open('', 'spa-preview');
+
+        setSaveState('saving');
+        router.post(`/cms/pages/${pageId}/draft`, payload(), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => { setSaveState('saved'); tab.location = previewUrl(); },
+            onError: (errors) => { setSaveState('unsaved'); tab.close(); flash(firstError(errors, 'Could not save draft')); },
+        });
+    };
+
     const restoreVersion = (n) => {
         flash(`Restored version ${n}`);
     };
@@ -675,7 +707,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                             <HistoryIcon size={15} />
                             History
                         </button>
-                        <button type="button" className="cms-btn" onClick={() => flash('Preview opens in a new tab')}>Preview</button>
+                        <button type="button" className="cms-btn" onClick={openPreview}>Preview</button>
                         <button type="button" className="cms-btn" onClick={saveDraft}>Save draft</button>
                         <button type="button" className="cms-btn cms-btn--primary" style={{ padding: '0 16px' }} onClick={() => setPublishOpen(true)}>Publish</button>
                     </div>
@@ -792,6 +824,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                     onClose={() => setHistoryOpen(false)}
                     pageTitle={page.title}
                     onRestore={restoreVersion}
+                    onPreview={openPreviewTab}
                     revisions={contentBacked ? revisions : null}
                 />
                 <PublishModal
@@ -800,6 +833,12 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                     onConfirm={confirmPublish}
                     pageTitle={page.title}
                     pageUrl={`/${page.slug}`}
+                />
+                <PreviewPromptModal
+                    open={previewPromptOpen}
+                    onClose={() => setPreviewPromptOpen(false)}
+                    onSaveAndPreview={saveAndPreview}
+                    onPreviewSaved={() => { setPreviewPromptOpen(false); openPreviewTab(); }}
                 />
             </div>
         </>
