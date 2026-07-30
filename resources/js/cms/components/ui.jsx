@@ -156,7 +156,21 @@ export function ToastStack({ toasts }) {
     );
 }
 
+function useEscapeToClose(open, onClose) {
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+
+        document.addEventListener('keydown', onKey);
+
+        return () => document.removeEventListener('keydown', onKey);
+    }, [open, onClose]);
+}
+
 export function Modal({ open, onClose, small, children }) {
+    useEscapeToClose(open, onClose);
+
     if (!open) return null;
     return (
         <>
@@ -169,6 +183,8 @@ export function Modal({ open, onClose, small, children }) {
 }
 
 export function Drawer({ open, onClose, title, subtitle, children }) {
+    useEscapeToClose(open, onClose);
+
     if (!open) return null;
     return (
         <>
@@ -179,7 +195,7 @@ export function Drawer({ open, onClose, title, subtitle, children }) {
                         <div className="cms-drawer__title">{title}</div>
                         {subtitle ? <div className="cms-drawer__subtitle">{subtitle}</div> : null}
                     </div>
-                    <button type="button" className="cms-icon-btn" style={{ marginLeft: 'auto', width: 30, height: 30 }} onClick={onClose}>
+                    <button type="button" aria-label="Close" title="Close" className="cms-icon-btn" style={{ marginLeft: 'auto', width: 30, height: 30 }} onClick={onClose}>
                         ✕
                     </button>
                 </div>

@@ -27,6 +27,9 @@ Route::prefix('cms')->name('cms.')->group(function () {
         ->whereNumber('n')->name('pages.preview.revision');
     Route::post('/pages/{page}/restore/{n}', [CmsPageController::class, 'restore'])
         ->whereNumber('n')->name('pages.restore');
+    Route::get('/pages/{page}/compare/{n}', [CmsPageController::class, 'compare'])
+        ->whereNumber('n')->name('pages.compare');
+    Route::post('/pages/{page}/changes', [CmsPageController::class, 'changes'])->name('pages.changes');
 
     Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
         ->whereNumber('reusable')->name('reusable.show');

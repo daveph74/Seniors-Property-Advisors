@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Cms;
 
 use App\Content\PageContentStore;
 use App\Content\ReusableSectionStore;
+use App\Content\SectionDiff;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveSectionsRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -68,6 +70,37 @@ class CmsPageController extends Controller
     public function previewRevision(string $page, int $n): Response
     {
         return $this->renderPreview($page, $this->store->previewRevision($this->resolveSlug($page), $n));
+    }
+
+    public function changes(SaveSectionsRequest $request, string $page): JsonResponse
+    {
+        $document = $this->store->document($this->resolveSlug($page));
+
+        return response()->json(
+            SectionDiff::between($document['published'] ?? [], $request->sections()),
+        );
+    }
+
+    public function compare(string $page, int $n): JsonResponse
+    {
+        $slug = $this->resolveSlug($page);
+        $sections = $this->store->revisionSections($slug, $n);
+
+        abort_if($sections === null, 404);
+
+        $against = request()->integer('against');
+        $document = $this->store->document($slug);
+
+        $other = $against > 0
+            ? $this->store->revisionSections($slug, $against)
+            : ($document['published'] ?? []);
+
+        abort_if($other === null, 404);
+
+        return response()->json([
+            'n' => $n,
+            'against' => $against > 0 ? $against : 'live',
+        ] + SectionDiff::between($sections, $other));
     }
 
     public function restore(string $page, int $n): RedirectResponse

@@ -186,6 +186,11 @@ class PageContentStore
         return true;
     }
 
+    public function revisionSections(string $slug, int $n): ?array
+    {
+        return $this->page($slug)?->revisions()->where('n', $n)->first()?->sections;
+    }
+
     public function revisions(string $slug): array
     {
         $page = $this->page($slug);

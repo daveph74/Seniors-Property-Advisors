@@ -46,8 +46,22 @@ so no `data` key can hold markup.
 `php artisan content:import [--force]` migrates a legacy `storage/app/content/` overlay
 into the database. Run it manually; never from a migration.
 
+`PageContentStore::renderable()` drops inactive *and* illegal blocks; the private
+`legal()` behind it can keep inactive ones. Restore needs that split — a restored
+version must keep sections the editor had hidden while still dropping block types that
+have since left `BLOCK_TYPES`, or the draft could never be saved again.
+
+Reusable sections are **independent copies**, stored whole in `reusable_sections` with
+their root type in its own column (drop legality is checked before the subtree loads).
+Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
+
 ## Current state
 
-The public site renders from the database. The CMS admin is still a prototype elsewhere:
-its non-builder routes render static props from `mockData.js`, and Puck is not installed.
-See `docs/specs/`.
+The public site renders from the database, and the builder is functional: undo/redo,
+draft and per-version preview, restore-to-draft, reusable sections, and a real change
+summary on publish and in the history drawer.
+
+Everything else in the CMS admin is still a prototype: the non-builder routes render
+static props from `mockData.js`, and Puck is not installed. See `docs/specs/`.
+
+Known remaining stub: `onOpenMediaPicker` in the builder still only raises a toast.

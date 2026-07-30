@@ -175,6 +175,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
     const [historyOpen, setHistoryOpen] = useState(false);
     const [publishOpen, setPublishOpen] = useState(false);
     const [previewPromptOpen, setPreviewPromptOpen] = useState(false);
+    const [publishDiff, setPublishDiff] = useState(null);
     const [compSearch, setCompSearch] = useState('');
     const drag = useRef({ dragKind: null, dragLabel: null, dragId: null });
     const [dragType, setDragType] = useState(null);
@@ -571,6 +572,41 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
         });
     };
 
+    const openPublish = async () => {
+        setPublishDiff(null);
+        setPublishOpen(true);
+
+        if (! contentBacked) return;
+
+        try {
+            const response = await fetch(`/cms/pages/${pageId}/changes`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+                },
+                body: JSON.stringify(payload()),
+            });
+
+            if (response.ok) setPublishDiff(await response.json());
+        } catch {
+            setPublishDiff(null);
+        }
+    };
+
+    const compareVersion = async (n) => {
+        try {
+            const response = await fetch(`/cms/pages/${pageId}/compare/${n}`, {
+                headers: { Accept: 'application/json' },
+            });
+
+            return response.ok ? await response.json() : null;
+        } catch {
+            return null;
+        }
+    };
+
     const restoreVersion = (n) => {
         if (saveState === 'unsaved'
             && ! window.confirm(`Restoring version ${n} will replace your unsaved changes. Continue?`)) return;
@@ -777,7 +813,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                         </button>
                         <button type="button" className="cms-btn" onClick={openPreview}>Preview</button>
                         <button type="button" className="cms-btn" onClick={saveDraft}>Save draft</button>
-                        <button type="button" className="cms-btn cms-btn--primary" style={{ padding: '0 16px' }} onClick={() => setPublishOpen(true)}>Publish</button>
+                        <button type="button" className="cms-btn cms-btn--primary" style={{ padding: '0 16px' }} onClick={openPublish}>Publish</button>
                     </div>
                 </div>
 
@@ -897,6 +933,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                     pageTitle={page.title}
                     onRestore={restoreVersion}
                     onPreview={openPreviewTab}
+                    onCompare={compareVersion}
                     revisions={contentBacked ? revisions : null}
                 />
                 <PublishModal
@@ -905,6 +942,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                     onConfirm={confirmPublish}
                     pageTitle={page.title}
                     pageUrl={`/${page.slug}`}
+                    status={page.status === 'published'
+                        ? (saveState === 'saved' && ! page.hasDraft ? 'Live' : 'Live with unpublished changes')
+                        : 'Not published yet'}
+                    diff={publishDiff}
                 />
                 <PreviewPromptModal
                     open={previewPromptOpen}
