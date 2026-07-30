@@ -520,7 +520,21 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
     };
 
     const restoreVersion = (n) => {
-        flash(`Restored version ${n}`);
+        if (saveState === 'unsaved'
+            && ! window.confirm(`Restoring version ${n} will replace your unsaved changes. Continue?`)) return;
+
+        router.post(`/cms/pages/${pageId}/restore/${n}`, {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: (visit) => {
+                setBlocks(hydrate(visit.props.sections ?? []));
+                setSelectedId(null);
+                setSaveState('saved');
+                setHistoryOpen(false);
+                flash(`Version ${n} restored as a draft — publish when you are ready`);
+            },
+            onError: () => flash('Could not restore that version'),
+        });
     };
 
     const saveLabel = { saved: 'All changes saved', saving: 'Saving…', unsaved: 'Unsaved changes' }[saveState];
