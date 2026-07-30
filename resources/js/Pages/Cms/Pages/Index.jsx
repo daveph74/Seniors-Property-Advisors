@@ -9,7 +9,7 @@ import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
 import { relative } from '../../../cms/relativeTime';
 import { DotsVerticalIcon, FileIcon, PlusIcon } from '../../../cms/components/icons';
 
-export default function PagesIndex({ pages = [] }) {
+export default function PagesIndex({ pages = [], layouts = [] }) {
     const flash = useCmsToast();
     const [view, setView] = useState('list');
     const [search, setSearch] = useState('');
@@ -76,7 +76,7 @@ export default function PagesIndex({ pages = [] }) {
                     {filtered.map((p) => (
                         <div key={p.id} className="cms-table__row cms-table__row--pages">
                             <div className="cms-table__cell-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ width: p.depth ? 22 : 0, flex: 'none' }} />
+                                <span style={{ width: p.depth * 22, flex: 'none' }} />
                                 <div style={{ minWidth: 0 }}>
                                     <button type="button" onClick={() => editPage(p)}>{p.title}</button>
                                     <div className="cms-table__cell-sub">{p.url}</div>
@@ -144,7 +144,7 @@ export default function PagesIndex({ pages = [] }) {
                 <div className="cms-tree">
                     {filtered.map((p) => (
                         <div key={p.id} className="cms-tree-row">
-                            <span style={{ width: p.depth ? 22 : 0, flex: 'none' }} />
+                            <span style={{ width: p.depth * 22, flex: 'none' }} />
                             <FileIcon size={15} />
                             <button type="button" onClick={() => editPage(p)}>{p.title}</button>
                             <span style={{ fontSize: 12, color: 'var(--cms-text-mid)' }}>{p.url}</span>
@@ -154,7 +154,7 @@ export default function PagesIndex({ pages = [] }) {
                 </div>
             )}
 
-            <CreatePageModal open={createOpen} onClose={() => setCreateOpen(false)} />
+            <CreatePageModal open={createOpen} onClose={() => setCreateOpen(false)} pages={pages} layouts={layouts} />
             <ConfirmModal
                 open={confirm !== null}
                 onClose={() => setConfirm(null)}

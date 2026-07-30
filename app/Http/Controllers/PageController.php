@@ -12,8 +12,16 @@ class PageController extends Controller
 
     public function home(): Response
     {
-        $page = $this->store->resolve('home');
+        return $this->render($this->store->resolve('home'));
+    }
 
+    public function show(string $path): Response
+    {
+        return $this->render($this->store->resolve($path));
+    }
+
+    private function render(?array $page): Response
+    {
         abort_if($page === null, 404);
 
         return Inertia::render('AgentFinder', [

@@ -19,6 +19,7 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('/', fn () => Inertia::render('Cms/Dashboard'))->name('dashboard');
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
+    Route::post('/pages', [CmsPageController::class, 'store'])->name('pages.store');
     Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
     Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->name('pages.draft');
     Route::patch('/pages/{page}/details', [CmsPageController::class, 'saveDetails'])->name('pages.details');
@@ -53,3 +54,9 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('/users', fn () => Inertia::render('Cms/Users/Index'))->name('users.index');
     Route::get('/settings', fn () => Inertia::render('Cms/Settings/Index'))->name('settings.index');
 });
+
+Route::redirect('/home', '/', 301);
+
+Route::get('/{path}', [PageController::class, 'show'])
+    ->where('path', '(?!(?:cms|build|storage|up)(?:/|$))[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*')
+    ->name('page.show');

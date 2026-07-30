@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Cms;
 use App\Content\PageContentStore;
 use App\Content\ReusableSectionStore;
 use App\Content\SectionDiff;
+use App\Content\StarterLayouts;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CreatePageRequest;
 use App\Http\Requests\SavePageDetailsRequest;
 use App\Http\Requests\SaveSectionsRequest;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +21,22 @@ class CmsPageController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('Cms/Pages/Index', ['pages' => $this->store->all()]);
+        return Inertia::render('Cms/Pages/Index', [
+            'pages' => $this->store->all(),
+            'layouts' => StarterLayouts::options(),
+        ]);
+    }
+
+    public function store(CreatePageRequest $request): RedirectResponse
+    {
+        $page = $this->store->create(
+            $request->title(),
+            $request->parent(),
+            StarterLayouts::sections($request->layout()),
+            $this->author(),
+        );
+
+        return redirect()->route('cms.pages.edit', $page['id']);
     }
 
     public function edit(string $page): Response

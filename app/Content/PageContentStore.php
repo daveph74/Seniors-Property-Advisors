@@ -7,6 +7,7 @@ use App\Models\PageRevision;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PageContentStore
 {
@@ -55,9 +56,13 @@ class PageContentStore
 
     public const MAX_ROW_DEPTH = 2;
 
+    public const RESERVED_SLUGS = [
+        'cms', 'build', 'storage', 'up', 'api', 'login', 'logout', 'register', 'home',
+    ];
+
     public function resolve(string $slug): ?array
     {
-        return $this->remember("page:{$slug}:published", function () use ($slug) {
+        return $this->remember($this->cacheKey($slug), function () use ($slug) {
             $page = $this->document($slug);
 
             if ($page === null || ($page['status'] ?? null) !== 'published') {
@@ -122,7 +127,7 @@ class PageContentStore
             'title' => $page->title,
             'url' => $page->url,
             'status' => $page->draft !== null && $page->status === 'published' ? 'changes' : $page->status,
-            'sectionCount' => count($page->published ?? []),
+            'sectionCount' => count($page->draft ?? $page->published ?? []),
             'updatedAt' => $page->updated_at?->toIso8601String(),
             'by' => $page->last_updated_by ?? $page->published_by,
             'depth' => max(0, substr_count(rtrim($page->url, '/'), '/') - 1),
@@ -223,6 +228,22 @@ class PageContentStore
         return true;
     }
 
+    public function create(string $title, ?string $parent, array $sections, string $by): array
+    {
+        $prefix = ($parent !== null && $parent !== '' && $parent !== 'home')
+            ? rtrim($parent, '/').'/'
+            : '';
+
+        $page = $this->insert(
+            $this->availableSlug($prefix.Str::slug($title)),
+            $title,
+            ['seo' => [], 'draft' => $sections],
+            $by,
+        );
+
+        return ['id' => $page->cms_id, 'slug' => $page->slug, 'url' => $page->url, 'title' => $page->title];
+    }
+
     public function duplicate(string $slug, string $by): ?array
     {
         $source = $this->page($slug);
@@ -231,20 +252,12 @@ class PageContentStore
             return null;
         }
 
-        $title = "{$source->title} (copy)";
-        $copySlug = $this->uniqueSlug($source->slug);
-
-        $copy = Page::create([
-            'cms_id' => (int) Page::max('cms_id') + 1,
-            'slug' => $copySlug,
-            'url' => '/'.$copySlug,
-            'title' => $title,
-            'status' => 'draft',
-            'seo' => $source->seo ?? [],
-            'draft' => $source->draft ?? $source->published ?? [],
-            'published' => [],
-            'last_updated_by' => $by,
-        ]);
+        $copy = $this->insert(
+            $this->availableSlug($source->slug.'-copy'),
+            "{$source->title} (copy)",
+            ['seo' => $source->seo ?? [], 'draft' => $source->draft ?? $source->published ?? []],
+            $by,
+        );
 
         return ['id' => $copy->cms_id, 'title' => $copy->title];
     }
@@ -293,17 +306,37 @@ class PageContentStore
 
     public function forget(string $slug): void
     {
-        Cache::forget("page:{$slug}:published");
+        Cache::forget($this->cacheKey($slug));
     }
 
-    private function uniqueSlug(string $base): string
+    private function cacheKey(string $slug): string
     {
-        $candidate = "{$base}-copy";
+        return 'page:'.str_replace('/', ':', $slug).':published';
+    }
+
+    private function insert(string $slug, string $title, array $content, string $by): Page
+    {
+        return DB::transaction(fn () => Page::create([
+            'cms_id' => (int) Page::query()->lockForUpdate()->max('cms_id') + 1,
+            'slug' => $slug,
+            'url' => '/'.$slug,
+            'title' => $title,
+            'status' => 'draft',
+            'seo' => $content['seo'],
+            'draft' => $content['draft'],
+            'published' => [],
+            'last_updated_by' => $by,
+        ]));
+    }
+
+    private function availableSlug(string $base): string
+    {
+        $candidate = $base;
         $n = 1;
 
         while (Page::where('slug', $candidate)->exists()) {
             $n++;
-            $candidate = "{$base}-copy-{$n}";
+            $candidate = "{$base}-{$n}";
         }
 
         return $candidate;
