@@ -79,6 +79,50 @@ class CmsPageController extends Controller
         return back();
     }
 
+    public function publishNow(string $page): RedirectResponse
+    {
+        $slug = $this->resolveSlug($page);
+
+        $this->store->setStatus($slug, 'published', $this->author());
+        $this->store->publish($slug, $this->author());
+
+        return back();
+    }
+
+    public function unpublish(string $page): RedirectResponse
+    {
+        abort_if(! $this->store->setStatus($this->resolveSlug($page), 'draft', $this->author()), 404);
+
+        return back();
+    }
+
+    public function archive(string $page): RedirectResponse
+    {
+        abort_if(! $this->store->setStatus($this->resolveSlug($page), 'archived', $this->author()), 404);
+
+        return back();
+    }
+
+    public function unarchive(string $page): RedirectResponse
+    {
+        $slug = $this->resolveSlug($page);
+        $document = $this->store->document($slug);
+        $status = ($document['published'] ?? []) === [] ? 'draft' : 'published';
+
+        abort_if(! $this->store->setStatus($slug, $status, $this->author()), 404);
+
+        return back();
+    }
+
+    public function duplicate(string $page): RedirectResponse
+    {
+        $copy = $this->store->duplicate($this->resolveSlug($page), $this->author());
+
+        abort_if($copy === null, 404);
+
+        return back();
+    }
+
     public function preview(string $page): Response
     {
         return $this->renderPreview($page, $this->store->preview($this->resolveSlug($page)));

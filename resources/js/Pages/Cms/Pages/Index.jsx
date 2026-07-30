@@ -19,11 +19,25 @@ export default function PagesIndex({ pages = [] }) {
     const filtered = useMemo(() => pages.filter((p) => {
         const q = search.trim().toLowerCase();
         if (q && !p.title.toLowerCase().includes(q) && !p.url.toLowerCase().includes(q)) return false;
-        if (statusFilter !== 'all' && p.status !== statusFilter) return false;
-        return true;
+        if (statusFilter === 'all') return p.status !== 'archived';
+        return p.status === statusFilter;
     }), [pages, search, statusFilter]);
 
+    const archivedCount = pages.filter((p) => p.status === 'archived').length;
+
     const editPage = (p) => router.visit(`/cms/pages/${p.id}/edit`);
+
+    const act = (p, action, done, confirmCopy = null) => {
+        setMenuFor(null);
+
+        if (confirmCopy && ! window.confirm(confirmCopy)) return;
+
+        router.post(`/cms/pages/${p.id}/${action}`, {}, {
+            preserveScroll: true,
+            onSuccess: () => flash(done),
+            onError: () => flash(`Could not ${action.replace('-', ' ')} ${p.title}`),
+        });
+    };
 
     return (
         <div className="cms-page">
@@ -34,6 +48,7 @@ export default function PagesIndex({ pages = [] }) {
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
                     <option value="changes">Unpublished changes</option>
+                    <option value="archived">Archived{archivedCount ? ` (${archivedCount})` : ''}</option>
                 </select>
                 <div className="cms-spacer" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div className="cms-segmented">
@@ -71,13 +86,32 @@ export default function PagesIndex({ pages = [] }) {
                                 </button>
                                 <DropdownMenu open={menuFor === p.id} onClose={() => setMenuFor(null)}>
                                     <MenuItem onClick={() => { setMenuFor(null); editPage(p); }}>Edit page</MenuItem>
-                                    <MenuItem onClick={() => { setMenuFor(null); flash('Preview opens in a new tab'); }}>Preview</MenuItem>
-                                    <MenuItem onClick={() => { setMenuFor(null); flash(`${p.title} duplicated`); }}>Duplicate</MenuItem>
-                                    <MenuItem onClick={() => { setMenuFor(null); flash(`${p.title} published`); }}>Publish</MenuItem>
-                                    <MenuItem onClick={() => { setMenuFor(null); flash(`${p.title} unpublished`); }}>Unpublish</MenuItem>
-                                    <MenuItem onClick={() => { setMenuFor(null); flash('Version history opens'); }}>View history</MenuItem>
+                                    <MenuItem onClick={() => { setMenuFor(null); window.open(`/cms/pages/${p.id}/preview`, 'spa-preview'); }}>Preview</MenuItem>
+                                    <MenuItem onClick={() => { setMenuFor(null); router.visit(`/cms/pages/${p.id}/edit?history=1`); }}>View history</MenuItem>
+                                    <MenuItem onClick={() => act(p, 'duplicate', `${p.title} duplicated`)}>Duplicate</MenuItem>
                                     <MenuSeparator />
-                                    <MenuItem danger onClick={() => { setMenuFor(null); flash(`${p.title} archived`); }}>Archive page</MenuItem>
+                                    {p.status !== 'archived' && p.status !== 'published' && (
+                                        <MenuItem onClick={() => act(p, 'publish-now', `${p.title} is now live`)}>Publish</MenuItem>
+                                    )}
+                                    {p.status === 'changes' && (
+                                        <MenuItem onClick={() => act(p, 'publish-now', `${p.title} is now live`)}>Publish changes</MenuItem>
+                                    )}
+                                    {(p.status === 'published' || p.status === 'changes') && (
+                                        <MenuItem onClick={() => act(p, 'unpublish', `${p.title} is no longer public`,
+                                            `Unpublish "${p.title}"?\n\nVisitors going to ${p.url} will get a "page not found" error until you publish it again.`)}
+                                        >
+                                            Unpublish
+                                        </MenuItem>
+                                    )}
+                                    {p.status === 'archived' ? (
+                                        <MenuItem onClick={() => act(p, 'unarchive', `${p.title} restored`)}>Restore page</MenuItem>
+                                    ) : (
+                                        <MenuItem danger onClick={() => act(p, 'archive', `${p.title} archived`,
+                                            `Archive "${p.title}"?\n\nIt will be hidden from visitors and moved out of the main list. You can restore it later.`)}
+                                        >
+                                            Archive page
+                                        </MenuItem>
+                                    )}
                                 </DropdownMenu>
                             </div>
                         </div>

@@ -209,6 +209,46 @@ class PageContentStore
         return $changed;
     }
 
+    public function setStatus(string $slug, string $status, string $by): bool
+    {
+        $page = $this->page($slug);
+
+        if ($page === null || ! in_array($status, ['draft', 'published', 'archived'], true)) {
+            return false;
+        }
+
+        $page->forceFill(['status' => $status, 'last_updated_by' => $by])->save();
+        $this->forget($slug);
+
+        return true;
+    }
+
+    public function duplicate(string $slug, string $by): ?array
+    {
+        $source = $this->page($slug);
+
+        if ($source === null) {
+            return null;
+        }
+
+        $title = "{$source->title} (copy)";
+        $copySlug = $this->uniqueSlug($source->slug);
+
+        $copy = Page::create([
+            'cms_id' => (int) Page::max('cms_id') + 1,
+            'slug' => $copySlug,
+            'url' => '/'.$copySlug,
+            'title' => $title,
+            'status' => 'draft',
+            'seo' => $source->seo ?? [],
+            'draft' => $source->draft ?? $source->published ?? [],
+            'published' => [],
+            'last_updated_by' => $by,
+        ]);
+
+        return ['id' => $copy->cms_id, 'title' => $copy->title];
+    }
+
     public function restore(string $slug, int $n, string $by): bool
     {
         $page = $this->page($slug);
@@ -254,6 +294,19 @@ class PageContentStore
     public function forget(string $slug): void
     {
         Cache::forget("page:{$slug}:published");
+    }
+
+    private function uniqueSlug(string $base): string
+    {
+        $candidate = "{$base}-copy";
+        $n = 1;
+
+        while (Page::where('slug', $candidate)->exists()) {
+            $n++;
+            $candidate = "{$base}-copy-{$n}";
+        }
+
+        return $candidate;
     }
 
     private function page(string $slug): ?Page

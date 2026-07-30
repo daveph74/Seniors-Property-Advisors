@@ -174,7 +174,9 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
     const [leftPanel, setLeftPanel] = useState('components');
     const [openPanels, setOpenPanels] = useState(() => new Set(['content']));
     const [saveState, setSaveState] = useState('saved');
-    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(
+        () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('history'),
+    );
     const [publishOpen, setPublishOpen] = useState(false);
     const [previewPromptOpen, setPreviewPromptOpen] = useState(false);
     const [publishDiff, setPublishDiff] = useState(null);

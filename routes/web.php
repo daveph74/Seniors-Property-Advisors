@@ -32,6 +32,11 @@ Route::prefix('cms')->name('cms.')->group(function () {
         ->whereNumber('n')->name('pages.compare');
     Route::post('/pages/{page}/changes', [CmsPageController::class, 'changes'])->name('pages.changes');
     Route::get('/pages/{page}/revisions', [CmsPageController::class, 'revisions'])->name('pages.revisions');
+    Route::post('/pages/{page}/publish-now', [CmsPageController::class, 'publishNow'])->name('pages.publish-now');
+    Route::post('/pages/{page}/unpublish', [CmsPageController::class, 'unpublish'])->name('pages.unpublish');
+    Route::post('/pages/{page}/archive', [CmsPageController::class, 'archive'])->name('pages.archive');
+    Route::post('/pages/{page}/unarchive', [CmsPageController::class, 'unarchive'])->name('pages.unarchive');
+    Route::post('/pages/{page}/duplicate', [CmsPageController::class, 'duplicate'])->name('pages.duplicate');
 
     Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
         ->whereNumber('reusable')->name('reusable.show');
