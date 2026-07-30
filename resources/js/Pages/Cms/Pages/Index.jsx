@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, DropdownMenu, MenuItem, MenuSeparator } from '../../../cms/components/ui';
 import CreatePageModal from '../../../cms/components/CreatePageModal';
+import ConfirmModal from '../../../cms/components/ConfirmModal';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
 import { relative } from '../../../cms/relativeTime';
@@ -15,6 +16,7 @@ export default function PagesIndex({ pages = [] }) {
     const [statusFilter, setStatusFilter] = useState('all');
     const [menuFor, setMenuFor] = useState(null);
     const [createOpen, setCreateOpen] = useState(false);
+    const [confirm, setConfirm] = useState(null);
 
     const filtered = useMemo(() => pages.filter((p) => {
         const q = search.trim().toLowerCase();
@@ -27,16 +29,20 @@ export default function PagesIndex({ pages = [] }) {
 
     const editPage = (p) => router.visit(`/cms/pages/${p.id}/edit`);
 
-    const act = (p, action, done, confirmCopy = null) => {
+    const run = (p, action, done) => router.post(`/cms/pages/${p.id}/${action}`, {}, {
+        preserveScroll: true,
+        onSuccess: () => flash(done),
+        onError: () => flash(`Could not ${action.replace('-', ' ')} ${p.title}`),
+    });
+
+    const act = (p, action, done) => {
         setMenuFor(null);
+        run(p, action, done);
+    };
 
-        if (confirmCopy && ! window.confirm(confirmCopy)) return;
-
-        router.post(`/cms/pages/${p.id}/${action}`, {}, {
-            preserveScroll: true,
-            onSuccess: () => flash(done),
-            onError: () => flash(`Could not ${action.replace('-', ' ')} ${p.title}`),
-        });
+    const ask = (p, action, done, dialog) => {
+        setMenuFor(null);
+        setConfirm({ ...dialog, onConfirm: () => { setConfirm(null); run(p, action, done); } });
     };
 
     return (
@@ -97,8 +103,13 @@ export default function PagesIndex({ pages = [] }) {
                                         <MenuItem onClick={() => act(p, 'publish-now', `${p.title} is now live`)}>Publish changes</MenuItem>
                                     )}
                                     {(p.status === 'published' || p.status === 'changes') && (
-                                        <MenuItem onClick={() => act(p, 'unpublish', `${p.title} is no longer public`,
-                                            `Unpublish "${p.title}"?\n\nVisitors going to ${p.url} will get a "page not found" error until you publish it again.`)}
+                                        <MenuItem onClick={() => ask(p, 'unpublish', `${p.title} is no longer public`, {
+                                            title: 'Take this page off the site?',
+                                            lead: `${p.title} will stop being visible to visitors straight away. Your content is kept, so you can publish it again at any time.`,
+                                            detail: `Anyone visiting ${p.url} will see a “page not found” error until you publish it again.`,
+                                            confirmLabel: 'Unpublish',
+                                            danger: true,
+                                        })}
                                         >
                                             Unpublish
                                         </MenuItem>
@@ -106,8 +117,13 @@ export default function PagesIndex({ pages = [] }) {
                                     {p.status === 'archived' ? (
                                         <MenuItem onClick={() => act(p, 'unarchive', `${p.title} restored`)}>Restore page</MenuItem>
                                     ) : (
-                                        <MenuItem danger onClick={() => act(p, 'archive', `${p.title} archived`,
-                                            `Archive "${p.title}"?\n\nIt will be hidden from visitors and moved out of the main list. You can restore it later.`)}
+                                        <MenuItem danger onClick={() => ask(p, 'archive', `${p.title} archived`, {
+                                            title: 'Archive this page?',
+                                            lead: `${p.title} will be hidden from visitors and moved out of your main list. Nothing is deleted.`,
+                                            detail: 'You can bring it back at any time from the Archived filter.',
+                                            confirmLabel: 'Archive page',
+                                            danger: true,
+                                        })}
                                         >
                                             Archive page
                                         </MenuItem>
@@ -139,6 +155,16 @@ export default function PagesIndex({ pages = [] }) {
             )}
 
             <CreatePageModal open={createOpen} onClose={() => setCreateOpen(false)} />
+            <ConfirmModal
+                open={confirm !== null}
+                onClose={() => setConfirm(null)}
+                onConfirm={confirm?.onConfirm}
+                title={confirm?.title}
+                lead={confirm?.lead}
+                detail={confirm?.detail}
+                confirmLabel={confirm?.confirmLabel}
+                danger={confirm?.danger}
+            />
         </div>
     );
 }

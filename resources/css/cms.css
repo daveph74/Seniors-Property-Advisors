@@ -111,6 +111,8 @@
 .cms-btn--primary:hover{ background: var(--cms-navy-hover); }
 .cms-btn--danger-outline{ border-color: var(--cms-danger-border); color: var(--cms-danger-text); }
 .cms-btn--danger-outline:hover{ background: var(--cms-danger-bg); }
+.cms-btn--danger{ background: var(--cms-danger-text); border-color: var(--cms-danger-text); color: #fff; }
+.cms-btn--danger:hover{ background: #8B2921; border-color: #8B2921; }
 .cms-btn--ghost{ border-color: transparent; background: transparent; }
 .cms-btn--ghost:hover{ background: #F1F4F8; }
 .cms-btn--block{ width: 100%; }
@@ -236,6 +238,14 @@
 .cms-modal__title{ margin: 0 0 4px; font-size: 18px; font-weight: 600; }
 .cms-modal__lead{ margin: 0 0 18px; font-size: 13.5px; color: var(--cms-text-mid); line-height: 1.55; }
 .cms-modal__actions{ display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.cms-confirm-detail{
+  margin: 0 0 18px; padding: 11px 13px; border: 1px solid var(--cms-border-soft);
+  border-radius: var(--cms-radius); background: var(--cms-tint-2);
+  font-size: 13px; line-height: 1.5; color: var(--cms-text);
+}
+.cms-confirm-detail--danger{
+  border-color: var(--cms-danger-border); background: var(--cms-danger-bg); color: var(--cms-danger-text);
+}
 .cms-drawer-overlay{ position: fixed; inset: 0; background: rgba(12,27,49,0.32); z-index: 70; }
 .cms-drawer{
   position: fixed; top: 0; right: 0; bottom: 0; width: 380px; background: var(--cms-surface); z-index: 71;
