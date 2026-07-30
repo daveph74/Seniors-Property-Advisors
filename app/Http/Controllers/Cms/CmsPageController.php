@@ -6,6 +6,7 @@ use App\Content\PageContentStore;
 use App\Content\ReusableSectionStore;
 use App\Content\SectionDiff;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SavePageDetailsRequest;
 use App\Http\Requests\SaveSectionsRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,8 @@ class CmsPageController extends Controller
             'page' => [
                 'slug' => ltrim($document['url'] ?? $slug, '/'),
                 'title' => $document['title'] ?? '',
+                'url' => $document['url'] ?? '/',
+                'seo' => $document['seo'] ?? [],
                 'status' => $document['status'] ?? 'draft',
                 'hasDraft' => ($document['draft'] ?? null) !== null,
                 'lastUpdatedBy' => $document['last_updated_by'] ?? null,
@@ -53,6 +56,15 @@ class CmsPageController extends Controller
         $slug = $this->resolveSlug($page);
 
         $this->store->saveDraft($slug, $request->sections(), $this->author());
+
+        return back();
+    }
+
+    public function saveDetails(SavePageDetailsRequest $request, string $page): RedirectResponse
+    {
+        $slug = $this->resolveSlug($page);
+
+        $this->store->saveDetails($slug, $request->title(), $request->seo(), $this->author());
 
         return back();
     }

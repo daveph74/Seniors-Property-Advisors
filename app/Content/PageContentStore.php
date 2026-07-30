@@ -154,6 +154,25 @@ class PageContentStore
         return $document['draft'] ?? $document['published'] ?? [];
     }
 
+    public function saveDetails(string $slug, string $title, array $seo, string $by): bool
+    {
+        $page = $this->page($slug);
+
+        if ($page === null) {
+            return false;
+        }
+
+        $page->forceFill([
+            'title' => $title,
+            'seo' => array_filter(array_merge($page->seo ?? [], $seo), fn ($value) => $value !== null),
+            'last_updated_by' => $by,
+        ])->save();
+
+        $this->forget($slug);
+
+        return true;
+    }
+
     public function saveDraft(string $slug, array $sections, string $by): void
     {
         $this->page($slug)?->forceFill([

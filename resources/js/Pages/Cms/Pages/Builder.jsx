@@ -15,6 +15,7 @@ import SettingsPanel from '../../../cms/builder/SettingsPanel';
 import HistoryDrawer from '../../../cms/builder/HistoryDrawer';
 import PublishModal from '../../../cms/builder/PublishModal';
 import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
+import PageSettingsPanel from '../../../cms/builder/PageSettingsPanel';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
 import { relative } from '../../../cms/relativeTime';
 import {
@@ -608,6 +609,20 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
         }
     };
 
+    const savePageDetails = (details) => {
+        if (! contentBacked) {
+            flash('This page has no content file yet, so it cannot be renamed.');
+            return;
+        }
+
+        router.patch(`/cms/pages/${pageId}/details`, details, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => flash('Page details saved'),
+            onError: (errors) => flash(firstError(errors, 'Could not save the page details')),
+        });
+    };
+
     const loadOlderRevisions = async (before) => {
         try {
             const response = await fetch(`/cms/pages/${pageId}/revisions?before=${before}`, {
@@ -641,6 +656,11 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
     };
 
     const saveLabel = { saved: 'All changes saved', saving: 'Saving…', unsaved: 'Unsaved changes' }[saveState];
+    const pending = page.hasDraft || saveState !== 'saved';
+    const statusLabel = page.status !== 'published'
+        ? 'Not published yet'
+        : pending ? 'Live with unpublished changes' : 'Live';
+    const statusTone = page.status !== 'published' ? 'warning' : pending ? 'info' : 'success';
 
     const dropLine = (parentId, index, label) => (
         isDropAt(parentId, index) ? (
@@ -795,8 +815,24 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                     </button>
                     <div className="cms-builder-topbar__divider" />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-                        <div className="cms-builder-topbar__title">{page.title}</div>
-                        <span className="cms-badge cms-badge--info">Draft · live version published</span>
+                        <input
+                            key={`page-title-${page.title}`}
+                            className="cms-builder-topbar__title cms-builder-topbar__title--input"
+                            defaultValue={page.title}
+                            title="Click to rename this page"
+                            disabled={! contentBacked}
+                            onBlur={(e) => {
+                                const title = e.target.value.trim();
+
+                                if (! title) { e.target.value = page.title; return; }
+                                if (title !== page.title) savePageDetails({ title, seo: page.seo || {} });
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') e.target.blur();
+                                if (e.key === 'Escape') { e.target.value = page.title; e.target.blur(); }
+                            }}
+                        />
+                        <span className={`cms-badge cms-badge--${statusTone}`}>{statusLabel}</span>
                         <span className="cms-builder-topbar__save">{saveLabel}</span>
                     </div>
 
@@ -926,19 +962,31 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                     </div>
 
                     <div className="cms-builder-right">
-                        <SettingsPanel
-                            block={selected}
-                            openPanels={openPanels}
-                            onTogglePanel={togglePanel}
-                            patch={patchSelected}
-                            setLabel={setSelectedLabel}
-                            setAnchor={setSelectedAnchor}
-                            device={device}
-                            onDevice={setDevice}
-                            onColumnCount={(n) => setColumnCount(selectedId, n)}
-                            onSaveReusable={() => saveReusable(selected)}
-                            onOpenMediaPicker={() => flash('Media picker opens over the builder')}
-                        />
+                        {selected ? (
+                            <SettingsPanel
+                                block={selected}
+                                openPanels={openPanels}
+                                onTogglePanel={togglePanel}
+                                patch={patchSelected}
+                                setLabel={setSelectedLabel}
+                                setAnchor={setSelectedAnchor}
+                                device={device}
+                                onDevice={setDevice}
+                                onColumnCount={(n) => setColumnCount(selectedId, n)}
+                                onSaveReusable={() => saveReusable(selected)}
+                                onOpenMediaPicker={() => flash('Media picker opens over the builder')}
+                            />
+                        ) : (
+                            <>
+                                <div className="cms-builder-right__head">
+                                    <div className="cms-builder-right__title-row">
+                                        <div className="cms-builder-right__title">Page settings</div>
+                                    </div>
+                                    <div className="cms-hint">Select a section on the canvas to edit its content.</div>
+                                </div>
+                                <PageSettingsPanel page={page} onSave={savePageDetails} />
+                            </>
+                        )}
                     </div>
                 </div>
 
