@@ -159,7 +159,7 @@ function isDescendant(block, id) {
     return (block.children || []).some((c) => c.id === id || isDescendant(c, id));
 }
 
-function BuilderInner({ page, pageId, sections, revisions, globals }) {
+function BuilderInner({ page, pageId, sections, revisions, globals, reusables = [] }) {
     const flash = useCmsToast();
     const contentBacked = Array.isArray(sections);
     const [selectedId, setSelectedId] = useState(null);
@@ -256,6 +256,57 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         markUnsaved();
         endDrag();
         flash(`${label} added`);
+    };
+
+    const insertReusable = async (reusableId, label, at) => {
+        endDrag();
+
+        try {
+            const response = await fetch(`/cms/reusable-sections/${reusableId}`, {
+                headers: { Accept: 'application/json' },
+            });
+
+            if (!response.ok) throw new Error('missing');
+
+            const fresh = reid(await response.json());
+
+            setBlocks((prev) => withList(prev, at?.parentId ?? null, (list) => {
+                const next = list.slice();
+                next.splice(at?.index == null ? next.length : at.index, 0, fresh);
+
+                return next;
+            }));
+
+            setSelectedId(fresh.id);
+            markUnsaved();
+            flash(`${label} added`);
+        } catch {
+            flash('Could not load that saved section');
+        }
+    };
+
+    const saveReusable = (block) => {
+        const name = window.prompt('Name this saved section', block.label);
+
+        if (!name) return;
+
+        router.post('/cms/reusable-sections', { name, sections: [serialise(block)] }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => flash(`${name} saved to Saved sections`),
+            onError: (errors) => flash(firstError(errors, 'Could not save that section')),
+        });
+    };
+
+    const deleteReusable = (reusableId, label) => {
+        if (! window.confirm(`Delete the saved section "${label}"? Copies already on a page are not affected.`)) return;
+
+        router.delete(`/cms/reusable-sections/${reusableId}`, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => flash(`${label} deleted`),
+            onError: () => flash('Could not delete that saved section'),
+        });
     };
 
     const moveBlock = (id, dir) => {
@@ -410,10 +461,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         flash(`${label} ${wasHidden ? 'shown' : 'hidden'} on this page`);
     };
 
-    const onLibraryDragStart = (e, type, label) => {
+    const onLibraryDragStart = (e, type, label, reusableId = null) => {
         if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy';
 
-        drag.current = { dragKind: type, dragLabel: label, dragId: null };
+        drag.current = { dragKind: type, dragLabel: label, dragId: null, reusableId };
         setDragType(type);
     };
 
@@ -443,7 +494,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
 
     const performDrop = (fallbackAt) => {
         const at = dropAt ?? fallbackAt;
-        const { dragId, dragKind, dragLabel } = drag.current;
+        const { dragId, dragKind, dragLabel, reusableId } = drag.current;
         const type = dragId ? locate(blocks, dragId)?.block.type : dragKind;
         const target = parentInfo(blocks, at.parentId);
 
@@ -453,6 +504,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
         }
 
         if (dragId) moveTo(dragId, at);
+        else if (reusableId) insertReusable(reusableId, dragLabel, at);
         else insertBlock(dragKind, dragLabel || 'Section', at);
     };
 
@@ -657,9 +709,11 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                         <button type="button" title="Duplicate" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); duplicateBlock(b.id); }}>
                             <DuplicateIcon />
                         </button>
-                        <button type="button" title="Save as reusable section" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); flash('Saved to reusable sections'); }}>
-                            <ReusableIcon />
-                        </button>
+                        {b.type !== 'row' && b.type !== 'column' && (
+                            <button type="button" title="Save as reusable section" className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); saveReusable(b); }}>
+                                <ReusableIcon />
+                            </button>
+                        )}
                         <button type="button" title={b.active === false ? 'Show on page' : 'Hide on page'} className="cms-block__toolbar-btn" onClick={(e) => { e.stopPropagation(); toggleActive(b.id, b.label); }}>
                             <HideIcon />
                         </button>
@@ -741,7 +795,11 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                                 onSearch={setCompSearch}
                                 onDragStart={onLibraryDragStart}
                                 onDragEnd={endDrag}
-                                onAdd={(type, label) => insertBlock(type, label, null)}
+                                onAdd={(type, label, reusableId) => (reusableId
+                                    ? insertReusable(reusableId, label, null)
+                                    : insertBlock(type, label, null))}
+                                onDeleteReusable={deleteReusable}
+                                reusables={reusables}
                             />
                         ) : (
                             <LayersPanel
@@ -827,7 +885,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
                             device={device}
                             onDevice={setDevice}
                             onColumnCount={(n) => setColumnCount(selectedId, n)}
-                            onSaveReusable={() => flash('Saved to reusable sections')}
+                            onSaveReusable={() => saveReusable(selected)}
                             onOpenMediaPicker={() => flash('Media picker opens over the builder')}
                         />
                     </div>
@@ -859,7 +917,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals }) {
     );
 }
 
-export default function Builder({ pageId, sections = null, page = null, revisions = [], globals = null }) {
+export default function Builder({ pageId, sections = null, page = null, revisions = [], globals = null, reusables = [] }) {
     const meta = useMemo(() => {
         if (page) return { id: pageId, ...page };
 
@@ -871,7 +929,7 @@ export default function Builder({ pageId, sections = null, page = null, revision
 
     return (
         <ToastProvider>
-            <BuilderInner page={meta} pageId={pageId} sections={sections} revisions={revisions} globals={globals} />
+            <BuilderInner page={meta} pageId={pageId} sections={sections} revisions={revisions} globals={globals} reusables={reusables} />
         </ToastProvider>
     );
 }

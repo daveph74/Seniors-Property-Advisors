@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Cms\CmsPageController;
+use App\Http\Controllers\Cms\ReusableSectionController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +27,12 @@ Route::prefix('cms')->name('cms.')->group(function () {
         ->whereNumber('n')->name('pages.preview.revision');
     Route::post('/pages/{page}/restore/{n}', [CmsPageController::class, 'restore'])
         ->whereNumber('n')->name('pages.restore');
+
+    Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
+        ->whereNumber('reusable')->name('reusable.show');
+    Route::post('/reusable-sections', [ReusableSectionController::class, 'store'])->name('reusable.store');
+    Route::delete('/reusable-sections/{reusable}', [ReusableSectionController::class, 'destroy'])
+        ->whereNumber('reusable')->name('reusable.destroy');
 
     Route::get('/blog', fn () => Inertia::render('Cms/Blog/Index'))->name('blog.index');
     Route::get('/faqs', fn () => Inertia::render('Cms/Faqs/Index'))->name('faqs.index');

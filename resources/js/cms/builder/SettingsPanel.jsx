@@ -475,11 +475,13 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     : 'Give this a name to link to it from the menu, e.g. #how'}
                             </div>
                         </div>
-                        <div className="cms-reusable-box">
-                            <div className="cms-reusable-box__title">Reusable section</div>
-                            <p className="cms-reusable-box__body">Save this section once and reuse it on other pages. Linked sections update everywhere; duplicated sections are independent copies.</p>
-                            <button type="button" className="cms-btn cms-btn--sm" onClick={onSaveReusable}>Save as reusable</button>
-                        </div>
+                        {type !== 'row' && type !== 'column' && (
+                            <div className="cms-reusable-box">
+                                <div className="cms-reusable-box__title">Saved section</div>
+                                <p className="cms-reusable-box__body">Keep a copy of this section in the Components panel so you can drop it onto any page. Each copy is independent — editing one does not change the others.</p>
+                                <button type="button" className="cms-btn cms-btn--sm" onClick={onSaveReusable}>Save as reusable</button>
+                            </div>
+                        )}
                     </>
                 </AccordionSection>
             </div>

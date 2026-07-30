@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cms;
 
 use App\Content\PageContentStore;
+use App\Content\ReusableSectionStore;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveSectionsRequest;
 use Illuminate\Http\RedirectResponse;
@@ -36,6 +37,7 @@ class CmsPageController extends Controller
             ],
             'revisions' => $this->revisionSummaries($slug),
             'globals' => $this->store->globals(),
+            'reusables' => (new ReusableSectionStore)->all(),
         ]);
     }
 
