@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDownSmallIcon } from './icons';
 
 const STATUS_CLASS = {
@@ -73,28 +74,73 @@ export function EmptyState({ icon, title, body, actionLabel, onAction }) {
     );
 }
 
+const MENU_WIDTH = 190;
+
 export function DropdownMenu({ open, onClose, children, align = 'right' }) {
-    const ref = useRef(null);
+    const anchor = useRef(null);
+    const menu = useRef(null);
+    const [pos, setPos] = useState(null);
+
+    useLayoutEffect(() => {
+        if (!open || !anchor.current) return undefined;
+
+        const place = () => {
+            const cell = anchor.current?.parentElement;
+
+            if (!cell) return;
+
+            const rect = cell.getBoundingClientRect();
+            const height = menu.current?.offsetHeight ?? 0;
+            const fitsBelow = window.innerHeight - rect.bottom > height + 12;
+            const left = align === 'right' ? rect.right - MENU_WIDTH : rect.left;
+
+            setPos({
+                top: fitsBelow ? rect.bottom + 4 : Math.max(8, rect.top - height - 4),
+                left: Math.max(8, Math.min(left, window.innerWidth - MENU_WIDTH - 8)),
+            });
+        };
+
+        place();
+        window.addEventListener('resize', place);
+        window.addEventListener('scroll', place, true);
+
+        return () => {
+            window.removeEventListener('resize', place);
+            window.removeEventListener('scroll', place, true);
+        };
+    }, [open, align, children]);
 
     useEffect(() => {
-        if (!open) return;
+        if (!open) return undefined;
+
         function onDocClick(e) {
-            if (ref.current && !ref.current.contains(e.target)) onClose();
+            const insideMenu = menu.current?.contains(e.target);
+            const insideTrigger = anchor.current?.parentElement?.contains(e.target);
+
+            if (!insideMenu && !insideTrigger) onClose();
         }
+
         document.addEventListener('mousedown', onDocClick);
+
         return () => document.removeEventListener('mousedown', onDocClick);
     }, [open, onClose]);
 
     if (!open) return null;
 
     return (
-        <div
-            ref={ref}
-            className="cms-menu cms-anim-rise"
-            style={{ top: 32, [align]: 0 }}
-        >
-            {children}
-        </div>
+        <>
+            <span ref={anchor} hidden />
+            {createPortal(
+                <div
+                    ref={menu}
+                    className="cms-menu cms-anim-rise"
+                    style={{ position: 'fixed', top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+                >
+                    {children}
+                </div>,
+                document.body,
+            )}
+        </>
     );
 }
 
