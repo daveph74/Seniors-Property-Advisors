@@ -1,8 +1,8 @@
-const WHEN = (at) => (at ? new Date(at).toLocaleString('en-AU') : null);
+import { relative, exact } from '../cms/builder/relativeTime';
 
-export default function PreviewBanner({ mode, n, by, at, editUrl }) {
+export default function PreviewBanner({ mode, by, at, editUrl }) {
     const label = mode === 'revision'
-        ? `Viewing version ${n}${by ? ` · published by ${by}` : ''}${WHEN(at) ? ` · ${WHEN(at)}` : ''}`
+        ? `Viewing the version published ${relative(at)}${by ? ` by ${by}` : ''} · ${exact(at)}`
         : mode === 'draft'
             ? 'Draft preview — this is not what visitors see'
             : 'Preview of the live page — there is no draft yet';

@@ -16,6 +16,7 @@ import HistoryDrawer from '../../../cms/builder/HistoryDrawer';
 import PublishModal from '../../../cms/builder/PublishModal';
 import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
+import { relative } from '../../../cms/builder/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
     MoveIcon, DuplicateIcon, ReusableIcon, HideIcon, TrashIcon, PlusIcon, ChevronUpSmallIcon,
@@ -607,9 +608,23 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
         }
     };
 
-    const restoreVersion = (n) => {
+    const loadOlderRevisions = async (before) => {
+        try {
+            const response = await fetch(`/cms/pages/${pageId}/revisions?before=${before}`, {
+                headers: { Accept: 'application/json' },
+            });
+
+            return response.ok ? await response.json() : null;
+        } catch {
+            return null;
+        }
+    };
+
+    const restoreVersion = (n, at) => {
+        const when = at ? relative(at) : `version ${n}`;
+
         if (saveState === 'unsaved'
-            && ! window.confirm(`Restoring version ${n} will replace your unsaved changes. Continue?`)) return;
+            && ! window.confirm(`Restoring the version from ${when} will replace your unsaved changes. Continue?`)) return;
 
         router.post(`/cms/pages/${pageId}/restore/${n}`, {}, {
             preserveScroll: true,
@@ -619,7 +634,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                 setSelectedId(null);
                 setSaveState('saved');
                 setHistoryOpen(false);
-                flash(`Version ${n} restored as a draft — publish when you are ready`);
+                flash(`Restored the version from ${when} as a draft — publish when you are ready`);
             },
             onError: () => flash('Could not restore that version'),
         });
@@ -934,6 +949,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                     onRestore={restoreVersion}
                     onPreview={openPreviewTab}
                     onCompare={compareVersion}
+                    onLoadOlder={loadOlderRevisions}
                     revisions={contentBacked ? revisions : null}
                 />
                 <PublishModal
@@ -958,7 +974,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
     );
 }
 
-export default function Builder({ pageId, sections = null, page = null, revisions = [], globals = null, reusables = [] }) {
+export default function Builder({ pageId, sections = null, page = null, revisions = null, globals = null, reusables = [] }) {
     const meta = useMemo(() => {
         if (page) return { id: pageId, ...page };
 

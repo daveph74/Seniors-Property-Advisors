@@ -12,12 +12,14 @@ class PageRevision extends Model
         'n',
         'action',
         'by',
+        'section_count',
         'sections',
         'schema_version',
     ];
 
     protected $casts = [
         'n' => 'integer',
+        'section_count' => 'integer',
         'schema_version' => 'integer',
         'sections' => 'array',
     ];
@@ -34,7 +36,7 @@ class PageRevision extends Model
             'action' => $this->action,
             'by' => $this->by,
             'at' => $this->created_at?->toIso8601String(),
-            'sections' => $this->sections ?? [],
+            'sectionCount' => $this->section_count,
         ];
     }
 }

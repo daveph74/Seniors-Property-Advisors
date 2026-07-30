@@ -97,21 +97,42 @@ class ContentStorageTest extends TestCase
         $store = new PageContentStore;
 
         foreach (['one', 'two', 'three'] as $by) {
-            $store->saveDraft('home', $this->tree(), $by);
+            $tree = $this->tree();
+            $tree[0]['label'] = "Edited by {$by}";
+
+            $store->saveDraft('home', $tree, $by);
             $store->publish('home', $by);
         }
 
-        $revisions = $store->revisions('home');
+        $revisions = $store->revisions('home')['rows'];
 
         $this->assertSame([3, 2, 1], array_column($revisions, 'n'));
         $this->assertSame(['three', 'two', 'one'], array_column($revisions, 'by'));
-        $this->assertSame(['n', 'action', 'by', 'at', 'sections'], array_keys($revisions[0]));
-        $this->assertSame($this->tree(), $revisions[0]['sections']);
+        $this->assertSame(['n', 'action', 'by', 'at', 'sectionCount'], array_keys($revisions[0]));
+        $this->assertSame(1, $revisions[0]['sectionCount']);
+    }
+
+    public function test_the_revision_list_never_loads_the_section_blobs(): void
+    {
+        $store = new PageContentStore;
+        $store->saveDraft('home', $this->tree(), 'Tester');
+        $store->publish('home', 'Tester');
+
+        DB::enableQueryLog();
+        $store->revisions('home');
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        $listQuery = collect($queries)->firstWhere(fn ($q) => str_contains($q['query'], 'page_revisions')
+            && str_contains($q['query'], 'select "n"'));
+
+        $this->assertNotNull($listQuery, 'expected a column-scoped select against page_revisions');
+        $this->assertStringNotContainsString('"sections"', $listQuery['query']);
     }
 
     public function test_revisions_are_empty_for_an_unknown_page(): void
     {
-        $this->assertSame([], (new PageContentStore)->revisions('nope'));
+        $this->assertSame(['total' => 0, 'rows' => []], (new PageContentStore)->revisions('nope'));
     }
 
     public function test_the_seeder_is_idempotent_and_creates_no_revisions(): void

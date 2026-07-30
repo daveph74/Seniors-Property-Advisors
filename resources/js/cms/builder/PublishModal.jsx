@@ -44,7 +44,15 @@ export default function PublishModal({ open, onClose, onConfirm, pageTitle, page
 
             <div className="cms-modal__actions">
                 <button type="button" className="cms-btn" onClick={onClose}>Cancel</button>
-                <button type="button" className="cms-btn cms-btn--primary" style={{ height: 36, padding: '0 18px' }} onClick={onConfirm}>Publish now</button>
+                <button
+                    type="button"
+                    className="cms-btn cms-btn--primary"
+                    style={{ height: 36, padding: '0 18px' }}
+                    disabled={!!diff?.unchanged}
+                    onClick={onConfirm}
+                >
+                    Publish now
+                </button>
             </div>
         </Modal>
     );

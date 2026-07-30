@@ -51,6 +51,11 @@ into the database. Run it manually; never from a migration.
 version must keep sections the editor had hidden while still dropping block types that
 have since left `BLOCK_TYPES`, or the draft could never be saved again.
 
+Publish history keeps **whole snapshots, never deltas** — restore correctness beats storage,
+and a snapshot is ~9KB. Nothing prunes it. The list read must stay metadata-only: `revisions()`
+selects named columns and reads the persisted `section_count`, never the `sections` blob, and a
+test asserts that. Publishing an unchanged tree records no revision.
+
 Reusable sections are **independent copies**, stored whole in `reusable_sections` with
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.

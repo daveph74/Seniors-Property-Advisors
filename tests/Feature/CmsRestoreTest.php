@@ -52,11 +52,11 @@ class CmsRestoreTest extends TestCase
     public function test_restoring_creates_no_revision(): void
     {
         $this->publishTwice();
-        $this->assertCount(2, (new PageContentStore)->revisions('home'));
+        $this->assertCount(2, (new PageContentStore)->revisions('home')['rows']);
 
         $this->post('/cms/pages/1/restore/1')->assertRedirect();
 
-        $this->assertCount(2, (new PageContentStore)->revisions('home'));
+        $this->assertCount(2, (new PageContentStore)->revisions('home')['rows']);
     }
 
     public function test_a_restored_draft_can_then_be_published(): void
@@ -71,7 +71,7 @@ class CmsRestoreTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p->where('sections.0.data.heading', 'Version one'));
-        $this->assertCount(3, (new PageContentStore)->revisions('home'));
+        $this->assertCount(3, (new PageContentStore)->revisions('home')['rows']);
     }
 
     public function test_a_revision_holding_a_retired_block_type_still_restores_and_re_saves(): void

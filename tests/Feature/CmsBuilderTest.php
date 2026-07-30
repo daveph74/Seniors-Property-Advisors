@@ -110,7 +110,7 @@ class CmsBuilderTest extends TestCase
         $this->assertSame('column', $row['children'][0]['type']);
         $this->assertSame('heading', $row['children'][0]['children'][0]['type']);
         $this->assertSame('Nested deep', $row['children'][0]['children'][0]['data']['heading']);
-        $this->assertSame('heading', $store->revisions('home')[0]['sections'][0]['children'][0]['children'][0]['children'][0]['type']);
+        $this->assertSame('heading', $store->revisionSections('home', 1)[0]['children'][0]['children'][0]['children'][0]['type']);
 
         $this->get('/')->assertInertia(function ($page) {
             $sections = $page->toArray()['props']['sections'];
@@ -166,7 +166,7 @@ class CmsBuilderTest extends TestCase
         $this->assertSame('heading', $leaf['type']);
         $this->assertSame('Six levels down', $leaf['data']['heading']);
 
-        $revision = $store->revisions('home')[0]['sections'][0];
+        $revision = $store->revisionSections('home', 1)[0];
         $this->assertSame(
             'heading',
             $revision['children'][0]['children'][0]['children'][0]['children'][0]['children'][0]['type'],
@@ -295,7 +295,7 @@ class CmsBuilderTest extends TestCase
 
         $this->assertNull($document['draft']);
         $this->assertCount(1, $document['published'][0]['children']);
-        $this->assertCount(1, $store->revisions('home')[0]['sections'][0]['children']);
+        $this->assertCount(1, $store->revisionSections('home', 1)[0]['children']);
 
         $this->get('/')->assertInertia(function ($page) {
             $sections = $page->toArray()['props']['sections'];
@@ -560,7 +560,7 @@ class CmsBuilderTest extends TestCase
         $this->assertNull($document['draft']);
         $this->assertCount(1, $document['published']);
         $this->assertNotNull($document['published_at']);
-        $this->assertCount(1, $store->revisions('home'));
+        $this->assertCount(1, $store->revisions('home')['rows']);
 
         $this->get('/')->assertInertia(function ($page) {
             $sections = $page->toArray()['props']['sections'];

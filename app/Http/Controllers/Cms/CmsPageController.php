@@ -37,7 +37,7 @@ class CmsPageController extends Controller
                 'lastUpdatedBy' => $document['last_updated_by'] ?? null,
                 'publishedAt' => $document['published_at'] ?? null,
             ],
-            'revisions' => $this->revisionSummaries($slug),
+            'revisions' => $this->store->revisions($slug),
             'globals' => $this->store->globals(),
             'reusables' => (new ReusableSectionStore)->all(),
         ]);
@@ -112,6 +112,16 @@ class CmsPageController extends Controller
         return back();
     }
 
+    public function revisions(string $page): JsonResponse
+    {
+        $before = request()->integer('before');
+
+        return response()->json($this->store->revisions(
+            $this->resolveSlug($page),
+            before: $before > 0 ? $before : null,
+        ));
+    }
+
     private function renderPreview(string $page, ?array $data): Response
     {
         abort_if($data === null, 404);
@@ -143,16 +153,5 @@ class CmsPageController extends Controller
     private function author(): string
     {
         return request()->user()?->name ?? 'Helen Marsh';
-    }
-
-    private function revisionSummaries(string $slug): array
-    {
-        return array_map(fn ($revision) => [
-            'n' => $revision['n'],
-            'action' => $revision['action'],
-            'by' => $revision['by'],
-            'at' => $revision['at'],
-            'sections' => count($revision['sections'] ?? []),
-        ], $this->store->revisions($slug));
     }
 }

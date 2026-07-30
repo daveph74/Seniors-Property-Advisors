@@ -167,6 +167,7 @@
 .cms-segmented__btn--icon{ width: 30px; padding: 0; flex: none; }
 .cms-segmented__btn--active{ background: var(--cms-navy); color: #ffffffbf; }
 .cms-segmented__btn:disabled{ opacity: .35; cursor: not-allowed; }
+.cms-version-more{ display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 10px 4px; }
 
 /* ---------- Badges ---------- */
 .cms-badge{

@@ -30,6 +30,7 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('/pages/{page}/compare/{n}', [CmsPageController::class, 'compare'])
         ->whereNumber('n')->name('pages.compare');
     Route::post('/pages/{page}/changes', [CmsPageController::class, 'changes'])->name('pages.changes');
+    Route::get('/pages/{page}/revisions', [CmsPageController::class, 'revisions'])->name('pages.revisions');
 
     Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
         ->whereNumber('reusable')->name('reusable.show');

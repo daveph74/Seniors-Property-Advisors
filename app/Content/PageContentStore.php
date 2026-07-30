@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\PageRevision;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class PageContentStore
 {
@@ -147,15 +148,16 @@ class PageContentStore
         ])->save();
     }
 
-    public function publish(string $slug, string $by): void
+    public function publish(string $slug, string $by): bool
     {
         $page = $this->page($slug);
 
         if ($page === null) {
-            return;
+            return false;
         }
 
         $sections = $page->draft ?? $page->published ?? [];
+        $changed = $sections !== ($page->published ?? []) || $page->revisions()->count() === 0;
 
         $page->forceFill([
             'published' => $sections,
@@ -165,8 +167,13 @@ class PageContentStore
             'published_at' => now(),
         ])->save();
 
-        $this->addRevision($page, $sections, $by);
+        if ($changed) {
+            $this->addRevision($page, $sections, $by);
+        }
+
         $this->forget($slug);
+
+        return $changed;
     }
 
     public function restore(string $slug, int $n, string $by): bool
@@ -191,15 +198,24 @@ class PageContentStore
         return $this->page($slug)?->revisions()->where('n', $n)->first()?->sections;
     }
 
-    public function revisions(string $slug): array
+    public function revisions(string $slug, int $limit = 50, ?int $before = null): array
     {
         $page = $this->page($slug);
 
         if ($page === null) {
-            return [];
+            return ['total' => 0, 'rows' => []];
         }
 
-        return $page->revisions->map->toSummaryRow()->all();
+        $query = $page->revisions()->select(['n', 'action', 'by', 'section_count', 'created_at']);
+
+        if ($before !== null) {
+            $query->where('n', '<', $before);
+        }
+
+        return [
+            'total' => $page->revisions()->count(),
+            'rows' => $query->limit($limit)->get()->map->toSummaryRow()->all(),
+        ];
     }
 
     public function forget(string $slug): void
@@ -214,13 +230,18 @@ class PageContentStore
 
     private function addRevision(Page $page, array $sections, string $by): void
     {
-        PageRevision::create([
-            'page_id' => $page->id,
-            'n' => (int) $page->revisions()->max('n') + 1,
-            'action' => 'publish',
-            'by' => $by,
-            'sections' => $sections,
-        ]);
+        DB::transaction(function () use ($page, $sections, $by) {
+            Page::where('id', $page->id)->lockForUpdate()->first();
+
+            PageRevision::create([
+                'page_id' => $page->id,
+                'n' => (int) $page->revisions()->max('n') + 1,
+                'action' => 'publish',
+                'by' => $by,
+                'section_count' => count($sections),
+                'sections' => $sections,
+            ]);
+        });
 
         $page->unsetRelation('revisions');
     }
