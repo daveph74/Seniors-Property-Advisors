@@ -8,12 +8,17 @@ export default function FamilySection({ data, actions, anchor }) {
             <div className="container">
                 <div className="family-grid">
                     <div className="family-visual">
-                        <div
-                            className="ph"
-                            role="img"
-                            aria-label={image.alt}
-                            style={image.src ? { backgroundImage: `url('${image.src}')` } : undefined}
-                        />
+                        {image.src ? (
+                            <img
+                                className="ph"
+                                src={image.src}
+                                alt={image.alt || ""}
+                                loading="lazy"
+                                decoding="async"
+                            />
+                        ) : (
+                            <div className="ph" />
+                        )}
                         <div className="quote">
                             <span
                                 className="av"

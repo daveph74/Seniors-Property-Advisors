@@ -26,12 +26,17 @@ export default function WhyListSection({ data, anchor }) {
                     </div>
 
                     <div className="why-visual">
-                        <div
-                            className="ph"
-                            role="img"
-                            aria-label={image.alt}
-                            style={image.src ? { backgroundImage: `url('${image.src}')` } : undefined}
-                        />
+                        {image.src ? (
+                            <img
+                                className="ph"
+                                src={image.src}
+                                alt={image.alt || ""}
+                                loading="lazy"
+                                decoding="async"
+                            />
+                        ) : (
+                            <div className="ph" />
+                        )}
                         <div className="stamp">
                             <div className="big">{stamp.value}</div>
                             <small>{stamp.text}</small>

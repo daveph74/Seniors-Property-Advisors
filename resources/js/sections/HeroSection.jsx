@@ -47,12 +47,19 @@ export default function HeroSection({ data, actions, anchor }) {
                     </div>
 
                     <div className="hero-visual">
-                        <div
-                            className="photo"
-                            role="img"
-                            aria-label={image.alt}
-                            style={image.src ? { backgroundImage: `url('${image.src}')` } : undefined}
-                        />
+                        {image.src ? (
+                            <img
+                                className="photo"
+                                src={image.src}
+                                alt={image.alt || ''}
+                                width="1400"
+                                height="934"
+                                fetchPriority="high"
+                                decoding="async"
+                            />
+                        ) : (
+                            <div className="photo" />
+                        )}
 
                         <div className="hero-card rating">
                             <div className="ico">
