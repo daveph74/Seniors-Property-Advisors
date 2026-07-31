@@ -1,9 +1,12 @@
 /* ===================== Brand font: Arboria =====================
-   Arboria is a commercial typeface (the SPA brand font). Drop the licensed
-   webfont files into public/fonts/arboria/ (see the README there) and these
-   rules pick them up automatically. Absolute /fonts URLs are served from
-   public/ and are NOT bundled by Vite, so the build never fails when the files
-   are absent — the page simply falls back to DM Sans until they're added. */
+   Arboria is a commercial typeface (the SPA brand font) and the licensed files
+   are not in public/fonts/arboria/ yet — only the README is. While they are
+   missing these three @font-face rules cost six failed requests (woff2 + woff
+   per weight) on the critical path of every page load, so they stay commented
+   out. Restore this block verbatim the moment the files are added; "Arboria"
+   is already first in --font-sans/--font-display, so it takes effect with no
+   other change, and until then those stacks fall through to DM Sans.
+
 @font-face{
   font-family: "Arboria";
   font-style: normal;
@@ -28,6 +31,7 @@
   src: url("/fonts/arboria/Arboria-Bold.woff2") format("woff2"),
        url("/fonts/arboria/Arboria-Bold.woff") format("woff");
 }
+*/
 
 :root{
   /* ===== Brand palette =====
@@ -287,8 +291,10 @@ h1.headline em{
 }
 .hero-visual .photo{
   position: absolute; inset: 0;
+  width: 100%; height: 100%;
   border-radius: 26px;
   background-size: cover; background-position: center;
+  object-fit: cover; object-position: center;
   box-shadow: var(--shadow-lg);
 }
 
@@ -535,6 +541,7 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
 }
 .compare-toolbar{
   display:flex; align-items:center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
   padding: 22px 28px;
   border-bottom: 1px solid var(--line-soft);
   background: linear-gradient(180deg, #FCFDFE, #F7FAFD);
@@ -817,9 +824,6 @@ footer{
   .steps, .block-step-grid{ grid-template-columns: 1fr 1fr; }
   .steps::before, .block-step-grid::before{ display: none;}
   .trust .cards, .block-card-grid{ grid-template-columns: 1fr;}
-  .compare-grid{ grid-template-columns: 1fr; }
-  .cmp-cell.label{ display: none;}
-  .cmp-cell.head{ border-bottom: none; }
   .foot-grid{ grid-template-columns: 1fr 1fr; gap: 40px;}
 }
 @media (max-width: 640px){
@@ -1036,4 +1040,174 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .block-card-grid p, .block-step-grid p, .block-benefit-list span,
 .block-quote-card p, .block-info-card small, .block-checklist li{
   white-space: pre-line;
+}
+
+/* ---------- Agent comparison: cards for phone width ---------- */
+.compare-cards{ display: none; gap: 16px; padding: 20px; }
+.cmp-cards__title{
+  margin: 0 4px 2px; font-family: var(--font-display); font-size: 20px;
+  font-weight: 700; color: var(--navy);
+}
+.cmp-card{
+  border: 1px solid var(--line-soft); border-radius: var(--radius-md, 14px);
+  background: var(--white); overflow: hidden;
+}
+.cmp-card.best{ border-color: var(--blue); box-shadow: 0 8px 24px rgba(2,14,60,0.08); }
+.cmp-card__head{ padding: 18px; background: #FAFCFE; border-bottom: 1px solid var(--line-soft); }
+.cmp-card.best .cmp-card__head{ background: linear-gradient(180deg, var(--blue-tint), transparent); }
+.cmp-card.best .cmp-card__head::after{
+  content: "Advisor pick"; display: inline-block; margin-top: 10px;
+  background: var(--navy); color: var(--white);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+  padding: 4px 10px; border-radius: 99px; text-transform: uppercase;
+}
+.cmp-card__rows{ margin: 0; padding: 0; }
+.cmp-row{ display: grid; gap: 4px; padding: 14px 18px; border-bottom: 1px solid var(--line-soft); }
+.cmp-row:last-child{ border-bottom: none; }
+.cmp-row__label{
+  color: var(--text-soft); font-size: 11.5px; letter-spacing: 0.08em;
+  text-transform: uppercase; font-weight: 600;
+}
+.cmp-row__value{ margin: 0; font-size: 14.5px; color: var(--text); }
+.cmp-row.note .cmp-row__value{ font-size: 14px; color: var(--text-mid); line-height: 1.55; font-style: italic; }
+.cmp-row.cta{ padding: 16px 18px 18px; }
+
+/* ---------- Tablet: keep the real table, and use the extra width ---------- */
+@media (min-width: 641px) and (max-width: 1080px){
+  .section-head{ flex-direction: column; align-items: flex-start; }
+  .trust .cards, .block-card-grid{ grid-template-columns: 1fr 1fr; }
+
+  .compare-grid{ grid-template-columns: 0.95fr repeat(3, 1fr); }
+  .cmp-cell{ padding: 16px 12px; font-size: 13.5px; }
+  .cmp-cell.label{ font-size: 11px; letter-spacing: 0.06em; }
+  .cmp-cell.head{ padding: 44px 12px 16px; }
+  .cmp-cell.cta{ padding: 16px 12px; }
+  .cmp-cell.first-label{ font-size: 18px; padding-bottom: 16px; }
+  .cmp-cell .price{ font-size: 18px; }
+  .cmp-cell.note{ font-size: 13px; }
+  .agent-head{ gap: 8px; }
+  .agent-head .av{ width: 44px; height: 44px; }
+  .agent-head b{ font-size: 15px; }
+  .agent-head small{ font-size: 12.5px; }
+  .cmp-cell.head.best::before{ top: 10px; right: 10px; font-size: 9.5px; padding: 3px 8px; }
+}
+
+/* ---------- Phone: swap the table for one card per agent ---------- */
+@media (max-width: 640px){
+  .compare-grid{ display: none; }
+  .compare-cards{ display: grid; }
+  .compare-toolbar{ padding: 16px 18px; }
+  .compare-toolbar .right{ width: 100%; }
+  .compare-toolbar .right .chip{ width: 100%; justify-content: center; }
+}
+
+/* Header: the logo is a 300x64 lockup, so at its full height it needs 214px and
+   .brand has flex:none — together with the phone and the CTA that overflows any
+   viewport under about 520px. Letting the mark scale to the space left over keeps
+   the call-to-action at full size and works at every width without magic numbers. */
+@media (max-width: 640px){
+  :root{ --gutter: 20px; }
+  .nav{ gap: 14px; }
+  .brand{ flex: 1 1 auto; min-width: 0; }
+  .brand .word{ display: none; }
+  .brand .mark{ height: auto; width: auto; max-width: 100%; max-height: 42px; }
+  .nav .right{ flex: none; gap: 10px; }
+  .nav .right .btn .arr{ display: none; }
+  .btn.sm{ padding: 0 16px; }
+}
+
+/* The 30+ stamp deliberately hangs 34px outside the photo, which only has room
+   while the why grid is two columns. Below that the photo spans the container,
+   so a negative offset puts the stamp outside the section and .why{overflow:hidden}
+   clips its left edge. Tuck it against the photo instead. */
+@media (max-width: 1080px){
+  .why-visual .stamp{ left: 0; }
+}
+
+/* ---------- Mobile / tablet menu ----------
+   The inline nav list is hidden below 1220px, so the links live in a drawer
+   behind this toggle. Tap targets are deliberately generous for the audience. */
+.nav-toggle{
+  display: none;
+  width: 46px; height: 46px; flex: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  border: 1.5px solid rgba(1,10,68,0.18); border-radius: var(--btn-radius);
+  background: var(--white);
+}
+.nav-toggle span{
+  display: block; width: 20px; height: 2px; border-radius: 2px;
+  background: var(--navy);
+  transition: transform .2s ease, opacity .15s ease;
+}
+.nav-toggle:hover{ border-color: var(--navy); }
+.nav-toggle--open span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+.nav-toggle--open span:nth-child(2){ opacity: 0; }
+.nav-toggle--open span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+
+.nav-drawer{ display: none; }
+.nav-drawer ul{ list-style: none; margin: 0; padding: 0; }
+.nav-drawer a{
+  display: block; padding: 16px 0;
+  color: var(--navy); font-size: 17px; font-weight: 500;
+  border-bottom: 1px solid var(--line-soft);
+}
+.nav-drawer a.active{ color: var(--blue-deep); }
+/* Needs to outrank `.nav-drawer a` (0,1,1) above, which would otherwise force
+   this row to display:block and stack the icon above the number. */
+.nav-drawer .nav-drawer__phone{
+  display: flex; align-items: center; gap: 10px;
+  padding: 18px 0 4px;
+  color: var(--navy); font-weight: 600; font-size: 17px;
+  border-bottom: none;
+}
+.nav-drawer__phone .ico{
+  width: 32px; height: 32px; border-radius: 50%; flex: none;
+  background: var(--blue-tint); display: grid; place-items: center;
+  color: var(--blue-deep);
+}
+
+@media (max-width: 1220px){
+  .nav-toggle{ display: flex; }
+  /* Overlaid rather than pushed into the flow: closing the drawer must not shift
+     the page, or an anchor jump made from it lands in the wrong place. */
+  .nav-drawer--open{
+    display: block;
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 40;
+    padding: 6px var(--gutter) 22px;
+    border-top: 1px solid var(--line-soft);
+    background: var(--white);
+    box-shadow: 0 18px 40px rgba(2,14,60,0.14);
+    max-height: calc(100vh - 126px);
+    overflow-y: auto;
+  }
+}
+
+/* Anchored sections clear the sticky header, so links from the menu land on the
+   heading instead of behind the bar. */
+.hero, section[id]{ scroll-margin-top: 96px; }
+
+/* Below 480px the phone chip, the CTA, the toggle and the logo cannot all sit on
+   one line, so the phone number moves into the drawer where it has a full row. */
+@media (max-width: 480px){
+  .nav .phone{ display: none; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .nav-toggle span{ transition: none; }
+}
+
+/* Buttons size to their labels, so a pair stacked on a phone ends up ragged —
+   hero 218/238, family 209/203, closing CTA 197/216. Stretch them to one width.
+   These three rows contain nothing but buttons, so stretching is safe. */
+@media (max-width: 640px){
+  .hero-ctas, .btn-row, .cta .row{ flex-direction: column; align-items: stretch; }
+  .hero-ctas .btn, .btn-row .btn, .cta .row .btn{ width: 100%; justify-content: center; }
+}
+
+/* The why and family photos are now <img loading="lazy"> rather than background
+   images, so the browser defers those two large downloads until they are scrolled
+   near. object-fit reproduces background-size: cover exactly. */
+.why-visual .ph, .family-visual .ph{
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
 }
