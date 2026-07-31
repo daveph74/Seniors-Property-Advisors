@@ -1,15 +1,54 @@
 import { useState } from 'react';
+import { uploadMedia } from './uploadMedia';
+import MediaLibraryModal from './MediaLibraryModal';
 
 export default function ImageField({ label, value, alt, onChange, onAltChange, hint }) {
     const [failed, setFailed] = useState(false);
+    const [percent, setPercent] = useState(null);
+    const [error, setError] = useState(null);
+    const [dragging, setDragging] = useState(false);
+    const [picking, setPicking] = useState(false);
     const src = (value || '').trim();
+    const busy = percent !== null;
+
+    const send = async (file) => {
+        if (! file) return;
+
+        if (! file.type.startsWith('image/')) {
+            setError('Only images can be used here.');
+            return;
+        }
+
+        setError(null);
+        setFailed(false);
+        setPercent(0);
+
+        try {
+            const media = await uploadMedia(file, setPercent);
+            onChange(media.url);
+            if (onAltChange && ! alt) onAltChange('');
+        } catch (e) {
+            setError(e.message);
+        } finally {
+            setPercent(null);
+        }
+    };
 
     return (
         <div className="cms-field">
             <label className="cms-field-label">{label}</label>
 
-            <div className="cms-media-pick-row">
-                {src && !failed ? (
+            <div
+                className={`cms-media-pick-row ${dragging ? 'cms-media-pick-row--over' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                    e.preventDefault();
+                    setDragging(false);
+                    send(e.dataTransfer.files?.[0]);
+                }}
+            >
+                {src && ! failed ? (
                     <img
                         key={src}
                         className="cms-media-pick-row__thumb cms-media-pick-row__thumb--img"
@@ -20,21 +59,41 @@ export default function ImageField({ label, value, alt, onChange, onAltChange, h
                 ) : (
                     <div className="cms-media-pick-row__thumb" />
                 )}
-                <div style={{ minWidth: 0 }}>
+
+                <div style={{ minWidth: 0, flex: 1 }}>
                     <div className="cms-media-pick-row__name">
-                        {src ? src.split('/').pop() : 'No image yet'}
+                        {busy ? 'Uploading…' : src ? src.split('/').pop() : 'No image yet'}
                     </div>
-                    <div className="cms-media-pick-row__dims">
-                        {src && failed ? 'That address did not load' : hint || 'Paste a web address or a file path'}
-                    </div>
+
+                    {busy ? (
+                        <div className="cms-upload-bar">
+                            <div className="cms-upload-bar__fill" style={{ width: `${percent}%` }} />
+                        </div>
+                    ) : (
+                        <div className="cms-media-pick-row__dims">
+                            {error
+                                || (src && failed ? 'That address did not load' : hint || 'Drop a file here, or upload one')}
+                        </div>
+                    )}
                 </div>
+
+                <span className="cms-media-pick-row__pct">{busy ? `${percent}%` : null}</span>
+
+                <button
+                    type="button"
+                    className="cms-btn cms-btn--xs"
+                    disabled={busy}
+                    onClick={() => setPicking(true)}
+                >
+                    {src ? 'Replace' : 'Choose'}
+                </button>
             </div>
 
             <input
                 className="cms-input"
                 value={value || ''}
-                placeholder="/images/photo.jpg"
-                onChange={(e) => { setFailed(false); onChange(e.target.value); }}
+                placeholder="/media/… or a web address"
+                onChange={(e) => { setFailed(false); setError(null); onChange(e.target.value); }}
             />
 
             {onAltChange ? (
@@ -49,6 +108,16 @@ export default function ImageField({ label, value, alt, onChange, onAltChange, h
                     <div className="cms-hint">Read aloud to visitors who cannot see it.</div>
                 </div>
             ) : null}
+
+            <MediaLibraryModal
+                open={picking}
+                onClose={() => setPicking(false)}
+                onPick={(media) => {
+                    setFailed(false);
+                    setError(null);
+                    onChange(media.url);
+                }}
+            />
         </div>
     );
 }

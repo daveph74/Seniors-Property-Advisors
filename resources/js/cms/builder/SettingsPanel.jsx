@@ -16,7 +16,6 @@ const SPACE_STEPS = [['none', 'None'], ['small', 'Small'], ['medium', 'Medium'],
 const FIELDS = {
     'rating-stars': [['stars', 'Stars'], ['ratingLabel', 'Headline'], ['note', 'Sub-note']],
     'stat-stamp': [['value', 'Big number'], ['text', 'Caption']],
-    'quote-card': [['quote', 'Quote', 'area'], ['by', 'Attribution'], ['avatar', 'Photo URL']],
 };
 
 const PANELS = [

@@ -87,6 +87,15 @@ const CONTENT_SCHEMAS = {
         TEXT('value', 'Big value'),
         TEXT('note', 'Sub-note'),
     ],
+    image: [
+        IMG('src', 'Image', 'alt'),
+        TEXT('caption', 'Caption'),
+    ],
+    'quote-card': [
+        AREA('quote', 'Quote'),
+        TEXT('by', 'Attribution'),
+        IMG('avatar', 'Photo'),
+    ],
 };
 
 export function contentFieldsFor(type) {

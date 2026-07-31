@@ -135,19 +135,6 @@ export const TESTIMONIALS = [
     { name: 'Coralie B.', loc: 'Bendigo', active: true, rating: 5, quote: 'From first visit to settlement they answered every question, however small.' },
 ];
 
-export const MEDIA_ITEMS = [
-    { name: 'advisor-couple-garden.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'family-home-hallway.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'helen-portrait.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'retirement-village-walk.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'moving-boxes-kitchen.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'consultation-kitchen-table.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'daniel-portrait.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'downsizing-checklist.pdf', meta: 'PDF · 420 KB' },
-    { name: 'coastal-apartment.jpg', meta: 'JPG · 2400 × 1600' },
-    { name: 'garden-terrace.jpg', meta: 'JPG · 2400 × 1600' },
-];
-
 export const MENUS = [
     { id: 'header', label: 'Header navigation' },
     { id: 'footer', label: 'Footer navigation' },

@@ -1,0 +1,14 @@
+services:
+  floci:
+    image: floci/floci:latest
+    container_name: spa-floci
+    ports:
+      - "4566:4566"
+    environment:
+      FLOCI_STORAGE_MODE: persistent
+    volumes:
+      - floci-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  floci-data:

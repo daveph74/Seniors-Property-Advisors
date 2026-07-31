@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Cms\CmsPageController;
+use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\ReusableSectionController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
@@ -48,12 +49,22 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('/blog', fn () => Inertia::render('Cms/Blog/Index'))->name('blog.index');
     Route::get('/faqs', fn () => Inertia::render('Cms/Faqs/Index'))->name('faqs.index');
     Route::get('/testimonials', fn () => Inertia::render('Cms/Testimonials/Index'))->name('testimonials.index');
-    Route::get('/media', fn () => Inertia::render('Cms/Media/Index'))->name('media.index');
+    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+    Route::get('/media/library', [MediaController::class, 'library'])->name('media.library');
+    Route::post('/media/sign', [MediaController::class, 'sign'])->name('media.sign');
+    Route::post('/media', [MediaController::class, 'store'])->name('media.store');
+    Route::post('/media/usage', [MediaController::class, 'usageFor'])->name('media.usage');
+    Route::delete('/media', [MediaController::class, 'destroyMany'])->name('media.destroy-many');
+    Route::delete('/media/{medium}', [MediaController::class, 'destroy'])
+        ->whereNumber('medium')->name('media.destroy');
     Route::get('/navigation', fn () => Inertia::render('Cms/Navigation/Index'))->name('navigation.index');
     Route::get('/global-content', fn () => Inertia::render('Cms/Global/Index'))->name('global.index');
     Route::get('/users', fn () => Inertia::render('Cms/Users/Index'))->name('users.index');
     Route::get('/settings', fn () => Inertia::render('Cms/Settings/Index'))->name('settings.index');
 });
+
+Route::get('/media/{key}', [MediaController::class, 'show'])
+    ->where('key', '.*')->name('media.show');
 
 Route::redirect('/home', '/', 301);
 
