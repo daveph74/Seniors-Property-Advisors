@@ -9,6 +9,7 @@ import { SECTION_LABELS } from '../../../sections/registry';
 import SiteHeader from '../../../sections/SiteHeader';
 import SiteFooter from '../../../sections/SiteFooter';
 import BlockRenderer from '../../../cms/builder/BlockRenderer';
+import CanvasFrame from '../../../cms/builder/CanvasFrame';
 import ComponentPanel from '../../../cms/builder/ComponentPanel';
 import LayersPanel from '../../../cms/builder/LayersPanel';
 import SettingsPanel from '../../../cms/builder/SettingsPanel';
@@ -172,6 +173,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
         blocks, commit: setBlocks, undo, redo, canUndo, canRedo,
     } = useTreeHistory(() => hydrate(contentBacked ? sections : []), selectionRef, setSelectedId);
     const [device, setDevice] = useState('desktop');
+    const [canvasHeight, setCanvasHeight] = useState(600);
+    const [canvasReady, setCanvasReady] = useState(false);
+    const [roomForCanvas, setRoomForCanvas] = useState(0);
+    const canvasOuter = useRef(null);
     const [leftPanel, setLeftPanel] = useState('components');
     const [openPanels, setOpenPanels] = useState(() => new Set(['content']));
     const [saveState, setSaveState] = useState('saved');
@@ -183,6 +188,27 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
     const [publishDiff, setPublishDiff] = useState(null);
     const [compSearch, setCompSearch] = useState('');
     const drag = useRef({ dragKind: null, dragLabel: null, dragId: null });
+
+    useEffect(() => {
+        const el = canvasOuter.current;
+
+        if (! el) return;
+
+        const measure = () => setRoomForCanvas(el.clientWidth - 48);
+
+        measure();
+
+        const watch = new ResizeObserver(measure);
+
+        watch.observe(el);
+
+        return () => watch.disconnect();
+    }, []);
+
+    const deviceWidth = parseInt(DEVICE_WIDTH[device], 10);
+    const zoom = roomForCanvas > 0
+        ? Math.min(1, Math.round((roomForCanvas / deviceWidth) * 100) / 100)
+        : 1;
     const [dragType, setDragType] = useState(null);
     const [dropAt, setDropAt] = useState(null);
 
@@ -907,17 +933,20 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
 
                     <div
                         className="cms-canvas-outer"
+                        ref={canvasOuter}
                         onDragOver={(e) => {
                             e.preventDefault();
                             if (!isDropAt(null, blocks.length)) setDropAt({ parentId: null, index: blocks.length });
                         }}
                         onDrop={(e) => { e.preventDefault(); performDrop({ parentId: null, index: blocks.length }); }}
                     >
-                        <div className="cms-canvas-frame" style={{ width: DEVICE_WIDTH[device] }}>
+                        <div className="cms-canvas-frame" style={{ width: deviceWidth * zoom }}>
                             <div className="cms-canvas-caption">
-                                <span>{DEVICE_LABEL[device]}</span>
+                                <span>{DEVICE_LABEL[device]}{zoom < 1 ? ` · ${Math.round(zoom * 100)}%` : ''}</span>
                                 <span>seniorspropertyadvisors.com.au/{page.slug}</span>
                             </div>
+                            <div className="cms-canvas-scale" style={canvasReady ? { height: canvasHeight * zoom } : undefined}>
+                            <CanvasFrame width={deviceWidth} scale={zoom} onHeight={setCanvasHeight} onReady={setCanvasReady}>
                             <div className="cms-canvas-page">
                                 {globals ? (
                                     <div className="cms-canvas-chrome">
@@ -963,6 +992,8 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
                                 onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId: null, index: blocks.length }); }}
                             >
                                 Drop a component here to add it to the end of the page
+                            </div>
+                            </CanvasFrame>
                             </div>
                         </div>
                     </div>
