@@ -109,6 +109,23 @@ const SCHEMAS = {
         buttons: { title: 'Buttons', fields: CTA_BUTTON_FIELDS },
         trustMarks: { title: 'Trust marks', fields: [TEXT('', 'Text')] },
     },
+    'stat-row': {
+        stats: {
+            title: 'Statistics',
+            fields: [TEXT('value', 'Figure'), TEXT('label', 'Label'), TEXT('note', 'Sub-note')],
+        },
+    },
+    'team-intro': {
+        members: {
+            title: 'Team members',
+            fields: [
+                TEXT('name', 'Name'),
+                TEXT('role', 'Role'),
+                AREA('bio', 'Short bio'),
+                IMG('photo', 'Photo'),
+            ],
+        },
+    },
 };
 
 export function repeatersFor(type, data) {

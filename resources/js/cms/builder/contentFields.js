@@ -1,4 +1,4 @@
-import { TEXT, AREA, PICK, FLAGON, IMG, ACTIONS } from './repeaters';
+import { TEXT, AREA, PICK, FLAGON, NUM, IMG, ACTIONS } from './repeaters';
 
 const GROUP = (title, fields) => ({ group: true, title, fields });
 
@@ -8,6 +8,8 @@ const HEAD = [
     TEXT('headingEm', 'Highlighted heading'),
     AREA('lead', 'Intro text'),
 ];
+
+const HEAD_CENTRED = HEAD;
 
 const LINK_FIELDS = (base) => [
     TEXT(`${base}.label`, 'Label'),
@@ -95,6 +97,48 @@ const CONTENT_SCHEMAS = {
         AREA('quote', 'Quote'),
         TEXT('by', 'Attribution'),
         IMG('avatar', 'Photo'),
+    ],
+    'text-image': [
+        TEXT('eyebrow', 'Pre-heading'),
+        AREA('heading', 'Heading'),
+        TEXT('headingEm', 'Highlighted heading'),
+        AREA('body', 'Body text'),
+        IMG('image.src', 'Image', 'image.alt'),
+        PICK('imageSide', 'Image sits', ['right', 'left']),
+        GROUP('Button', LINK_FIELDS('cta')),
+    ],
+    'stat-row': HEAD_CENTRED,
+    testimonials: [
+        ...HEAD_CENTRED,
+        PICK('source', 'Which testimonials', ['featured', 'all']),
+        NUM('limit', 'How many to show'),
+        PICK('layout', 'Display as', ['grid', 'slider']),
+    ],
+    'faq-list': [
+        ...HEAD_CENTRED,
+        TEXT('category', 'Category to show'),
+        NUM('limit', 'How many to show'),
+        FLAGON('openFirst', 'Open the first question'),
+    ],
+    'team-intro': [
+        ...HEAD_CENTRED,
+        NUM('photoWidth', 'Photo width (px)'),
+        NUM('photoHeight', 'Photo height (px)'),
+    ],
+    'contact-form': [
+        TEXT('eyebrow', 'Pre-heading'),
+        AREA('heading', 'Heading'),
+        TEXT('headingEm', 'Highlighted heading'),
+        AREA('intro', 'Introductory text'),
+        TEXT('submitLabel', 'Button label'),
+        AREA('consent', 'Privacy consent wording'),
+        AREA('confirmation', 'Confirmation message'),
+    ],
+    'blog-list': [
+        ...HEAD_CENTRED,
+        TEXT('category', 'Category to show'),
+        NUM('limit', 'How many to show'),
+        FLAGON('showMore', 'Show a load-more control'),
     ],
 };
 

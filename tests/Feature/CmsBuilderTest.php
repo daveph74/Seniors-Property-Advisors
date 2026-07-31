@@ -343,13 +343,27 @@ class CmsBuilderTest extends TestCase
         'checklist', 'benefit-list', 'trust-marks', 'stat-stamp', 'quote-card', 'info-card',
     ];
 
+    private const SCOPE_SECTIONS = [
+        'text-image', 'stat-row', 'testimonials', 'faq-list',
+        'team-intro', 'contact-form', 'blog-list',
+    ];
+
     public function test_the_new_elements_are_registered_block_types(): void
     {
         foreach (self::NEW_ELEMENTS as $type) {
             $this->assertContains($type, PageContentStore::BLOCK_TYPES, "{$type} is missing");
         }
 
-        $this->assertCount(23, PageContentStore::BLOCK_TYPES);
+        $this->assertCount(30, PageContentStore::BLOCK_TYPES);
+    }
+
+    public function test_the_scoped_section_types_are_registered(): void
+    {
+        foreach (self::SCOPE_SECTIONS as $type) {
+            $this->assertContains($type, PageContentStore::BLOCK_TYPES, "{$type} is missing");
+            $this->assertContains($type, PageContentStore::CHILD_TYPES['section']);
+            $this->assertNotContains($type, PageContentStore::CHILD_TYPES['row']);
+        }
     }
 
     public function test_the_new_elements_are_allowed_in_sections_and_columns_but_not_rows(): void

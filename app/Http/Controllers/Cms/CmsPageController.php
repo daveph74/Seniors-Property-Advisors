@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Cms;
 
+use App\Content\ContentLibrary;
 use App\Content\PageContentStore;
 use App\Content\ReusableSectionStore;
 use App\Content\SectionDiff;
@@ -17,7 +18,10 @@ use Inertia\Response;
 
 class CmsPageController extends Controller
 {
-    public function __construct(private readonly PageContentStore $store) {}
+    public function __construct(
+        private readonly PageContentStore $store,
+        private readonly ContentLibrary $library,
+    ) {}
 
     public function index(): Response
     {
@@ -55,6 +59,7 @@ class CmsPageController extends Controller
             'page' => [
                 'slug' => ltrim($document['url'] ?? $slug, '/'),
                 'title' => $document['title'] ?? '',
+                'navLabel' => $document['navLabel'] ?? null,
                 'url' => $document['url'] ?? '/',
                 'seo' => $document['seo'] ?? [],
                 'status' => $document['status'] ?? 'draft',
@@ -64,6 +69,7 @@ class CmsPageController extends Controller
             ],
             'revisions' => $this->store->revisions($slug),
             'globals' => $this->store->globals(),
+            'library' => $this->library->for($slug),
             'reusables' => (new ReusableSectionStore)->all(),
         ]);
     }
@@ -81,7 +87,14 @@ class CmsPageController extends Controller
     {
         $slug = $this->resolveSlug($page);
 
-        $this->store->saveDetails($slug, $request->title(), $request->seo(), $this->author());
+        $this->store->saveDetails(
+            $slug,
+            $request->title(),
+            $request->seo(),
+            $this->author(),
+            $request->navLabel(),
+            $request->slug(),
+        );
 
         return back();
     }
@@ -209,6 +222,7 @@ class CmsPageController extends Controller
             'seo' => $data['seo'],
             'sections' => $data['sections'],
             'globals' => $this->store->globals(),
+            'library' => $this->library->for($this->resolveSlug($page)),
             'preview' => [
                 'mode' => $data['source'],
                 'n' => $data['n'] ?? null,

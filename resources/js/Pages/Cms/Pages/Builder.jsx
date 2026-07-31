@@ -163,7 +163,7 @@ function isDescendant(block, id) {
     return (block.children || []).some((c) => c.id === id || isDescendant(c, id));
 }
 
-function BuilderInner({ page, pageId, sections, revisions, globals, reusables = [] }) {
+function BuilderInner({ page, pageId, sections, revisions, globals, library = {}, reusables = [] }) {
     const flash = useCmsToast();
     const contentBacked = Array.isArray(sections);
     const [selectedId, setSelectedId] = useState(null);
@@ -785,7 +785,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
             {CONTENT_KEY[b.type] && isBlank(b.data[CONTENT_KEY[b.type]]) ? (
                 <div className="cms-block-placeholder">{SECTION_LABELS[b.type]} — no content yet</div>
             ) : (
-                <BlockRenderer block={b}>
+                <BlockRenderer block={b} library={library}>
                     {isContainerType(b.type)
                         ? renderChildren(b, b.type === 'row' ? parentDepth + 1 : parentDepth)
                         : null}
@@ -1058,7 +1058,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, reusables = 
     );
 }
 
-export default function Builder({ pageId, sections = null, page = null, revisions = null, globals = null, reusables = [] }) {
+export default function Builder({ pageId, sections = null, page = null, revisions = null, globals = null, library = {}, reusables = [] }) {
     const meta = useMemo(() => {
         if (page) return { id: pageId, ...page };
 
@@ -1070,7 +1070,7 @@ export default function Builder({ pageId, sections = null, page = null, revision
 
     return (
         <ToastProvider>
-            <BuilderInner page={meta} pageId={pageId} sections={sections} revisions={revisions} globals={globals} reusables={reusables} />
+            <BuilderInner page={meta} pageId={pageId} sections={sections} revisions={revisions} globals={globals} library={library} reusables={reusables} />
         </ToastProvider>
     );
 }

@@ -3,6 +3,7 @@
 namespace App\Content;
 
 use App\Models\Page;
+use App\Models\PageRedirect;
 use App\Models\PageRevision;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
@@ -35,6 +36,13 @@ class PageContentStore
         'stat-stamp',
         'quote-card',
         'info-card',
+        'text-image',
+        'stat-row',
+        'testimonials',
+        'faq-list',
+        'team-intro',
+        'contact-form',
+        'blog-list',
     ];
 
     public const CONTAINER_TYPES = [
@@ -117,7 +125,20 @@ class PageContentStore
 
     public function globals(): array
     {
-        return Setting::find('globals')?->value ?? [];
+        $globals = Setting::find('globals')?->value ?? [];
+        $labels = Page::whereNotNull('nav_label')->pluck('nav_label', 'url');
+
+        if ($labels->isEmpty() || ! isset($globals['nav']['links'])) {
+            return $globals;
+        }
+
+        $globals['nav']['links'] = array_map(function (array $link) use ($labels) {
+            $label = $labels[$link['href'] ?? ''] ?? null;
+
+            return $label === null ? $link : ['label' => $label] + $link;
+        }, $globals['nav']['links']);
+
+        return $globals;
     }
 
     public function all(): array
@@ -125,6 +146,7 @@ class PageContentStore
         return Page::orderBy('cms_id')->get()->map(fn (Page $page) => [
             'id' => $page->cms_id,
             'title' => $page->title,
+            'navLabel' => $page->nav_label,
             'url' => $page->url,
             'status' => $page->draft !== null && $page->status === 'published' ? 'changes' : $page->status,
             'sectionCount' => count($page->draft ?? $page->published ?? []),
@@ -159,23 +181,72 @@ class PageContentStore
         return $document['draft'] ?? $document['published'] ?? [];
     }
 
-    public function saveDetails(string $slug, string $title, array $seo, string $by): bool
-    {
+    public function saveDetails(
+        string $slug,
+        string $title,
+        array $seo,
+        string $by,
+        ?string $navLabel = null,
+        ?string $newSlug = null,
+    ): bool {
         $page = $this->page($slug);
 
         if ($page === null) {
             return false;
         }
 
-        $page->forceFill([
+        $changes = [
             'title' => $title,
             'seo' => array_filter(array_merge($page->seo ?? [], $seo), fn ($value) => $value !== null),
             'last_updated_by' => $by,
-        ])->save();
+        ];
+
+        if ($navLabel !== null) {
+            $changes['nav_label'] = $navLabel === '' ? null : $navLabel;
+        }
+
+        $moved = $this->renameTo($page, $newSlug);
+
+        if ($moved !== null) {
+            $changes['slug'] = $moved;
+            $changes['url'] = '/'.$moved;
+        }
+
+        $page->forceFill($changes)->save();
 
         $this->forget($slug);
 
+        if ($moved !== null) {
+            $this->forget($moved);
+        }
+
         return true;
+    }
+
+    private function renameTo(Page $page, ?string $requested): ?string
+    {
+        $target = trim((string) $requested, '/');
+
+        if ($target === '' || $target === $page->slug || $page->slug === 'home') {
+            return null;
+        }
+
+        $target = $this->availableSlug($target);
+        $from = $page->url;
+        $to = '/'.$target;
+
+        if ($page->status === 'published') {
+            PageRedirect::where('to_url', $from)->update(['to_url' => $to]);
+
+            PageRedirect::updateOrCreate(
+                ['from_url' => $from],
+                ['to_url' => $to, 'page_id' => $page->id],
+            );
+        }
+
+        PageRedirect::where('from_url', $to)->delete();
+
+        return $target;
     }
 
     public function saveDraft(string $slug, array $sections, string $by): void

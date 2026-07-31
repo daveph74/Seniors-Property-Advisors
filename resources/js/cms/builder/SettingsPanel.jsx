@@ -108,6 +108,14 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                 {f.type === 'text' && (
                     <input className="cms-input" value={value} onChange={(e) => set(e.target.value)} />
                 )}
+                {f.type === 'number' && (
+                    <input
+                        className="cms-input"
+                        type="number"
+                        value={value}
+                        onChange={(e) => set(e.target.value === '' ? '' : Number(e.target.value))}
+                    />
+                )}
             </div>
         );
     };

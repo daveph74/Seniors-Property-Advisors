@@ -22,6 +22,13 @@ const BLOCK_TYPES = [
     'stat-stamp',
     'quote-card',
     'info-card',
+    'text-image',
+    'stat-row',
+    'testimonials',
+    'faq-list',
+    'team-intro',
+    'contact-form',
+    'blog-list',
 ];
 
 export const PAGE_TYPES = [...BLOCK_TYPES, 'section'];

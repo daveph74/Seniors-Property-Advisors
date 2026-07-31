@@ -215,6 +215,13 @@ export const COMPONENT_LIBRARY = [
         { type: 'agent-compare', label: 'Agent comparison', d: 'M3 5h18v14H3zM9 5v14M15 5v14' },
         { type: 'family', label: 'For families', d: 'M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M5 20v-1a5 5 0 0 1 14 0v1' },
         { type: 'cta', label: 'Call to action', d: 'M4 7h16v10H4zM9 12h6' },
+        { type: 'text-image', label: 'Text and image', d: 'M3 5h9v14H3zM15 5h6v6h-6zM15 13h6v6h-6z' },
+        { type: 'stat-row', label: 'Statistics', d: 'M4 20V10M10 20V4M16 20v-8M22 20H2' },
+        { type: 'testimonials', label: 'Testimonials', d: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
+        { type: 'faq-list', label: 'FAQs', d: 'M9 9a3 3 0 1 1 4 2.8V13M12 17h.01M4 4h16v16H4z' },
+        { type: 'team-intro', label: 'Team introduction', d: 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M2 20a7 7 0 0 1 14 0M17 11a3 3 0 1 0 0-6M18 20a7 7 0 0 0-3-5.7' },
+        { type: 'contact-form', label: 'Contact form', d: 'M4 5h16v14H4zM7 9h10M7 13h10M7 17h5' },
+        { type: 'blog-list', label: 'Blog articles', d: 'M4 5h16v5H4zM4 13h7v6H4zM13 13h7v2h-7zM13 17h7v2h-7z' },
     ] },
 ];
 

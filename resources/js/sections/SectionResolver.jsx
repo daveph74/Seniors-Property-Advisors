@@ -3,14 +3,14 @@ import { resolveSection } from './registry';
 
 const BREAKPOINTS = ['desktop', 'tablet', 'mobile'];
 
-export default function SectionResolver({ sections = [], actions = {}, depth = 0 }) {
+export default function SectionResolver({ sections = [], actions = {}, library = {}, depth = 0 }) {
     return sections.map((section) => {
         const Section = resolveSection(section.type);
 
         if (!Section || section.active === false) return null;
 
         const nested = depth < 5 && Array.isArray(section.children)
-            ? <SectionResolver sections={section.children} actions={actions} depth={depth + 1} />
+            ? <SectionResolver sections={section.children} actions={actions} library={library} depth={depth + 1} />
             : null;
 
         const rendered = (
@@ -18,6 +18,7 @@ export default function SectionResolver({ sections = [], actions = {}, depth = 0
                 data={section.data || {}}
                 anchor={section.anchor}
                 actions={actions}
+                library={library}
             >
                 {nested}
             </Section>

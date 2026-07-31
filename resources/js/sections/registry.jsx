@@ -24,6 +24,13 @@ import TrustMarksBlock from './TrustMarksBlock';
 import StatStampBlock from './StatStampBlock';
 import QuoteCardBlock from './QuoteCardBlock';
 import InfoCardBlock from './InfoCardBlock';
+import TextImageSection from './TextImageSection';
+import StatRowSection from './StatRowSection';
+import TestimonialsSection from './TestimonialsSection';
+import FaqListSection from './FaqListSection';
+import TeamIntroSection from './TeamIntroSection';
+import ContactFormSection from './ContactFormSection';
+import BlogListSection from './BlogListSection';
 
 export const SECTIONS = {
     section: SectionContainer,
@@ -52,6 +59,13 @@ export const SECTIONS = {
     'stat-stamp': StatStampBlock,
     'quote-card': QuoteCardBlock,
     'info-card': InfoCardBlock,
+    'text-image': TextImageSection,
+    'stat-row': StatRowSection,
+    testimonials: TestimonialsSection,
+    'faq-list': FaqListSection,
+    'team-intro': TeamIntroSection,
+    'contact-form': ContactFormSection,
+    'blog-list': BlogListSection,
 };
 
 export const SECTION_LABELS = {
@@ -81,6 +95,13 @@ export const SECTION_LABELS = {
     'stat-stamp': 'Stat badge',
     'quote-card': 'Quote card',
     'info-card': 'Info card',
+    'text-image': 'Text and image',
+    'stat-row': 'Statistics',
+    testimonials: 'Testimonials',
+    'faq-list': 'FAQs',
+    'team-intro': 'Team introduction',
+    'contact-form': 'Contact form',
+    'blog-list': 'Blog articles',
 };
 
 export function resolveSection(type) {

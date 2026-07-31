@@ -6,7 +6,7 @@ import SectionResolver from '../sections/SectionResolver';
 import SiteHeader from '../sections/SiteHeader';
 import SiteFooter from '../sections/SiteFooter';
 
-export default function AgentFinder({ title, seo = {}, sections = [], globals = {}, preview = null }) {
+export default function AgentFinder({ title, seo = {}, sections = [], globals = {}, library = {}, preview = null }) {
     const [modalOpen, setModalOpen] = useState(false);
     const actions = { 'open-finder': () => setModalOpen(true) };
 
@@ -14,6 +14,12 @@ export default function AgentFinder({ title, seo = {}, sections = [], globals = 
         <>
             <Head title={seo.title || title}>
                 {seo.description && <meta name="description" content={seo.description} />}
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content={seo.title || title} />
+                {seo.description && <meta property="og:description" content={seo.description} />}
+                {seo.image && <meta property="og:image" content={seo.image} />}
+                {seo.url && <meta property="og:url" content={seo.url} />}
+                {seo.url && <link rel="canonical" href={seo.url} />}
                 {preview && <meta name="robots" content="noindex" />}
             </Head>
 
@@ -21,7 +27,7 @@ export default function AgentFinder({ title, seo = {}, sections = [], globals = 
 
             <SiteHeader globals={globals} actions={actions} />
 
-            <SectionResolver sections={sections} actions={actions} />
+            <SectionResolver sections={sections} actions={actions} library={library} />
 
             <SiteFooter globals={globals} />
 

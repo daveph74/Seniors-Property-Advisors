@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Cms\CmsPageController;
+use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\ReusableSectionController;
 use App\Http\Controllers\PageController;
@@ -47,7 +48,13 @@ Route::prefix('cms')->name('cms.')->group(function () {
         ->whereNumber('reusable')->name('reusable.destroy');
 
     Route::get('/blog', fn () => Inertia::render('Cms/Blog/Index'))->name('blog.index');
-    Route::get('/faqs', fn () => Inertia::render('Cms/Faqs/Index'))->name('faqs.index');
+    Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
+    Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store');
+    Route::post('/faqs/reorder', [FaqController::class, 'reorder'])->name('faqs.reorder');
+    Route::patch('/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
+    Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+    Route::post('/faq-categories', [FaqController::class, 'storeCategory'])->name('faqs.categories.store');
+    Route::patch('/faq-categories/{category}', [FaqController::class, 'updateCategory'])->name('faqs.categories.update');
     Route::get('/testimonials', fn () => Inertia::render('Cms/Testimonials/Index'))->name('testimonials.index');
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::get('/media/library', [MediaController::class, 'library'])->name('media.library');
