@@ -244,6 +244,6 @@ class CmsPageController extends Controller
 
     private function author(): string
     {
-        return request()->user()?->name ?? 'Helen Marsh';
+        return (string) request()->user()->name;
     }
 }

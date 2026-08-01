@@ -1,23 +1,36 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Cms\AccountController;
 use App\Http\Controllers\Cms\CmsPageController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\ReusableSectionController;
+use App\Http\Controllers\Cms\UserController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [PageController::class, 'home'])->name('agent-finder');
 
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:10,1');
+});
+
+Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
 /*
 |--------------------------------------------------------------------------
-| CMS admin (prototype)
+| CMS admin
 |--------------------------------------------------------------------------
-| Renders the CMS UI with mocked data — no persistence layer yet. Each
-| route just hands the matching Inertia page component its static props.
+| Everything here needs an active CMS account. `permit:content.manage` covers
+| both roles; the tighter abilities are super-administrator only (scope §2).
 */
-Route::prefix('cms')->name('cms.')->group(function () {
+Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.session'])->group(function () {
+    Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
+    Route::patch('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+
     Route::get('/', fn () => Inertia::render('Cms/Dashboard'))->name('dashboard');
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
@@ -38,21 +51,23 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::post('/pages/{page}/publish-now', [CmsPageController::class, 'publishNow'])->name('pages.publish-now');
     Route::post('/pages/{page}/unpublish', [CmsPageController::class, 'unpublish'])->name('pages.unpublish');
     Route::post('/pages/{page}/archive', [CmsPageController::class, 'archive'])->name('pages.archive');
-    Route::post('/pages/{page}/unarchive', [CmsPageController::class, 'unarchive'])->name('pages.unarchive');
+    Route::post('/pages/{page}/unarchive', [CmsPageController::class, 'unarchive'])
+        ->middleware('permit:content.restore')->name('pages.unarchive');
     Route::post('/pages/{page}/duplicate', [CmsPageController::class, 'duplicate'])->name('pages.duplicate');
 
     Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
         ->whereNumber('reusable')->name('reusable.show');
     Route::post('/reusable-sections', [ReusableSectionController::class, 'store'])->name('reusable.store');
     Route::delete('/reusable-sections/{reusable}', [ReusableSectionController::class, 'destroy'])
-        ->whereNumber('reusable')->name('reusable.destroy');
+        ->whereNumber('reusable')->middleware('permit:content.delete')->name('reusable.destroy');
 
     Route::get('/blog', fn () => Inertia::render('Cms/Blog/Index'))->name('blog.index');
     Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
     Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store');
     Route::post('/faqs/reorder', [FaqController::class, 'reorder'])->name('faqs.reorder');
     Route::patch('/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
-    Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+    Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
+        ->middleware('permit:content.delete')->name('faqs.destroy');
     Route::post('/faq-categories', [FaqController::class, 'storeCategory'])->name('faqs.categories.store');
     Route::patch('/faq-categories/{category}', [FaqController::class, 'updateCategory'])->name('faqs.categories.update');
     Route::get('/testimonials', fn () => Inertia::render('Cms/Testimonials/Index'))->name('testimonials.index');
@@ -61,13 +76,22 @@ Route::prefix('cms')->name('cms.')->group(function () {
     Route::post('/media/sign', [MediaController::class, 'sign'])->name('media.sign');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::post('/media/usage', [MediaController::class, 'usageFor'])->name('media.usage');
-    Route::delete('/media', [MediaController::class, 'destroyMany'])->name('media.destroy-many');
+    Route::delete('/media', [MediaController::class, 'destroyMany'])
+        ->middleware('permit:content.delete')->name('media.destroy-many');
     Route::delete('/media/{medium}', [MediaController::class, 'destroy'])
-        ->whereNumber('medium')->name('media.destroy');
+        ->whereNumber('medium')->middleware('permit:content.delete')->name('media.destroy');
     Route::get('/navigation', fn () => Inertia::render('Cms/Navigation/Index'))->name('navigation.index');
     Route::get('/global-content', fn () => Inertia::render('Cms/Global/Index'))->name('global.index');
-    Route::get('/users', fn () => Inertia::render('Cms/Users/Index'))->name('users.index');
-    Route::get('/settings', fn () => Inertia::render('Cms/Settings/Index'))->name('settings.index');
+
+    Route::middleware('permit:users.manage')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+
+    Route::get('/settings', fn () => Inertia::render('Cms/Settings/Index'))
+        ->middleware('permit:settings.manage')->name('settings.index');
 });
 
 Route::get('/media/{key}', [MediaController::class, 'show'])

@@ -17,6 +17,7 @@ function navIdFromUrl(url) {
     if (path.startsWith('/cms/global-content')) return 'global';
     if (path.startsWith('/cms/users')) return 'users';
     if (path.startsWith('/cms/settings')) return 'settings';
+    if (path.startsWith('/cms/account')) return 'account';
     return 'dashboard';
 }
 

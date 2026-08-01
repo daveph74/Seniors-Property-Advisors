@@ -1,9 +1,3 @@
-export const CURRENT_USER = {
-    initials: 'HM',
-    name: 'Helen Marsh',
-    role: 'Client Administrator',
-};
-
 export const NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', count: '' },
     { id: 'pages', label: 'Pages', count: '18' },
@@ -28,6 +22,7 @@ export const SCREEN_TITLES = {
     global: 'Global content',
     users: 'Users and roles',
     settings: 'Settings',
+    account: 'Your account',
 };
 
 export const QUICK_ACTIONS = [
@@ -162,13 +157,6 @@ export const GLOBAL_CARDS = [
     { title: 'Social links', usage: 'Used on 18 pages', body: 'Facebook and LinkedIn profiles shown in the footer.' },
     { title: 'Site-wide announcement', usage: 'Currently hidden', body: 'A single banner above the header for seasonal or urgent notices.' },
     { title: 'Default call to action', usage: 'Used on 9 pages', body: 'The standard “Request a consultation” block used at the end of pages.' },
-];
-
-export const USERS = [
-    { initials: 'HM', name: 'Helen Marsh', email: 'helen@seniorspropertyadvisors.com.au', role: 'Client Administrator', active: true, last: 'Today, 8:42 am' },
-    { initials: 'DR', name: 'Daniel Ruiz', email: 'daniel@seniorspropertyadvisors.com.au', role: 'Client Administrator', active: true, last: 'Yesterday' },
-    { initials: 'SW', name: 'Sam Whitfield', email: 'sam@studio.dev', role: 'Super Administrator', active: true, last: '3 days ago' },
-    { initials: 'AK', name: 'Anna Kelly', email: 'anna@seniorspropertyadvisors.com.au', role: 'Client Administrator', active: false, last: '2 months ago' },
 ];
 
 export const VERSIONS = [

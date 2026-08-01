@@ -60,13 +60,43 @@ Reusable sections are **independent copies**, stored whole in `reusable_sections
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
 
+## Accounts and permissions
+
+`/cms/*` requires an active account. Scope §2's two roles live in one place —
+`app/Auth/Permissions.php` — as an ability map and a module map; the `permit:{ability}`
+middleware, the `Gate` definitions in `AppServiceProvider`, and the sidebar's shared
+`auth.modules` prop all read from it. Nothing else should hard-code a role name.
+
+Client administrators create, edit, publish and unpublish content. Super administrators
+additionally delete content, restore archived pages, manage accounts and reach settings.
+Deleting anything is therefore a super-admin route — the scope never gives client users a
+delete, only disable and archive.
+
+`Tests\TestCase` signs in a super administrator for every test, so existing suites need no
+auth setup; `PermissionsTest` and `AuthTest` sign in as somebody else, or nobody.
+
+Accounts are made with `php artisan cms:user email --name= --role= [--password=]`, which
+generates and prints a password when none is given. `UserSeeder` creates local development
+accounts with a shared password and must never run in production.
+
+Everyone changes their own password at `/cms/account`; only super administrators set anyone
+else's. Both paths end sessions on other devices, via `auth.session` on the `/cms` group plus
+`Auth::logoutOtherDevices()`. Two ordering traps live there, both covered by `AccountTest`:
+the plaintext must be handed to `logoutOtherDevices()` **after** the save, and when the target
+is the acting user the guard needs `Auth::setUser()` first — it caches its own instance and
+would otherwise compare against the hash that was just replaced.
+
+Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
+`SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
+
 ## Current state
 
 The public site renders from the database, and the builder is functional: undo/redo,
 draft and per-version preview, restore-to-draft, reusable sections, and a real change
 summary on publish and in the history drawer.
 
-Everything else in the CMS admin is still a prototype: the non-builder routes render
-static props from `mockData.js`, and Puck is not installed. See `docs/specs/`.
+Pages, FAQs, media and users are real. The remaining CMS routes are still a prototype:
+the dashboard, blog, testimonials, navigation, global content and settings render static
+props from `mockData.js`, and Puck is not installed. See `docs/specs/`.
 
 Known remaining stub: `onOpenMediaPicker` in the builder still only raises a toast.

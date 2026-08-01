@@ -329,7 +329,13 @@
   font-size: 13px; color: #415064; border: 1px solid var(--cms-border);
 }
 .cms-view-site:hover{ background: #F1F4F8; }
-.cms-user-chip{ display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; background: #F7F9FB; }
+.cms-user-chip-wrap{ position: relative; }
+.cms-user-chip{
+  display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; background: #F7F9FB;
+  width: 100%; border: 0; text-align: left; cursor: pointer; font: inherit; color: inherit;
+}
+.cms-user-chip:hover{ background: #EFF4F9; }
+.cms-user-menu__head{ padding: 8px 12px; font-size: 11.5px; color: var(--cms-text-mid); word-break: break-all; }
 .cms-user-chip__avatar{
   width: 28px; height: 28px; flex: none; border-radius: 50%; background: #DDE6F2; color: var(--cms-navy);
   display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600;
@@ -408,7 +414,7 @@
 .cms-table__row:last-child{ border-bottom: none; }
 .cms-table__row:hover{ background: var(--cms-tint-2); }
 .cms-table__row--pages{ min-width: 900px; grid-template-columns: minmax(240px,2.4fr) minmax(120px,1fr) 130px 150px 130px 44px; }
-.cms-table__row--users{ min-width: 840px; grid-template-columns: minmax(240px,1.6fr) minmax(140px,1fr) 130px 150px 90px; }
+.cms-table__row--users{ min-width: 900px; grid-template-columns: minmax(240px,1.6fr) minmax(140px,1fr) 110px 130px 210px; }
 .cms-table__cell-title{ min-width: 0; }
 .cms-table__cell-title button{
   border: none; background: none; padding: 0; font: 500 13.5px/1.3 var(--cms-font-sans); color: var(--cms-ink);
@@ -886,6 +892,32 @@
 .cms-skeleton__bar--cardtitle{ width: 74%; height: 14px; margin-bottom: 14px; }
 
 @keyframes cms-shimmer{ from{ background-position: -200px 0; } to{ background-position: 400px 0; } }
+
+.cms-account-facts{
+  margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; font-size: 13px;
+}
+.cms-account-facts dt{ color: var(--cms-text-mid); }
+.cms-account-facts dd{ margin: 0; }
+
+/* ---------- Sign in ---------- */
+.cms-signin{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--cms-tint); }
+.cms-signin__card{
+  width: 100%; max-width: 380px; background: var(--cms-surface); border: 1px solid var(--cms-border);
+  border-radius: 12px; padding: 26px; box-shadow: 0 12px 32px rgba(20, 38, 66, .08);
+}
+.cms-signin__brand{ display: flex; align-items: center; gap: 11px; margin-bottom: 22px; }
+.cms-signin__name{ font-size: 14.5px; font-weight: 600; }
+.cms-signin__sub{ font-size: 12px; color: var(--cms-text-mid); }
+.cms-signin__status{
+  margin-bottom: 14px; padding: 9px 11px; border-radius: 7px; font-size: 12.5px;
+  background: var(--cms-tint); border: 1px solid var(--cms-border);
+}
+.cms-signin__error{
+  margin: -4px 0 14px; padding: 9px 11px; border-radius: 7px; font-size: 12.5px;
+  color: var(--cms-danger-text); background: var(--cms-danger-bg); border: 1px solid var(--cms-danger-border);
+}
+.cms-signin__remember{ display: flex; align-items: center; gap: 8px; margin: 14px 0 18px; font-size: 12.5px; color: var(--cms-text-mid); }
+.cms-signin__submit{ width: 100%; justify-content: center; }
 
 @media (prefers-reduced-motion: reduce){
   .cms-skeleton__bar{ animation: none; background: #EDF1F6; }

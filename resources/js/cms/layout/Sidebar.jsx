@@ -1,5 +1,7 @@
-import { Link } from '@inertiajs/react';
-import { NAV_ITEMS, CURRENT_USER } from '../data/mockData';
+import { useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { NAV_ITEMS } from '../data/mockData';
+import { DropdownMenu, MenuItem, MenuSeparator } from '../components/ui';
 import {
     DashboardIcon, PagesIcon, BlogIcon, FaqsIcon, TestimonialsIcon, MediaIcon,
     NavigationIcon, GlobalIcon, UsersIcon, SettingsIcon, ExternalLinkIcon, ChevronDownIcon,
@@ -32,6 +34,11 @@ const HREFS = {
 };
 
 export default function Sidebar({ active }) {
+    const { auth } = usePage().props;
+    const user = auth?.user;
+    const modules = auth?.modules ?? {};
+    const [menuOpen, setMenuOpen] = useState(false);
+
     return (
         <aside className="cms-sidebar">
             <div className="cms-sidebar__brand">
@@ -43,7 +50,7 @@ export default function Sidebar({ active }) {
             </div>
 
             <nav className="cms-sidebar__nav">
-                {NAV_ITEMS.map((item) => {
+                {NAV_ITEMS.filter((item) => modules[item.id] !== false).map((item) => {
                     const Icon = ICONS[item.id];
                     const isActive = active === item.id;
                     return (
@@ -65,13 +72,26 @@ export default function Sidebar({ active }) {
                     <ExternalLinkIcon size={15} />
                     View public website
                 </a>
-                <div className="cms-user-chip">
-                    <div className="cms-user-chip__avatar">{CURRENT_USER.initials}</div>
-                    <div style={{ minWidth: 0, lineHeight: 1.25 }}>
-                        <div className="cms-user-chip__name">{CURRENT_USER.name}</div>
-                        <div className="cms-user-chip__role">{CURRENT_USER.role}</div>
-                    </div>
-                    <ChevronDownIcon size={14} style={{ marginLeft: 'auto' }} stroke="#8C99AB" />
+                <div className="cms-user-chip-wrap">
+                    <button
+                        type="button"
+                        className="cms-user-chip"
+                        onClick={() => setMenuOpen((open) => !open)}
+                    >
+                        <div className="cms-user-chip__avatar">{user?.initials ?? '—'}</div>
+                        <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+                            <div className="cms-user-chip__name">{user?.name ?? 'Not signed in'}</div>
+                            <div className="cms-user-chip__role">{user?.roleLabel ?? ''}</div>
+                        </div>
+                        <ChevronDownIcon size={14} style={{ marginLeft: 'auto' }} stroke="#8C99AB" />
+                    </button>
+
+                    <DropdownMenu open={menuOpen} onClose={() => setMenuOpen(false)} align="left">
+                        <div className="cms-user-menu__head">{user?.email}</div>
+                        <MenuSeparator />
+                        <MenuItem onClick={() => router.visit('/cms/account')}>Your account</MenuItem>
+                        <MenuItem onClick={() => router.post('/logout')}>Sign out</MenuItem>
+                    </DropdownMenu>
                 </div>
             </div>
         </aside>
