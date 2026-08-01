@@ -1571,10 +1571,10 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
    Placed after every card definition on purpose: these share specificity with the rules above,
    so sitting earlier in the file would simply lose to them.
 
-   Two tiers, and the difference is meaningful rather than decorative. A card that is a link
-   lifts; a card that only carries information does not, because movement is how a page says
-   "you can click this" and most of these cards have no link to give. Both tiers respond, so
-   the family still feels like one thing. */
+   Every card lifts by the same amount, whether or not it links anywhere — the values live in
+   --card-lift and --card-ease so they cannot drift apart again. The trade-off is accepted
+   deliberately: a card that lifts but cannot be clicked may invite a click that does nothing.
+   Cards that are links get the extras on top — title colour, image zoom, a focus ring. */
 .card, .step, .cmp-card, .block-quote-card, .block-info-card, .article-card, .faq{
   transition: transform var(--card-ease), box-shadow var(--card-ease), border-color var(--card-ease);
 }
@@ -1582,9 +1582,6 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .faq:hover, .article-card:hover{
   box-shadow: var(--shadow);
   border-color: var(--line);
-}
-/* Only a card that is genuinely a link moves. */
-a.article-card:hover, a.card:hover, a.step:hover{
   transform: translateY(var(--card-lift));
 }
 a.article-card:hover .article-card__title{ color: var(--blue-deep); }
@@ -1598,6 +1595,7 @@ a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
 @media (prefers-reduced-motion: reduce){
   .card, .step, .cmp-card, .block-quote-card, .block-info-card, .article-card, .faq,
   .article-card__image, .article-card__title{ transition: none; }
-  a.article-card:hover, a.card:hover, a.step:hover{ transform: none; }
+  .card:hover, .step:hover, .cmp-card:hover, .block-quote-card:hover, .block-info-card:hover,
+  .faq:hover, .article-card:hover{ transform: none; }
   a.article-card:hover .article-card__image{ transform: none; }
 }
