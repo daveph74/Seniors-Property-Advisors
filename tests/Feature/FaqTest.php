@@ -131,6 +131,21 @@ class FaqTest extends TestCase
         $this->assertSame($before, FaqCategory::count());
     }
 
+    public function test_the_builder_can_pick_a_category_that_has_no_questions_yet(): void
+    {
+        $empty = $this->category('Nothing filed here');
+
+        $choices = (new ContentLibrary)->choices();
+
+        /* Wider than the reader-facing list, which hides a grouping with nothing behind it. */
+        $this->assertContains($empty->name, $choices['allFaqCategories']);
+        $this->assertNotContains($empty->name, (new ContentLibrary)->for(null)['faqCategories']);
+
+        $empty->update(['active' => false]);
+
+        $this->assertNotContains($empty->name, (new ContentLibrary)->choices()['allFaqCategories']);
+    }
+
     public function test_categories_can_be_reordered(): void
     {
         $first = $this->category('Fees at the top');

@@ -1011,6 +1011,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                                 onDevice={setDevice}
                                 onColumnCount={(n) => setColumnCount(selectedId, n)}
                                 onSaveReusable={() => saveReusable(selected)}
+                                library={library}
                             />
                         ) : (
                             <>

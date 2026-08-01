@@ -5,6 +5,7 @@ export const ACTIONS = ['', 'open-finder'];
 export const TEXT = (path, label) => ({ path, label, type: 'text' });
 export const AREA = (path, label) => ({ path, label, type: 'textarea' });
 export const PICK = (path, label, options) => ({ path, label, type: 'select', options });
+export const PICKFROM = (path, label, source, blank) => ({ path, label, type: 'select', source, blank });
 export const FLAG = (path, label) => ({ path, label, type: 'toggle' });
 export const FLAGON = (path, label) => ({ path, label, type: 'toggle', whenAbsent: true });
 export const NUM = (path, label) => ({ path, label, type: 'number' });

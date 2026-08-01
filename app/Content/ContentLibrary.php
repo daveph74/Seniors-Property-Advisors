@@ -39,6 +39,24 @@ class ContentLibrary
     }
 
     /**
+     * Every switched-on category, for the builder's category pickers. Deliberately wider than what
+     * the reader-facing lists offer: those hide a grouping with nothing behind it, but an editor
+     * setting a section up needs to reach a category before it has been filled. Builder-only, so
+     * it never rides along with a public page render.
+     */
+    public function choices(): array
+    {
+        return [
+            'allFaqCategories' => FaqCategory::where('active', true)
+                ->orderBy('sort_order')->orderBy('id')->pluck('name')->all(),
+            'allPostCategories' => BlogCategory::active()->ordered()
+                ->get(['name', 'slug'])
+                ->map(fn (BlogCategory $c) => ['name' => $c->name, 'slug' => $c->slug])
+                ->all(),
+        ];
+    }
+
+    /**
      * One page of published articles, newest first. Capped because this ships with every
      * page render; the load-more route asks for later pages.
      *

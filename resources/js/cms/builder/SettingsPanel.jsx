@@ -26,7 +26,26 @@ const PANELS = [
     ['advanced', 'Advanced'],
 ];
 
-export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, onSaveReusable }) {
+/*
+ * Choices that come from the content library rather than the schema — FAQ and article categories.
+ * A category the editor has since renamed or deleted is kept as an option rather than dropped,
+ * so opening the panel can never quietly rewrite what the section was set to.
+ */
+function optionsFor(field, library, value) {
+    if (! field.source) return field.options.map((o) => [o, o === '' ? 'Nothing' : o]);
+
+    const listed = (library[field.source] || []).map((o) => (
+        typeof o === 'string' ? [o, o] : [o.slug, o.name]
+    ));
+
+    return [
+        ['', field.blank || 'Nothing'],
+        ...listed,
+        ...(value && ! listed.some(([v]) => v === value) ? [[value, `${value} (no longer listed)`]] : []),
+    ];
+}
+
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, onSaveReusable, library = {} }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -98,13 +117,21 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                 {f.type === 'textarea' && (
                     <textarea className="cms-textarea" rows={3} value={value} onChange={(e) => set(e.target.value)} />
                 )}
-                {f.type === 'select' && (
-                    <select className="cms-select" value={value || f.options[0]} onChange={(e) => set(e.target.value)}>
-                        {f.options.map((o) => (
-                            <option key={o} value={o}>{o === '' ? 'Nothing' : o}</option>
-                        ))}
-                    </select>
-                )}
+                {f.type === 'select' && (() => {
+                    const choices = optionsFor(f, library, value);
+
+                    return (
+                        <select
+                            className="cms-select"
+                            value={value || choices[0][0]}
+                            onChange={(e) => set(e.target.value)}
+                        >
+                            {choices.map(([v, label]) => (
+                                <option key={v} value={v}>{label}</option>
+                            ))}
+                        </select>
+                    );
+                })()}
                 {f.type === 'text' && (
                     <input className="cms-input" value={value} onChange={(e) => set(e.target.value)} />
                 )}

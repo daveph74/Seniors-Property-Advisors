@@ -70,7 +70,7 @@ class CmsPageController extends Controller
             ],
             'revisions' => $this->store->revisions($slug),
             'globals' => $this->store->globals(),
-            'library' => $this->library->for($slug),
+            'library' => $this->library->for($slug) + $this->library->choices(),
             'reusables' => (new ReusableSectionStore)->all(),
         ]);
     }
