@@ -28,7 +28,29 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
 
     const shown = chosen ? items.filter((f) => f.category === chosen) : items;
 
+    /*
+     * With more than one grouping the section earns the full width: the groups become a rail
+     * beside the answers rather than chips above a column floating in the middle of it. The
+     * answers stay capped at a readable measure either way — a question is a line of prose, not a
+     * layout to fill.
+     */
+    const railed = ! editing && groups.length > 1;
+
     if (items.length === 0 && ! editing) return null;
+
+    const count = (name) => items.filter((f) => f.category === name).length;
+
+    const railButton = (name, label, total) => (
+        <button
+            key={name ?? 'all'}
+            type="button"
+            className={`filter-chip ${chosen === name ? 'filter-chip--on' : ''}`}
+            onClick={() => setChosen(name)}
+        >
+            {label}
+            <span className="faq-rail__count">{total}</span>
+        </button>
+    );
 
     return (
         <section className="faq-list" id={anchor}>
@@ -50,27 +72,13 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
                         ]}
                     />
                 ) : (
-                    <>
-                        {! editing && groups.length > 1 ? (
-                            <div className="filter-chips">
-                                <button
-                                    type="button"
-                                    className={`filter-chip ${chosen ? '' : 'filter-chip--on'}`}
-                                    onClick={() => setChosen(null)}
-                                >
-                                    All questions
-                                </button>
-                                {groups.map((name) => (
-                                    <button
-                                        key={name}
-                                        type="button"
-                                        className={`filter-chip ${chosen === name ? 'filter-chip--on' : ''}`}
-                                        onClick={() => setChosen(name)}
-                                    >
-                                        {name}
-                                    </button>
-                                ))}
-                            </div>
+                    <div className={railed ? 'faq-list__grid' : undefined}>
+                        {railed ? (
+                            <nav className="faq-rail" aria-label="Question categories">
+                                <h2 className="faq-rail__title">Browse by topic</h2>
+                                {railButton(null, 'All questions', items.length)}
+                                {groups.map((name) => railButton(name, name, count(name)))}
+                            </nav>
                         ) : null}
 
                         <div className="faq-list__items">
@@ -88,7 +96,7 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
                                 </details>
                             ))}
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
         </section>
