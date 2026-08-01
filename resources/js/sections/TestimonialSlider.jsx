@@ -62,19 +62,20 @@ export default function TestimonialSlider({ children, count }) {
 
     return (
         <div className="testimonial-slider" ref={root}>
-            <div className="swiper" ref={host}>
-                <div className="swiper-wrapper">{children}</div>
-            </div>
-
-            <div className="testimonial-slider__controls">
+            <div className="testimonial-slider__nav">
                 <button type="button" className="testimonial-nav testimonial-nav--prev" aria-label="Previous testimonials">
                     <span aria-hidden="true">&larr;</span>
                 </button>
-                <div className="testimonial-dots" />
                 <button type="button" className="testimonial-nav testimonial-nav--next" aria-label="Next testimonials">
                     <span aria-hidden="true">&rarr;</span>
                 </button>
             </div>
+
+            <div className="swiper" ref={host}>
+                <div className="swiper-wrapper">{children}</div>
+            </div>
+
+            <div className="testimonial-dots" />
         </div>
     );
 }
