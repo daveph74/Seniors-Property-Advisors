@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { ChevronDownSmallIcon } from './icons';
 
 const STATUS_CLASS = {
     success: 'cms-badge--success',
@@ -13,6 +15,30 @@ export function Badge({ tone = 'neutral', small, children }) {
         <span className={`cms-badge ${STATUS_CLASS[tone] || STATUS_CLASS.neutral} ${small ? 'cms-badge--sm' : ''}`}>
             {children}
         </span>
+    );
+}
+
+export function AccordionSection({ id, title, open, onToggle, children }) {
+    return (
+        <div className={`cms-accordion ${open ? 'cms-accordion--open' : ''}`}>
+            <button
+                type="button"
+                className="cms-accordion__head"
+                aria-expanded={open}
+                aria-controls={`cms-panel-${id}`}
+                onClick={() => onToggle(id)}
+            >
+                <span className="cms-accordion__title">{title}</span>
+                <span className="cms-accordion__chevron" aria-hidden="true">
+                    <ChevronDownSmallIcon />
+                </span>
+            </button>
+            {open && (
+                <div id={`cms-panel-${id}`} role="region" className="cms-accordion__body cms-anim-rise">
+                    {children}
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -48,28 +74,75 @@ export function EmptyState({ icon, title, body, actionLabel, onAction }) {
     );
 }
 
+const MENU_WIDTH = 190;
+
 export function DropdownMenu({ open, onClose, children, align = 'right' }) {
-    const ref = useRef(null);
+    const anchor = useRef(null);
+    const menu = useRef(null);
+    const [pos, setPos] = useState(null);
+
+    useLayoutEffect(() => {
+        if (!open || !anchor.current) return undefined;
+
+        const place = () => {
+            const cell = anchor.current?.parentElement;
+
+            if (!cell) return;
+
+            const rect = cell.getBoundingClientRect();
+            const height = menu.current?.offsetHeight ?? 0;
+            const fitsBelow = window.innerHeight - rect.bottom > height + 12;
+            const left = align === 'right' ? rect.right - MENU_WIDTH : rect.left;
+
+            setPos({
+                top: fitsBelow ? rect.bottom + 4 : Math.max(8, rect.top - height - 4),
+                left: Math.max(8, Math.min(left, window.innerWidth - MENU_WIDTH - 8)),
+            });
+        };
+
+        place();
+        window.addEventListener('resize', place);
+        window.addEventListener('scroll', place, true);
+
+        return () => {
+            window.removeEventListener('resize', place);
+            window.removeEventListener('scroll', place, true);
+        };
+    }, [open, align, children]);
 
     useEffect(() => {
-        if (!open) return;
+        if (!open) return undefined;
+
         function onDocClick(e) {
-            if (ref.current && !ref.current.contains(e.target)) onClose();
+            const insideMenu = menu.current?.contains(e.target);
+            const insideTrigger = anchor.current?.parentElement?.contains(e.target);
+
+            if (!insideMenu && !insideTrigger) onClose();
         }
+
         document.addEventListener('mousedown', onDocClick);
+
         return () => document.removeEventListener('mousedown', onDocClick);
     }, [open, onClose]);
 
     if (!open) return null;
 
     return (
-        <div
-            ref={ref}
-            className="cms-menu cms-anim-rise"
-            style={{ top: 32, [align]: 0 }}
-        >
-            {children}
-        </div>
+        <>
+            <span ref={anchor} hidden />
+            {createPortal(
+                <div className="cms-portal">
+                    <div
+                        ref={menu}
+                        className="cms-menu cms-anim-rise"
+                        style={{ position: 'fixed', top: pos?.top ?? -9999, left: pos?.left ?? -9999 }}
+                    >
+                        {children}
+                    </div>
+                </div>,
+                document.body,
+            )}
+        </>
     );
 }
 
@@ -120,7 +193,7 @@ export function ToastStack({ toasts }) {
     const last = toasts[toasts.length - 1];
     if (!last) return null;
     return (
-        <div className="cms-toast cms-anim-rise">
+        <div className="cms-toast cms-anim-toast">
             <span className="cms-toast__check">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m4 12 5.5 5.5L20 7" />
@@ -131,12 +204,26 @@ export function ToastStack({ toasts }) {
     );
 }
 
+function useEscapeToClose(open, onClose) {
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+
+        document.addEventListener('keydown', onKey);
+
+        return () => document.removeEventListener('keydown', onKey);
+    }, [open, onClose]);
+}
+
 export function Modal({ open, onClose, small, children }) {
+    useEscapeToClose(open, onClose);
+
     if (!open) return null;
     return (
         <>
-            <div className="cms-overlay" onClick={onClose} />
-            <div className={`cms-modal cms-anim-rise ${small ? 'cms-modal--sm' : ''}`}>
+            <div className="cms-overlay cms-anim-fade" onClick={onClose} />
+            <div className={`cms-modal cms-anim-modal ${small ? 'cms-modal--sm' : ''}`}>
                 {children}
             </div>
         </>
@@ -144,17 +231,19 @@ export function Modal({ open, onClose, small, children }) {
 }
 
 export function Drawer({ open, onClose, title, subtitle, children }) {
+    useEscapeToClose(open, onClose);
+
     if (!open) return null;
     return (
         <>
-            <div className="cms-drawer-overlay" onClick={onClose} />
-            <div className="cms-drawer cms-anim-rise">
+            <div className="cms-drawer-overlay cms-anim-fade" onClick={onClose} />
+            <div className="cms-drawer cms-anim-drawer">
                 <div className="cms-drawer__header">
                     <div>
                         <div className="cms-drawer__title">{title}</div>
                         {subtitle ? <div className="cms-drawer__subtitle">{subtitle}</div> : null}
                     </div>
-                    <button type="button" className="cms-icon-btn" style={{ marginLeft: 'auto', width: 30, height: 30 }} onClick={onClose}>
+                    <button type="button" aria-label="Close" title="Close" className="cms-icon-btn" style={{ marginLeft: 'auto', width: 30, height: 30 }} onClick={onClose}>
                         ✕
                     </button>
                 </div>
