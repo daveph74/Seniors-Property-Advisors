@@ -166,15 +166,26 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 /* ---------- Menu with children ---------- */
 /* Opens on click, never hover: a hover menu cannot be used on a touch screen, and it punishes
    anyone whose pointer drifts — which on this site is most of the audience. */
-.nav-has-menu{ position: relative; display: flex; align-items: center; }
+.nav-has-menu{ position: relative; }
+/* Longhand, not the `font` shorthand: `font: 500 15px/1 inherit` is invalid — `inherit` is not
+   a legal family token there — so the whole declaration is dropped and the button falls back to
+   the browser's 13.3px/400 default, which is visibly lighter and smaller than its neighbours. */
 .nav-menu__trigger{
   display: inline-flex; align-items: center; gap: 7px;
   padding: 0; border: 0; background: none; cursor: pointer;
-  color: var(--navy); font: 500 15px/1 inherit; white-space: nowrap; position: relative;
+  color: var(--navy);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap; position: relative;
 }
 .nav-menu__trigger:hover{ color: var(--blue-deep); }
+/* -26 rather than the links' -28: a button's box sits 2px lower than an inline anchor's, so
+   the same offset would put this underline 2px below the others. */
 .nav-menu__trigger.active::after{
-  content:""; position:absolute; left: 0; right: 0; bottom: -28px;
+  content:""; position:absolute; left: 0; right: 0; bottom: -26px;
   height: 2px; background: var(--blue); border-radius: 2px;
 }
 .nav-menu__caret{
