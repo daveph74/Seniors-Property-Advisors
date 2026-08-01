@@ -63,10 +63,18 @@ class FaqController extends Controller
         return back();
     }
 
+    /**
+     * The given questions are shuffled between the positions they already occupy, rather than being
+     * numbered from one — otherwise a list sent while the screen is searched or filtered by category
+     * overwrites the positions of every question it does not mention.
+     */
     public function reorder(Request $request): RedirectResponse
     {
-        foreach ((array) $request->input('ids', []) as $position => $id) {
-            Faq::whereKey($id)->update(['sort_order' => $position + 1]);
+        $ids = array_values(array_filter((array) $request->input('ids', [])));
+        $slots = Faq::whereKey($ids)->pluck('sort_order')->sort()->values();
+
+        foreach ($ids as $position => $id) {
+            Faq::whereKey($id)->update(['sort_order' => $slots[$position] ?? $position + 1]);
         }
 
         return back();

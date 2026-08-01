@@ -187,6 +187,21 @@ class TestimonialTest extends TestCase
         $this->assertSame(2, $a->refresh()->sort_order);
     }
 
+    public function test_reordering_a_filtered_list_leaves_the_hidden_rows_where_they_were(): void
+    {
+        $first = $this->testimonial(['name' => 'First', 'sort_order' => 1, 'featured' => false]);
+        $hidden = $this->testimonial(['name' => 'Hidden by the filter', 'sort_order' => 2, 'featured' => false]);
+        $last = $this->testimonial(['name' => 'Last', 'sort_order' => 3, 'featured' => false]);
+
+        /* What the screen sends while a filter is on: two of the three rows. */
+        $this->post('/cms/testimonials/reorder', ['ids' => [$last->id, $first->id]])->assertRedirect();
+
+        /* The pair swap the slots they held — 1 and 3 — and the row between them does not move. */
+        $this->assertSame(1, $last->refresh()->sort_order);
+        $this->assertSame(3, $first->refresh()->sort_order);
+        $this->assertSame(2, $hidden->refresh()->sort_order);
+    }
+
     public function test_only_a_super_administrator_can_delete_one(): void
     {
         $t = $this->testimonial();

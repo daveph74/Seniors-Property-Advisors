@@ -98,6 +98,20 @@ class FaqTest extends TestCase
         $this->assertSame(2, $a->refresh()->sort_order);
     }
 
+    public function test_reordering_a_filtered_list_leaves_the_hidden_questions_where_they_were(): void
+    {
+        $first = $this->faq(['question' => 'First', 'sort_order' => 1]);
+        $hidden = $this->faq(['question' => 'Filtered out', 'sort_order' => 2]);
+        $last = $this->faq(['question' => 'Last', 'sort_order' => 3]);
+
+        /* What the screen sends while a search or a category filter is on. */
+        $this->post('/cms/faqs/reorder', ['ids' => [$last->id, $first->id]])->assertRedirect();
+
+        $this->assertSame(1, $last->refresh()->sort_order);
+        $this->assertSame(3, $first->refresh()->sort_order);
+        $this->assertSame(2, $hidden->refresh()->sort_order);
+    }
+
     public function test_categories_can_be_created_and_renamed(): void
     {
         $this->post('/cms/faq-categories', ['name' => 'Fees for families'])->assertRedirect();

@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
+import reorderWithinAll from '../../../cms/reorderWithinAll';
 import { useCmsToast } from '../../../cms/ToastContext';
 
 const BLANK = { question: '', answer: '', faq_category_id: '', page_slug: '', active: true };
@@ -87,14 +88,11 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
     };
 
     const move = (index, delta) => {
-        const next = [...shown];
-        const target = index + delta;
+        const ids = reorderWithinAll(faqs, shown, index, delta);
 
-        if (target < 0 || target >= next.length) return;
+        if (! ids) return;
 
-        [next[index], next[target]] = [next[target], next[index]];
-
-        router.post('/cms/faqs/reorder', { ids: next.map((f) => f.id) }, {
+        router.post('/cms/faqs/reorder', { ids }, {
             preserveScroll: true,
             onSuccess: () => flash('Order updated'),
         });

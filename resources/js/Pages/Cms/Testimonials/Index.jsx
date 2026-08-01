@@ -4,6 +4,7 @@ import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import ImageField from '../../../cms/builder/ImageField';
+import reorderWithinAll from '../../../cms/reorderWithinAll';
 import { useCmsToast } from '../../../cms/ToastContext';
 
 const BLANK = {
@@ -75,14 +76,11 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
     });
 
     const move = (index, delta) => {
-        const next = [...shown];
-        const target = index + delta;
+        const ids = reorderWithinAll(testimonials, shown, index, delta);
 
-        if (target < 0 || target >= next.length) return;
+        if (! ids) return;
 
-        [next[index], next[target]] = [next[target], next[index]];
-
-        router.post('/cms/testimonials/reorder', { ids: next.map((t) => t.id) }, {
+        router.post('/cms/testimonials/reorder', { ids }, {
             preserveScroll: true,
             onSuccess: () => flash('Order updated'),
         });

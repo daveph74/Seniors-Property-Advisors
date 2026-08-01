@@ -57,10 +57,19 @@ class TestimonialController extends Controller
         return back();
     }
 
+    /**
+     * The given rows are shuffled between the positions they already occupy, rather than being
+     * numbered from one. Numbering from one means a partial list — anything sent while the screen is
+     * searched or filtered — overwrites the positions of rows it does not mention. This way a subset
+     * can only ever permute itself.
+     */
     public function reorder(Request $request): RedirectResponse
     {
-        foreach ((array) $request->input('ids', []) as $position => $id) {
-            Testimonial::whereKey($id)->update(['sort_order' => $position + 1]);
+        $ids = array_values(array_filter((array) $request->input('ids', [])));
+        $slots = Testimonial::whereKey($ids)->pluck('sort_order')->sort()->values();
+
+        foreach ($ids as $position => $id) {
+            Testimonial::whereKey($id)->update(['sort_order' => $slots[$position] ?? $position + 1]);
         }
 
         return back();
