@@ -80,6 +80,8 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::post('/blog-categories', [CmsBlogController::class, 'storeCategory'])->name('blog.categories.store');
     Route::patch('/blog-categories/{category}', [CmsBlogController::class, 'updateCategory'])->name('blog.categories.update');
     Route::post('/blog-categories/reorder', [CmsBlogController::class, 'reorderCategories'])->name('blog.categories.reorder');
+    Route::delete('/blog-categories/{category}', [CmsBlogController::class, 'destroyCategory'])
+        ->middleware('permit:content.delete')->name('blog.categories.destroy');
 
     Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
     Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store');

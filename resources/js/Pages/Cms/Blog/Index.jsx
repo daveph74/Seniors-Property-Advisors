@@ -2,17 +2,20 @@ import { useMemo, useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
+import ConfirmModal from '../../../cms/components/ConfirmModal';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
 import { relative } from '../../../cms/relativeTime';
 import { PlusIcon } from '../../../cms/components/icons';
 
-export default function BlogIndex({ articles = [], categories = [] }) {
+export default function BlogIndex({ articles = [], categories = [], auth }) {
     const flash = useCmsToast();
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('all');
     const [status, setStatus] = useState('all');
     const [newCategory, setNewCategory] = useState('');
+    const [pendingCategory, setPendingCategory] = useState(null);
+    const canDelete = auth?.can?.['content.delete'] === true;
 
     const filtered = useMemo(() => articles.filter((a) => {
         const q = search.trim().toLowerCase();
@@ -148,6 +151,18 @@ export default function BlogIndex({ articles = [], categories = [] }) {
                         </div>
 
                         <Toggle on={c.active} onChange={() => toggle(c)} />
+
+                        {canDelete && ! c.isFallback ? (
+                            <button
+                                type="button"
+                                className="cms-icon-btn-sm"
+                                aria-label={`Delete ${c.name}`}
+                                title={`Delete ${c.name}`}
+                                onClick={() => setPendingCategory(c)}
+                            >
+                                &times;
+                            </button>
+                        ) : null}
                     </div>
                 ))}
 
@@ -170,6 +185,28 @@ export default function BlogIndex({ articles = [], categories = [] }) {
                     <div className="cms-hint">Press Enter to add.</div>
                 </div>
             </aside>
+
+            <ConfirmModal
+                open={pendingCategory !== null}
+                danger
+                title="Delete this category?"
+                lead={pendingCategory?.count
+                    ? 'Its articles are kept. Any left without a category move to Uncategorised.'
+                    : 'Nothing is filed under it, so no articles are affected.'}
+                detail={pendingCategory
+                    ? `${pendingCategory.name} · ${pendingCategory.count === 1 ? '1 article' : `${pendingCategory.count} articles`}`
+                    : ''}
+                confirmLabel="Delete"
+                onClose={() => setPendingCategory(null)}
+                onConfirm={() => {
+                    router.delete(`/cms/blog-categories/${pendingCategory.id}`, {
+                        preserveScroll: true,
+                        onSuccess: () => flash('Category deleted'),
+                        onError: (bag) => flash(Object.values(bag)[0] || 'That category could not be deleted'),
+                    });
+                    setPendingCategory(null);
+                }}
+            />
         </div>
     );
 }

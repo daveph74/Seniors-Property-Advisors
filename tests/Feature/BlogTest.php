@@ -271,6 +271,41 @@ class BlogTest extends TestCase
         $this->assertSame(['Finance'], $both->refresh()->categories->pluck('name')->all());
     }
 
+    public function test_a_super_administrator_can_delete_a_category_from_the_cms(): void
+    {
+        $downsizing = $this->category('Downsizing');
+        $post = $this->article();
+        $post->syncCategories([$downsizing->id]);
+
+        $this->delete("/cms/blog-categories/{$downsizing->id}")->assertRedirect();
+
+        $this->assertDatabaseMissing('blog_categories', ['id' => $downsizing->id]);
+
+        /* The article survives and is re-filed rather than orphaned. */
+        $this->assertSame(['Uncategorised'], $post->refresh()->categories->pluck('name')->all());
+        $this->assertDatabaseHas('blog_posts', ['id' => $post->id]);
+    }
+
+    public function test_a_client_administrator_cannot_delete_a_category(): void
+    {
+        $downsizing = $this->category('Downsizing');
+
+        $this->actingAs($this->clientAdmin());
+
+        $this->delete("/cms/blog-categories/{$downsizing->id}")->assertForbidden();
+
+        $this->assertDatabaseHas('blog_categories', ['id' => $downsizing->id]);
+    }
+
+    public function test_the_uncategorised_category_cannot_be_deleted(): void
+    {
+        $fallback = BlogCategory::where('slug', 'uncategorised')->sole();
+
+        $this->delete("/cms/blog-categories/{$fallback->id}")->assertStatus(422);
+
+        $this->assertDatabaseHas('blog_categories', ['id' => $fallback->id]);
+    }
+
     public function test_uncategorised_is_never_shown_to_readers(): void
     {
         $post = $this->article();

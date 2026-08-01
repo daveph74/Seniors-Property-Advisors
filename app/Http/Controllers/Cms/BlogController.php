@@ -172,6 +172,24 @@ class BlogController extends Controller
         return back();
     }
 
+    /**
+     * The articles are not deleted with it — the model re-files anything left with nothing into
+     * Uncategorised. That category is the floor of the system, so it cannot be removed itself:
+     * it would only be recreated on the next save, and refusing says so plainly.
+     */
+    public function destroyCategory(BlogCategory $category): RedirectResponse
+    {
+        abort_if(
+            $category->isFallback(),
+            422,
+            'Uncategorised cannot be deleted — it is where articles go when they have no category.',
+        );
+
+        $category->delete();
+
+        return back();
+    }
+
     public function reorderCategories(): RedirectResponse
     {
         foreach ((array) request()->input('ids', []) as $position => $id) {
@@ -217,6 +235,7 @@ class BlogController extends Controller
             'slug' => $category->slug,
             'active' => $category->active,
             'count' => $category->posts_count,
+            'isFallback' => $category->isFallback(),
         ])->all();
     }
 
