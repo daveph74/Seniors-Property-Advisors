@@ -251,6 +251,26 @@ class BlogTest extends TestCase
         $this->assertSame(['Uncategorised'], BlogPost::sole()->categories->pluck('name')->all());
     }
 
+    public function test_deleting_a_category_refiles_its_articles_rather_than_orphaning_them(): void
+    {
+        $downsizing = $this->category('Downsizing');
+        $finance = $this->category('Finance');
+
+        $only = $this->article(['slug' => 'only-downsizing']);
+        $only->syncCategories([$downsizing->id]);
+
+        $both = $this->article(['slug' => 'in-both']);
+        $both->syncCategories([$downsizing->id, $finance->id]);
+
+        $downsizing->delete();
+
+        /* Left with nothing, so it falls back. */
+        $this->assertSame(['Uncategorised'], $only->refresh()->categories->pluck('name')->all());
+
+        /* Still has Finance, so it is not touched. */
+        $this->assertSame(['Finance'], $both->refresh()->categories->pluck('name')->all());
+    }
+
     public function test_uncategorised_is_never_shown_to_readers(): void
     {
         $post = $this->article();
