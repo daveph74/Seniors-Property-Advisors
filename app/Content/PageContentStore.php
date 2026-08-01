@@ -68,6 +68,30 @@ class PageContentStore
         'cms', 'build', 'storage', 'up', 'api', 'login', 'logout', 'register', 'home',
     ];
 
+    /**
+     * Namespaces owned by a dedicated route. A page at "blog" is the article listing and
+     * is allowed; anything beneath it would be shadowed by /blog/{article} and could never
+     * be viewed, so it is refused rather than created and left broken.
+     */
+    public const RESERVED_PREFIXES = ['blog'];
+
+    public static function slugIsReserved(string $slug): bool
+    {
+        $slug = trim($slug, '/');
+
+        if (in_array($slug, self::RESERVED_SLUGS, true)) {
+            return true;
+        }
+
+        foreach (self::RESERVED_PREFIXES as $prefix) {
+            if (str_starts_with($slug, $prefix.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function resolve(string $slug): ?array
     {
         return $this->remember($this->cacheKey($slug), function () use ($slug) {
@@ -132,13 +156,27 @@ class PageContentStore
             return $globals;
         }
 
-        $globals['nav']['links'] = array_map(function (array $link) use ($labels) {
+        $globals['nav']['links'] = $this->labelled($globals['nav']['links'], $labels);
+
+        return $globals;
+    }
+
+    /**
+     * A menu item pointing at a page takes that page's menu label, so renaming it in the CMS
+     * renames the menu. Children are walked too — Blog sits under Resources, and a nested item
+     * that stopped following its page would be a quiet inconsistency.
+     */
+    private function labelled(array $links, $labels): array
+    {
+        return array_map(function (array $link) use ($labels) {
+            if (isset($link['children']) && is_array($link['children'])) {
+                $link['children'] = $this->labelled($link['children'], $labels);
+            }
+
             $label = $labels[$link['href'] ?? ''] ?? null;
 
             return $label === null ? $link : ['label' => $label] + $link;
-        }, $globals['nav']['links']);
-
-        return $globals;
+        }, $links);
     }
 
     public function all(): array
@@ -227,7 +265,7 @@ class PageContentStore
     {
         $target = trim((string) $requested, '/');
 
-        if ($target === '' || $target === $page->slug || $page->slug === 'home') {
+        if ($target === '' || $target === $page->slug || $page->slug === 'home' || self::slugIsReserved($target)) {
             return null;
         }
 

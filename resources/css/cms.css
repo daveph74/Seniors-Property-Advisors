@@ -134,6 +134,11 @@
   border-color: var(--cms-navy); background: var(--cms-navy); color: #fff; font-weight: 600;
   box-shadow: 0 1px 2px rgba(16,32,58,0.2);
 }
+/* `.cms-shell a` is more specific than `.cms-btn`, so a link styled as a button would
+   take the shell's navy text — invisible on a navy button. */
+.cms-shell a.cms-btn{ color: var(--cms-ink-soft); }
+.cms-shell a.cms-btn--primary{ color: #fff; }
+.cms-shell a.cms-btn--danger-outline{ color: var(--cms-danger-text); }
 .cms-btn--primary:hover{ background: var(--cms-navy-hover); }
 .cms-btn--danger-outline{ border-color: var(--cms-danger-border); color: var(--cms-danger-text); }
 .cms-btn--danger-outline:hover{ background: var(--cms-danger-bg); }
@@ -892,6 +897,74 @@
 .cms-skeleton__bar--cardtitle{ width: 74%; height: 14px; margin-bottom: 14px; }
 
 @keyframes cms-shimmer{ from{ background-position: -200px 0; } to{ background-position: 400px 0; } }
+
+/* ---------- Blog ---------- */
+.cms-blog-editor{ display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.cms-blog-side{ display: flex; flex-direction: column; gap: 16px; }
+.cms-cat-row{ display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+.cms-check{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 13px; }
+.cms-check:last-child{ margin-bottom: 0; }
+
+/* A writing surface, not a code box: the same shapes the published article uses, so what an
+   editor sees while typing is what a reader gets. The public .prose rules live in app.css,
+   which the admin deliberately does not load, so they are restated here. */
+.cms-rt{ border: 1px solid var(--cms-border-input); border-radius: 8px; overflow: hidden; background: var(--cms-surface); }
+.cms-rt__bar{
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  padding: 8px; background: var(--cms-tint); border-bottom: 1px solid var(--cms-border-soft);
+  position: sticky; top: 0; z-index: 2;
+}
+.cms-rt__style{
+  height: 32px; padding: 0 8px; border: 1px solid var(--cms-border-input);
+  border-radius: 6px; background: var(--cms-surface);
+  font: 500 13px/1 var(--cms-font-sans); color: var(--cms-ink); cursor: pointer;
+}
+.cms-rt__tool{
+  min-width: 34px; height: 32px; padding: 0 11px;
+  border: 1px solid transparent; border-radius: 6px; background: transparent;
+  font: 500 13px/1 var(--cms-font-sans); color: var(--cms-ink-soft); cursor: pointer;
+}
+.cms-rt__tool:hover:not(:disabled){ background: var(--cms-surface); border-color: var(--cms-border-input-2); }
+.cms-rt__tool--on{ background: var(--cms-navy); border-color: var(--cms-navy); color: #fff; }
+.cms-rt__tool:disabled{ opacity: .35; cursor: not-allowed; }
+.cms-rt__divider{ width: 1px; height: 22px; margin: 0 3px; background: var(--cms-border); }
+.cms-rt__spacer{ margin-left: auto; }
+
+.cms-rt__surface{
+  min-height: 420px; max-height: 70vh; overflow-y: auto; padding: 26px 30px; outline: none;
+  font-size: 16px; line-height: 1.75; color: var(--cms-text);
+}
+.cms-rt__surface > :first-child{ margin-top: 0; }
+.cms-rt__surface > :last-child{ margin-bottom: 0; }
+.cms-rt__surface h2{ margin: 30px 0 12px; font-size: 26px; line-height: 1.25; color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface h3{ margin: 26px 0 10px; font-size: 21px; line-height: 1.3; color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface h4{ margin: 22px 0 8px; font-size: 18px; color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface p{ margin: 0 0 18px; }
+.cms-rt__surface a{ color: var(--cms-accent); text-decoration: underline; }
+.cms-rt__surface strong{ color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface ul, .cms-rt__surface ol{ margin: 0 0 18px; padding-left: 26px; }
+.cms-rt__surface li{ margin-bottom: 7px; }
+.cms-rt__surface blockquote{
+  margin: 22px 0; padding: 2px 0 2px 18px;
+  border-left: 3px solid var(--cms-accent-border); color: var(--cms-ink-soft); font-size: 18px;
+}
+.cms-rt__surface img{ max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0 20px; }
+.cms-rt__surface hr{ margin: 26px 0; border: 0; border-top: 1px solid var(--cms-border); }
+.cms-rt__surface table{ width: 100%; border-collapse: collapse; margin: 0 0 20px; }
+.cms-rt__surface th, .cms-rt__surface td{
+  padding: 10px 12px; border: 1px solid var(--cms-border); text-align: left; vertical-align: top; min-width: 60px;
+}
+.cms-rt__surface th{ background: var(--cms-tint); color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface .selectedCell{ background: var(--cms-accent-bg); }
+/* The placeholder-ish hint when the article is empty. */
+.cms-rt__surface p.is-editor-empty:first-child::before{
+  content: 'Start writing the article here…';
+  float: left; height: 0; pointer-events: none; color: var(--cms-text-quiet);
+}
+
+@media (max-width: 1100px){
+  .cms-blog-editor{ grid-template-columns: minmax(0, 1fr); }
+}
 
 .cms-account-facts{
   margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; font-size: 13px;

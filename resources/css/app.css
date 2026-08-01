@@ -77,6 +77,11 @@
 
   --container: 1240px;
   --gutter: 32px;
+
+  /* One card-hover recipe for the whole site. The lift is reserved for cards that are actually
+     links — see .is-card / a.is-card below — so movement keeps meaning "you can click this". */
+  --card-lift: -3px;
+  --card-ease: .2s ease;
 }
 
 *,*::before,*::after{ box-sizing: border-box; }
@@ -127,9 +132,13 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid var(--line-soft);
 }
+/* The row has to fit inside the same 1176px column the page content uses, or the CTA hangs
+   outside the grid. With the phone number showing it was 78px over; grouping Blog under
+   Resources and tightening these three gaps is what buys it back — deliberately not hiding
+   the phone number, which is half the conversion path. */
 .nav{
   display:flex; align-items:center; justify-content:space-between;
-  gap: 32px;
+  gap: 24px;
   height: 84px;
 }
 .brand{
@@ -146,7 +155,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   font-size: 16px; white-space: nowrap;
 }
 .nav ul{
-  display:flex; list-style: none; gap: 28px; padding: 0; margin: 0;
+  display:flex; list-style: none; gap: 22px; padding: 0; margin: 0;
 }
 .nav ul a{
   color: var(--navy);
@@ -159,7 +168,75 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   content:""; position:absolute; left: 0; right: 0; bottom: -28px;
   height: 2px; background: var(--blue); border-radius: 2px;
 }
-.nav .right{ display:flex; align-items:center; gap: 18px; }
+/* ---------- Menu with children ---------- */
+/* Opens on click, never hover: a hover menu cannot be used on a touch screen, and it punishes
+   anyone whose pointer drifts — which on this site is most of the audience. */
+.nav-has-menu{ position: relative; }
+/* Longhand, not the `font` shorthand: `font: 500 15px/1 inherit` is invalid — `inherit` is not
+   a legal family token there — so the whole declaration is dropped and the button falls back to
+   the browser's 13.3px/400 default, which is visibly lighter and smaller than its neighbours. */
+.nav-menu__trigger{
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--navy);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: inherit;
+  letter-spacing: inherit;
+  white-space: nowrap; position: relative;
+}
+.nav-menu__trigger:hover{ color: var(--blue-deep); }
+/* -26 rather than the links' -28: a button's box sits 2px lower than an inline anchor's, so
+   the same offset would put this underline 2px below the others. */
+.nav-menu__trigger.active::after{
+  content:""; position:absolute; left: 0; right: 0; bottom: -26px;
+  height: 2px; background: var(--blue); border-radius: 2px;
+}
+.nav-menu__caret{
+  width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform .15s ease;
+}
+.nav-menu__caret--up{ transform: rotate(-135deg) translate(-3px, -3px); }
+/* Scoped as `.nav .nav-menu` (0,2,0) because `.nav ul` (0,1,1) matches this list too and would
+   otherwise win, laying the panel out as a horizontal flex row with no padding — which is
+   exactly what it did: one content-width item jammed against the panel's left edge. */
+/* Same surface treatment as .article-card and the hero cards — the tokens, not lookalike
+   values — so it reads as part of the site rather than a browser widget. Left-aligned to the
+   label it belongs to, rather than centred under it and drifting under its neighbours. */
+.nav .nav-menu{
+  /* -22px is the panel's own 8px padding plus a row's 14px, so the item text lines up exactly
+     under the label text rather than sitting a ragged 15px to its right. */
+  position: absolute; top: calc(100% + 12px); left: -22px;
+  display: block;
+  /* Items are nowrap, so the panel grows to fit longer labels; this is just a floor that
+     keeps it from looking pinched while Blog is the only child. */
+  min-width: 200px; padding: 8px; margin: 0; gap: 0; list-style: none; z-index: 60;
+  background: var(--white); border: 1px solid var(--line-soft);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  animation: nav-menu-in .16s ease-out;
+  transform-origin: top left;
+}
+@keyframes nav-menu-in{
+  from{ opacity: 0; transform: translateY(-4px); }
+  to{ opacity: 1; transform: none; }
+}
+/* Full-width, finger-sized rows — 44px is the floor for a comfortable tap. */
+.nav .nav-menu a{
+  display: block; padding: 13px 14px; border-radius: var(--radius-sm);
+  color: var(--navy); font-size: 15px; font-weight: 500; white-space: nowrap;
+  transition: background .12s ease;
+}
+/* --blue-wash is a step darker than the old --blue-wash-2, which was so close to the current
+   item's tint that the two states were hard to tell apart. */
+.nav .nav-menu a:hover{ background: var(--blue-wash); }
+.nav .nav-menu a.active{ background: var(--blue-tint); color: var(--navy); font-weight: 600; }
+/* `.nav ul a.active::after` draws the underline for the top-level row and matches these items
+   too, leaving a stray blue bar floating 28px below the panel. Inside the menu the tinted row
+   is the "you are here" mark. */
+.nav .nav-menu a.active::after{ content: none; }
+
+.nav .right{ display:flex; align-items:center; gap: 14px; }
 .nav .phone{ color: var(--navy); font-weight: 600; font-size: 15px; display:flex; align-items:center; gap: 8px; white-space: nowrap;}
 .nav .phone .ico{
   width: 30px; height: 30px; border-radius: 50%;
@@ -415,10 +492,8 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
   padding: 36px 32px;
-  transition: transform .25s ease, box-shadow .25s ease;
   position: relative;
 }
-.card:hover{ transform: translateY(-4px); box-shadow: var(--shadow); }
 .card .ico{
   width: 56px; height: 56px;
   border-radius: 18px;
@@ -807,10 +882,12 @@ footer{
 .success .ref strong{ color: var(--navy); }
 
 /* ===================== Responsive ===================== */
-@media (max-width: 1380px){
+/* The number itself, not just an icon: measured, it fits from 768px up. It hides only
+   below 760, where the logo, CTA and menu button already fill the bar. */
+@media (max-width: 760px){
   .nav .phone span{ display: none; }
 }
-@media (max-width: 1220px){
+@media (max-width: 1240px){
   .nav ul{ display: none; }
 }
 @media (max-width: 1080px){
@@ -837,7 +914,6 @@ footer{
   .foot-grid{ grid-template-columns: 1fr;}
   .section-head{ flex-direction: column; align-items: flex-start;}
   h1.headline{ font-size: 38px;}
-  .nav .phone span{ display: none;}
 }
 
 .section-block__inner{
@@ -1152,6 +1228,16 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   border-bottom: 1px solid var(--line-soft);
 }
 .nav-drawer a.active{ color: var(--blue-deep); }
+/* Children sit in the open, indented under a heading. An accordion would hide them behind a
+   tap, and there is no shortage of room in the drawer. */
+.nav-drawer__group{
+  display: block; padding: 16px 0 8px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-soft);
+}
+.nav-drawer__sub{ padding-left: 16px !important; border-left: 2px solid var(--line-soft); }
+.nav-drawer__sub a{ font-size: 16px; }
+.nav-drawer__sub li:last-child a{ border-bottom: 0; }
 /* Needs to outrank `.nav-drawer a` (0,1,1) above, which would otherwise force
    this row to display:block and stack the icon above the number. */
 .nav-drawer .nav-drawer__phone{
@@ -1166,7 +1252,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   color: var(--blue-deep);
 }
 
-@media (max-width: 1220px){
+/* Must match where .nav ul hides (1240), or there is a band with no menu at all. */
+@media (max-width: 1240px){
   .nav-toggle{ display: flex; }
   /* Overlaid rather than pushed into the flow: closing the drawer must not shift
      the page, or an anchor jump made from it lands in the wrong place. */
@@ -1194,6 +1281,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 
 @media (prefers-reduced-motion: reduce){
   .nav-toggle span{ transition: none; }
+  .nav .nav-menu{ animation: none; }
+  .nav-menu__caret{ transition: none; }
 }
 
 /* Buttons size to their labels, so a pair stacked on a phone ends up ragged —
@@ -1313,10 +1402,24 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   padding: 48px 24px; text-align: center; color: var(--text-mid);
   background: var(--white); border: 1.5px dashed var(--line); border-radius: var(--radius);
 }
+.blog-list__more{ margin-top: 34px; display: flex; justify-content: center; }
+.blog-list__none{ margin: 0; padding: 40px 0; color: var(--text-mid); font-size: 17px; }
+.blog-list__none a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
+.blog-filters{ display: flex; flex-wrap: wrap; gap: 10px; margin: -8px 0 34px; }
+.blog-filters__chip{
+  padding: 9px 18px; border-radius: 99px; border: 1.5px solid var(--line);
+  background: var(--white); color: var(--navy); font-size: 14.5px; font-weight: 500;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.blog-filters__chip:hover{ border-color: var(--navy); }
+.blog-filters__chip--on{ background: var(--navy); border-color: var(--navy); color: var(--white); }
+.blog-filters__chip--on:hover{ color: var(--white); }
 .article-card{
   background: var(--white); border: 1px solid var(--line-soft);
   border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
+  display: block; /* the whole card is the link, so the target is the card, not just the title */
 }
+.article-card__title{ transition: color var(--card-ease); }
 .article-card__image{ width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
 .article-card__body{ padding: 24px; }
 .article-card__tag{
@@ -1368,3 +1471,129 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .section-head.center .left{ max-width: 640px; margin: 0 auto; text-align: center; }
 .section-head.center .left .eyebrow-line{ justify-content: center; }
 .section-head .left > :last-child{ margin-bottom: 0; }
+
+/* ---------- Blog article ---------- */
+.article{ padding: 72px 0 96px; }
+/* Only applied when the rail has something in it, so a lone article stays one centred
+   column instead of being squeezed against an empty gutter. */
+.article__grid{ display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 64px; align-items: start; }
+.article__body{ max-width: 760px; min-width: 0; }
+/* .nav-wrap is sticky at top: 0 and about 72px tall, so the rail has to clear it. */
+.article__rail{ position: sticky; top: 96px; display: flex; flex-direction: column; gap: 32px; }
+.article-rail__block{ padding-top: 4px; }
+.article-rail__title{
+  margin: 0 0 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-soft);
+}
+.article-rail__list{ margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.article-rail__item{
+  display: flex; gap: 12px; align-items: flex-start; padding: 10px; margin: 0 -10px;
+  border-radius: 12px; transition: background .15s ease;
+}
+.article-rail__item:hover{ background: var(--blue-wash-2); }
+.article-rail__thumb{
+  width: 56px; height: 56px; flex: none; border-radius: 8px; object-fit: cover;
+}
+.article-rail__thumb--blank{ background: var(--blue-tint); }
+.article-rail__text{ min-width: 0; }
+.article-rail__name{
+  display: block; font-size: 14.5px; font-weight: 600; line-height: 1.35; color: var(--navy);
+}
+.article-rail__date{ display: block; margin-top: 4px; font-size: 12.5px; color: var(--text-soft); }
+.article__head{ margin-bottom: 32px; }
+.article__tags{ display: flex; flex-wrap: wrap; gap: 8px; }
+.article__title{ margin: 0 0 14px; font-size: clamp(32px, 4.6vw, 52px); line-height: 1.12; color: var(--navy); }
+.article__byline{ margin: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--text-soft); }
+.article__hero{
+  width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover;
+  border-radius: var(--radius); margin-bottom: 36px;
+}
+.article__lead{ margin: 0 0 28px; font-size: 20px; line-height: 1.6; color: var(--text-mid); }
+
+/* Rendered Markdown. The only place article HTML lands, so every tag CommonMark
+   can emit needs a home here. */
+.prose{ color: var(--text-mid); font-size: 17px; line-height: 1.75; }
+.prose > :first-child{ margin-top: 0; }
+.prose > :last-child{ margin-bottom: 0; }
+.prose h2{ margin: 44px 0 14px; font-size: 30px; line-height: 1.25; color: var(--navy); }
+.prose h3{ margin: 34px 0 12px; font-size: 23px; line-height: 1.3; color: var(--navy); }
+.prose h4{ margin: 28px 0 10px; font-size: 19px; color: var(--navy); }
+.prose p{ margin: 0 0 20px; }
+.prose a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
+.prose a:hover{ color: var(--navy-2); }
+.prose strong{ color: var(--navy); font-weight: 600; }
+.prose ul, .prose ol{ margin: 0 0 20px; padding-left: 24px; }
+.prose li{ margin-bottom: 8px; }
+.prose li > ul, .prose li > ol{ margin: 8px 0 0; }
+.prose blockquote{
+  margin: 30px 0; padding: 4px 0 4px 24px;
+  border-left: 3px solid var(--blue); color: var(--navy);
+  font-size: 20px; line-height: 1.6;
+}
+.prose blockquote p:last-child{ margin-bottom: 0; }
+.prose img{ max-width: 100%; height: auto; border-radius: var(--radius-sm); margin: 12px 0 26px; }
+.prose hr{ margin: 40px 0; border: 0; border-top: 1px solid var(--line); }
+.prose code{
+  padding: 2px 6px; border-radius: 5px; background: var(--blue-wash-2);
+  font-size: 0.92em; color: var(--navy);
+}
+.prose pre{
+  margin: 0 0 24px; padding: 18px 20px; overflow-x: auto;
+  background: var(--blue-wash-2); border-radius: var(--radius-sm);
+}
+.prose pre code{ padding: 0; background: none; }
+/* Wide tables scroll inside their own box rather than pushing the page sideways. */
+.prose .table-wrap, .prose table{ margin: 0 0 26px; }
+.prose table{ width: 100%; border-collapse: collapse; display: block; overflow-x: auto; font-size: 15.5px; }
+.prose th, .prose td{ padding: 11px 14px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+.prose th{ background: var(--blue-wash-2); color: var(--navy); font-weight: 600; }
+
+/* Below this the rail cannot sit beside 760px of prose, so it drops underneath and stops
+   being sticky — a sticky block in normal flow would trail the reader down the page. */
+@media (max-width: 1080px){
+  .article__grid{ grid-template-columns: minmax(0, 1fr); gap: 56px; }
+  .article__body{ max-width: none; }
+  .article__rail{ position: static; }
+}
+
+@media (max-width: 640px){
+  .article{ padding: 44px 0 64px; }
+  .article__lead{ font-size: 18px; }
+  .prose{ font-size: 16.5px; }
+  .prose h2{ font-size: 25px; margin-top: 36px; }
+  .prose h3{ font-size: 20px; }
+}
+
+/* ---------- Card hover, one recipe ----------
+   Placed after every card definition on purpose: these share specificity with the rules above,
+   so sitting earlier in the file would simply lose to them.
+
+   Every card lifts by the same amount, whether or not it links anywhere — the values live in
+   --card-lift and --card-ease so they cannot drift apart again. The trade-off is accepted
+   deliberately: a card that lifts but cannot be clicked may invite a click that does nothing.
+   Cards that are links get the extras on top — title colour, image zoom, a focus ring. */
+.card, .step, .cmp-card, .block-quote-card, .block-info-card, .article-card, .faq{
+  transition: transform var(--card-ease), box-shadow var(--card-ease), border-color var(--card-ease);
+}
+.card:hover, .step:hover, .cmp-card:hover, .block-quote-card:hover, .block-info-card:hover,
+.faq:hover, .article-card:hover{
+  box-shadow: var(--shadow);
+  border-color: var(--line);
+  transform: translateY(var(--card-lift));
+}
+/* Only the card moves. The picture deliberately does not zoom: two things easing at once on
+   the same hover reads as fidgety, and the lift alone is enough to say the card is live.
+   The title still changes colour — a link with no textual response is worse than a still one. */
+a.article-card:hover .article-card__title{ color: var(--blue-deep); }
+a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
+  outline: 2px solid var(--blue-deep); outline-offset: 3px;
+}
+
+/* After the .article-card rules, not before: at equal specificity the later rule wins, and a
+   reduced-motion block sitting above them is simply overridden. */
+@media (prefers-reduced-motion: reduce){
+  .card, .step, .cmp-card, .block-quote-card, .block-info-card, .article-card, .faq,
+  .article-card__title{ transition: none; }
+  .card:hover, .step:hover, .cmp-card:hover, .block-quote-card:hover, .block-info-card:hover,
+  .faq:hover, .article-card:hover{ transform: none; }
+}

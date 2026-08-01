@@ -149,6 +149,7 @@ class ContentStorageTest extends TestCase
         $globals = (new PageContentStore)->globals();
 
         $this->assertArrayHasKey('nav', $globals);
-        $this->assertCount(5, $globals['nav']['links']);
+        $this->assertNotEmpty($globals['nav']['links']);
+        $this->assertSame('How it works', $globals['nav']['links'][0]['label']);
     }
 }

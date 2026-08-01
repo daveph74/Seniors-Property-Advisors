@@ -11,6 +11,7 @@ class StarterLayouts
         'standard' => 'Standard content',
         'service' => 'Service page',
         'landing' => 'Landing page',
+        'blog' => 'Blog listing',
     ];
 
     public static function options(): array
@@ -28,8 +29,31 @@ class StarterLayouts
             'standard' => self::standard(),
             'service' => self::service(),
             'landing' => self::landing(),
+            'blog' => self::blog(),
             default => [],
         };
+    }
+
+    /**
+     * The listing page. The blog-list block pulls published articles from the content
+     * library, so the heading and intro stay editable while the cards stay automatic.
+     */
+    private static function blog(): array
+    {
+        return [
+            self::block('blog-list', 'Blog articles', [
+                'eyebrow' => 'Articles',
+                'heading' => 'Advice for selling and downsizing',
+                'headingEm' => '',
+                'lead' => 'Straightforward guidance from our advisors, written for homeowners over 50 and the families helping them.',
+                'category' => '',
+                'limit' => 9,
+                'showMore' => true,
+                'showFilters' => true,
+                'articles' => [],
+            ]),
+            self::cta(),
+        ];
     }
 
     private static function standard(): array

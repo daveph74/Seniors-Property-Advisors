@@ -60,6 +60,26 @@ Reusable sections are **independent copies**, stored whole in `reusable_sections
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
 
+## Blog articles
+
+Articles are their own tables (`blog_posts`, `blog_categories`, and a pivot), not page
+sections. Bodies are **HTML**, written in a what-you-see editor — the people using this are
+not typing markup — and `app/Content/Html.php` is the only gate between what they type and
+what a reader receives. It purifies on the way in, so a body in the database is already safe
+to print, which is what lets `Pages/Article.jsx` use `dangerouslySetInnerHTML`. Its allowlist
+is scope §5's editor list and nothing more; §17 excludes editing raw HTML, so nothing beyond
+it should be added. `BlogTest` is what keeps that true — do not widen the allowlist without
+adding a case there.
+
+The editor is TipTap (MIT). CKEditor and TinyMCE were rejected: both are GPL-or-paid, and GPL
+copyleft would reach this application. It lazy-loads as its own Vite chunk (~140KB gzipped),
+so only the article editor pays for it.
+
+The listing at `/blog` is an ordinary CMS page holding a `blog-list` section, so its heading
+and intro stay editable. Only `/blog/{article}` is a route, which is why `articles` is a
+reserved article slug and `PageContentStore::slugIsReserved()` refuses a page under `blog/`.
+`published_at` is the date readers see, never a scheduler — §17 excludes scheduled publishing.
+
 ## Accounts and permissions
 
 `/cms/*` requires an active account. Scope §2's two roles live in one place —

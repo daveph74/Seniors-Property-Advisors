@@ -206,7 +206,7 @@ class CreatePageTest extends TestCase
         $this->get('/cms/pages')
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p
-                ->has('layouts', 4)
+                ->has('layouts', count(StarterLayouts::OPTIONS))
                 ->where('layouts.0.key', 'blank'));
     }
 }

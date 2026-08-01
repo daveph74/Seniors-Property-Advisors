@@ -39,8 +39,11 @@ class CreatePageRequest extends FormRequest
                 return;
             }
 
-            if (in_array($slug, PageContentStore::RESERVED_SLUGS, true)) {
-                $validator->errors()->add('title', 'That page name is reserved. Please choose another.');
+            $parent = trim((string) $this->input('parent'), '/');
+            $full = $parent === '' || $parent === 'home' ? $slug : "{$parent}/{$slug}";
+
+            if (PageContentStore::slugIsReserved($slug) || PageContentStore::slugIsReserved($full)) {
+                $validator->errors()->add('title', 'That web address is reserved. Please choose another name or parent.');
             }
         });
     }

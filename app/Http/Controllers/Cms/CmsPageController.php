@@ -6,6 +6,7 @@ use App\Content\ContentLibrary;
 use App\Content\PageContentStore;
 use App\Content\ReusableSectionStore;
 use App\Content\SectionDiff;
+use App\Content\Seo;
 use App\Content\StarterLayouts;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreatePageRequest;
@@ -219,7 +220,7 @@ class CmsPageController extends Controller
 
         return Inertia::render('AgentFinder', [
             'title' => $data['title'],
-            'seo' => $data['seo'],
+            'seo' => Seo::forSharing($data['seo'] ?? [], null, url()->current()),
             'sections' => $data['sections'],
             'globals' => $this->store->globals(),
             'library' => $this->library->for($this->resolveSlug($page)),

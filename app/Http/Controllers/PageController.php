@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Content\ContentLibrary;
 use App\Content\PageContentStore;
+use App\Content\Seo;
 use App\Models\PageRedirect;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -36,16 +37,27 @@ class PageController extends Controller
         return $this->render($page, $path);
     }
 
+    /**
+     * A listing page carrying a blog-list section reads ?category=… so a filtered view is a
+     * real address. Any other page simply ignores it.
+     */
+    private function requestedCategory(): ?string
+    {
+        $category = trim((string) request()->query('category'));
+
+        return preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $category) === 1 ? $category : null;
+    }
+
     private function render(?array $page, string $slug): Response
     {
         abort_if($page === null, 404);
 
         return Inertia::render('AgentFinder', [
             'title' => $page['title'],
-            'seo' => $page['seo'] + ['url' => url()->current()],
+            'seo' => Seo::forSharing($page['seo'] ?? [], null, url()->current()),
             'sections' => $page['sections'],
             'globals' => $this->store->globals(),
-            'library' => $this->library->for($slug),
+            'library' => $this->library->for($slug, $this->requestedCategory()),
         ]);
     }
 }

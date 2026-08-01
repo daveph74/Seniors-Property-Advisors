@@ -18,6 +18,9 @@ export default function AgentFinder({ title, seo = {}, sections = [], globals = 
                 <meta property="og:title" content={seo.title || title} />
                 {seo.description && <meta property="og:description" content={seo.description} />}
                 {seo.image && <meta property="og:image" content={seo.image} />}
+                {seo.imageWidth && <meta property="og:image:width" content={String(seo.imageWidth)} />}
+                {seo.imageHeight && <meta property="og:image:height" content={String(seo.imageHeight)} />}
+                <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
                 {seo.url && <meta property="og:url" content={seo.url} />}
                 {seo.url && <link rel="canonical" href={seo.url} />}
                 {preview && <meta name="robots" content="noindex" />}
