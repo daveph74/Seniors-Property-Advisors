@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Cms;
 
-use App\Content\Markdown;
 use App\Content\PageContentStore;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveBlogCategoryRequest;
 use App\Http\Requests\SaveBlogPostRequest;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -148,15 +146,6 @@ class BlogController extends Controller
                 'editUrl' => route('cms.blog.edit', $post),
             ],
         ]);
-    }
-
-    /**
-     * The editor's preview renders through the same converter the public page uses, so
-     * what an author checks cannot drift from what a reader gets.
-     */
-    public function render(): JsonResponse
-    {
-        return response()->json(['html' => Markdown::toHtml(request()->input('body'))]);
     }
 
     public function storeCategory(SaveBlogCategoryRequest $request): RedirectResponse

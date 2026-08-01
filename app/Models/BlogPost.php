@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Content\Markdown;
+use App\Content\Html;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -51,16 +51,21 @@ class BlogPost extends Model
         return '/blog/'.$this->slug;
     }
 
+    /**
+     * Bodies are purified before they are stored, so this is a pass-through. It stays a method
+     * rather than reading the column directly so there is one place to change if that ever
+     * stops being true.
+     */
     public function renderedBody(): string
     {
-        return Markdown::toHtml($this->body);
+        return (string) $this->body;
     }
 
     public function cardSummary(): string
     {
         return trim((string) $this->summary) !== ''
             ? (string) $this->summary
-            : Markdown::excerpt($this->body);
+            : Html::excerpt($this->body);
     }
 
     public function toCard(): array

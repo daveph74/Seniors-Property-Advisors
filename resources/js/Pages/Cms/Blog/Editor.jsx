@@ -5,7 +5,7 @@ import { Badge } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import ImageField from '../../../cms/builder/ImageField';
 import MediaLibraryModal from '../../../cms/builder/MediaLibraryModal';
-import MarkdownEditor from '../../../cms/components/MarkdownEditor';
+import RichTextEditor from '../../../cms/components/RichTextEditor';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
 
@@ -153,13 +153,12 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
                     <section className="cms-settings-section">
                         <h2 className="cms-settings-section__title">Article</h2>
                         <p className="cms-settings-section__lead">
-                            Use the buttons for headings, lists, quotes, links, images and tables. Pasted HTML
-                            is refused rather than saved.
+                            Type as you would in a letter. Select some words, then use the buttons above to
+                            make them a heading, bold, a list, a quote or a link.
                         </p>
 
-                        <MarkdownEditor
+                        <RichTextEditor
                             value={data.body}
-                            error={errors.body}
                             onChange={(body) => setData('body', body)}
                             onPickImage={(insert) => setPickImageInto(() => insert)}
                         />

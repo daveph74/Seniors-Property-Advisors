@@ -2,9 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Content\Markdown;
+use App\Content\Html;
 use App\Models\BlogPost;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -38,23 +37,6 @@ class SaveBlogPostRequest extends FormRequest
         ];
     }
 
-    /**
-     * The body is stored as Markdown and rendered with HTML stripped, so nothing unsafe
-     * could reach a reader. Rejecting it here as well means an editor who pastes from a
-     * web page is told what happened, rather than having their text quietly altered.
-     */
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator) {
-            if (Markdown::holdsUnsafeHtml($this->input('body'))) {
-                $validator->errors()->add(
-                    'body',
-                    'Remove the HTML from the article. Use the formatting buttons instead — pasted code and scripts are not saved.',
-                );
-            }
-        });
-    }
-
     public function details(): array
     {
         $data = $this->validated();
@@ -62,7 +44,12 @@ class SaveBlogPostRequest extends FormRequest
         return [
             'title' => trim(strip_tags($data['title'])),
             'summary' => $this->clean($data['summary'] ?? null),
-            'body' => $data['body'] ?? null,
+            /*
+             * Purified here, so what reaches the database is already safe to print. A writer
+             * pasting from Word or a web page keeps their words and loses the markup, which is
+             * what a what-you-see editor should do — no error to decipher.
+             */
+            'body' => Html::clean($data['body'] ?? null) ?: null,
             'featured_image' => $data['featured_image'] ?? null,
             'author_name' => $this->clean($data['author_name'] ?? null),
             'published_at' => $data['published_at'] ?? null,

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Content\ContentLibrary;
+use App\Content\Html;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\Page;
@@ -39,7 +40,7 @@ class BlogTest extends TestCase
         return $this->post('/cms/blog', array_merge([
             'title' => 'When to start planning',
             'summary' => 'A guide for families.',
-            'body' => "## A heading\n\nSome **bold** text.",
+            'body' => '<h2>A heading</h2><p>Some <strong>bold</strong> text.</p>',
         ], $body));
     }
 
@@ -93,56 +94,67 @@ class BlogTest extends TestCase
         $this->get("/blog/{$post->slug}")->assertOk();
     }
 
-    public function test_the_body_renders_every_format_the_scope_asks_for(): void
+    public function test_every_format_the_scope_asks_for_survives_saving(): void
     {
-        $post = $this->article(['body' => <<<'MD'
-            ## A heading
+        $this->write(['body' => '<h2>A heading</h2>'
+            .'<p>Some <strong>bold</strong> and <em>italic</em> text with a <a href="https://example.com">link</a>.</p>'
+            .'<ul><li>first</li><li>second</li></ul>'
+            .'<ol><li>one</li><li>two</li></ol>'
+            .'<blockquote><p>A quotation.</p></blockquote>'
+            .'<table><thead><tr><th>Column</th></tr></thead><tbody><tr><td>a</td></tr></tbody></table>'
+            .'<img src="/media/2026/07/photo.png" alt="A photo">'])->assertRedirect();
 
-            Some **bold** and *italic* text with a [link](https://example.com).
+        $html = BlogPost::sole()->renderedBody();
 
-            - first
-            - second
-
-            1. one
-            2. two
-
-            > A quotation.
-
-            | Column | Other |
-            | --- | --- |
-            | a | b |
-
-            ![A photo](/media/2026/07/photo.png)
-            MD]);
-
-        $html = $post->renderedBody();
-
-        foreach (['<h2>', '<strong>', '<em>', '<a href="https://example.com">', '<ul>', '<ol>', '<blockquote>', '<table>', '<td>', '<img src="/media/2026/07/photo.png"'] as $needle) {
+        foreach (['<h2>', '<strong>', '<em>', 'href="https://example.com"', '<ul>', '<ol>',
+            '<blockquote>', '<table>', '<th>', '<td>', 'src="/media/2026/07/photo.png"'] as $needle) {
             $this->assertStringContainsString($needle, $html, "missing {$needle}");
         }
     }
 
-    public function test_html_in_a_stored_body_can_never_reach_a_reader(): void
+    /**
+     * The editor posts HTML now, so the allowlist is the only thing between a paste and a
+     * reader. The words survive; the markup does not.
+     */
+    public function test_dangerous_markup_is_stripped_on_the_way_in(): void
     {
-        $post = $this->article(['body' => 'Before <script>alert(1)</script> after <iframe src="x"></iframe>']);
+        $this->write(['body' => '<p>Before</p><script>alert(1)</script>'
+            .'<iframe src="https://evil.test"></iframe>'
+            .'<p onclick="steal()">Tap me</p>'
+            .'<a href="javascript:alert(1)">Bad link</a>'
+            .'<img src="x" onerror="alert(1)">'
+            .'<form><input name="card"></form>'])->assertRedirect();
 
-        $html = $post->renderedBody();
+        $body = BlogPost::sole()->body;
 
-        $this->assertStringNotContainsString('<script', $html);
-        $this->assertStringNotContainsString('<iframe', $html);
-        $this->assertStringContainsString('Before', $html);
+        foreach (['<script', '<iframe', 'onclick', 'onerror', 'javascript:', '<form', '<input'] as $forbidden) {
+            $this->assertStringNotContainsString($forbidden, $body, "{$forbidden} survived");
+        }
+
+        $this->assertStringContainsString('Before', $body);
+        $this->assertStringContainsString('Tap me', $body);
+    }
+
+    public function test_a_reader_never_receives_unsafe_markup(): void
+    {
+        $post = $this->article(['body' => Html::clean('<p>Safe</p><script>alert(1)</script>')]);
 
         $this->get("/blog/{$post->slug}")->assertOk()->assertInertia(function ($props) {
-            $this->assertStringNotContainsString('<script', $props->toArray()['props']['article']['body']);
+            $body = $props->toArray()['props']['article']['body'];
+
+            $this->assertStringNotContainsString('<script', $body);
+            $this->assertStringContainsString('Safe', $body);
         });
     }
 
-    public function test_pasted_html_is_refused_with_a_clear_message(): void
+    public function test_the_allowlist_keeps_styling_out_of_the_approved_design(): void
     {
-        $this->write(['body' => 'Hello <script>alert(1)</script>'])->assertSessionHasErrors('body');
-        $this->write(['body' => '<div onclick="steal()">Tap</div>'])->assertSessionHasErrors('body');
+        $cleaned = Html::clean('<p style="font-size:80px;color:red">Huge</p><div class="x">Block</div>');
 
-        $this->assertSame(0, BlogPost::count());
+        $this->assertStringNotContainsString('style=', $cleaned);
+        $this->assertStringNotContainsString('font-size', $cleaned);
+        $this->assertStringContainsString('Huge', $cleaned);
+        $this->assertStringContainsString('Block', $cleaned);
     }
 
     public function test_a_future_date_does_not_hide_a_published_article(): void
@@ -364,15 +376,5 @@ class BlogTest extends TestCase
         $this->assertSame('draft', $copy->status);
         $this->assertNull($copy->published_at);
         $this->assertCount(1, $copy->categories);
-    }
-
-    public function test_the_editor_preview_renders_through_the_same_converter(): void
-    {
-        $response = $this->post('/cms/blog/render', ['body' => "## Hi\n\n<script>alert(1)</script>"]);
-
-        $html = $response->assertOk()->json('html');
-
-        $this->assertStringContainsString('<h2>Hi</h2>', $html);
-        $this->assertStringNotContainsString('<script', $html);
     }
 }

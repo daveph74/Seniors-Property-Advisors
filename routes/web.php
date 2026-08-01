@@ -66,7 +66,6 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::get('/blog', [CmsBlogController::class, 'index'])->name('blog.index');
     Route::get('/blog/new', [CmsBlogController::class, 'create'])->name('blog.create');
     Route::post('/blog', [CmsBlogController::class, 'store'])->name('blog.store');
-    Route::post('/blog/render', [CmsBlogController::class, 'render'])->name('blog.render');
     Route::get('/blog/{post}/edit', [CmsBlogController::class, 'edit'])->whereNumber('post')->name('blog.edit');
     Route::patch('/blog/{post}', [CmsBlogController::class, 'update'])->whereNumber('post')->name('blog.update');
     Route::get('/blog/{post}/preview', [CmsBlogController::class, 'preview'])->whereNumber('post')->name('blog.preview');
