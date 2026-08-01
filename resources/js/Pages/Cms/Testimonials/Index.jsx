@@ -87,7 +87,7 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
     };
 
     return (
-        <div className="cms-page cms-page--wide">
+        <div className="cms-page">
             <div className="cms-toolbar">
                 <SearchInput
                     value={search}
