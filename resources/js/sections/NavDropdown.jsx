@@ -9,10 +9,20 @@ import { isCurrent, resolve } from './navHref';
  * The parent is a button rather than a link because its own page is not published yet; when it
  * is, an "Overview" item joins the top of the list.
  */
+/**
+ * Long enough that sweeping the mouse across the bar toward the CTA does not flash the panel
+ * open, short enough not to feel laggy when someone means it.
+ */
+const OPEN_AFTER = 120;
+
+/** Lets a reader cut the corner diagonally into the panel without it vanishing. */
+const CLOSE_AFTER = 250;
+
 export default function NavDropdown({ link, here, current }) {
     const [open, setOpen] = useState(false);
     const wrap = useRef(null);
     const trigger = useRef(null);
+    const timer = useRef(null);
     const id = useId();
     const children = link.children || [];
 
@@ -28,10 +38,36 @@ export default function NavDropdown({ link, here, current }) {
         return () => document.removeEventListener('pointerdown', onOutside);
     }, [open]);
 
+    useEffect(() => () => clearTimeout(timer.current), []);
+
     const close = ({ toTrigger = false } = {}) => {
+        clearTimeout(timer.current);
         setOpen(false);
 
         if (toTrigger) trigger.current?.focus();
+    };
+
+    /**
+     * Hover is an extra on top of click, never a replacement: it is enabled only for a real
+     * mouse, so touch — which has no hover — keeps the tap behaviour, and keyboard users keep
+     * theirs. The panel stays open while the pointer is inside it and closes on Escape, which
+     * is what WCAG 1.4.13 asks of content revealed on hover.
+     */
+    const hoverable = () => typeof window !== 'undefined'
+        && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+
+    const onPointerEnter = () => {
+        if (! hoverable()) return;
+
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => setOpen(true), OPEN_AFTER);
+    };
+
+    const onPointerLeave = () => {
+        if (! hoverable()) return;
+
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => setOpen(false), CLOSE_AFTER);
     };
 
     const items = () => [...(wrap.current?.querySelectorAll('.nav-menu a') || [])];
@@ -82,14 +118,23 @@ export default function NavDropdown({ link, here, current }) {
     };
 
     return (
-        <div className="nav-has-menu" ref={wrap} onKeyDown={onKeyDown}>
+        <div
+            className="nav-has-menu"
+            ref={wrap}
+            onKeyDown={onKeyDown}
+            onPointerEnter={onPointerEnter}
+            onPointerLeave={onPointerLeave}
+        >
             <button
                 type="button"
                 ref={trigger}
                 className={`nav-menu__trigger${current ? ' active' : ''}`}
                 aria-expanded={open}
                 aria-controls={id}
-                onClick={() => setOpen((v) => ! v)}
+                onClick={() => {
+                    clearTimeout(timer.current);
+                    setOpen((v) => ! v);
+                }}
             >
                 {link.label}
                 <span className={`nav-menu__caret${open ? ' nav-menu__caret--up' : ''}`} aria-hidden="true" />
