@@ -73,13 +73,16 @@ class ContentLibrary
     }
 
     /**
-     * Only categories that actually have something published behind them — an empty filter
-     * a reader can click is worse than no filter.
+     * Only categories that actually have something published behind them — an empty filter a
+     * reader can click is worse than no filter. Uncategorised is left out too: it is
+     * housekeeping for the editor, not a topic anyone would choose. Those articles still show
+     * under "All articles".
      */
     private function postCategories(): array
     {
         return BlogCategory::active()
             ->ordered()
+            ->where('slug', '<>', BlogCategory::UNCATEGORISED)
             ->whereHas('posts', fn ($query) => $query->where('status', 'published'))
             ->get(['name', 'slug'])
             ->map(fn (BlogCategory $category) => ['name' => $category->name, 'slug' => $category->slug])

@@ -193,6 +193,82 @@ class BlogTest extends TestCase
         $this->assertSame(['Downsizing', 'Finance'], BlogPost::sole()->categories->pluck('name')->sort()->values()->all());
     }
 
+    public function test_the_agreed_categories_exist(): void
+    {
+        $this->assertSame(
+            ['Property Advice', 'Uncategorised'],
+            BlogCategory::whereIn('slug', ['property-advice', 'uncategorised'])
+                ->orderBy('name')->pluck('name')->all(),
+        );
+    }
+
+    public function test_an_article_saved_with_no_category_is_filed_as_uncategorised(): void
+    {
+        $this->write()->assertRedirect();
+
+        $this->assertSame(['Uncategorised'], BlogPost::sole()->categories->pluck('name')->all());
+    }
+
+    public function test_choosing_a_real_category_drops_the_uncategorised_marker(): void
+    {
+        $this->write()->assertRedirect();
+
+        $post = BlogPost::sole();
+
+        $this->assertTrue($post->categories->first()->isFallback());
+
+        $this->patch("/cms/blog/{$post->id}", [
+            'title' => $post->title,
+            'categories' => [$this->category('Downsizing')->id],
+        ])->assertRedirect();
+
+        $this->assertSame(['Downsizing'], $post->refresh()->categories->pluck('name')->all());
+    }
+
+    public function test_clearing_every_category_files_it_back_as_uncategorised(): void
+    {
+        $downsizing = $this->category('Downsizing');
+
+        $this->write(['categories' => [$downsizing->id]])->assertRedirect();
+
+        $post = BlogPost::sole();
+
+        $this->patch("/cms/blog/{$post->id}", ['title' => $post->title, 'categories' => []])
+            ->assertRedirect();
+
+        $this->assertSame(['Uncategorised'], $post->refresh()->categories->pluck('name')->all());
+    }
+
+    /**
+     * Saving must not depend on a row an editor is free to delete.
+     */
+    public function test_the_fallback_returns_after_being_deleted(): void
+    {
+        BlogCategory::where('slug', 'uncategorised')->delete();
+
+        $this->write()->assertRedirect();
+
+        $this->assertSame(['Uncategorised'], BlogPost::sole()->categories->pluck('name')->all());
+    }
+
+    public function test_uncategorised_is_never_shown_to_readers(): void
+    {
+        $post = $this->article();
+        $post->syncCategories([]);
+
+        $library = (new ContentLibrary)->posts();
+
+        $this->assertNotContains('uncategorised', array_column($library['postCategories'], 'slug'));
+
+        /* Still reachable — it is the label that is hidden, not the article. */
+        $this->assertCount(1, $library['posts']);
+
+        /* And it must not surface as a tag on the card or the article page. */
+        $this->assertNull($library['posts'][0]['category']);
+        $this->assertSame([], $library['posts'][0]['categories']);
+        $this->assertNull($post->refresh()->toArticle()['category']);
+    }
+
     public function test_categories_can_be_created_reordered_and_disabled(): void
     {
         $this->post('/cms/blog-categories', ['name' => 'Downsizing'])->assertRedirect();
@@ -203,7 +279,10 @@ class BlogTest extends TestCase
 
         $this->post('/cms/blog-categories/reorder', ['ids' => [$second->id, $first->id]])->assertRedirect();
 
-        $this->assertSame(['Finance', 'Downsizing'], BlogCategory::ordered()->pluck('name')->all());
+        $this->assertSame(
+            ['Finance', 'Downsizing'],
+            BlogCategory::ordered()->whereIn('name', ['Downsizing', 'Finance'])->pluck('name')->all(),
+        );
 
         $this->patch("/cms/blog-categories/{$first->id}", ['name' => 'Downsizing', 'active' => false])
             ->assertRedirect();

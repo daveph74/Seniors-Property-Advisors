@@ -33,6 +33,24 @@ class BlogPost extends Model
     }
 
     /**
+     * An article always belongs somewhere. With nothing chosen it falls to Uncategorised, and
+     * the moment a real category is picked that placeholder is dropped again — otherwise
+     * articles would quietly accumulate both.
+     *
+     * The category is fetched by slug and created if missing, so deleting it in the CMS cannot
+     * break saving; it simply reappears the next time it is needed.
+     */
+    public function syncCategories(array $ids): void
+    {
+        $real = BlogCategory::whereKey($ids)
+            ->where('slug', '<>', BlogCategory::UNCATEGORISED)
+            ->pluck('id')
+            ->all();
+
+        $this->categories()->sync($real === [] ? [BlogCategory::fallback()->id] : $real);
+    }
+
+    /**
      * Scheduled publishing is out of scope (§17), so this deliberately ignores
      * published_at — the date is what readers see, not a release trigger.
      */
@@ -70,6 +88,9 @@ class BlogPost extends Model
 
     public function toCard(): array
     {
+        /* Uncategorised is filing, not a topic — a reader should never see it on a card. */
+        $shown = $this->categories->reject(fn (BlogCategory $category) => $category->isFallback());
+
         return [
             'id' => $this->id,
             'title' => $this->title,
@@ -78,8 +99,8 @@ class BlogPost extends Model
             'summary' => $this->cardSummary(),
             'image' => $this->featured_image,
             'date' => $this->published_at?->format('j F Y'),
-            'category' => $this->categories->first()?->name,
-            'categories' => $this->categories->pluck('name')->all(),
+            'category' => $shown->first()?->name,
+            'categories' => $shown->pluck('name')->values()->all(),
         ];
     }
 

@@ -58,7 +58,7 @@ class BlogController extends Controller
             'last_updated_by' => $request->user()->name,
         ]);
 
-        $post->categories()->sync($request->categories() ?? []);
+        $post->syncCategories($request->categories() ?? []);
 
         return redirect()->route('cms.blog.edit', $post);
     }
@@ -81,7 +81,7 @@ class BlogController extends Controller
         $post->forceFill($changes)->save();
 
         if ($request->categories() !== null) {
-            $post->categories()->sync($request->categories());
+            $post->syncCategories($request->categories());
         }
 
         return back();
@@ -125,7 +125,7 @@ class BlogController extends Controller
             'last_updated_by' => request()->user()->name,
         ]);
 
-        $copy->categories()->sync($post->categories->pluck('id')->all());
+        $copy->syncCategories($post->categories->pluck('id')->all());
 
         return redirect()->route('cms.blog.edit', $copy);
     }
