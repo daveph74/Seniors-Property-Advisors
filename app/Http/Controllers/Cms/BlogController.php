@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cms;
 
 use App\Content\PageContentStore;
+use App\Http\Controllers\BlogController as PublicBlogController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveBlogCategoryRequest;
 use App\Http\Requests\SaveBlogPostRequest;
@@ -142,6 +143,7 @@ class BlogController extends Controller
 
         return Inertia::render('Article', [
             'article' => $post->load('categories')->toArticle(),
+            'seo' => PublicBlogController::sharing($post),
             'related' => [],
             'globals' => $store->globals(),
             'preview' => [

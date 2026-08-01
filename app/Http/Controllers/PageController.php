@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Content\ContentLibrary;
 use App\Content\PageContentStore;
+use App\Content\Seo;
 use App\Models\PageRedirect;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -53,7 +54,7 @@ class PageController extends Controller
 
         return Inertia::render('AgentFinder', [
             'title' => $page['title'],
-            'seo' => $page['seo'] + ['url' => url()->current()],
+            'seo' => Seo::forSharing($page['seo'] ?? [], null, url()->current()),
             'sections' => $page['sections'],
             'globals' => $this->store->globals(),
             'library' => $this->library->for($slug, $this->requestedCategory()),

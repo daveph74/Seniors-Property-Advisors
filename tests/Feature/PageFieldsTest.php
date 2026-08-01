@@ -223,7 +223,8 @@ class PageFieldsTest extends TestCase
         $this->get('/shared')->assertOk()->assertInertia(function ($props) {
             $seo = $props->toArray()['props']['seo'];
 
-            $this->assertSame('/media/2026/07/card.png', $seo['image']);
+            /* Stored relative for <img>, shared absolute because Open Graph requires it. */
+            $this->assertSame(url('/media/2026/07/card.png'), $seo['image']);
             $this->assertStringEndsWith('/shared', $seo['url']);
         });
     }

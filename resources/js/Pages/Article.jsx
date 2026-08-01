@@ -32,7 +32,7 @@ function RailList({ title, articles }) {
     );
 }
 
-export default function Article({ article, related = [], globals = {}, preview = null }) {
+export default function Article({ article, seo = {}, related = [], globals = {}, preview = null }) {
     const [modalOpen, setModalOpen] = useState(false);
     const actions = { 'open-finder': () => setModalOpen(true) };
 
@@ -48,10 +48,8 @@ export default function Article({ article, related = [], globals = {}, preview =
         remember(article);
     }, [article, preview]);
 
-    const seo = article.seo || {};
     const title = seo.title || article.title;
     const description = seo.description || article.summary;
-    const image = seo.image || article.image;
     const hasRail = related.length > 0 || recent.length > 0;
 
     return (
@@ -61,7 +59,12 @@ export default function Article({ article, related = [], globals = {}, preview =
                 <meta property="og:type" content="article" />
                 <meta property="og:title" content={title} />
                 {description && <meta property="og:description" content={description} />}
-                {image && <meta property="og:image" content={image} />}
+                {seo.image && <meta property="og:image" content={seo.image} />}
+                {seo.imageWidth && <meta property="og:image:width" content={String(seo.imageWidth)} />}
+                {seo.imageHeight && <meta property="og:image:height" content={String(seo.imageHeight)} />}
+                <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
+                {seo.url && <meta property="og:url" content={seo.url} />}
+                {seo.url && <link rel="canonical" href={seo.url} />}
                 {preview && <meta name="robots" content="noindex" />}
             </Head>
 

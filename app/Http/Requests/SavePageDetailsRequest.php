@@ -32,12 +32,21 @@ class SavePageDetailsRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            if (self::isSvg($this->input('seo.image'))) {
+                $validator->errors()->add('seo.image', 'A sharing image cannot be an SVG — social networks will not show it. Use a JPG or PNG.');
+            }
+
             $slug = (string) $this->input('slug');
 
             if ($slug !== '' && PageContentStore::slugIsReserved($slug)) {
                 $validator->errors()->add('slug', 'That web address is reserved and cannot be used for a page.');
             }
         });
+    }
+
+    public static function isSvg(?string $path): bool
+    {
+        return $path !== null && str_ends_with(strtolower(trim(parse_url($path, PHP_URL_PATH) ?: $path)), '.svg');
     }
 
     public function title(): string

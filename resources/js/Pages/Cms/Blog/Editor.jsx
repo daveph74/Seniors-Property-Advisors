@@ -271,7 +271,7 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
                             label="Social sharing image"
                             value={data.seo.image}
                             onChange={(src) => setData('seo', { ...data.seo, image: src })}
-                            hint="Shown when the article is shared. The featured image is used if this is empty."
+                            hint="Shown when the article is shared. The featured image is used if this is empty. Use 1200 x 630 pixels, and keep any wording centred - X crops the sides. JPG or PNG, not SVG."
                         />
                     </section>
                 </aside>

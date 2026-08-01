@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Content\Html;
 use App\Models\BlogPost;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,6 +36,22 @@ class SaveBlogPostRequest extends FormRequest
             'title.required' => 'An article needs a title.',
             'slug.regex' => 'A web address can only use lowercase letters, numbers and hyphens.',
         ];
+    }
+
+    /**
+     * The media library accepts SVG, but social networks refuse it — an SVG sharing image
+     * produces no preview at all, silently. Better to say so than to let it look saved.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            if (SavePageDetailsRequest::isSvg($this->input('seo.image'))) {
+                $validator->errors()->add(
+                    'seo.image',
+                    'A sharing image cannot be an SVG — social networks will not show it. Use a JPG or PNG.',
+                );
+            }
+        });
     }
 
     public function details(): array

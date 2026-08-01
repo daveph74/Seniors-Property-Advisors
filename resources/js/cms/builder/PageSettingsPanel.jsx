@@ -105,7 +105,7 @@ export default function PageSettingsPanel({ page, onSave }) {
             <ImageField
                 label="Sharing image"
                 value={seo.image || ''}
-                hint="Shown when the page is shared on Facebook or LinkedIn."
+                hint="Shown when the page is shared on Facebook or LinkedIn. Use 1200 x 630 pixels, and keep any wording centred - X crops the sides. JPG or PNG, not SVG."
                 onChange={(value) => saveSeo('image', value)}
             />
 

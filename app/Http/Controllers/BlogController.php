@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Content\ContentLibrary;
 use App\Content\PageContentStore;
+use App\Content\Seo;
 use App\Models\BlogPost;
 use App\Models\PageRedirect;
 use Illuminate\Http\JsonResponse;
@@ -34,9 +35,27 @@ class BlogController extends Controller
 
         return Inertia::render('Article', [
             'article' => $post->toArticle(),
+            'seo' => $this->sharing($post),
             'related' => $this->library->related($post),
             'globals' => $this->store->globals(),
         ]);
+    }
+
+    /**
+     * The featured image stands in when an article has no sharing image of its own, and the
+     * fallback is resolved here rather than in the page component so the sharing tags have one
+     * source. `Cms\BlogController::preview()` builds the same shape.
+     */
+    public static function sharing(BlogPost $post): array
+    {
+        return Seo::forSharing(
+            array_merge(
+                ['title' => $post->title, 'description' => $post->summary],
+                array_filter($post->seo ?? [], fn ($value) => $value !== null && $value !== ''),
+            ),
+            $post->featured_image,
+            url($post->url()),
+        );
     }
 
     /**
