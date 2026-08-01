@@ -69,10 +69,6 @@ export default function Login({ status }) {
                     <button type="submit" className="cms-btn cms-btn--primary cms-signin__submit" disabled={processing}>
                         {processing ? 'Signing in…' : 'Sign in'}
                     </button>
-
-                    <p className="cms-signin__foot">
-                        Accounts are created by the RedHQ support team. Contact them if you need access.
-                    </p>
                 </form>
             </div>
         </>
