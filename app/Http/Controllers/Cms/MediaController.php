@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Cms;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlogPost;
 use App\Models\Media;
 use App\Models\Page;
+use App\Models\Testimonial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -259,6 +261,19 @@ class MediaController extends Controller
             if ($this->holds($page->draft, $url)) {
                 $usedBy[] = $page->title.' (draft)';
             }
+        }
+
+        /*
+         * Articles and testimonials keep their images in ordinary columns rather than a section
+         * tree, so the tree scan above cannot see them. Without this an editor could delete the
+         * photo out from under a published article and be told nothing was using it.
+         */
+        foreach (BlogPost::where('featured_image', $url)->orWhere($this->mentions('body', $url))->get() as $post) {
+            $usedBy[] = $post->title.' ('.($post->status === 'published' ? 'article' : 'draft article').')';
+        }
+
+        foreach (Testimonial::where('image', $url)->pluck('name') as $name) {
+            $usedBy[] = 'Testimonial: '.$name;
         }
 
         $chrome = DB::table('settings')->where('key', 'globals')->where($this->mentions('value', $url))->exists();

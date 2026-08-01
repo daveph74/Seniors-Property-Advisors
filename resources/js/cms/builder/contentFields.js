@@ -1,4 +1,4 @@
-import { TEXT, AREA, PICK, PICKFROM, FLAGON, NUM, IMG, ACTIONS } from './repeaters';
+import { TEXT, AREA, PICK, PICKFROM, PICKMANY, FLAGON, NUM, IMG, ACTIONS } from './repeaters';
 
 const GROUP = (title, fields) => ({ group: true, title, fields });
 
@@ -110,7 +110,8 @@ const CONTENT_SCHEMAS = {
     'stat-row': HEAD_CENTRED,
     testimonials: [
         ...HEAD_CENTRED,
-        PICK('source', 'Which testimonials', ['featured', 'all']),
+        PICK('source', 'Which testimonials', ['featured', 'all', 'chosen']),
+        PICKMANY('chosen', 'Chosen testimonials', 'testimonialChoices', 'No testimonials in the library yet.'),
         NUM('limit', 'How many to show'),
         PICK('layout', 'Display as', ['grid', 'slider']),
     ],

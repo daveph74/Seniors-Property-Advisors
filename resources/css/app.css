@@ -1494,12 +1494,57 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 }
 .section-pending li::before{ content: "· "; color: var(--blue-deep); }
 
-.testimonials__grid--slider{
-  grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr);
-  grid-template-columns: none; overflow-x: auto;
-  scroll-snap-type: x mandatory; padding-bottom: 8px;
+/* Swiper handles the sliding; these are the controls. Sized for the hands using this site — 48px
+   arrows and dots with a 44px hit area, not the 8px dots a carousel usually ships with. */
+.testimonial-slider .swiper{ padding: 4px; margin: -4px; }
+.testimonial-slider .swiper-slide{ height: auto; display: flex; }
+.testimonial-slider .swiper-slide > .testimonial{ flex: 1; }
+.testimonial-slider .swiper:focus-visible{
+  outline: 3px solid var(--blue-deep); outline-offset: 4px; border-radius: var(--radius);
 }
-.testimonials__grid--slider > *{ scroll-snap-align: start; }
+/* Both arrows above the cards on the right. .section-head.center leaves 72px below its lead, so the
+   pair sits in that gap rather than pushing the cards down. */
+.testimonial-slider{ position: relative; }
+.testimonial-slider__nav{
+  position: absolute; right: 0; bottom: 100%; margin-bottom: 22px;
+  display: flex; gap: 10px;
+}
+.testimonial-nav{
+  width: 48px; height: 48px; flex: none; border-radius: 50%; cursor: pointer;
+  background: var(--white); border: 1px solid var(--line-soft); color: var(--navy);
+  font-size: 18px; line-height: 1; box-shadow: var(--shadow-sm);
+  transition: background .15s ease, border-color .15s ease, transform .15s ease;
+}
+.testimonial-nav:hover{ border-color: var(--navy); transform: translateY(-1px); }
+.testimonial-nav:focus-visible{ outline: 3px solid var(--blue-deep); outline-offset: 3px; }
+.testimonial-nav.swiper-button-disabled{ opacity: .38; cursor: default; transform: none; }
+.testimonial-dots{
+  display: flex; align-items: center; justify-content: center; gap: 0; width: auto;
+  margin-top: 30px;
+}
+/* Swiper's own spacing is about 8px between bullets. Matching it while keeping a usable target: the
+   box stays 44px tall for the finger, and narrows to 22px so the dots read as a group, not a row of
+   scattered points. */
+.testimonial-dots{ --swiper-pagination-bullet-horizontal-gap: 0; }
+.testimonial-dots .swiper-pagination-bullet{
+  width: 20px; height: 44px; margin: 0; background: none; opacity: 1; border-radius: 6px;
+  display: grid; place-items: center; cursor: pointer;
+}
+.testimonial-dots .swiper-pagination-bullet::before{
+  content: ""; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--line-strong, #C2CEDD); transition: background .15s ease, transform .15s ease;
+}
+.testimonial-dots .swiper-pagination-bullet:hover::before{ background: var(--blue-deep); }
+.testimonial-dots .swiper-pagination-bullet-active::before{
+  background: var(--navy); transform: scale(1.25);
+}
+.testimonial-dots .swiper-pagination-bullet:focus-visible{
+  outline: 3px solid var(--blue-deep); outline-offset: -3px;
+}
+@media (max-width: 640px){
+  .testimonial-nav{ width: 44px; height: 44px; font-size: 16px; }
+  .testimonial-slider__nav{ margin-bottom: 16px; gap: 8px; }
+}
 
 /* .section-head sets gap:40px for its horizontal row, but .center switches to a
    column, so that gap lands between the pre-heading, heading and lead — 58px

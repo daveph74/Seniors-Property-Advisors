@@ -6,6 +6,7 @@ use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\Faq;
 use App\Models\FaqCategory;
+use App\Models\Testimonial;
 
 class ContentLibrary
 {
@@ -16,6 +17,7 @@ class ContentLibrary
         return [
             'faqs' => $this->faqs($slug),
             'faqCategories' => $this->faqCategories($slug),
+            'testimonials' => $this->testimonials(),
         ] + $this->posts(1, $category);
     }
 
@@ -44,9 +46,26 @@ class ContentLibrary
      * setting a section up needs to reach a category before it has been filled. Builder-only, so
      * it never rides along with a public page render.
      */
+    /**
+     * Every testimonial a reader may see, in the order the library sets. Whole rather than paged
+     * and unfiltered by featured or limit: those are decisions a section makes, and the set is
+     * small enough that sending it once beats a request per section. `active` already requires
+     * recorded consent, so an unconfirmed testimonial cannot leave the CMS by this route.
+     */
+    private function testimonials(): array
+    {
+        return Testimonial::active()->ordered()->get()->map->toCard()->all();
+    }
+
     public function choices(): array
     {
         return [
+            'testimonialChoices' => Testimonial::ordered()->get()
+                ->map(fn (Testimonial $t) => [
+                    'id' => (string) $t->id,
+                    'label' => $t->name.($t->location ? ' — '.$t->location : ''),
+                ])
+                ->all(),
             'allFaqCategories' => FaqCategory::where('active', true)
                 ->orderBy('sort_order')->orderBy('id')->pluck('name')->all(),
             'allPostCategories' => BlogCategory::active()->ordered()

@@ -8,6 +8,7 @@ use App\Http\Controllers\Cms\CmsPageController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\ReusableSectionController;
+use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
@@ -94,7 +95,13 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::patch('/faq-categories/{category}', [FaqController::class, 'updateCategory'])->name('faqs.categories.update');
     Route::delete('/faq-categories/{category}', [FaqController::class, 'destroyCategory'])
         ->middleware('permit:content.delete')->name('faqs.categories.destroy');
-    Route::get('/testimonials', fn () => Inertia::render('Cms/Testimonials/Index'))->name('testimonials.index');
+    Route::get('/testimonials', [TestimonialController::class, 'index'])->name('testimonials.index');
+    Route::post('/testimonials', [TestimonialController::class, 'store'])->name('testimonials.store');
+    Route::post('/testimonials/reorder', [TestimonialController::class, 'reorder'])->name('testimonials.reorder');
+    Route::patch('/testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('testimonials.update');
+    Route::post('/testimonials/{testimonial}/consent', [TestimonialController::class, 'consent'])->name('testimonials.consent');
+    Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])
+        ->middleware('permit:content.delete')->name('testimonials.destroy');
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::get('/media/library', [MediaController::class, 'library'])->name('media.library');
     Route::post('/media/sign', [MediaController::class, 'sign'])->name('media.sign');

@@ -26,6 +26,7 @@ class HomePageTest extends TestCase
                 'why-list',
                 'agent-compare',
                 'family',
+                'testimonials',
                 'cta',
             ], $types);
         });

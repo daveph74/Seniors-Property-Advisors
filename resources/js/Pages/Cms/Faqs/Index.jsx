@@ -3,6 +3,8 @@ import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
+import { DragHandleIcon } from '../../../cms/components/icons';
+import useSortableList from '../../../cms/useSortableList';
 import { useCmsToast } from '../../../cms/ToastContext';
 
 const BLANK = { question: '', answer: '', faq_category_id: '', page_slug: '', active: true };
@@ -12,19 +14,16 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
     const canDelete = auth?.can?.['content.delete'] === true;
     const [pendingCategory, setPendingCategory] = useState(null);
 
-    const moveCategory = (index, delta) => {
-        const next = [...categories];
-        const target = index + delta;
-
-        if (target < 0 || target >= next.length) return;
-
-        [next[index], next[target]] = [next[target], next[index]];
-
-        router.post('/cms/faq-categories/reorder', { ids: next.map((c) => c.id) }, {
+    const sortableCategories = useSortableList({
+        items: categories,
+        name: 'faq-category',
+        labelFor: (c) => c.name,
+        onReorder: (ids) => router.post('/cms/faq-categories/reorder', { ids }, {
             preserveScroll: true,
             onSuccess: () => flash('Category order updated'),
-        });
-    };
+            onFinish: () => sortableCategories.settle(),
+        }),
+    });
 
     const toggleCategory = (c) => router.patch(`/cms/faq-categories/${c.id}`, {
         name: c.name,
@@ -86,19 +85,16 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
         }
     };
 
-    const move = (index, delta) => {
-        const next = [...shown];
-        const target = index + delta;
-
-        if (target < 0 || target >= next.length) return;
-
-        [next[index], next[target]] = [next[target], next[index]];
-
-        router.post('/cms/faqs/reorder', { ids: next.map((f) => f.id) }, {
+    const sortable = useSortableList({
+        items: shown,
+        axis: 'y',
+        labelFor: (f) => f.question,
+        onReorder: (ids) => router.post('/cms/faqs/reorder', { ids }, {
             preserveScroll: true,
             onSuccess: () => flash('Order updated'),
-        });
-    };
+            onFinish: () => sortable.settle(),
+        }),
+    });
 
     const toggle = (faq) => router.patch(`/cms/faqs/${faq.id}`, bodyFor(faq, { active: ! faq.active }), {
         preserveScroll: true,
@@ -136,17 +132,24 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                             : 'Nothing matches that search.'}
                     </div>
                 ) : (
-                    <div className="cms-faq-list">
-                        {shown.map((f, i) => (
-                            <div key={f.id} className="cms-faq-row">
-                                <div style={{ display: 'grid' }}>
-                                    <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, -1)} aria-label="Move up">
-                                        &uarr;
-                                    </button>
-                                    <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, 1)} aria-label="Move down">
-                                        &darr;
-                                    </button>
-                                </div>
+                    <div className="cms-faq-list" {...sortable.containerProps}>
+                        {sortable.order.map((f, i) => (
+                            <div
+                                key={f.id}
+                                className={`cms-faq-row${sortable.activeId === f.id ? ' cms-sort--lifted' : ''}`}
+                                {...sortable.itemProps(f.id)}
+                            >
+                                {sortable.dropLineAt(i) ? (
+                                    <span className={`cms-sort-line cms-sort-line--${sortable.dropLineAt(i)}`} />
+                                ) : null}
+
+                                <button
+                                    type="button"
+                                    className="cms-drag-handle cms-icon-btn-sm"
+                                    {...sortable.handleProps(f.id)}
+                                >
+                                    <DragHandleIcon size={16} fill="currentColor" />
+                                </button>
 
                                 <span className="cms-faq-row__q">
                                     {f.question}
@@ -170,6 +173,12 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                         ))}
                     </div>
                 )}
+
+                <p className="cms-hint" id={sortable.instructionsId} style={{ marginTop: 12 }}>
+                    Drag a question by its handle to reorder. With a keyboard: focus a handle, press
+                    Space, move with the arrow keys, Space again to drop.
+                </p>
+                <p className="cms-sr-only" role="status" aria-live="polite">{sortable.liveMessage}</p>
             </div>
 
             <aside className="cms-media-side">
@@ -178,44 +187,66 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                     Groups questions, and decides what an FAQ section pulls in.
                 </p>
 
-                {categories.map((c, i) => (
-                    <div key={c.id} className="cms-cat-row">
-                        <div style={{ display: 'grid' }}>
-                            <button type="button" className="cms-icon-btn-sm" onClick={() => moveCategory(i, -1)} aria-label="Move up">&uarr;</button>
-                            <button type="button" className="cms-icon-btn-sm" onClick={() => moveCategory(i, 1)} aria-label="Move down">&darr;</button>
+                <div {...sortableCategories.containerProps}>
+                    {sortableCategories.order.map((c, i) => (
+                        <div
+                            key={c.id}
+                            className={`cms-cat-row${sortableCategories.activeId === c.id ? ' cms-sort--lifted' : ''}`}
+                            {...sortableCategories.itemProps(c.id)}
+                        >
+                            {sortableCategories.dropLineAt(i) ? (
+                                <span className={`cms-sort-line cms-sort-line--${sortableCategories.dropLineAt(i)}`} />
+                            ) : null}
+
+                            <div className="cms-cat-row__line">
+                                <button
+                                    type="button"
+                                    className="cms-drag-handle cms-icon-btn-sm"
+                                    {...sortableCategories.handleProps(c.id)}
+                                >
+                                    <DragHandleIcon size={16} fill="currentColor" />
+                                </button>
+
+                                <input
+                                    className="cms-input"
+                                    style={{ flex: 1, minWidth: 0 }}
+                                    defaultValue={c.name}
+                                    onBlur={(e) => {
+                                        if (e.target.value.trim() && e.target.value !== c.name) {
+                                            router.patch(`/cms/faq-categories/${c.id}`, {
+                                                name: e.target.value,
+                                                active: c.active,
+                                            }, { preserveScroll: true });
+                                        }
+                                    }}
+                                />
+
+                                <Toggle on={c.active} onChange={() => toggleCategory(c)} />
+
+                                {canDelete ? (
+                                    <button
+                                        type="button"
+                                        className="cms-icon-btn-sm"
+                                        aria-label={`Delete ${c.name}`}
+                                        title={`Delete ${c.name}`}
+                                        onClick={() => setPendingCategory(c)}
+                                    >
+                                        &times;
+                                    </button>
+                                ) : null}
+                            </div>
+
+                            <div className="cms-hint cms-cat-row__count">
+                                {c.count === 1 ? '1 question' : `${c.count} questions`}
+                            </div>
                         </div>
+                    ))}
+                </div>
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <input
-                                className="cms-input"
-                                defaultValue={c.name}
-                                onBlur={(e) => {
-                                    if (e.target.value.trim() && e.target.value !== c.name) {
-                                        router.patch(`/cms/faq-categories/${c.id}`, {
-                                            name: e.target.value,
-                                            active: c.active,
-                                        }, { preserveScroll: true });
-                                    }
-                                }}
-                            />
-                            <div className="cms-hint">{c.count === 1 ? '1 question' : `${c.count} questions`}</div>
-                        </div>
-
-                        <Toggle on={c.active} onChange={() => toggleCategory(c)} />
-
-                        {canDelete ? (
-                            <button
-                                type="button"
-                                className="cms-icon-btn-sm"
-                                aria-label={`Delete ${c.name}`}
-                                title={`Delete ${c.name}`}
-                                onClick={() => setPendingCategory(c)}
-                            >
-                                &times;
-                            </button>
-                        ) : null}
-                    </div>
-                ))}
+                <p className="cms-hint" id={sortableCategories.instructionsId} style={{ margin: '10px 0 18px' }}>
+                    Drag by the handle to reorder, or press Space and use the arrow keys.
+                </p>
+                <p className="cms-sr-only" role="status" aria-live="polite">{sortableCategories.liveMessage}</p>
 
                 <div className="cms-field">
                     <label className="cms-field-label">Add a category</label>

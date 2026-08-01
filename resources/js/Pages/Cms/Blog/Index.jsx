@@ -6,7 +6,8 @@ import ConfirmModal from '../../../cms/components/ConfirmModal';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
 import { relative } from '../../../cms/relativeTime';
-import { PlusIcon } from '../../../cms/components/icons';
+import { DragHandleIcon, PlusIcon } from '../../../cms/components/icons';
+import useSortableList from '../../../cms/useSortableList';
 
 export default function BlogIndex({ articles = [], categories = [], auth }) {
     const flash = useCmsToast();
@@ -27,19 +28,16 @@ export default function BlogIndex({ articles = [], categories = [], auth }) {
         return true;
     }), [articles, search, category, status]);
 
-    const move = (index, delta) => {
-        const next = [...categories];
-        const target = index + delta;
-
-        if (target < 0 || target >= next.length) return;
-
-        [next[index], next[target]] = [next[target], next[index]];
-
-        router.post('/cms/blog-categories/reorder', { ids: next.map((c) => c.id) }, {
+    const sortable = useSortableList({
+        items: categories,
+        name: 'blog-category',
+        labelFor: (c) => c.name,
+        onReorder: (ids) => router.post('/cms/blog-categories/reorder', { ids }, {
             preserveScroll: true,
             onSuccess: () => flash('Order updated'),
-        });
-    };
+            onFinish: () => sortable.settle(),
+        }),
+    });
 
     const toggle = (c) => router.patch(`/cms/blog-categories/${c.id}`, { name: c.name, active: ! c.active }, {
         preserveScroll: true,
@@ -127,44 +125,70 @@ export default function BlogIndex({ articles = [], categories = [], auth }) {
                     touching its articles.
                 </p>
 
-                {categories.map((c, i) => (
-                    <div key={c.id} className="cms-cat-row">
-                        <div style={{ display: 'grid' }}>
-                            <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, -1)} aria-label="Move up">&uarr;</button>
-                            <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, 1)} aria-label="Move down">&darr;</button>
+                <div {...sortable.containerProps}>
+                    {sortable.order.map((c, i) => (
+                        <div
+                            key={c.id}
+                            className={`cms-cat-row${sortable.activeId === c.id ? ' cms-sort--lifted' : ''}`}
+                            {...sortable.itemProps(c.id)}
+                        >
+                            {sortable.dropLineAt(i) ? (
+                                <span className={`cms-sort-line cms-sort-line--${sortable.dropLineAt(i)}`} />
+                            ) : null}
+
+                            <div className="cms-cat-row__line">
+                                <button
+                                    type="button"
+                                    className="cms-drag-handle cms-icon-btn-sm"
+                                    {...sortable.handleProps(c.id)}
+                                >
+                                    <DragHandleIcon size={16} fill="currentColor" />
+                                </button>
+
+                                <input
+                                    className="cms-input"
+                                    style={{ flex: 1, minWidth: 0 }}
+                                    defaultValue={c.name}
+                                    onBlur={(e) => {
+                                        if (e.target.value.trim() && e.target.value !== c.name) {
+                                            router.patch(`/cms/blog-categories/${c.id}`, {
+                                                name: e.target.value,
+                                                active: c.active,
+                                            }, { preserveScroll: true });
+                                        }
+                                    }}
+                                />
+
+                                <Toggle on={c.active} onChange={() => toggle(c)} />
+
+                                {canDelete && ! c.isFallback ? (
+                                    <button
+                                        type="button"
+                                        className="cms-icon-btn-sm"
+                                        aria-label={`Delete ${c.name}`}
+                                        title={`Delete ${c.name}`}
+                                        onClick={() => setPendingCategory(c)}
+                                    >
+                                        &times;
+                                    </button>
+                                ) : (
+                                    /* Uncategorised cannot be deleted; without a stand-in its toggle
+                                       slides into the gap and stops lining up with the row above. */
+                                    <span style={{ width: 28, flex: 'none' }} aria-hidden="true" />
+                                )}
+                            </div>
+
+                            <div className="cms-hint cms-cat-row__count">
+                                {c.count === 1 ? '1 article' : `${c.count} articles`}
+                            </div>
                         </div>
+                    ))}
+                </div>
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <input
-                                className="cms-input"
-                                defaultValue={c.name}
-                                onBlur={(e) => {
-                                    if (e.target.value.trim() && e.target.value !== c.name) {
-                                        router.patch(`/cms/blog-categories/${c.id}`, {
-                                            name: e.target.value,
-                                            active: c.active,
-                                        }, { preserveScroll: true });
-                                    }
-                                }}
-                            />
-                            <div className="cms-hint">{c.count === 1 ? '1 article' : `${c.count} articles`}</div>
-                        </div>
-
-                        <Toggle on={c.active} onChange={() => toggle(c)} />
-
-                        {canDelete && ! c.isFallback ? (
-                            <button
-                                type="button"
-                                className="cms-icon-btn-sm"
-                                aria-label={`Delete ${c.name}`}
-                                title={`Delete ${c.name}`}
-                                onClick={() => setPendingCategory(c)}
-                            >
-                                &times;
-                            </button>
-                        ) : null}
-                    </div>
-                ))}
+                <p className="cms-hint" id={sortable.instructionsId} style={{ margin: '10px 0 0' }}>
+                    Drag by the handle to reorder, or press Space and use the arrow keys.
+                </p>
+                <p className="cms-sr-only" role="status" aria-live="polite">{sortable.liveMessage}</p>
 
                 <div className="cms-field" style={{ marginTop: 12 }}>
                     <label className="cms-field-label">Add a category</label>

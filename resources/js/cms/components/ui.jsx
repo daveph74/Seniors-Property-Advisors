@@ -42,13 +42,14 @@ export function AccordionSection({ id, title, open, onToggle, children }) {
     );
 }
 
-export function Toggle({ on, onChange, label }) {
+export function Toggle({ on, onChange, label, disabled = false }) {
     return (
         <button
             type="button"
             role="switch"
             aria-checked={on}
             aria-label={label}
+            disabled={disabled}
             className={`cms-toggle ${on ? 'cms-toggle--on' : ''}`}
             onClick={() => onChange && onChange(!on)}
         >

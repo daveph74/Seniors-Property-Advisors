@@ -102,6 +102,40 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
             );
         }
 
+        /*
+         * Stored as a comma-joined list of ids rather than an array: the section tree is sanitised
+         * string by string on save, so a scalar survives that pass unchanged and needs no special
+         * case there. Order follows the library, not the order they were ticked — an editor sets
+         * the running order in the library, and having two places to set it would be a trap.
+         */
+        if (f.type === 'checklist') {
+            const chosen = String(value || '').split(',').map((v) => v.trim()).filter(Boolean);
+            const options = library[f.source] || [];
+
+            return (
+                <div key={f.path} className="cms-field">
+                    <label className="cms-field-label">{f.label}</label>
+                    {options.length === 0 ? (
+                        <div className="cms-hint">{f.empty || 'Nothing to choose from yet.'}</div>
+                    ) : options.map((o) => (
+                        <label key={o.id} className="cms-check-row">
+                            <input
+                                type="checkbox"
+                                checked={chosen.includes(String(o.id))}
+                                onChange={() => set(options
+                                    .filter((c) => (String(c.id) === String(o.id)
+                                        ? ! chosen.includes(String(o.id))
+                                        : chosen.includes(String(c.id))))
+                                    .map((c) => c.id)
+                                    .join(','))}
+                            />
+                            <span>{o.label}</span>
+                        </label>
+                    ))}
+                </div>
+            );
+        }
+
         if (f.type === 'toggle') {
             return (
                 <div key={f.path} className="cms-toggle-row">
