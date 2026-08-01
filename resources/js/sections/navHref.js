@@ -29,6 +29,14 @@ export function resolve(href, url) {
  * at needs scroll tracking, which this is not — so on the home page the item the content
  * marked as `active` keeps that role, exactly as before.
  */
+/**
+ * A parent with children is current when any of them is, so grouping Blog under Resources
+ * does not lose the "you are here" mark that a top-level Blog item had.
+ */
+export function holdsCurrent(link, url) {
+    return (link?.children || []).some((child) => isCurrent(child.href, url, child.active));
+}
+
 export function isCurrent(href, url, flagged = false) {
     const value = String(href || '');
     const here = path(url);

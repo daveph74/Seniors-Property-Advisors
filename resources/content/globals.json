@@ -31,12 +31,14 @@
                 "label": "For families"
             },
             {
-                "href": "#",
-                "label": "Resources"
-            },
-            {
-                "href": "/blog",
-                "label": "Blog"
+                "href": null,
+                "label": "Resources",
+                "children": [
+                    {
+                        "href": "/blog",
+                        "label": "Blog"
+                    }
+                ]
             }
         ],
         "cta": {

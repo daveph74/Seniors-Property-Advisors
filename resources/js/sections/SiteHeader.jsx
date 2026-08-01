@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import ActionButton from './ActionButton';
-import { isCurrent, resolve } from './navHref';
+import NavDropdown from './NavDropdown';
+import { holdsCurrent, isCurrent, resolve } from './navHref';
 import { PhoneIcon, GiftIcon } from '../components/icons';
 
 export default function SiteHeader({ globals = {}, actions = {} }) {
@@ -49,12 +50,16 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
                     <ul>
                         {links.map((l) => (
                             <li key={l.label}>
-                                <a
-                                    href={resolve(l.href, here)}
-                                    className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
-                                >
-                                    {l.label}
-                                </a>
+                                {l.children?.length ? (
+                                    <NavDropdown link={l} here={here} current={holdsCurrent(l, here)} />
+                                ) : (
+                                    <a
+                                        href={resolve(l.href, here)}
+                                        className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
+                                    >
+                                        {l.label}
+                                    </a>
+                                )}
                             </li>
                         ))}
                     </ul>
@@ -65,6 +70,7 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
                             </span>
                             <span>{phone.label}</span>
                         </a>
+
                         <ActionButton cta={nav.cta} actions={actions} tight className="btn primary sm" />
                         <button
                             type="button"
@@ -89,13 +95,34 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
                     <ul>
                         {links.map((l) => (
                             <li key={l.label}>
-                                <a
-                                    href={resolve(l.href, here)}
-                                    className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
-                                    onClick={() => setOpen(false)}
-                                >
-                                    {l.label}
-                                </a>
+                                {l.children?.length ? (
+                                    <>
+                                        {/* A label, not a control: the children are already
+                                            visible, and an accordion would cost a tap. */}
+                                        <span className="nav-drawer__group">{l.label}</span>
+                                        <ul className="nav-drawer__sub">
+                                            {l.children.map((child) => (
+                                                <li key={child.label}>
+                                                    <a
+                                                        href={resolve(child.href, here)}
+                                                        className={isCurrent(child.href, here, child.active) ? 'active' : undefined}
+                                                        onClick={() => setOpen(false)}
+                                                    >
+                                                        {child.label}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                ) : (
+                                    <a
+                                        href={resolve(l.href, here)}
+                                        className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
+                                        onClick={() => setOpen(false)}
+                                    >
+                                        {l.label}
+                                    </a>
+                                )}
                             </li>
                         ))}
                     </ul>

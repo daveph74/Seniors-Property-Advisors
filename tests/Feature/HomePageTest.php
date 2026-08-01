@@ -38,7 +38,11 @@ class HomePageTest extends TestCase
 
             $this->assertSame('1300 277 228', $globals['phone']['label']);
             $this->assertContains('How it works', array_column($globals['nav']['links'], 'label'));
-            $this->assertContains('/blog', array_column($globals['nav']['links'], 'href'));
+
+            /* Blog is nested under Resources, so the menu fits the content column. */
+            $resources = collect($globals['nav']['links'])->firstWhere('label', 'Resources');
+
+            $this->assertContains('/blog', array_column($resources['children'], 'href'));
             $this->assertCount(3, $globals['footer']['columns']);
         });
     }

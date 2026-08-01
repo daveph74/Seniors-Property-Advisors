@@ -71,33 +71,47 @@ class PageFieldsTest extends TestCase
         $this->assertSame('What we do', $links[0]['label']);
     }
 
-    public function test_the_blog_is_reachable_from_the_menu_and_the_footer(): void
+    private function resourcesMenu(): array
+    {
+        return collect($this->store()->globals()['nav']['links'])->firstWhere('label', 'Resources') ?? [];
+    }
+
+    public function test_the_blog_sits_under_resources_and_in_the_footer(): void
     {
         $globals = $this->store()->globals();
+        $resources = $this->resourcesMenu();
 
-        $this->assertContains('/blog', array_column($globals['nav']['links'], 'href'));
+        $this->assertContains('/blog', array_column($resources['children'], 'href'));
 
-        $resources = collect($globals['footer']['columns'])->firstWhere('heading', 'Resources');
+        /* The parent is a trigger, not a link — its own page is still a draft. */
+        $this->assertNull($resources['href']);
 
-        $this->assertContains('/blog', array_column($resources['links'], 'href'));
+        /* Nothing left at the top level, or the menu would list Blog twice. */
+        $this->assertNotContains('/blog', array_column($globals['nav']['links'], 'href'));
+
+        $footer = collect($globals['footer']['columns'])->firstWhere('heading', 'Resources');
+
+        $this->assertContains('/blog', array_column($footer['links'], 'href'));
     }
 
     public function test_the_blog_link_is_not_added_twice(): void
     {
-        $before = $this->store()->globals();
+        $before = count($this->resourcesMenu()['children']);
 
         $this->artisan('migrate', ['--force' => true])->assertSuccessful();
 
-        $links = array_column($this->store()->globals()['nav']['links'], 'href');
-
+        $this->assertCount($before, $this->resourcesMenu()['children']);
         $this->assertSame(
-            count(array_column($before['nav']['links'], 'href')),
-            count($links),
+            1,
+            count(array_keys(array_column($this->resourcesMenu()['children'], 'href'), '/blog', true)),
         );
-        $this->assertSame(1, count(array_keys($links, '/blog', true)));
     }
 
-    public function test_the_menu_label_follows_the_blog_page(): void
+    /**
+     * Relabelling used to walk only the top level. Blog is nested now, so a page rename that
+     * stopped reaching it would be a quiet inconsistency.
+     */
+    public function test_the_menu_label_follows_the_blog_page_even_when_nested(): void
     {
         $blog = Page::create([
             'cms_id' => Page::max('cms_id') + 1,
@@ -110,15 +124,15 @@ class PageFieldsTest extends TestCase
             'published' => [],
         ]);
 
-        $link = collect($this->store()->globals()['nav']['links'])->firstWhere('href', '/blog');
+        $child = collect($this->resourcesMenu()['children'])->firstWhere('href', '/blog');
 
-        $this->assertSame('Advice', $link['label']);
+        $this->assertSame('Advice', $child['label']);
 
         $blog->forceFill(['nav_label' => 'Articles'])->save();
 
-        $link = collect($this->store()->globals()['nav']['links'])->firstWhere('href', '/blog');
+        $child = collect($this->resourcesMenu()['children'])->firstWhere('href', '/blog');
 
-        $this->assertSame('Articles', $link['label']);
+        $this->assertSame('Articles', $child['label']);
     }
 
     public function test_renaming_a_draft_leaves_no_redirect(): void

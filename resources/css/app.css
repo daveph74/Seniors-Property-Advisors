@@ -127,9 +127,13 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid var(--line-soft);
 }
+/* The row has to fit inside the same 1176px column the page content uses, or the CTA hangs
+   outside the grid. With the phone number showing it was 78px over; grouping Blog under
+   Resources and tightening these three gaps is what buys it back — deliberately not hiding
+   the phone number, which is half the conversion path. */
 .nav{
   display:flex; align-items:center; justify-content:space-between;
-  gap: 32px;
+  gap: 24px;
   height: 84px;
 }
 .brand{
@@ -146,7 +150,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   font-size: 16px; white-space: nowrap;
 }
 .nav ul{
-  display:flex; list-style: none; gap: 28px; padding: 0; margin: 0;
+  display:flex; list-style: none; gap: 22px; padding: 0; margin: 0;
 }
 .nav ul a{
   color: var(--navy);
@@ -159,7 +163,42 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   content:""; position:absolute; left: 0; right: 0; bottom: -28px;
   height: 2px; background: var(--blue); border-radius: 2px;
 }
-.nav .right{ display:flex; align-items:center; gap: 18px; }
+/* ---------- Menu with children ---------- */
+/* Opens on click, never hover: a hover menu cannot be used on a touch screen, and it punishes
+   anyone whose pointer drifts — which on this site is most of the audience. */
+.nav-has-menu{ position: relative; display: flex; align-items: center; }
+.nav-menu__trigger{
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--navy); font: 500 15px/1 inherit; white-space: nowrap; position: relative;
+}
+.nav-menu__trigger:hover{ color: var(--blue-deep); }
+.nav-menu__trigger.active::after{
+  content:""; position:absolute; left: 0; right: 0; bottom: -28px;
+  height: 2px; background: var(--blue); border-radius: 2px;
+}
+.nav-menu__caret{
+  width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform .15s ease;
+}
+.nav-menu__caret--up{ transform: rotate(-135deg) translate(-3px, -3px); }
+.nav-menu{
+  position: absolute; top: calc(100% + 18px); left: 50%; transform: translateX(-50%);
+  /* Items are nowrap, so the panel grows to fit longer labels; this is just a floor that
+     keeps it from looking pinched while Blog is the only child. */
+  min-width: 186px; padding: 8px; margin: 0; list-style: none; z-index: 60;
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: 0 18px 44px rgba(2, 14, 60, 0.14);
+}
+/* Full-width, finger-sized rows — 44px is the floor for a comfortable tap. */
+.nav-menu a{
+  display: block; padding: 13px 14px; border-radius: 9px;
+  color: var(--navy); font-size: 15.5px; font-weight: 500; white-space: nowrap;
+}
+.nav-menu a:hover{ background: var(--blue-wash-2); }
+.nav-menu a.active{ background: var(--blue-tint); color: var(--navy); }
+
+.nav .right{ display:flex; align-items:center; gap: 14px; }
 .nav .phone{ color: var(--navy); font-weight: 600; font-size: 15px; display:flex; align-items:center; gap: 8px; white-space: nowrap;}
 .nav .phone .ico{
   width: 30px; height: 30px; border-radius: 50%;
@@ -807,10 +846,12 @@ footer{
 .success .ref strong{ color: var(--navy); }
 
 /* ===================== Responsive ===================== */
-@media (max-width: 1380px){
+/* The number itself, not just an icon: measured, it fits from 768px up. It hides only
+   below 760, where the logo, CTA and menu button already fill the bar. */
+@media (max-width: 760px){
   .nav .phone span{ display: none; }
 }
-@media (max-width: 1220px){
+@media (max-width: 1240px){
   .nav ul{ display: none; }
 }
 @media (max-width: 1080px){
@@ -837,7 +878,6 @@ footer{
   .foot-grid{ grid-template-columns: 1fr;}
   .section-head{ flex-direction: column; align-items: flex-start;}
   h1.headline{ font-size: 38px;}
-  .nav .phone span{ display: none;}
 }
 
 .section-block__inner{
@@ -1152,6 +1192,16 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   border-bottom: 1px solid var(--line-soft);
 }
 .nav-drawer a.active{ color: var(--blue-deep); }
+/* Children sit in the open, indented under a heading. An accordion would hide them behind a
+   tap, and there is no shortage of room in the drawer. */
+.nav-drawer__group{
+  display: block; padding: 16px 0 8px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-soft);
+}
+.nav-drawer__sub{ padding-left: 16px !important; border-left: 2px solid var(--line-soft); }
+.nav-drawer__sub a{ font-size: 16px; }
+.nav-drawer__sub li:last-child a{ border-bottom: 0; }
 /* Needs to outrank `.nav-drawer a` (0,1,1) above, which would otherwise force
    this row to display:block and stack the icon above the number. */
 .nav-drawer .nav-drawer__phone{
@@ -1166,7 +1216,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   color: var(--blue-deep);
 }
 
-@media (max-width: 1220px){
+/* Must match where .nav ul hides (1240), or there is a band with no menu at all. */
+@media (max-width: 1240px){
   .nav-toggle{ display: flex; }
   /* Overlaid rather than pushed into the flow: closing the drawer must not shift
      the page, or an anchor jump made from it lands in the wrong place. */
