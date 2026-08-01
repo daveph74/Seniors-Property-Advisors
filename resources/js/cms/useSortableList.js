@@ -3,7 +3,6 @@ import reorderVisible from './reorderVisible';
 
 const THRESHOLD = 5;
 const EDGE_BAND = 80;
-const INSTRUCTIONS_ID = 'sortable-instructions';
 
 /**
  * Drag-to-reorder for a flat list, by pointer or by keyboard.
@@ -16,7 +15,8 @@ const INSTRUCTIONS_ID = 'sortable-instructions';
  * `axis` is 'y' for a stacked list or 'grid' for a wrapping one, where the midpoint test runs
  * horizontally because cells flow left to right.
  */
-export default function useSortableList({ items, axis = 'y', labelFor = () => '', onReorder }) {
+export default function useSortableList({ items, axis = 'y', name = 'sortable', labelFor = () => '', onReorder }) {
+    const instructionsId = `${name}-instructions`;
     const containerRef = useRef(null);
     const boxes = useRef([]);
     const pointer = useRef(null);
@@ -188,7 +188,7 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
         'data-sort-handle': String(id),
         'aria-label': `Reorder ${labelFor(order[at(id)])}, ${place(at(id)).toLowerCase()}`,
         'aria-pressed': grabbed?.id === id,
-        'aria-describedby': INSTRUCTIONS_ID,
+        'aria-describedby': instructionsId,
         title: 'Drag to reorder, or press Space then use the arrow keys',
         onPointerDown: (e) => {
             if (e.button !== 0 && e.pointerType === 'mouse') return;
@@ -291,7 +291,7 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
                 ?.scrollIntoView({ block: 'nearest' });
         },
         onBlur: () => setGrabbed((prev) => (prev?.id === id ? null : prev)),
-    }), [at, autoScroll, dropAt, dropGrabbed, dropped, finish, grabbed, labelFor, measure, order, place, say, signature, track]);
+    }), [at, autoScroll, dropAt, dropGrabbed, dropped, finish, grabbed, instructionsId, labelFor, measure, order, place, say, signature, track]);
 
     /* An in-flight response can repaint the list under a drag; the slot the pointer is over would
        then belong to a different row. Abort rather than drop into it. */
@@ -324,7 +324,7 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
         activeId,
         liveMessage,
         settle: () => setPending(null),
-        instructionsId: INSTRUCTIONS_ID,
+        instructionsId,
         containerProps: { ref: containerRef },
         itemProps: (id) => ({ 'data-sort-id': String(id) }),
         handleProps,

@@ -14,19 +14,16 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
     const canDelete = auth?.can?.['content.delete'] === true;
     const [pendingCategory, setPendingCategory] = useState(null);
 
-    const moveCategory = (index, delta) => {
-        const next = [...categories];
-        const target = index + delta;
-
-        if (target < 0 || target >= next.length) return;
-
-        [next[index], next[target]] = [next[target], next[index]];
-
-        router.post('/cms/faq-categories/reorder', { ids: next.map((c) => c.id) }, {
+    const sortableCategories = useSortableList({
+        items: categories,
+        name: 'faq-category',
+        labelFor: (c) => c.name,
+        onReorder: (ids) => router.post('/cms/faq-categories/reorder', { ids }, {
             preserveScroll: true,
             onSuccess: () => flash('Category order updated'),
-        });
-    };
+            onFinish: () => sortableCategories.settle(),
+        }),
+    });
 
     const toggleCategory = (c) => router.patch(`/cms/faq-categories/${c.id}`, {
         name: c.name,
@@ -190,14 +187,26 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                     Groups questions, and decides what an FAQ section pulls in.
                 </p>
 
-                {categories.map((c, i) => (
-                    <div key={c.id} className="cms-cat-row">
-                        <div style={{ display: 'grid' }}>
-                            <button type="button" className="cms-icon-btn-sm" onClick={() => moveCategory(i, -1)} aria-label="Move up">&uarr;</button>
-                            <button type="button" className="cms-icon-btn-sm" onClick={() => moveCategory(i, 1)} aria-label="Move down">&darr;</button>
-                        </div>
+                <div {...sortableCategories.containerProps}>
+                    {sortableCategories.order.map((c, i) => (
+                        <div
+                            key={c.id}
+                            className={`cms-cat-row${sortableCategories.activeId === c.id ? ' cms-sort--lifted' : ''}`}
+                            {...sortableCategories.itemProps(c.id)}
+                        >
+                            {sortableCategories.dropLineAt(i) ? (
+                                <span className={`cms-sort-line cms-sort-line--${sortableCategories.dropLineAt(i)}`} />
+                            ) : null}
 
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <button
+                                type="button"
+                                className="cms-drag-handle cms-icon-btn-sm"
+                                {...sortableCategories.handleProps(c.id)}
+                            >
+                                <DragHandleIcon size={16} fill="currentColor" />
+                            </button>
+
+                            <div style={{ flex: 1, minWidth: 0 }}>
                             <input
                                 className="cms-input"
                                 defaultValue={c.name}
@@ -213,21 +222,27 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                             <div className="cms-hint">{c.count === 1 ? '1 question' : `${c.count} questions`}</div>
                         </div>
 
-                        <Toggle on={c.active} onChange={() => toggleCategory(c)} />
+                            <Toggle on={c.active} onChange={() => toggleCategory(c)} />
 
-                        {canDelete ? (
-                            <button
-                                type="button"
-                                className="cms-icon-btn-sm"
-                                aria-label={`Delete ${c.name}`}
-                                title={`Delete ${c.name}`}
-                                onClick={() => setPendingCategory(c)}
-                            >
-                                &times;
-                            </button>
-                        ) : null}
-                    </div>
-                ))}
+                            {canDelete ? (
+                                <button
+                                    type="button"
+                                    className="cms-icon-btn-sm"
+                                    aria-label={`Delete ${c.name}`}
+                                    title={`Delete ${c.name}`}
+                                    onClick={() => setPendingCategory(c)}
+                                >
+                                    &times;
+                                </button>
+                            ) : null}
+                        </div>
+                    ))}
+                </div>
+
+                <p className="cms-hint" id={sortableCategories.instructionsId} style={{ margin: '10px 0 18px' }}>
+                    Drag by the handle to reorder, or press Space and use the arrow keys.
+                </p>
+                <p className="cms-sr-only" role="status" aria-live="polite">{sortableCategories.liveMessage}</p>
 
                 <div className="cms-field">
                     <label className="cms-field-label">Add a category</label>

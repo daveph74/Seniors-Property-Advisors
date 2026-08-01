@@ -929,7 +929,7 @@
 /* ---------- Blog ---------- */
 .cms-blog-editor{ display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
 .cms-blog-side{ display: flex; flex-direction: column; gap: 16px; }
-.cms-cat-row{ display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+.cms-cat-row{ position: relative; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
 .cms-check{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 13px; }
 .cms-check:last-child{ margin-bottom: 0; }
 
