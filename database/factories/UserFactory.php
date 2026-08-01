@@ -30,7 +30,24 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => User::CLIENT_ADMIN,
+            'is_active' => true,
         ];
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->state(fn () => ['role' => User::SUPER_ADMIN]);
+    }
+
+    public function clientAdmin(): static
+    {
+        return $this->state(fn () => ['role' => User::CLIENT_ADMIN]);
+    }
+
+    public function deactivated(): static
+    {
+        return $this->state(fn () => ['is_active' => false]);
     }
 
     /**

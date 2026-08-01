@@ -23,7 +23,7 @@ class ReusableSectionController extends Controller
 
     public function store(SaveReusableSectionRequest $request): RedirectResponse
     {
-        $this->store->save($request->name(), $request->block(), request()->user()?->name ?? 'Helen Marsh');
+        $this->store->save($request->name(), $request->block(), (string) request()->user()->name);
 
         return back();
     }

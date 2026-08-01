@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Auth\Permissions;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,9 +36,22 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
-            //
+            'auth' => [
+                'user' => $user === null ? null : [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'roleLabel' => $user->roleLabel(),
+                    'initials' => $user->initials(),
+                ],
+                'can' => Permissions::abilities($user),
+                'modules' => Permissions::modules($user),
+            ],
         ];
     }
 }
