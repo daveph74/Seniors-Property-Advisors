@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import ActionButton from './ActionButton';
 import NavDropdown from './NavDropdown';
+import useSectionInView from './useSectionInView';
 import { holdsCurrent, isCurrent, resolve } from './navHref';
 import { PhoneIcon, GiftIcon } from '../components/icons';
 
@@ -31,6 +32,21 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
 
     const links = nav.links || [];
 
+    /**
+     * The anchor links all point at the home page, so the path alone cannot say which one a
+     * reader is on — without this the underline sits on whichever item the content marked as
+     * active and never moves. Only the home page has these sections to watch.
+     */
+    const onHome = here.split('?')[0].split('#')[0] === '/';
+    const anchors = links.flatMap((l) => [l, ...(l.children || [])])
+        .map((l) => l.href)
+        .filter((href) => typeof href === 'string' && href.length > 1 && href.startsWith('#'));
+    const inView = useSectionInView(anchors, onHome);
+
+    const currentFor = (l) => (l.href && l.href.startsWith('#') && l.href.length > 1
+        ? onHome && inView === l.href
+        : isCurrent(l.href, here, l.active));
+
     return (
         <>
             <div className="topbar">
@@ -55,7 +71,7 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
                                 ) : (
                                     <a
                                         href={resolve(l.href, here)}
-                                        className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
+                                        className={currentFor(l) ? 'active' : undefined}
                                     >
                                         {l.label}
                                     </a>
@@ -117,7 +133,7 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
                                 ) : (
                                     <a
                                         href={resolve(l.href, here)}
-                                        className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
+                                        className={currentFor(l) ? 'active' : undefined}
                                         onClick={() => setOpen(false)}
                                     >
                                         {l.label}
