@@ -42,10 +42,10 @@ class StarterLayouts
     {
         return [
             self::block('blog-list', 'Blog articles', [
-                'eyebrow' => 'Insights',
-                'heading' => 'Advice and articles',
+                'eyebrow' => 'Articles',
+                'heading' => 'Advice for selling and downsizing',
                 'headingEm' => '',
-                'lead' => 'Guidance on downsizing, selling and retirement living.',
+                'lead' => 'Straightforward guidance from our advisors, written for homeowners over 50 and the families helping them.',
                 'category' => '',
                 'limit' => 9,
                 'showMore' => true,
