@@ -68,6 +68,30 @@ class PageContentStore
         'cms', 'build', 'storage', 'up', 'api', 'login', 'logout', 'register', 'home',
     ];
 
+    /**
+     * Namespaces owned by a dedicated route. A page at "blog" is the article listing and
+     * is allowed; anything beneath it would be shadowed by /blog/{article} and could never
+     * be viewed, so it is refused rather than created and left broken.
+     */
+    public const RESERVED_PREFIXES = ['blog'];
+
+    public static function slugIsReserved(string $slug): bool
+    {
+        $slug = trim($slug, '/');
+
+        if (in_array($slug, self::RESERVED_SLUGS, true)) {
+            return true;
+        }
+
+        foreach (self::RESERVED_PREFIXES as $prefix) {
+            if (str_starts_with($slug, $prefix.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function resolve(string $slug): ?array
     {
         return $this->remember($this->cacheKey($slug), function () use ($slug) {
@@ -227,7 +251,7 @@ class PageContentStore
     {
         $target = trim((string) $requested, '/');
 
-        if ($target === '' || $target === $page->slug || $page->slug === 'home') {
+        if ($target === '' || $target === $page->slug || $page->slug === 'home' || self::slugIsReserved($target)) {
             return null;
         }
 

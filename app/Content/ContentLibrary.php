@@ -2,13 +2,72 @@
 
 namespace App\Content;
 
+use App\Models\BlogCategory;
+use App\Models\BlogPost;
 use App\Models\Faq;
 
 class ContentLibrary
 {
+    public const PER_PAGE = 12;
+
     public function for(?string $slug = null): array
     {
-        return ['faqs' => $this->faqs($slug)];
+        return ['faqs' => $this->faqs($slug)] + $this->posts();
+    }
+
+    /**
+     * One page of published articles, newest first. Capped because this ships with every
+     * page render; the load-more route asks for later pages.
+     */
+    public function posts(int $page = 1): array
+    {
+        $total = BlogPost::published()->count();
+        $posts = BlogPost::published()
+            ->ordered()
+            ->with('categories')
+            ->skip(($page - 1) * self::PER_PAGE)
+            ->take(self::PER_PAGE)
+            ->get();
+
+        return [
+            'posts' => $posts->map->toCard()->all(),
+            'page' => $page,
+            'hasMorePosts' => $total > $page * self::PER_PAGE,
+            'postCategories' => $this->postCategories(),
+        ];
+    }
+
+    /**
+     * Articles sharing a category, never the article itself. "Where practical" in §5, so
+     * it quietly returns nothing when an article has no categories.
+     */
+    public function related(BlogPost $post, int $limit = 3): array
+    {
+        $categoryIds = $post->categories->pluck('id');
+
+        if ($categoryIds->isEmpty()) {
+            return [];
+        }
+
+        return BlogPost::published()
+            ->ordered()
+            ->with('categories')
+            ->whereKeyNot($post->getKey())
+            ->whereHas('categories', fn ($query) => $query->whereIn('blog_categories.id', $categoryIds))
+            ->take($limit)
+            ->get()
+            ->map
+            ->toCard()
+            ->all();
+    }
+
+    private function postCategories(): array
+    {
+        return BlogCategory::active()
+            ->ordered()
+            ->whereHas('posts', fn ($query) => $query->where('status', 'published'))
+            ->pluck('name')
+            ->all();
     }
 
     private function faqs(?string $slug): array

@@ -14,28 +14,29 @@ class ScaffoldPages extends Command
     protected $description = 'Create any of the agreed website pages that do not exist yet, as drafts';
 
     private const PAGES = [
-        ['About Us', 'about-us', 'About'],
-        ['Our Services', 'our-services', 'Services'],
-        ['How It Works', 'how-it-works', 'How it works'],
-        ['Resources', 'resources', 'Resources'],
-        ['FAQs', 'faqs', 'FAQs'],
-        ['Contact', 'contact', 'Contact'],
-        ['Privacy Policy', 'privacy-policy', 'Privacy'],
-        ['Terms and Conditions', 'terms-and-conditions', 'Terms'],
+        ['About Us', 'about-us', 'About', 'blank'],
+        ['Our Services', 'our-services', 'Services', 'blank'],
+        ['How It Works', 'how-it-works', 'How it works', 'blank'],
+        ['Blog', 'blog', 'Blog', 'blog'],
+        ['Resources', 'resources', 'Resources', 'blank'],
+        ['FAQs', 'faqs', 'FAQs', 'blank'],
+        ['Contact', 'contact', 'Contact', 'blank'],
+        ['Privacy Policy', 'privacy-policy', 'Privacy', 'blank'],
+        ['Terms and Conditions', 'terms-and-conditions', 'Terms', 'blank'],
     ];
 
     public function handle(PageContentStore $store): int
     {
         $created = 0;
 
-        foreach (self::PAGES as [$title, $slug, $navLabel]) {
+        foreach (self::PAGES as [$title, $slug, $navLabel, $layout]) {
             if (Page::where('slug', $slug)->exists()) {
                 $this->line("  skipped {$slug} — already exists");
 
                 continue;
             }
 
-            $page = $store->create($title, null, StarterLayouts::sections('blank'), 'RedHQ');
+            $page = $store->create($title, null, StarterLayouts::sections($layout), 'RedHQ');
 
             Page::where('slug', $page['slug'])->update([
                 'slug' => $slug,

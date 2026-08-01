@@ -134,6 +134,11 @@
   border-color: var(--cms-navy); background: var(--cms-navy); color: #fff; font-weight: 600;
   box-shadow: 0 1px 2px rgba(16,32,58,0.2);
 }
+/* `.cms-shell a` is more specific than `.cms-btn`, so a link styled as a button would
+   take the shell's navy text — invisible on a navy button. */
+.cms-shell a.cms-btn{ color: var(--cms-ink-soft); }
+.cms-shell a.cms-btn--primary{ color: #fff; }
+.cms-shell a.cms-btn--danger-outline{ color: var(--cms-danger-text); }
 .cms-btn--primary:hover{ background: var(--cms-navy-hover); }
 .cms-btn--danger-outline{ border-color: var(--cms-danger-border); color: var(--cms-danger-text); }
 .cms-btn--danger-outline:hover{ background: var(--cms-danger-bg); }
@@ -892,6 +897,65 @@
 .cms-skeleton__bar--cardtitle{ width: 74%; height: 14px; margin-bottom: 14px; }
 
 @keyframes cms-shimmer{ from{ background-position: -200px 0; } to{ background-position: 400px 0; } }
+
+/* ---------- Blog ---------- */
+.cms-blog-editor{ display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.cms-blog-side{ display: flex; flex-direction: column; gap: 16px; }
+.cms-cat-row{ display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+.cms-check{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 13px; }
+.cms-check:last-child{ margin-bottom: 0; }
+
+.cms-md{ border: 1px solid var(--cms-border-input); border-radius: 7px; overflow: hidden; }
+.cms-md--error{ border-color: var(--cms-danger-border); }
+.cms-md__bar{
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  padding: 6px 8px; background: var(--cms-tint); border-bottom: 1px solid var(--cms-border-soft);
+}
+.cms-md__tool{
+  min-width: 30px; height: 28px; padding: 0 8px;
+  border: 1px solid transparent; border-radius: 6px; background: transparent;
+  font: 500 12.5px/1 var(--cms-font-sans); color: var(--cms-ink-soft); cursor: pointer;
+}
+.cms-md__tool:hover:not(:disabled){ background: var(--cms-surface); border-color: var(--cms-border-input-2); }
+.cms-md__tool:disabled{ opacity: .4; cursor: not-allowed; }
+.cms-md__tabs{ margin-left: auto; display: flex; gap: 2px; }
+.cms-md__tab{
+  height: 26px; padding: 0 11px; border: 0; border-radius: 6px;
+  background: transparent; font: 500 12px/1 var(--cms-font-sans); color: var(--cms-text-mid); cursor: pointer;
+}
+.cms-md__tab--on{ background: var(--cms-navy); color: #fff; }
+.cms-md__area{
+  display: block; width: 100%; padding: 16px 18px; border: 0; outline: none; resize: vertical;
+  font: 14px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--cms-ink);
+}
+.cms-md__preview{
+  padding: 18px; min-height: 320px; max-height: 640px; overflow-y: auto; background: var(--cms-surface);
+}
+/* The HTML here is exactly what the website renders — same converter — but the public
+   .prose styles live in app.css, which the admin deliberately does not load. These keep the
+   structure readable; the Preview button opens the real page for exact appearance. */
+.cms-md__preview{ font-size: 14px; line-height: 1.7; color: var(--cms-text); }
+.cms-md__preview > :first-child{ margin-top: 0; }
+.cms-md__preview h2{ margin: 24px 0 10px; font-size: 20px; color: var(--cms-ink); }
+.cms-md__preview h3{ margin: 20px 0 8px; font-size: 16.5px; color: var(--cms-ink); }
+.cms-md__preview p{ margin: 0 0 14px; }
+.cms-md__preview a{ color: var(--cms-accent); text-decoration: underline; }
+.cms-md__preview strong{ color: var(--cms-ink); }
+.cms-md__preview ul, .cms-md__preview ol{ margin: 0 0 14px; padding-left: 22px; }
+.cms-md__preview li{ margin-bottom: 5px; }
+.cms-md__preview blockquote{
+  margin: 18px 0; padding-left: 14px; border-left: 3px solid var(--cms-accent-border); color: var(--cms-ink-soft);
+}
+.cms-md__preview img{ max-width: 100%; height: auto; border-radius: 6px; margin: 6px 0 16px; }
+.cms-md__preview table{ width: 100%; border-collapse: collapse; margin: 0 0 16px; display: block; overflow-x: auto; }
+.cms-md__preview th, .cms-md__preview td{ padding: 8px 10px; border: 1px solid var(--cms-border); text-align: left; }
+.cms-md__preview th{ background: var(--cms-tint); color: var(--cms-ink); }
+.cms-md__preview code{ padding: 1px 5px; border-radius: 4px; background: var(--cms-tint); font-size: .93em; }
+.cms-md__preview pre{ margin: 0 0 16px; padding: 12px 14px; background: var(--cms-tint); border-radius: 6px; overflow-x: auto; }
+
+@media (max-width: 1100px){
+  .cms-blog-editor{ grid-template-columns: minmax(0, 1fr); }
+}
 
 .cms-account-facts{
   margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; font-size: 13px;

@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\Cms\AccountController;
+use App\Http\Controllers\Cms\BlogController as CmsBlogController;
 use App\Http\Controllers\Cms\CmsPageController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
@@ -61,7 +63,25 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::delete('/reusable-sections/{reusable}', [ReusableSectionController::class, 'destroy'])
         ->whereNumber('reusable')->middleware('permit:content.delete')->name('reusable.destroy');
 
-    Route::get('/blog', fn () => Inertia::render('Cms/Blog/Index'))->name('blog.index');
+    Route::get('/blog', [CmsBlogController::class, 'index'])->name('blog.index');
+    Route::get('/blog/new', [CmsBlogController::class, 'create'])->name('blog.create');
+    Route::post('/blog', [CmsBlogController::class, 'store'])->name('blog.store');
+    Route::post('/blog/render', [CmsBlogController::class, 'render'])->name('blog.render');
+    Route::get('/blog/{post}/edit', [CmsBlogController::class, 'edit'])->whereNumber('post')->name('blog.edit');
+    Route::patch('/blog/{post}', [CmsBlogController::class, 'update'])->whereNumber('post')->name('blog.update');
+    Route::get('/blog/{post}/preview', [CmsBlogController::class, 'preview'])->whereNumber('post')->name('blog.preview');
+    Route::post('/blog/{post}/publish', [CmsBlogController::class, 'publish'])->whereNumber('post')->name('blog.publish');
+    Route::post('/blog/{post}/unpublish', [CmsBlogController::class, 'unpublish'])->whereNumber('post')->name('blog.unpublish');
+    Route::post('/blog/{post}/archive', [CmsBlogController::class, 'archive'])->whereNumber('post')->name('blog.archive');
+    Route::post('/blog/{post}/unarchive', [CmsBlogController::class, 'unarchive'])
+        ->whereNumber('post')->middleware('permit:content.restore')->name('blog.unarchive');
+    Route::post('/blog/{post}/duplicate', [CmsBlogController::class, 'duplicate'])->whereNumber('post')->name('blog.duplicate');
+    Route::delete('/blog/{post}', [CmsBlogController::class, 'destroy'])
+        ->whereNumber('post')->middleware('permit:content.delete')->name('blog.destroy');
+    Route::post('/blog-categories', [CmsBlogController::class, 'storeCategory'])->name('blog.categories.store');
+    Route::patch('/blog-categories/{category}', [CmsBlogController::class, 'updateCategory'])->name('blog.categories.update');
+    Route::post('/blog-categories/reorder', [CmsBlogController::class, 'reorderCategories'])->name('blog.categories.reorder');
+
     Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
     Route::post('/faqs', [FaqController::class, 'store'])->name('faqs.store');
     Route::post('/faqs/reorder', [FaqController::class, 'reorder'])->name('faqs.reorder');
@@ -96,6 +116,15 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
 
 Route::get('/media/{key}', [MediaController::class, 'show'])
     ->where('key', '.*')->name('media.show');
+
+/*
+| The listing at /blog is an ordinary CMS page holding a blog-list section, so it is
+| resolved by the catch-all below. These two claim the /blog/* namespace, which is why
+| "articles" is a reserved article slug and a page cannot be given a blog/... slug.
+*/
+Route::get('/blog/articles', [BlogController::class, 'articles'])->name('blog.articles');
+Route::get('/blog/{article}', [BlogController::class, 'show'])
+    ->where('article', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('blog.show');
 
 Route::redirect('/home', '/', 301);
 

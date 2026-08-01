@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Content\PageContentStore;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SavePageDetailsRequest extends FormRequest
@@ -25,6 +27,17 @@ class SavePageDetailsRequest extends FormRequest
             'title.required' => 'A page needs a name.',
             'slug.regex' => 'A web address can only use lowercase letters, numbers and hyphens.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $slug = (string) $this->input('slug');
+
+            if ($slug !== '' && PageContentStore::slugIsReserved($slug)) {
+                $validator->errors()->add('slug', 'That web address is reserved and cannot be used for a page.');
+            }
+        });
     }
 
     public function title(): string

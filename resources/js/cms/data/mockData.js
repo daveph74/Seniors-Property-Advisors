@@ -1,9 +1,11 @@
+/* Counts are deliberately empty: invented numbers beside a real module read as fact.
+   The dashboard workstream (§3) is what puts true counts here. */
 export const NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', count: '' },
-    { id: 'pages', label: 'Pages', count: '18' },
-    { id: 'blog', label: 'Blog', count: '24' },
-    { id: 'faqs', label: 'FAQs', count: '31' },
-    { id: 'testimonials', label: 'Testimonials', count: '12' },
+    { id: 'pages', label: 'Pages', count: '' },
+    { id: 'blog', label: 'Blog', count: '' },
+    { id: 'faqs', label: 'FAQs', count: '' },
+    { id: 'testimonials', label: 'Testimonials', count: '' },
     { id: 'media', label: 'Media', count: '' },
     { id: 'navigation', label: 'Navigation', count: '' },
     { id: 'global', label: 'Global content', count: '' },
