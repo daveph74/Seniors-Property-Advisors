@@ -3,8 +3,8 @@ import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
+import { DragHandleIcon } from '../../../cms/components/icons';
 import ImageField from '../../../cms/builder/ImageField';
-import reorderVisible from '../../../cms/reorderVisible';
 import useSortableList from '../../../cms/useSortableList';
 import { useCmsToast } from '../../../cms/ToastContext';
 
@@ -80,16 +80,11 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
         items: shown,
         axis: 'grid',
         labelFor: (t) => t.name,
-        onReorder: (from, to) => {
-            const ids = reorderVisible(shown, from, to);
-
-            if (! ids) return;
-
-            router.post('/cms/testimonials/reorder', { ids }, {
-                preserveScroll: true,
-                onSuccess: () => flash('Order updated'),
-            });
-        },
+        onReorder: (ids) => router.post('/cms/testimonials/reorder', { ids }, {
+            preserveScroll: true,
+            onSuccess: () => flash('Order updated'),
+            onFinish: () => sortable.settle(),
+        }),
     });
 
     return (
@@ -148,7 +143,7 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
                                     className="cms-drag-handle cms-icon-btn-sm"
                                     {...sortable.handleProps(t.id)}
                                 >
-                                    <span aria-hidden="true">&#10247;</span>
+                                    <DragHandleIcon size={16} fill="currentColor" />
                                 </button>
                             </div>
 

@@ -3,7 +3,7 @@ import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
-import reorderVisible from '../../../cms/reorderVisible';
+import { DragHandleIcon } from '../../../cms/components/icons';
 import useSortableList from '../../../cms/useSortableList';
 import { useCmsToast } from '../../../cms/ToastContext';
 
@@ -92,16 +92,11 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
         items: shown,
         axis: 'y',
         labelFor: (f) => f.question,
-        onReorder: (from, to) => {
-            const ids = reorderVisible(shown, from, to);
-
-            if (! ids) return;
-
-            router.post('/cms/faqs/reorder', { ids }, {
-                preserveScroll: true,
-                onSuccess: () => flash('Order updated'),
-            });
-        },
+        onReorder: (ids) => router.post('/cms/faqs/reorder', { ids }, {
+            preserveScroll: true,
+            onSuccess: () => flash('Order updated'),
+            onFinish: () => sortable.settle(),
+        }),
     });
 
     const toggle = (faq) => router.patch(`/cms/faqs/${faq.id}`, bodyFor(faq, { active: ! faq.active }), {
@@ -156,7 +151,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                                     className="cms-drag-handle cms-icon-btn-sm"
                                     {...sortable.handleProps(f.id)}
                                 >
-                                    <span aria-hidden="true">&#10247;</span>
+                                    <DragHandleIcon size={16} fill="currentColor" />
                                 </button>
 
                                 <span className="cms-faq-row__q">

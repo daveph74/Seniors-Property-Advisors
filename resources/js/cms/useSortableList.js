@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import reorderVisible from './reorderVisible';
 
 const THRESHOLD = 5;
 const EDGE_BAND = 80;
@@ -25,20 +26,39 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
     const [activeId, setActiveId] = useState(null);
     const [dropAt, setDropAt] = useState(null);
     const [grabbed, setGrabbed] = useState(null);
+    const [pending, setPending] = useState(null);
     const [liveMessage, setLiveMessage] = useState('');
 
     const signature = items.map((row) => row.id).join(',');
 
+    /*
+     * The row lands where it was dropped straight away and the save happens behind it. Waiting for
+     * the round-trip before moving anything makes a drag feel like it did not take.
+     *
+     * `pending` only bridges the gap until the response lands — `settle` clears it, after which the
+     * server's order is the one on screen, so a failed save corrects itself rather than leaving a
+     * lie in front of the editor.
+     */
     const order = useMemo(() => {
-        if (! grabbed) return items;
+        if (grabbed) {
+            const next = items.slice();
+            const [moved] = next.splice(grabbed.from, 1);
 
-        const next = items.slice();
-        const [moved] = next.splice(grabbed.from, 1);
+            next.splice(grabbed.to, 0, moved);
 
-        next.splice(grabbed.to, 0, moved);
+            return next;
+        }
 
-        return next;
-    }, [items, grabbed]);
+        if (pending) {
+            const known = new Map(items.map((row) => [String(row.id), row]));
+            const moved = pending.map((id) => known.get(String(id))).filter(Boolean);
+            const rest = items.filter((row) => ! pending.some((id) => String(id) === String(row.id)));
+
+            if (moved.length > 0) return [...moved, ...rest];
+        }
+
+        return items;
+    }, [items, grabbed, pending]);
 
     const at = useCallback((id) => order.findIndex((row) => String(row.id) === String(id)), [order]);
     const say = useCallback((text) => setLiveMessage(text), []);
@@ -137,13 +157,32 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
         scrolling.current = requestAnimationFrame(step);
     }, [track]);
 
-    const commit = useCallback((from, to, id) => {
-        if (from === to) return;
-
+    const finalise = useCallback((ids, id, label, index) => {
         refocusId.current = id;
-        onReorder(from, to);
-        say(`Order updated. ${labelFor(order[from])} is now ${to + 1} of ${order.length}.`);
-    }, [labelFor, onReorder, order, say]);
+        setPending(ids);
+        onReorder(ids);
+        say(`Order updated. ${label} is now ${index + 1} of ${ids.length}.`);
+    }, [onReorder, say]);
+
+    /* Dropping reorders what is on screen, which during a pending save is `order` rather than the
+       items prop — so a second drag before the first response lands still moves the row the editor
+       is looking at. */
+    const dropped = useCallback((from, to, id) => {
+        const ids = reorderVisible(order, from, to);
+
+        if (! ids) return;
+
+        finalise(ids, id, labelFor(order[from]), to);
+    }, [finalise, labelFor, order]);
+
+    /* The keyboard has already previewed the outcome: `order` *is* the new order, so it is sent as
+       it stands. Re-splicing it by the original indices would move a different row — the preview
+       has already put the grabbed one where it belongs. */
+    const dropGrabbed = useCallback((id) => {
+        const index = order.findIndex((row) => String(row.id) === String(id));
+
+        finalise(order.map((row) => row.id), id, labelFor(order[index]), index);
+    }, [finalise, labelFor, order]);
 
     const handleProps = useCallback((id) => ({
         'data-sort-handle': String(id),
@@ -195,7 +234,7 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
                 const from = at(id);
                 const insert = dropAt.edge === 'after' ? dropAt.index + 1 : dropAt.index;
 
-                commit(from, insert > from ? insert - 1 : insert, id);
+                dropped(from, insert > from ? insert - 1 : insert, id);
             }
 
             finish();
@@ -209,7 +248,7 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
                 e.preventDefault();
 
                 if (grabbed?.id === id) {
-                    commit(grabbed.from, grabbed.to, id);
+                    if (grabbed.from !== grabbed.to) dropGrabbed(id);
                     setGrabbed(null);
                 } else {
                     setGrabbed({ id, from: index, to: index });
@@ -252,7 +291,7 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
                 ?.scrollIntoView({ block: 'nearest' });
         },
         onBlur: () => setGrabbed((prev) => (prev?.id === id ? null : prev)),
-    }), [at, autoScroll, commit, dropAt, finish, grabbed, labelFor, measure, order, place, say, signature, track]);
+    }), [at, autoScroll, dropAt, dropGrabbed, dropped, finish, grabbed, labelFor, measure, order, place, say, signature, track]);
 
     /* An in-flight response can repaint the list under a drag; the slot the pointer is over would
        then belong to a different row. Abort rather than drop into it. */
@@ -284,6 +323,7 @@ export default function useSortableList({ items, axis = 'y', labelFor = () => ''
         order,
         activeId,
         liveMessage,
+        settle: () => setPending(null),
         instructionsId: INSTRUCTIONS_ID,
         containerProps: { ref: containerRef },
         itemProps: (id) => ({ 'data-sort-id': String(id) }),
