@@ -1420,10 +1420,7 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   display: block; /* the whole card is the link, so the target is the card, not just the title */
 }
 .article-card__title{ transition: color var(--card-ease); }
-.article-card__image{
-  width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
-  transition: transform .35s ease;
-}
+.article-card__image{ width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
 .article-card__body{ padding: 24px; }
 .article-card__tag{
   display: inline-block; margin-bottom: 12px; padding: 4px 12px;
@@ -1584,8 +1581,10 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   border-color: var(--line);
   transform: translateY(var(--card-lift));
 }
+/* Only the card moves. The picture deliberately does not zoom: two things easing at once on
+   the same hover reads as fidgety, and the lift alone is enough to say the card is live.
+   The title still changes colour — a link with no textual response is worse than a still one. */
 a.article-card:hover .article-card__title{ color: var(--blue-deep); }
-a.article-card:hover .article-card__image{ transform: scale(1.03); }
 a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
   outline: 2px solid var(--blue-deep); outline-offset: 3px;
 }
@@ -1594,8 +1593,7 @@ a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
    reduced-motion block sitting above them is simply overridden. */
 @media (prefers-reduced-motion: reduce){
   .card, .step, .cmp-card, .block-quote-card, .block-info-card, .article-card, .faq,
-  .article-card__image, .article-card__title{ transition: none; }
+  .article-card__title{ transition: none; }
   .card:hover, .step:hover, .cmp-card:hover, .block-quote-card:hover, .block-info-card:hover,
   .faq:hover, .article-card:hover{ transform: none; }
-  a.article-card:hover .article-card__image{ transform: none; }
 }
