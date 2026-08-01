@@ -71,6 +71,56 @@ class PageFieldsTest extends TestCase
         $this->assertSame('What we do', $links[0]['label']);
     }
 
+    public function test_the_blog_is_reachable_from_the_menu_and_the_footer(): void
+    {
+        $globals = $this->store()->globals();
+
+        $this->assertContains('/blog', array_column($globals['nav']['links'], 'href'));
+
+        $resources = collect($globals['footer']['columns'])->firstWhere('heading', 'Resources');
+
+        $this->assertContains('/blog', array_column($resources['links'], 'href'));
+    }
+
+    public function test_the_blog_link_is_not_added_twice(): void
+    {
+        $before = $this->store()->globals();
+
+        $this->artisan('migrate', ['--force' => true])->assertSuccessful();
+
+        $links = array_column($this->store()->globals()['nav']['links'], 'href');
+
+        $this->assertSame(
+            count(array_column($before['nav']['links'], 'href')),
+            count($links),
+        );
+        $this->assertSame(1, count(array_keys($links, '/blog', true)));
+    }
+
+    public function test_the_menu_label_follows_the_blog_page(): void
+    {
+        $blog = Page::create([
+            'cms_id' => Page::max('cms_id') + 1,
+            'slug' => 'blog',
+            'url' => '/blog',
+            'title' => 'Blog',
+            'nav_label' => 'Advice',
+            'status' => 'published',
+            'seo' => [],
+            'published' => [],
+        ]);
+
+        $link = collect($this->store()->globals()['nav']['links'])->firstWhere('href', '/blog');
+
+        $this->assertSame('Advice', $link['label']);
+
+        $blog->forceFill(['nav_label' => 'Articles'])->save();
+
+        $link = collect($this->store()->globals()['nav']['links'])->firstWhere('href', '/blog');
+
+        $this->assertSame('Articles', $link['label']);
+    }
+
     public function test_renaming_a_draft_leaves_no_redirect(): void
     {
         $page = $this->page('old-name', 'draft');

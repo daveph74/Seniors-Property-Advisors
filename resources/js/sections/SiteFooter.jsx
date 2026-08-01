@@ -1,5 +1,9 @@
+import { usePage } from '@inertiajs/react';
+import { resolve } from './navHref';
+
 export default function SiteFooter({ globals = {} }) {
     const { logo = {}, footer = {} } = globals;
+    const here = usePage().url;
     const address = footer.address || [];
 
     return (
@@ -7,7 +11,7 @@ export default function SiteFooter({ globals = {} }) {
             <div className="container">
                 <div className="foot-grid">
                     <div className="foot-brand">
-                        <a href="#" className="brand">
+                        <a href="/" className="brand">
                             <img className="mark" src={logo.src} alt={logo.alt} />
                             <span className="word">
                                 <b>{footer.word}</b>
@@ -29,7 +33,7 @@ export default function SiteFooter({ globals = {} }) {
                             <ul>
                                 {col.links.map((l) => (
                                     <li key={l.label}>
-                                        {l.href ? <a href={l.href}>{l.label}</a> : l.label}
+                                        {l.href ? <a href={resolve(l.href, here)}>{l.label}</a> : l.label}
                                     </li>
                                 ))}
                             </ul>
@@ -40,7 +44,7 @@ export default function SiteFooter({ globals = {} }) {
                     <span>{footer.legal}</span>
                     <span className="links">
                         {(footer.links || []).map((l) => (
-                            <a key={l.label} href={l.href}>
+                            <a key={l.label} href={resolve(l.href, here)}>
                                 {l.label}
                             </a>
                         ))}

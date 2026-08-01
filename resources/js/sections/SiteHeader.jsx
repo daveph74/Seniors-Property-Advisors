@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import ActionButton from './ActionButton';
+import { isCurrent, resolve } from './navHref';
 import { PhoneIcon, GiftIcon } from '../components/icons';
 
 export default function SiteHeader({ globals = {}, actions = {} }) {
     const { notice = {}, logo = {}, phone = {}, nav = {} } = globals;
+    const here = usePage().url;
     const [open, setOpen] = useState(false);
     const header = useRef(null);
     const showMenu = open;
@@ -40,15 +43,15 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
 
             <div className="nav-wrap" ref={header}>
                 <div className="container nav">
-                    <a href="#" className="brand">
+                    <a href="/" className="brand">
                         <img className="mark" src={logo.src} alt={logo.alt} />
                     </a>
                     <ul>
                         {links.map((l) => (
                             <li key={l.label}>
                                 <a
-                                    href={l.href}
-                                    className={l.active ? 'active' : undefined}
+                                    href={resolve(l.href, here)}
+                                    className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
                                 >
                                     {l.label}
                                 </a>
@@ -87,8 +90,8 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
                         {links.map((l) => (
                             <li key={l.label}>
                                 <a
-                                    href={l.href}
-                                    className={l.active ? 'active' : undefined}
+                                    href={resolve(l.href, here)}
+                                    className={isCurrent(l.href, here, l.active) ? 'active' : undefined}
                                     onClick={() => setOpen(false)}
                                 >
                                     {l.label}

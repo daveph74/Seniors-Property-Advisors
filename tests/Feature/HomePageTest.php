@@ -37,7 +37,8 @@ class HomePageTest extends TestCase
             $globals = $page->toArray()['props']['globals'];
 
             $this->assertSame('1300 277 228', $globals['phone']['label']);
-            $this->assertCount(5, $globals['nav']['links']);
+            $this->assertContains('How it works', array_column($globals['nav']['links'], 'label'));
+            $this->assertContains('/blog', array_column($globals['nav']['links'], 'href'));
             $this->assertCount(3, $globals['footer']['columns']);
         });
     }
