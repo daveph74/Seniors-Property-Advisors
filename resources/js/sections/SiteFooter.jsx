@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { resolve } from './navHref';
+import BrandLogo from './BrandLogo';
 import SiteLink from './SiteLink';
 
 export default function SiteFooter({ globals = {} }) {
@@ -13,7 +14,7 @@ export default function SiteFooter({ globals = {} }) {
                 <div className="foot-grid">
                     <div className="foot-brand">
                         <SiteLink href="/" className="brand">
-                            <img className="mark" src={logo.src} alt={logo.alt} />
+                            <BrandLogo logo={logo} />
                             <span className="word">
                                 <b>{footer.word}</b>
                             </span>

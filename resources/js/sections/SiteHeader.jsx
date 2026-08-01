@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import ActionButton from './ActionButton';
 import NavDropdown from './NavDropdown';
+import BrandLogo from './BrandLogo';
 import SiteLink from './SiteLink';
 import useSectionInView from './useSectionInView';
 import { holdsCurrent, isCurrent, resolve } from './navHref';
@@ -62,7 +63,7 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
             <div className="nav-wrap" ref={header}>
                 <div className="container nav">
                     <SiteLink href="/" className="brand">
-                        <img className="mark" src={logo.src} alt={logo.alt} />
+                        <BrandLogo logo={logo} />
                     </SiteLink>
                     <ul>
                         {links.map((l) => (
