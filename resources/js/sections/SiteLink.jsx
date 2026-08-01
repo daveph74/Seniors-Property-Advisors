@@ -35,6 +35,21 @@ const SETTLE_FOR = 1200;
  * 'auto' resolves to that, so every correction animated and the queued animations rode straight
  * over a reader who had started scrolling. `scroll-margin-top` supplies the header offset.
  */
+function glideTo(hash) {
+    const el = document.getElementById(hash);
+
+    if (! el) return;
+
+    /*
+     * Within a page there is nothing to correct — the layout settled long ago — so this is a
+     * single scroll, and it can be the smooth one the site asks for in CSS. Someone who has
+     * asked their system for less motion gets the jump instead.
+     */
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    el.scrollIntoView({ behavior: still ? 'instant' : 'smooth' });
+}
+
 function jumpTo(hash) {
     const started = performance.now();
     let lastTop = null;
@@ -91,7 +106,7 @@ export default function SiteLink({ href, children, onClick, ...rest }) {
 
                     if (here === target) {
                         window.history.replaceState(null, '', href);
-                        jumpTo(hash);
+                        glideTo(hash);
 
                         return;
                     }

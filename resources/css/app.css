@@ -1288,6 +1288,9 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 }
 
 @media (prefers-reduced-motion: reduce){
+  /* Smooth scrolling is a common trigger for vestibular disorders, and the site forces it on
+     every in-page jump. Honour the system setting. */
+  html{ scroll-behavior: auto; }
   .nav-toggle span{ transition: none; }
   .nav .nav-menu{ animation: none; }
   .nav-menu__caret{ transition: none; }
