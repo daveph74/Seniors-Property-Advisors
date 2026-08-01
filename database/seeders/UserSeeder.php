@@ -7,15 +7,15 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Local development accounts. Production accounts are made with `php artisan cms:user`,
- * which never uses a shared password.
+ * Local development accounts only — they share one well-known password. Real accounts
+ * are made with `php artisan cms:user`, which generates a password per account.
  */
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
         $accounts = [
-            ['RedHQ Support', 'support@redhq.com.au', User::SUPER_ADMIN],
+            ['Site Administrator', 'superadmin@seniorspropertyadvisors.com.au', User::SUPER_ADMIN],
             ['Helen Marsh', 'helen@seniorspropertyadvisors.com.au', User::CLIENT_ADMIN],
         ];
 
