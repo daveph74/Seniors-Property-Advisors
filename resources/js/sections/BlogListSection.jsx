@@ -96,14 +96,14 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
     if (articles.length === 0 && ! editing && ! chosen) return null;
 
     const chips = filters.length > 1 ? (
-        <div className="blog-filters">
-            <SiteLink className={`blog-filters__chip ${chosen ? '' : 'blog-filters__chip--on'}`} href={filterHref(null)}>
+        <div className="filter-chips">
+            <SiteLink className={`filter-chip ${chosen ? '' : 'filter-chip--on'}`} href={filterHref(null)}>
                 All articles
             </SiteLink>
             {filters.map((c) => (
                 <SiteLink
                     key={c.slug}
-                    className={`blog-filters__chip ${chosen === c.slug ? 'blog-filters__chip--on' : ''}`}
+                    className={`filter-chip ${chosen === c.slug ? 'filter-chip--on' : ''}`}
                     href={filterHref(c.slug)}
                 >
                     {c.name}

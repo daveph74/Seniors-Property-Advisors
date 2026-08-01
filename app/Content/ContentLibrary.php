@@ -5,6 +5,7 @@ namespace App\Content;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\Faq;
+use App\Models\FaqCategory;
 
 class ContentLibrary
 {
@@ -12,7 +13,29 @@ class ContentLibrary
 
     public function for(?string $slug = null, ?string $category = null): array
     {
-        return ['faqs' => $this->faqs($slug)] + $this->posts(1, $category);
+        return [
+            'faqs' => $this->faqs($slug),
+            'faqCategories' => $this->faqCategories($slug),
+        ] + $this->posts(1, $category);
+    }
+
+    /**
+     * The groupings a reader can filter by: only categories that are switched on and actually
+     * have a question showing. A disabled category drops off the filters while its questions
+     * stay answerable under "all" — hiding a grouping should not hide the answers, the same rule
+     * the blog follows for Uncategorised.
+     */
+    private function faqCategories(?string $slug): array
+    {
+        return FaqCategory::query()
+            ->where('active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->whereHas('faqs', fn ($query) => $query
+                ->where('active', true)
+                ->where(fn ($q) => $q->whereNull('page_slug')->orWhere('page_slug', $slug)))
+            ->pluck('name')
+            ->all();
     }
 
     /**

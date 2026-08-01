@@ -119,6 +119,7 @@ const CONTENT_SCHEMAS = {
         TEXT('category', 'Category to show'),
         NUM('limit', 'How many to show'),
         FLAGON('openFirst', 'Open the first question'),
+        FLAGON('showFilters', 'Let readers filter by category'),
     ],
     'team-intro': [
         ...HEAD_CENTRED,

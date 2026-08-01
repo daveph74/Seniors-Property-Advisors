@@ -90,7 +90,10 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])
         ->middleware('permit:content.delete')->name('faqs.destroy');
     Route::post('/faq-categories', [FaqController::class, 'storeCategory'])->name('faqs.categories.store');
+    Route::post('/faq-categories/reorder', [FaqController::class, 'reorderCategories'])->name('faqs.categories.reorder');
     Route::patch('/faq-categories/{category}', [FaqController::class, 'updateCategory'])->name('faqs.categories.update');
+    Route::delete('/faq-categories/{category}', [FaqController::class, 'destroyCategory'])
+        ->middleware('permit:content.delete')->name('faqs.categories.destroy');
     Route::get('/testimonials', fn () => Inertia::render('Cms/Testimonials/Index'))->name('testimonials.index');
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::get('/media/library', [MediaController::class, 'library'])->name('media.library');

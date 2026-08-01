@@ -1416,15 +1416,15 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .blog-list__more{ margin-top: 34px; display: flex; justify-content: center; }
 .blog-list__none{ margin: 0; padding: 40px 0; color: var(--text-mid); font-size: 17px; }
 .blog-list__none a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
-.blog-filters{ display: flex; flex-wrap: wrap; gap: 10px; margin: -8px 0 34px; }
-.blog-filters__chip{
+.filter-chips{ display: flex; flex-wrap: wrap; gap: 10px; margin: -8px 0 34px; }
+.filter-chip{
   padding: 9px 18px; border-radius: 99px; border: 1.5px solid var(--line);
   background: var(--white); color: var(--navy); font-size: 14.5px; font-weight: 500;
   transition: border-color .15s ease, background .15s ease, color .15s ease;
 }
-.blog-filters__chip:hover{ border-color: var(--navy); }
-.blog-filters__chip--on{ background: var(--navy); border-color: var(--navy); color: var(--white); }
-.blog-filters__chip--on:hover{ color: var(--white); }
+.filter-chip:hover{ border-color: var(--navy); }
+.filter-chip--on{ background: var(--navy); border-color: var(--navy); color: var(--white); }
+.filter-chip--on:hover{ color: var(--white); }
 .article-card{
   background: var(--white); border: 1px solid var(--line-soft);
   border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);

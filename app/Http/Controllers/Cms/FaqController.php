@@ -92,6 +92,27 @@ class FaqController extends Controller
         return back();
     }
 
+    public function reorderCategories(Request $request): RedirectResponse
+    {
+        foreach ((array) $request->input('ids', []) as $position => $id) {
+            FaqCategory::whereKey($id)->update(['sort_order' => $position + 1]);
+        }
+
+        return back();
+    }
+
+    /**
+     * The questions are kept. `faq_category_id` is nullable with nullOnDelete, so they simply
+     * become uncategorised and still answer on any page that pulls all FAQs — deleting a
+     * grouping should never delete the content filed under it.
+     */
+    public function destroyCategory(FaqCategory $category): RedirectResponse
+    {
+        $category->delete();
+
+        return back();
+    }
+
     private function validated(Request $request): array
     {
         $data = $request->validate([
