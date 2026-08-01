@@ -1,3 +1,11 @@
+/* DM Sans is served from this origin, bundled by Vite, rather than fetched from Google. The
+   hosted version cost a second round trip — CSS from fonts.googleapis.com, then the file from
+   fonts.gstatic.com — and arrived with display=swap, so every page painted its text in the
+   system font and then reflowed once the real one landed. That reflow is what made the menu
+   appear to rearrange itself for the first few hundred milliseconds. Bundled here it loads
+   with the stylesheet, before first paint. */
+@import '@fontsource-variable/dm-sans/index.css';
+
 /* ===================== Brand font: Arboria =====================
    Arboria is a commercial typeface (the SPA brand font) and the licensed files
    are not in public/fonts/arboria/ yet — only the README is. While they are
