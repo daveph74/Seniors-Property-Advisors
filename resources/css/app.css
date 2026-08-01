@@ -1371,8 +1371,33 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .section-head .left > :last-child{ margin-bottom: 0; }
 
 /* ---------- Blog article ---------- */
-.article{ padding: 72px 0 0; }
-.article__inner{ max-width: 760px; }
+.article{ padding: 72px 0 96px; }
+/* Only applied when the rail has something in it, so a lone article stays one centred
+   column instead of being squeezed against an empty gutter. */
+.article__grid{ display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 64px; align-items: start; }
+.article__body{ max-width: 760px; min-width: 0; }
+/* .nav-wrap is sticky at top: 0 and about 72px tall, so the rail has to clear it. */
+.article__rail{ position: sticky; top: 96px; display: flex; flex-direction: column; gap: 32px; }
+.article-rail__block{ padding-top: 4px; }
+.article-rail__title{
+  margin: 0 0 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-soft);
+}
+.article-rail__list{ margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.article-rail__item{
+  display: flex; gap: 12px; align-items: flex-start; padding: 10px; margin: 0 -10px;
+  border-radius: 12px; transition: background .15s ease;
+}
+.article-rail__item:hover{ background: var(--blue-wash-2); }
+.article-rail__thumb{
+  width: 56px; height: 56px; flex: none; border-radius: 8px; object-fit: cover;
+}
+.article-rail__thumb--blank{ background: var(--blue-tint); }
+.article-rail__text{ min-width: 0; }
+.article-rail__name{
+  display: block; font-size: 14.5px; font-weight: 600; line-height: 1.35; color: var(--navy);
+}
+.article-rail__date{ display: block; margin-top: 4px; font-size: 12.5px; color: var(--text-soft); }
 .article__head{ margin-bottom: 32px; }
 .article__tags{ display: flex; flex-wrap: wrap; gap: 8px; }
 .article__title{ margin: 0 0 14px; font-size: clamp(32px, 4.6vw, 52px); line-height: 1.12; color: var(--navy); }
@@ -1382,8 +1407,6 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   border-radius: var(--radius); margin-bottom: 36px;
 }
 .article__lead{ margin: 0 0 28px; font-size: 20px; line-height: 1.6; color: var(--text-mid); }
-.article__related{ margin-top: 84px; }
-.article__related-title{ margin: 0 0 32px; font-size: 30px; color: var(--navy); }
 
 /* Rendered Markdown. The only place article HTML lands, so every tag CommonMark
    can emit needs a home here. */
@@ -1423,10 +1446,17 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .prose th, .prose td{ padding: 11px 14px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
 .prose th{ background: var(--blue-wash-2); color: var(--navy); font-weight: 600; }
 
+/* Below this the rail cannot sit beside 760px of prose, so it drops underneath and stops
+   being sticky — a sticky block in normal flow would trail the reader down the page. */
+@media (max-width: 1080px){
+  .article__grid{ grid-template-columns: minmax(0, 1fr); gap: 56px; }
+  .article__body{ max-width: none; }
+  .article__rail{ position: static; }
+}
+
 @media (max-width: 640px){
-  .article{ padding-top: 44px; }
+  .article{ padding: 44px 0 64px; }
   .article__lead{ font-size: 18px; }
-  .article__related{ margin-top: 56px; }
   .prose{ font-size: 16.5px; }
   .prose h2{ font-size: 25px; margin-top: 36px; }
   .prose h3{ font-size: 20px; }
