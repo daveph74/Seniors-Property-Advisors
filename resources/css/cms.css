@@ -464,6 +464,10 @@
 .cms-testimonial-card__name{ font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cms-testimonial-card__loc{ font-size: 12px; color: var(--cms-text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cms-testimonial-card__quote{ font-size: 13px; line-height: 1.6; color: var(--cms-text); }
+/* Its own line, not a flex sibling of the buttons: sharing that row left it whatever width three
+   buttons did not want, which was four words on four lines. */
+.cms-testimonial-card__meta{ margin-top: 14px; font-size: 11.5px; color: var(--cms-text-mid); }
+.cms-testimonial-card__meta + .cms-testimonial-card__foot{ margin-top: 8px; padding-top: 10px; }
 .cms-testimonial-card__foot{ display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--cms-border-softer); }
 
 /* ---------- Media ---------- */

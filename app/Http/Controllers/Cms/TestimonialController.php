@@ -27,7 +27,7 @@ class TestimonialController extends Controller
                 'active' => $t->active,
                 'hasConsent' => $t->hasConsent(),
                 'consentBy' => $t->consent_confirmed_by,
-                'consentAt' => $t->consent_confirmed_at?->toDateString(),
+                'consentAt' => $t->consent_confirmed_at?->format('j M Y'),
                 'updatedBy' => $t->last_updated_by,
             ])->all(),
         ]);

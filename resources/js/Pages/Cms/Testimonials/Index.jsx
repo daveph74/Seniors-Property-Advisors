@@ -179,10 +179,13 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
                                 />
                             </div>
 
+                            {t.hasConsent ? (
+                                <div className="cms-testimonial-card__meta">
+                                    Recorded by {t.consentBy} &middot; {t.consentAt}
+                                </div>
+                            ) : null}
+
                             <div className="cms-testimonial-card__foot" style={{ gap: 8 }}>
-                                {t.hasConsent ? (
-                                    <span className="cms-hint">By {t.consentBy} on {t.consentAt}</span>
-                                ) : null}
                                 <button
                                     type="button"
                                     className="cms-btn cms-btn--xs"
