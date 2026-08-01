@@ -1,5 +1,9 @@
+import { lazy, Suspense } from 'react';
 import SectionHead from './SectionHead';
 import PendingModule from './PendingModule';
+
+/* Its own chunk, so a page with a grid of testimonials never downloads a slider. */
+const TestimonialSlider = lazy(() => import('./TestimonialSlider'));
 
 const SOURCE_LABEL = {
     featured: 'Featured testimonials only',
@@ -24,6 +28,35 @@ function pull(data, library) {
     }
 
     return data.source === 'all' ? all : all.filter((t) => t.featured);
+}
+
+/*
+ * `eager` inside a slider: a lazy 44px avatar on a slide that is translated off-screen does not
+ * load until you slide to it, so the face pops in after the card arrives. They are a few KB each,
+ * and the grid keeps lazy loading because those cards really are below the fold.
+ */
+function card(t, i, eager = false) {
+    return (
+        <figure className="testimonial" key={t.id ?? i}>
+            {t.rating ? (
+                <div className="testimonial__rating" aria-label={`${t.rating} out of 5`}>
+                    {'★'.repeat(Math.max(0, Math.min(5, Number(t.rating) || 0)))}
+                </div>
+            ) : null}
+
+            {t.headline ? <h3 className="testimonial__headline">{t.headline}</h3> : null}
+
+            <blockquote className="testimonial__quote">{t.quote}</blockquote>
+
+            <figcaption className="testimonial__by">
+                {t.avatar ? <img src={t.avatar} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" /> : null}
+                <span>
+                    <b>{t.name}</b>
+                    {t.location ? <small>{t.location}</small> : null}
+                </span>
+            </figcaption>
+        </figure>
+    );
 }
 
 export default function TestimonialsSection({ data, anchor, library = {}, editing = false }) {
@@ -55,37 +88,16 @@ export default function TestimonialsSection({ data, anchor, library = {}, editin
                             'Only testimonials with recorded client permission',
                         ]}
                     />
+                ) : slider ? (
+                    <Suspense fallback={<div className="testimonials__grid">{items.map(card)}</div>}>
+                        <TestimonialSlider count={items.length}>
+                            {items.map((t, i) => (
+                                <div className="swiper-slide" key={t.id ?? i}>{card(t, i, true)}</div>
+                            ))}
+                        </TestimonialSlider>
+                    </Suspense>
                 ) : (
-                    <div
-                        className={`testimonials__grid${slider ? ' testimonials__grid--slider' : ''}`}
-                        /* A scroller is mouse-only unless it can be focused and arrow-keyed, and
-                           this audience is exactly who that would shut out. */
-                        tabIndex={slider ? 0 : undefined}
-                        role={slider ? 'group' : undefined}
-                        aria-label={slider ? 'Client testimonials — scroll or use the arrow keys' : undefined}
-                    >
-                        {items.map((t, i) => (
-                            <figure className="testimonial" key={t.id ?? i}>
-                                {t.rating ? (
-                                    <div className="testimonial__rating" aria-label={`${t.rating} out of 5`}>
-                                        {'★'.repeat(Math.max(0, Math.min(5, Number(t.rating) || 0)))}
-                                    </div>
-                                ) : null}
-
-                                {t.headline ? <h3 className="testimonial__headline">{t.headline}</h3> : null}
-
-                                <blockquote className="testimonial__quote">{t.quote}</blockquote>
-
-                                <figcaption className="testimonial__by">
-                                    {t.avatar ? <img src={t.avatar} alt="" loading="lazy" decoding="async" /> : null}
-                                    <span>
-                                        <b>{t.name}</b>
-                                        {t.location ? <small>{t.location}</small> : null}
-                                    </span>
-                                </figcaption>
-                            </figure>
-                        ))}
-                    </div>
+                    <div className="testimonials__grid">{items.map(card)}</div>
                 )}
             </div>
         </section>

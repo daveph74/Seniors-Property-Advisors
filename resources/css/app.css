@@ -1494,16 +1494,43 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 }
 .section-pending li::before{ content: "· "; color: var(--blue-deep); }
 
-.testimonials__grid--slider{
-  grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr);
-  grid-template-columns: none; overflow-x: auto;
-  scroll-snap-type: x mandatory; padding-bottom: 8px;
-}
-.testimonials__grid--slider > *{ scroll-snap-align: start; }
-/* The scroller takes focus so it can be arrow-keyed, which is worthless unless you can see that it
-   has focus. Offset outwards so the ring does not sit on top of the first card's border. */
-.testimonials__grid--slider:focus-visible{
+/* Swiper handles the sliding; these are the controls. Sized for the hands using this site — 48px
+   arrows and dots with a 44px hit area, not the 8px dots a carousel usually ships with. */
+.testimonial-slider .swiper{ padding: 4px; margin: -4px; }
+.testimonial-slider .swiper-slide{ height: auto; display: flex; }
+.testimonial-slider .swiper-slide > .testimonial{ flex: 1; }
+.testimonial-slider .swiper:focus-visible{
   outline: 3px solid var(--blue-deep); outline-offset: 4px; border-radius: var(--radius);
+}
+.testimonial-slider__controls{
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 32px;
+}
+.testimonial-nav{
+  width: 48px; height: 48px; flex: none; border-radius: 50%; cursor: pointer;
+  background: var(--white); border: 1px solid var(--line-soft); color: var(--navy);
+  font-size: 18px; line-height: 1; box-shadow: var(--shadow-sm);
+  transition: background .15s ease, border-color .15s ease, transform .15s ease;
+}
+.testimonial-nav:hover{ border-color: var(--navy); transform: translateY(-1px); }
+.testimonial-nav:focus-visible{ outline: 3px solid var(--blue-deep); outline-offset: 3px; }
+.testimonial-nav.swiper-button-disabled{ opacity: .38; cursor: default; transform: none; }
+.testimonial-dots{
+  display: flex; align-items: center; justify-content: center; gap: 2px; width: auto;
+}
+.testimonial-dots .swiper-pagination-bullet{
+  width: 44px; height: 44px; margin: 0; background: none; opacity: 1; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+}
+.testimonial-dots .swiper-pagination-bullet::before{
+  content: ""; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--line-strong, #C2CEDD); transition: background .15s ease, transform .15s ease;
+}
+.testimonial-dots .swiper-pagination-bullet:hover::before{ background: var(--blue-deep); }
+.testimonial-dots .swiper-pagination-bullet-active::before{
+  background: var(--navy); transform: scale(1.25);
+}
+.testimonial-dots .swiper-pagination-bullet:focus-visible{
+  outline: 3px solid var(--blue-deep); outline-offset: -3px;
 }
 
 /* .section-head sets gap:40px for its horizontal row, but .center switches to a
