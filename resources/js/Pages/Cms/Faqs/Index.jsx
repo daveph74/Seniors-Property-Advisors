@@ -3,7 +3,8 @@ import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
-import reorderWithinAll from '../../../cms/reorderWithinAll';
+import reorderVisible from '../../../cms/reorderVisible';
+import useSortableList from '../../../cms/useSortableList';
 import { useCmsToast } from '../../../cms/ToastContext';
 
 const BLANK = { question: '', answer: '', faq_category_id: '', page_slug: '', active: true };
@@ -87,16 +88,21 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
         }
     };
 
-    const move = (index, delta) => {
-        const ids = reorderWithinAll(faqs, shown, index, delta);
+    const sortable = useSortableList({
+        items: shown,
+        axis: 'y',
+        labelFor: (f) => f.question,
+        onReorder: (from, to) => {
+            const ids = reorderVisible(shown, from, to);
 
-        if (! ids) return;
+            if (! ids) return;
 
-        router.post('/cms/faqs/reorder', { ids }, {
-            preserveScroll: true,
-            onSuccess: () => flash('Order updated'),
-        });
-    };
+            router.post('/cms/faqs/reorder', { ids }, {
+                preserveScroll: true,
+                onSuccess: () => flash('Order updated'),
+            });
+        },
+    });
 
     const toggle = (faq) => router.patch(`/cms/faqs/${faq.id}`, bodyFor(faq, { active: ! faq.active }), {
         preserveScroll: true,
@@ -134,17 +140,24 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                             : 'Nothing matches that search.'}
                     </div>
                 ) : (
-                    <div className="cms-faq-list">
-                        {shown.map((f, i) => (
-                            <div key={f.id} className="cms-faq-row">
-                                <div style={{ display: 'grid' }}>
-                                    <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, -1)} aria-label="Move up">
-                                        &uarr;
-                                    </button>
-                                    <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, 1)} aria-label="Move down">
-                                        &darr;
-                                    </button>
-                                </div>
+                    <div className="cms-faq-list" {...sortable.containerProps}>
+                        {sortable.order.map((f, i) => (
+                            <div
+                                key={f.id}
+                                className={`cms-faq-row${sortable.activeId === f.id ? ' cms-sort--lifted' : ''}`}
+                                {...sortable.itemProps(f.id)}
+                            >
+                                {sortable.dropLineAt(i) ? (
+                                    <span className={`cms-sort-line cms-sort-line--${sortable.dropLineAt(i)}`} />
+                                ) : null}
+
+                                <button
+                                    type="button"
+                                    className="cms-drag-handle cms-icon-btn-sm"
+                                    {...sortable.handleProps(f.id)}
+                                >
+                                    <span aria-hidden="true">&#10247;</span>
+                                </button>
 
                                 <span className="cms-faq-row__q">
                                     {f.question}
@@ -168,6 +181,12 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                         ))}
                     </div>
                 )}
+
+                <p className="cms-hint" id={sortable.instructionsId} style={{ marginTop: 12 }}>
+                    Drag a question by its handle to reorder. With a keyboard: focus a handle, press
+                    Space, move with the arrow keys, Space again to drop.
+                </p>
+                <p className="cms-sr-only" role="status" aria-live="polite">{sortable.liveMessage}</p>
             </div>
 
             <aside className="cms-media-side">

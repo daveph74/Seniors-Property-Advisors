@@ -202,6 +202,24 @@ class TestimonialTest extends TestCase
         $this->assertSame(2, $hidden->refresh()->sort_order);
     }
 
+    public function test_a_drag_across_several_positions_keeps_the_hidden_rows_still(): void
+    {
+        $rows = collect(['One', 'Two', 'Hidden', 'Four', 'Five'])
+            ->map(fn ($name, $i) => $this->testimonial(['name' => $name, 'sort_order' => $i + 1]));
+
+        /* What a drag sends, unlike the arrows: the visible rows with one moved several places. */
+        $this->post('/cms/testimonials/reorder', ['ids' => [
+            $rows[1]->id, $rows[3]->id, $rows[4]->id, $rows[0]->id,
+        ]])->assertRedirect();
+
+        /* The four visible rows take the four slots they held — 1, 2, 4, 5 — in their new order. */
+        $this->assertSame(1, $rows[1]->refresh()->sort_order);
+        $this->assertSame(2, $rows[3]->refresh()->sort_order);
+        $this->assertSame(4, $rows[4]->refresh()->sort_order);
+        $this->assertSame(5, $rows[0]->refresh()->sort_order);
+        $this->assertSame(3, $rows[2]->refresh()->sort_order);
+    }
+
     public function test_only_a_super_administrator_can_delete_one(): void
     {
         $t = $this->testimonial();

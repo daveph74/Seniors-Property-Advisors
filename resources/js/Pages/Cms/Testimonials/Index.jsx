@@ -4,7 +4,8 @@ import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import ImageField from '../../../cms/builder/ImageField';
-import reorderWithinAll from '../../../cms/reorderWithinAll';
+import reorderVisible from '../../../cms/reorderVisible';
+import useSortableList from '../../../cms/useSortableList';
 import { useCmsToast } from '../../../cms/ToastContext';
 
 const BLANK = {
@@ -75,16 +76,21 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
         onError: (bag) => flash(Object.values(bag)[0] || 'That could not be changed'),
     });
 
-    const move = (index, delta) => {
-        const ids = reorderWithinAll(testimonials, shown, index, delta);
+    const sortable = useSortableList({
+        items: shown,
+        axis: 'grid',
+        labelFor: (t) => t.name,
+        onReorder: (from, to) => {
+            const ids = reorderVisible(shown, from, to);
 
-        if (! ids) return;
+            if (! ids) return;
 
-        router.post('/cms/testimonials/reorder', { ids }, {
-            preserveScroll: true,
-            onSuccess: () => flash('Order updated'),
-        });
-    };
+            router.post('/cms/testimonials/reorder', { ids }, {
+                preserveScroll: true,
+                onSuccess: () => flash('Order updated'),
+            });
+        },
+    });
 
     return (
         <div className="cms-page">
@@ -118,9 +124,17 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
                         : 'Nothing matches that search.'}
                 </div>
             ) : (
-                <div className="cms-testimonial-grid">
-                    {shown.map((t, i) => (
-                        <div key={t.id} className="cms-testimonial-card">
+                <div className="cms-testimonial-grid" {...sortable.containerProps}>
+                    {sortable.order.map((t, i) => (
+                        <div
+                            key={t.id}
+                            className={`cms-testimonial-card${sortable.activeId === t.id ? ' cms-sort--lifted' : ''}`}
+                            {...sortable.itemProps(t.id)}
+                        >
+                            {sortable.dropLineAt(i) ? (
+                                <span className={`cms-drop-line--v cms-drop-line--${sortable.dropLineAt(i)}`} />
+                            ) : null}
+
                             <div className="cms-testimonial-card__head">
                                 {t.image
                                     ? <img className="cms-testimonial-card__avatar" src={t.image} alt="" />
@@ -129,10 +143,13 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
                                     <div className="cms-testimonial-card__name">{t.name}</div>
                                     <div className="cms-testimonial-card__loc">{t.location || 'No location'}</div>
                                 </div>
-                                <div style={{ display: 'grid', flex: 'none' }}>
-                                    <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, -1)} aria-label="Move up">&uarr;</button>
-                                    <button type="button" className="cms-icon-btn-sm" onClick={() => move(i, 1)} aria-label="Move down">&darr;</button>
-                                </div>
+                                <button
+                                    type="button"
+                                    className="cms-drag-handle cms-icon-btn-sm"
+                                    {...sortable.handleProps(t.id)}
+                                >
+                                    <span aria-hidden="true">&#10247;</span>
+                                </button>
                             </div>
 
                             {t.headline ? (
@@ -209,6 +226,12 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
                     ))}
                 </div>
             )}
+
+            <p className="cms-hint" id={sortable.instructionsId} style={{ marginTop: 14 }}>
+                Drag a testimonial by its handle to reorder. With a keyboard: focus a handle, press
+                Space, move with the arrow keys, Space again to drop.
+            </p>
+            <p className="cms-sr-only" role="status" aria-live="polite">{sortable.liveMessage}</p>
 
             <ConfirmModal
                 open={pendingConsent !== null}
