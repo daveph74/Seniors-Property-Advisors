@@ -929,7 +929,12 @@
 /* ---------- Blog ---------- */
 .cms-blog-editor{ display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
 .cms-blog-side{ display: flex; flex-direction: column; gap: 16px; }
-.cms-cat-row{ position: relative; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+/* The handle, the name, the toggle and the delete sit on one centred line; the question count goes
+   underneath, indented to the name. Hanging them all off the top of a row that also contains the
+   count left every control 8px above the middle of the field they belong to. */
+.cms-cat-row{ position: relative; margin-bottom: 12px; }
+.cms-cat-row__line{ display: flex; align-items: center; gap: 8px; }
+.cms-cat-row__count{ margin: 3px 0 0 48px; }
 .cms-check{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 13px; }
 .cms-check:last-child{ margin-bottom: 0; }
 

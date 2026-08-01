@@ -198,43 +198,47 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                                 <span className={`cms-sort-line cms-sort-line--${sortableCategories.dropLineAt(i)}`} />
                             ) : null}
 
-                            <button
-                                type="button"
-                                className="cms-drag-handle cms-icon-btn-sm"
-                                {...sortableCategories.handleProps(c.id)}
-                            >
-                                <DragHandleIcon size={16} fill="currentColor" />
-                            </button>
-
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                            <input
-                                className="cms-input"
-                                defaultValue={c.name}
-                                onBlur={(e) => {
-                                    if (e.target.value.trim() && e.target.value !== c.name) {
-                                        router.patch(`/cms/faq-categories/${c.id}`, {
-                                            name: e.target.value,
-                                            active: c.active,
-                                        }, { preserveScroll: true });
-                                    }
-                                }}
-                            />
-                            <div className="cms-hint">{c.count === 1 ? '1 question' : `${c.count} questions`}</div>
-                        </div>
-
-                            <Toggle on={c.active} onChange={() => toggleCategory(c)} />
-
-                            {canDelete ? (
+                            <div className="cms-cat-row__line">
                                 <button
                                     type="button"
-                                    className="cms-icon-btn-sm"
-                                    aria-label={`Delete ${c.name}`}
-                                    title={`Delete ${c.name}`}
-                                    onClick={() => setPendingCategory(c)}
+                                    className="cms-drag-handle cms-icon-btn-sm"
+                                    {...sortableCategories.handleProps(c.id)}
                                 >
-                                    &times;
+                                    <DragHandleIcon size={16} fill="currentColor" />
                                 </button>
-                            ) : null}
+
+                                <input
+                                    className="cms-input"
+                                    style={{ flex: 1, minWidth: 0 }}
+                                    defaultValue={c.name}
+                                    onBlur={(e) => {
+                                        if (e.target.value.trim() && e.target.value !== c.name) {
+                                            router.patch(`/cms/faq-categories/${c.id}`, {
+                                                name: e.target.value,
+                                                active: c.active,
+                                            }, { preserveScroll: true });
+                                        }
+                                    }}
+                                />
+
+                                <Toggle on={c.active} onChange={() => toggleCategory(c)} />
+
+                                {canDelete ? (
+                                    <button
+                                        type="button"
+                                        className="cms-icon-btn-sm"
+                                        aria-label={`Delete ${c.name}`}
+                                        title={`Delete ${c.name}`}
+                                        onClick={() => setPendingCategory(c)}
+                                    >
+                                        &times;
+                                    </button>
+                                ) : null}
+                            </div>
+
+                            <div className="cms-hint cms-cat-row__count">
+                                {c.count === 1 ? '1 question' : `${c.count} questions`}
+                            </div>
                         </div>
                     ))}
                 </div>
