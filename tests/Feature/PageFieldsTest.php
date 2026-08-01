@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Content\PageContentStore;
+use App\Models\Faq;
 use App\Models\Page;
 use App\Models\PageRedirect;
 use App\Models\Setting;
@@ -92,6 +93,48 @@ class PageFieldsTest extends TestCase
         $footer = collect($globals['footer']['columns'])->firstWhere('heading', 'Resources');
 
         $this->assertContains('/blog', array_column($footer['links'], 'href'));
+    }
+
+    public function test_the_faq_page_is_reachable_from_the_menu_and_the_footer(): void
+    {
+        $children = array_column($this->resourcesMenu()['children'], 'href');
+
+        $this->assertContains('/faqs', $children);
+
+        /* Above Blog: someone opening Resources with a question wants an answer, not an article. */
+        $this->assertLessThan(array_search('/blog', $children, true), array_search('/faqs', $children, true));
+
+        $footer = collect($this->store()->globals()['footer']['columns'])->firstWhere('heading', 'Resources');
+
+        /* Repointed, not added — the label was already there against a placeholder. */
+        $this->assertContains('/faqs', array_column($footer['links'], 'href'));
+        $this->assertSame(1, count(array_keys(array_column($footer['links'], 'label'), 'FAQs', true)));
+    }
+
+    public function test_a_published_faq_section_carries_the_questions_to_the_reader(): void
+    {
+        Faq::create([
+            'question' => 'What does an advisor cost?',
+            'answer' => 'Nothing upfront.',
+            'sort_order' => 1,
+            'active' => true,
+        ]);
+
+        $page = $this->page('questions');
+        $page->forceFill([
+            'status' => 'published',
+            'published' => [['id' => 'f1', 'type' => 'faq-list', 'active' => true, 'data' => []]],
+        ])->save();
+
+        $this->get('/questions')->assertOk()->assertInertia(function ($props) {
+            $data = $props->toArray()['props'];
+
+            $this->assertSame('faq-list', $data['sections'][0]['type']);
+            $this->assertContains(
+                'What does an advisor cost?',
+                array_column($data['library']['faqs'], 'question'),
+            );
+        });
     }
 
     public function test_the_blog_link_is_not_added_twice(): void

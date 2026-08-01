@@ -1,4 +1,4 @@
-import { TEXT, AREA, PICK, FLAGON, NUM, IMG, ACTIONS } from './repeaters';
+import { TEXT, AREA, PICK, PICKFROM, FLAGON, NUM, IMG, ACTIONS } from './repeaters';
 
 const GROUP = (title, fields) => ({ group: true, title, fields });
 
@@ -116,9 +116,10 @@ const CONTENT_SCHEMAS = {
     ],
     'faq-list': [
         ...HEAD_CENTRED,
-        TEXT('category', 'Category to show'),
+        PICKFROM('category', 'Category to show', 'allFaqCategories', 'Every category'),
         NUM('limit', 'How many to show'),
         FLAGON('openFirst', 'Open the first question'),
+        FLAGON('showFilters', 'Let readers filter by category'),
     ],
     'team-intro': [
         ...HEAD_CENTRED,
@@ -136,7 +137,7 @@ const CONTENT_SCHEMAS = {
     ],
     'blog-list': [
         ...HEAD_CENTRED,
-        TEXT('category', 'Category to show'),
+        PICKFROM('category', 'Category to show', 'allPostCategories', 'Every category'),
         NUM('limit', 'How many to show'),
         FLAGON('showMore', 'Show a load-more control'),
         FLAGON('showFilters', 'Let readers filter by category'),

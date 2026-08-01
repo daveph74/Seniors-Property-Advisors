@@ -35,6 +35,10 @@
                 "label": "Resources",
                 "children": [
                     {
+                        "href": "/faqs",
+                        "label": "FAQs"
+                    },
+                    {
                         "href": "/blog",
                         "label": "Blog"
                     }
@@ -92,7 +96,7 @@
                         "label": "Glossary"
                     },
                     {
-                        "href": "#",
+                        "href": "/faqs",
                         "label": "FAQs"
                     },
                     {

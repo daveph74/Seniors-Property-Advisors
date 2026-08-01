@@ -7,8 +7,33 @@ import { useCmsToast } from '../../../cms/ToastContext';
 
 const BLANK = { question: '', answer: '', faq_category_id: '', page_slug: '', active: true };
 
-export default function FaqsIndex({ faqs = [], categories = [] }) {
+export default function FaqsIndex({ faqs = [], categories = [], auth }) {
     const flash = useCmsToast();
+    const canDelete = auth?.can?.['content.delete'] === true;
+    const [pendingCategory, setPendingCategory] = useState(null);
+
+    const moveCategory = (index, delta) => {
+        const next = [...categories];
+        const target = index + delta;
+
+        if (target < 0 || target >= next.length) return;
+
+        [next[index], next[target]] = [next[target], next[index]];
+
+        router.post('/cms/faq-categories/reorder', { ids: next.map((c) => c.id) }, {
+            preserveScroll: true,
+            onSuccess: () => flash('Category order updated'),
+        });
+    };
+
+    const toggleCategory = (c) => router.patch(`/cms/faq-categories/${c.id}`, {
+        name: c.name,
+        active: ! c.active,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => flash(c.active ? 'Category hidden from the website' : 'Category showing again'),
+    });
+
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('all');
     const [editing, setEditing] = useState(null);
@@ -153,18 +178,42 @@ export default function FaqsIndex({ faqs = [], categories = [] }) {
                     Groups questions, and decides what an FAQ section pulls in.
                 </p>
 
-                {categories.map((c) => (
-                    <div key={c.id} className="cms-field" style={{ marginBottom: 10 }}>
-                        <input
-                            className="cms-input"
-                            defaultValue={c.name}
-                            onBlur={(e) => {
-                                if (e.target.value.trim() && e.target.value !== c.name) {
-                                    router.patch(`/cms/faq-categories/${c.id}`, { name: e.target.value }, { preserveScroll: true });
-                                }
-                            }}
-                        />
-                        <div className="cms-hint">{c.count === 1 ? '1 question' : `${c.count} questions`}</div>
+                {categories.map((c, i) => (
+                    <div key={c.id} className="cms-cat-row">
+                        <div style={{ display: 'grid' }}>
+                            <button type="button" className="cms-icon-btn-sm" onClick={() => moveCategory(i, -1)} aria-label="Move up">&uarr;</button>
+                            <button type="button" className="cms-icon-btn-sm" onClick={() => moveCategory(i, 1)} aria-label="Move down">&darr;</button>
+                        </div>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <input
+                                className="cms-input"
+                                defaultValue={c.name}
+                                onBlur={(e) => {
+                                    if (e.target.value.trim() && e.target.value !== c.name) {
+                                        router.patch(`/cms/faq-categories/${c.id}`, {
+                                            name: e.target.value,
+                                            active: c.active,
+                                        }, { preserveScroll: true });
+                                    }
+                                }}
+                            />
+                            <div className="cms-hint">{c.count === 1 ? '1 question' : `${c.count} questions`}</div>
+                        </div>
+
+                        <Toggle on={c.active} onChange={() => toggleCategory(c)} />
+
+                        {canDelete ? (
+                            <button
+                                type="button"
+                                className="cms-icon-btn-sm"
+                                aria-label={`Delete ${c.name}`}
+                                title={`Delete ${c.name}`}
+                                onClick={() => setPendingCategory(c)}
+                            >
+                                &times;
+                            </button>
+                        ) : null}
                     </div>
                 ))}
 
@@ -187,6 +236,28 @@ export default function FaqsIndex({ faqs = [], categories = [] }) {
                     <div className="cms-hint">Press Enter to add.</div>
                 </div>
             </aside>
+
+            <ConfirmModal
+                open={pendingCategory !== null}
+                danger
+                title="Delete this category?"
+                lead={pendingCategory?.count
+                    ? 'The questions are kept — they simply stop being grouped, and still answer wherever all FAQs are shown.'
+                    : 'Nothing is filed under it, so no questions are affected.'}
+                detail={pendingCategory
+                    ? `${pendingCategory.name} · ${pendingCategory.count === 1 ? '1 question' : `${pendingCategory.count} questions`}`
+                    : ''}
+                confirmLabel="Delete"
+                onClose={() => setPendingCategory(null)}
+                onConfirm={() => {
+                    router.delete(`/cms/faq-categories/${pendingCategory.id}`, {
+                        preserveScroll: true,
+                        onSuccess: () => flash('Category deleted'),
+                        onError: (bag) => flash(Object.values(bag)[0] || 'That category could not be deleted'),
+                    });
+                    setPendingCategory(null);
+                }}
+            />
 
             <ConfirmModal
                 open={pendingDelete !== null}
