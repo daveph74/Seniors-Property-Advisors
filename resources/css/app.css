@@ -77,6 +77,11 @@
 
   --container: 1240px;
   --gutter: 32px;
+
+  /* One card-hover recipe for the whole site. The lift is reserved for cards that are actually
+     links — see .is-card / a.is-card below — so movement keeps meaning "you can click this". */
+  --card-lift: -3px;
+  --card-ease: .2s ease;
 }
 
 *,*::before,*::after{ box-sizing: border-box; }
@@ -487,10 +492,8 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-lg);
   padding: 36px 32px;
-  transition: transform .25s ease, box-shadow .25s ease;
   position: relative;
 }
-.card:hover{ transform: translateY(-4px); box-shadow: var(--shadow); }
 .card .ico{
   width: 56px; height: 56px;
   border-radius: 18px;
@@ -1415,21 +1418,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   background: var(--white); border: 1px solid var(--line-soft);
   border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
   display: block; /* the whole card is the link, so the target is the card, not just the title */
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
-/* The whole card lifts, rather than only the title changing colour — a small target is hard
-   work for this audience, and the lift says "this is one thing you can click". */
-a.article-card:hover{
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-  border-color: var(--line);
-}
-a.article-card:hover .article-card__title{ color: var(--blue-deep); }
-a.article-card:hover .article-card__image{ transform: scale(1.03); }
-a.article-card:focus-visible{
-  outline: 2px solid var(--blue-deep); outline-offset: 3px;
-}
-.article-card__title{ transition: color .2s ease; }
+.article-card__title{ transition: color var(--card-ease); }
 .article-card__image{
   width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
   transition: transform .35s ease;
@@ -1577,10 +1567,37 @@ a.article-card:focus-visible{
   .prose h3{ font-size: 20px; }
 }
 
+/* ---------- Card hover, one recipe ----------
+   Placed after every card definition on purpose: these share specificity with the rules above,
+   so sitting earlier in the file would simply lose to them.
+
+   Two tiers, and the difference is meaningful rather than decorative. A card that is a link
+   lifts; a card that only carries information does not, because movement is how a page says
+   "you can click this" and most of these cards have no link to give. Both tiers respond, so
+   the family still feels like one thing. */
+.card, .step, .cmp-card, .block-quote-card, .block-info-card, .article-card, .faq{
+  transition: transform var(--card-ease), box-shadow var(--card-ease), border-color var(--card-ease);
+}
+.card:hover, .step:hover, .cmp-card:hover, .block-quote-card:hover, .block-info-card:hover,
+.faq:hover, .article-card:hover{
+  box-shadow: var(--shadow);
+  border-color: var(--line);
+}
+/* Only a card that is genuinely a link moves. */
+a.article-card:hover, a.card:hover, a.step:hover{
+  transform: translateY(var(--card-lift));
+}
+a.article-card:hover .article-card__title{ color: var(--blue-deep); }
+a.article-card:hover .article-card__image{ transform: scale(1.03); }
+a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
+  outline: 2px solid var(--blue-deep); outline-offset: 3px;
+}
+
 /* After the .article-card rules, not before: at equal specificity the later rule wins, and a
    reduced-motion block sitting above them is simply overridden. */
 @media (prefers-reduced-motion: reduce){
-  .article-card, .article-card__image, .article-card__title{ transition: none; }
-  a.article-card:hover{ transform: none; }
+  .card, .step, .cmp-card, .block-quote-card, .block-info-card, .article-card, .faq,
+  .article-card__image, .article-card__title{ transition: none; }
+  a.article-card:hover, a.card:hover, a.step:hover{ transform: none; }
   a.article-card:hover .article-card__image{ transform: none; }
 }
