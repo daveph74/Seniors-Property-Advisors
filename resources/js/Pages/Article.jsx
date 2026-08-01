@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import FindMyAgentModal from '../components/FindMyAgentModal';
 import PreviewBanner from '../components/PreviewBanner';
 import SiteHeader from '../sections/SiteHeader';
+import SiteLink from '../sections/SiteLink';
 import SiteFooter from '../sections/SiteFooter';
 import { list as recentlyRead, remember } from '../recentlyRead';
 
@@ -16,7 +17,7 @@ function RailList({ title, articles }) {
             <ul className="article-rail__list">
                 {articles.map((a) => (
                     <li key={a.slug}>
-                        <a className="article-rail__item" href={a.url}>
+                        <SiteLink className="article-rail__item" href={a.url}>
                             {a.image
                                 ? <img className="article-rail__thumb" src={a.image} alt="" loading="lazy" decoding="async" />
                                 : <span className="article-rail__thumb article-rail__thumb--blank" />}
@@ -24,7 +25,7 @@ function RailList({ title, articles }) {
                                 <span className="article-rail__name">{a.title}</span>
                                 {a.date ? <time className="article-rail__date">{a.date}</time> : null}
                             </span>
-                        </a>
+                        </SiteLink>
                     </li>
                 ))}
             </ul>

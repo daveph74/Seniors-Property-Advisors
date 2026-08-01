@@ -1,5 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { resolve } from './navHref';
+import BrandLogo from './BrandLogo';
+import SiteLink from './SiteLink';
 
 export default function SiteFooter({ globals = {} }) {
     const { logo = {}, footer = {} } = globals;
@@ -11,12 +13,12 @@ export default function SiteFooter({ globals = {} }) {
             <div className="container">
                 <div className="foot-grid">
                     <div className="foot-brand">
-                        <a href="/" className="brand">
-                            <img className="mark" src={logo.src} alt={logo.alt} />
+                        <SiteLink href="/" className="brand">
+                            <BrandLogo logo={logo} />
                             <span className="word">
                                 <b>{footer.word}</b>
                             </span>
-                        </a>
+                        </SiteLink>
                         <p>{footer.blurb}</p>
                         <p className="muted">
                             {address.map((line, i) => (
@@ -33,7 +35,7 @@ export default function SiteFooter({ globals = {} }) {
                             <ul>
                                 {col.links.map((l) => (
                                     <li key={l.label}>
-                                        {l.href ? <a href={resolve(l.href, here)}>{l.label}</a> : l.label}
+                                        {l.href ? <SiteLink href={resolve(l.href, here)}>{l.label}</SiteLink> : l.label}
                                     </li>
                                 ))}
                             </ul>
@@ -44,9 +46,9 @@ export default function SiteFooter({ globals = {} }) {
                     <span>{footer.legal}</span>
                     <span className="links">
                         {(footer.links || []).map((l) => (
-                            <a key={l.label} href={resolve(l.href, here)}>
+                            <SiteLink key={l.label} href={resolve(l.href, here)}>
                                 {l.label}
-                            </a>
+                            </SiteLink>
                         ))}
                     </span>
                 </div>

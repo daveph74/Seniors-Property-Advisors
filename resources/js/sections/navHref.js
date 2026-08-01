@@ -10,6 +10,20 @@ function path(url) {
     return String(url || HOME).split('?')[0].split('#')[0] || HOME;
 }
 
+/**
+ * Whether Inertia should handle this link instead of the browser.
+ *
+ * Only same-origin paths, and only without a hash. A hash link is left to the browser because
+ * an Inertia visit does not reliably restore the scroll position for a fragment, and these
+ * pages lean on #how, #why and friends. tel:, mailto:, protocol-relative and absolute URLs are
+ * never ours to intercept.
+ */
+export function isInternal(href) {
+    const value = String(href || '');
+
+    return value.startsWith('/') && ! value.startsWith('//') && ! value.includes('#');
+}
+
 export function resolve(href, url) {
     const value = String(href || '');
 

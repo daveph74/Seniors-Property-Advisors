@@ -1,14 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import SiteLink from './SiteLink';
 import { isCurrent, resolve } from './navHref';
 
-/**
- * Opens on click, never on hover. Hover menus cannot be used on a touch screen at all, and they
- * punish anyone whose pointer wanders — which on this site is a lot of people. Escape closes and
- * returns focus to the trigger, arrow keys move between items, and every target is finger-sized.
- *
- * The parent is a button rather than a link because its own page is not published yet; when it
- * is, an "Overview" item joins the top of the list.
- */
 /**
  * Long enough that sweeping the mouse across the bar toward the CTA does not flash the panel
  * open, short enough not to feel laggy when someone means it.
@@ -18,6 +11,15 @@ const OPEN_AFTER = 120;
 /** Lets a reader cut the corner diagonally into the panel without it vanishing. */
 const CLOSE_AFTER = 250;
 
+/**
+ * Opens on click, and on hover for a real mouse only. Hover menus cannot be used on a touch
+ * screen at all, and they punish anyone whose pointer wanders — which on this site is a lot of
+ * people. Escape closes and returns focus to the trigger, arrow keys move between items, and
+ * every target is finger-sized.
+ *
+ * The parent is a button rather than a link because its own page is not published yet; when it
+ * is, an "Overview" item joins the top of the list.
+ */
 export default function NavDropdown({ link, here, current }) {
     const [open, setOpen] = useState(false);
     const wrap = useRef(null);
@@ -144,13 +146,13 @@ export default function NavDropdown({ link, here, current }) {
                 <ul className="nav-menu" id={id}>
                     {children.map((child) => (
                         <li key={child.label}>
-                            <a
+                            <SiteLink
                                 href={resolve(child.href, here)}
                                 className={isCurrent(child.href, here, child.active) ? 'active' : undefined}
                                 onClick={() => close()}
                             >
                                 {child.label}
-                            </a>
+                            </SiteLink>
                         </li>
                     ))}
                 </ul>
