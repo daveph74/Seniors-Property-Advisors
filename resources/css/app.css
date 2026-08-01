@@ -196,22 +196,36 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 /* Scoped as `.nav .nav-menu` (0,2,0) because `.nav ul` (0,1,1) matches this list too and would
    otherwise win, laying the panel out as a horizontal flex row with no padding — which is
    exactly what it did: one content-width item jammed against the panel's left edge. */
+/* Same surface treatment as .article-card and the hero cards — the tokens, not lookalike
+   values — so it reads as part of the site rather than a browser widget. Left-aligned to the
+   label it belongs to, rather than centred under it and drifting under its neighbours. */
 .nav .nav-menu{
-  position: absolute; top: calc(100% + 18px); left: 50%; transform: translateX(-50%);
+  /* -22px is the panel's own 8px padding plus a row's 14px, so the item text lines up exactly
+     under the label text rather than sitting a ragged 15px to its right. */
+  position: absolute; top: calc(100% + 12px); left: -22px;
   display: block;
   /* Items are nowrap, so the panel grows to fit longer labels; this is just a floor that
      keeps it from looking pinched while Blog is the only child. */
-  min-width: 186px; padding: 8px; margin: 0; gap: 0; list-style: none; z-index: 60;
-  background: var(--white); border: 1px solid var(--line);
-  border-radius: 14px; box-shadow: 0 18px 44px rgba(2, 14, 60, 0.14);
+  min-width: 200px; padding: 8px; margin: 0; gap: 0; list-style: none; z-index: 60;
+  background: var(--white); border: 1px solid var(--line-soft);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  animation: nav-menu-in .16s ease-out;
+  transform-origin: top left;
+}
+@keyframes nav-menu-in{
+  from{ opacity: 0; transform: translateY(-4px); }
+  to{ opacity: 1; transform: none; }
 }
 /* Full-width, finger-sized rows — 44px is the floor for a comfortable tap. */
 .nav .nav-menu a{
-  display: block; padding: 13px 14px; border-radius: 9px;
-  color: var(--navy); font-size: 15.5px; font-weight: 500; white-space: nowrap;
+  display: block; padding: 13px 14px; border-radius: var(--radius-sm);
+  color: var(--navy); font-size: 15px; font-weight: 500; white-space: nowrap;
+  transition: background .12s ease;
 }
-.nav .nav-menu a:hover{ background: var(--blue-wash-2); }
-.nav .nav-menu a.active{ background: var(--blue-tint); color: var(--navy); }
+/* --blue-wash is a step darker than the old --blue-wash-2, which was so close to the current
+   item's tint that the two states were hard to tell apart. */
+.nav .nav-menu a:hover{ background: var(--blue-wash); }
+.nav .nav-menu a.active{ background: var(--blue-tint); color: var(--navy); font-weight: 600; }
 /* `.nav ul a.active::after` draws the underline for the top-level row and matches these items
    too, leaving a stray blue bar floating 28px below the panel. Inside the menu the tinted row
    is the "you are here" mark. */
@@ -1264,6 +1278,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 
 @media (prefers-reduced-motion: reduce){
   .nav-toggle span{ transition: none; }
+  .nav .nav-menu{ animation: none; }
+  .nav-menu__caret{ transition: none; }
 }
 
 /* Buttons size to their labels, so a pair stacked on a phone ends up ragged —
