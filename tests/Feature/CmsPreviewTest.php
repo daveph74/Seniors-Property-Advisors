@@ -51,7 +51,7 @@ class CmsPreviewTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p
                 ->where('preview.mode', 'published')
-                ->has('sections', 7));
+                ->has('sections', 8));
     }
 
     public function test_preview_drops_hidden_and_illegal_blocks(): void

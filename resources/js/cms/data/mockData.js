@@ -123,15 +123,6 @@ export const FAQ_GROUPS = [
     ] },
 ];
 
-export const TESTIMONIALS = [
-    { name: 'Janet R.', loc: 'Glen Iris', featured: true, active: true, rating: 5, quote: 'They took the worry out of selling Mum’s house. Everything was explained twice, calmly, and never rushed.' },
-    { name: 'Brian and Lorraine T.', loc: 'Geelong', featured: true, active: true, rating: 5, quote: 'Honest advice with nothing to sell us. We felt looked after from the first phone call to settlement.' },
-    { name: 'Margaret W.', loc: 'Brighton', active: true, rating: 5, quote: 'I had put off the move for years. Having someone independent in my corner made it possible.' },
-    { name: 'Peter H.', loc: 'Ballarat', active: true, rating: 4, quote: 'They compared three agents for us and saved us thousands in fees and needless styling.' },
-    { name: 'The Nguyen family', loc: 'Werribee', active: true, rating: 5, quote: 'Patient with our parents, clear with us. The plan meant everyone knew what was happening.' },
-    { name: 'Coralie B.', loc: 'Bendigo', active: true, rating: 5, quote: 'From first visit to settlement they answered every question, however small.' },
-];
-
 export const MENUS = [
     { id: 'header', label: 'Header navigation' },
     { id: 'footer', label: 'Footer navigation' },

@@ -212,6 +212,7 @@ const TEMPLATES = {
         headingEm: '',
         lead: '',
         source: 'featured',
+        chosen: '',
         limit: 3,
         layout: 'grid',
         items: [],

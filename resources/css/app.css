@@ -1500,6 +1500,11 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   scroll-snap-type: x mandatory; padding-bottom: 8px;
 }
 .testimonials__grid--slider > *{ scroll-snap-align: start; }
+/* The scroller takes focus so it can be arrow-keyed, which is worthless unless you can see that it
+   has focus. Offset outwards so the ring does not sit on top of the first card's border. */
+.testimonials__grid--slider:focus-visible{
+  outline: 3px solid var(--blue-deep); outline-offset: 4px; border-radius: var(--radius);
+}
 
 /* .section-head sets gap:40px for its horizontal row, but .center switches to a
    column, so that gap lands between the pre-heading, heading and lead — 58px

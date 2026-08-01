@@ -7,6 +7,12 @@ use Tests\TestCase;
 
 class CmsBuilderTest extends TestCase
 {
+    /**
+     * How many sections the seeded home page has. Named rather than written in at each assertion,
+     * which is what made adding one to the design a three-test failure instead of a content change.
+     */
+    private const HOME_SECTIONS = 8;
+
     private function sections(string $heading = 'Edited heading'): array
     {
         return [[
@@ -530,7 +536,7 @@ class CmsBuilderTest extends TestCase
             $props = $page->toArray()['props'];
 
             $this->assertSame('Cms/Pages/Builder', $page->toArray()['component']);
-            $this->assertCount(7, $props['sections']);
+            $this->assertCount(self::HOME_SECTIONS, $props['sections']);
             $this->assertSame('hero', $props['sections'][0]['type']);
             $this->assertSame('', $props['page']['slug']);
             $this->assertSame('published', $props['page']['status']);
@@ -555,11 +561,11 @@ class CmsBuilderTest extends TestCase
         $document = $store->document('home');
 
         $this->assertCount(1, $document['draft']);
-        $this->assertCount(7, $document['published']);
+        $this->assertCount(self::HOME_SECTIONS, $document['published']);
 
         $this->get('/')->assertInertia(function ($page) {
             $sections = $page->toArray()['props']['sections'];
-            $this->assertCount(7, $sections);
+            $this->assertCount(self::HOME_SECTIONS, $sections);
             $this->assertSame('Independent advice.', $sections[0]['data']['heading']);
         });
     }

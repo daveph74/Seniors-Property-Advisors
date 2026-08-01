@@ -230,6 +230,7 @@
 .cms-toggle__knob{ position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s ease; }
 .cms-toggle--on{ background: var(--cms-navy); }
 .cms-toggle--on .cms-toggle__knob{ left: 16px; }
+.cms-toggle:disabled{ opacity: .45; cursor: not-allowed; }
 
 /* ---------- Empty state ---------- */
 .cms-empty{ padding: 64px 40px; text-align: center; }
@@ -669,6 +670,8 @@
 .cms-swatch--active{ box-shadow: 0 0 0 2px #C9DAF5; }
 .cms-toggle-row{ display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--cms-border-softer); }
 .cms-toggle-row__label{ font-size: 12.5px; color: var(--cms-text); }
+.cms-check-row{ display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; font-size: 12.5px; color: var(--cms-text); cursor: pointer; }
+.cms-check-row input{ margin: 2px 0 0; flex: none; }
 .cms-media-pick-row{ display: flex; align-items: center; gap: 10px; padding: 9px; border: 1px solid var(--cms-border-input); border-radius: 8px; margin-bottom: 14px; }
 .cms-media-pick-row__thumb{ width: 54px; height: 38px; border-radius: 5px; background: #DCE5F2; flex: none; }
 .cms-media-pick-row__name{ font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

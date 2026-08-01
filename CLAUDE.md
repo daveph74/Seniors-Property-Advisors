@@ -60,6 +60,29 @@ Reusable sections are **independent copies**, stored whole in `reusable_sections
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
 
+## Testimonials
+
+Their own `testimonials` table. Scope §7 closes with a constraint rather than a field — names and
+images may only be published where the client has given permission — so consent is **recorded, not
+validated**: `consent_confirmed_at` plus `consent_confirmed_by`, set by its own route. `scopeActive`
+requires both `active` and a recorded consent, so an unconfirmed testimonial cannot reach a reader
+through any path, and withdrawing permission unpublishes and unfeatures in the same move. One flag
+covers the name and the photo together; splitting them was considered and judged not worth the
+second failure mode.
+
+Updates validate `sometimes|required`, so a toggle patches **one field alone**. Sending the whole
+record on a single-field change lets a stale copy revert whatever else moved — turning "featured" on
+switched "showing" back off, which is how that was found.
+
+The section reads `library.testimonials` and picks in the browser: `featured`, `all`, or `chosen`
+(a comma-joined list of ids, scalar so the section-tree sanitiser passes it through untouched).
+`ContentLibrary::choices()` feeds the builder's picker and is builder-only. The slider is a focusable
+overflow scroller with a `:focus-visible` ring — never autoplaying, since auto-rotating quotes are
+worst for the readers this site is for.
+
+`MediaController::usage()` scans testimonial and article images too. It only read section trees
+before, so an article's featured image could be deleted while in use with no warning.
+
 ## Blog articles
 
 Articles are their own tables (`blog_posts`, `blog_categories`, and a pivot), not page
