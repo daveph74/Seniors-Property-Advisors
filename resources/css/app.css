@@ -1414,8 +1414,26 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .article-card{
   background: var(--white); border: 1px solid var(--line-soft);
   border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
+  display: block; /* the whole card is the link, so the target is the card, not just the title */
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.article-card__image{ width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+/* The whole card lifts, rather than only the title changing colour — a small target is hard
+   work for this audience, and the lift says "this is one thing you can click". */
+a.article-card:hover{
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+  border-color: var(--line);
+}
+a.article-card:hover .article-card__title{ color: var(--blue-deep); }
+a.article-card:hover .article-card__image{ transform: scale(1.03); }
+a.article-card:focus-visible{
+  outline: 2px solid var(--blue-deep); outline-offset: 3px;
+}
+.article-card__title{ transition: color .2s ease; }
+.article-card__image{
+  width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
+  transition: transform .35s ease;
+}
 .article-card__body{ padding: 24px; }
 .article-card__tag{
   display: inline-block; margin-bottom: 12px; padding: 4px 12px;
@@ -1557,4 +1575,12 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   .prose{ font-size: 16.5px; }
   .prose h2{ font-size: 25px; margin-top: 36px; }
   .prose h3{ font-size: 20px; }
+}
+
+/* After the .article-card rules, not before: at equal specificity the later rule wins, and a
+   reduced-motion block sitting above them is simply overridden. */
+@media (prefers-reduced-motion: reduce){
+  .article-card, .article-card__image, .article-card__title{ transition: none; }
+  a.article-card:hover{ transform: none; }
+  a.article-card:hover .article-card__image{ transform: none; }
 }
