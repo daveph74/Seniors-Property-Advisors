@@ -52,8 +52,30 @@ class StarterLayouts
                 'showFilters' => true,
                 'articles' => [],
             ]),
-            self::cta(),
+            self::blogCta(),
         ];
+    }
+
+    /**
+     * The generic cta() is a placeholder for a blank page, which is right when nobody knows what
+     * the page is for. A blog listing does know: whoever reaches the bottom has just been reading
+     * about selling, so this one ships with real copy and the same two actions the home page
+     * closes with, rather than "Add a short line about getting in touch".
+     */
+    private static function blogCta(): array
+    {
+        return self::block('cta', 'Call to action', [
+            'eyebrow' => 'Ready when you are',
+            'heading' => 'Talk it through with',
+            'headingEm' => 'someone independent',
+            'body' => 'Reading is a good place to start. When you are ready, a short conversation '
+                .'will tell you where you stand — with no pressure and nothing to sign.',
+            'buttons' => [
+                ['label' => 'Get Started', 'variant' => 'secondary', 'action' => 'open-finder', 'arrow' => true],
+                ['label' => 'Call 1300 277 228', 'variant' => 'ghost', 'href' => 'tel:1300277228', 'onNavy' => true],
+            ],
+            'trustMarks' => ['Independent advice', 'No agent commissions', 'Australian owned'],
+        ]);
     }
 
     private static function standard(): array
