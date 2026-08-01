@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Cms\AccountController;
 use App\Http\Controllers\Cms\CmsPageController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
@@ -26,7 +27,10 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 | Everything here needs an active CMS account. `permit:content.manage` covers
 | both roles; the tighter abilities are super-administrator only (scope §2).
 */
-Route::prefix('cms')->name('cms.')->middleware('permit:content.manage')->group(function () {
+Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.session'])->group(function () {
+    Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
+    Route::patch('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+
     Route::get('/', fn () => Inertia::render('Cms/Dashboard'))->name('dashboard');
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');

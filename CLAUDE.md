@@ -79,6 +79,16 @@ Accounts are made with `php artisan cms:user email --name= --role= [--password=]
 generates and prints a password when none is given. `UserSeeder` creates local development
 accounts with a shared password and must never run in production.
 
+Everyone changes their own password at `/cms/account`; only super administrators set anyone
+else's. Both paths end sessions on other devices, via `auth.session` on the `/cms` group plus
+`Auth::logoutOtherDevices()`. Two ordering traps live there, both covered by `AccountTest`:
+the plaintext must be handed to `logoutOtherDevices()` **after** the save, and when the target
+is the acting user the guard needs `Auth::setUser()` first — it caches its own instance and
+would otherwise compare against the hash that was just replaced.
+
+Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
+`SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
+
 ## Current state
 
 The public site renders from the database, and the builder is functional: undo/redo,

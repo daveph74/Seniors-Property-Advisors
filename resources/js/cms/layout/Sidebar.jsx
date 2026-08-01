@@ -89,6 +89,7 @@ export default function Sidebar({ active }) {
                     <DropdownMenu open={menuOpen} onClose={() => setMenuOpen(false)} align="left">
                         <div className="cms-user-menu__head">{user?.email}</div>
                         <MenuSeparator />
+                        <MenuItem onClick={() => router.visit('/cms/account')}>Your account</MenuItem>
                         <MenuItem onClick={() => router.post('/logout')}>Sign out</MenuItem>
                     </DropdownMenu>
                 </div>

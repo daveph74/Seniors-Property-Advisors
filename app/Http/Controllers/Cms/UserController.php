@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,14 +40,26 @@ class UserController extends Controller
     public function update(SaveUserRequest $request, User $user): RedirectResponse
     {
         $changes = $request->details();
+        $password = $request->filled('password') ? $request->password() : null;
 
-        if ($request->filled('password')) {
-            $changes['password'] = $request->password();
+        if ($password !== null) {
+            $changes['password'] = $password;
         }
 
         $this->guardLastSuperAdmin($user, $changes);
 
         $user->forceFill($changes)->save();
+
+        /**
+         * A new password strands every session holding the old hash, which is the point when
+         * an account is compromised. Changing your own would stand down your own session too,
+         * so refresh it — via setUser, because the guard caches its own instance of the user
+         * and would otherwise still be comparing against the hash we just replaced.
+         */
+        if ($password !== null && $user->is($request->user())) {
+            Auth::setUser($user);
+            Auth::logoutOtherDevices($password);
+        }
 
         return back();
     }

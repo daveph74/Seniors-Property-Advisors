@@ -893,6 +893,12 @@
 
 @keyframes cms-shimmer{ from{ background-position: -200px 0; } to{ background-position: 400px 0; } }
 
+.cms-account-facts{
+  margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; font-size: 13px;
+}
+.cms-account-facts dt{ color: var(--cms-text-mid); }
+.cms-account-facts dd{ margin: 0; }
+
 /* ---------- Sign in ---------- */
 .cms-signin{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--cms-tint); }
 .cms-signin__card{

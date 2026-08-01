@@ -22,6 +22,7 @@ export const SCREEN_TITLES = {
     global: 'Global content',
     users: 'Users and roles',
     settings: 'Settings',
+    account: 'Your account',
 };
 
 export const QUICK_ACTIONS = [
