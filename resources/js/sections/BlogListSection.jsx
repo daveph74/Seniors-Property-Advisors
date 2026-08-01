@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import SectionHead from './SectionHead';
+import SiteLink from './SiteLink';
 import PendingModule from './PendingModule';
 
 export default function BlogListSection({ data, anchor, library = {}, editing = false }) {
@@ -96,17 +97,17 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
 
     const chips = filters.length > 1 ? (
         <div className="blog-filters">
-            <a className={`blog-filters__chip ${chosen ? '' : 'blog-filters__chip--on'}`} href={filterHref(null)}>
+            <SiteLink className={`blog-filters__chip ${chosen ? '' : 'blog-filters__chip--on'}`} href={filterHref(null)}>
                 All articles
-            </a>
+            </SiteLink>
             {filters.map((c) => (
-                <a
+                <SiteLink
                     key={c.slug}
                     className={`blog-filters__chip ${chosen === c.slug ? 'blog-filters__chip--on' : ''}`}
                     href={filterHref(c.slug)}
                 >
                     {c.name}
-                </a>
+                </SiteLink>
             ))}
         </div>
     ) : null;
@@ -120,7 +121,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
 
                 {articles.length === 0 && chosen ? (
                     <p className="blog-list__none">
-                        Nothing in that category yet. <a href={filterHref(null)}>See all articles</a>.
+                        Nothing in that category yet. <SiteLink href={filterHref(null)}>See all articles</SiteLink>.
                     </p>
                 ) : articles.length === 0 ? (
                     <PendingModule
@@ -161,7 +162,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
                                 );
 
                                 return a.url && ! editing
-                                    ? <a className="article-card" href={a.url} key={a.slug ?? i}>{card}</a>
+                                    ? <SiteLink className="article-card" href={a.url} key={a.slug ?? i}>{card}</SiteLink>
                                     : <article className="article-card" key={a.slug ?? i}>{card}</article>;
                             })}
                         </div>

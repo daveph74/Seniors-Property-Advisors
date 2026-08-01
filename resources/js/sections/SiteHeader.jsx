@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import ActionButton from './ActionButton';
 import NavDropdown from './NavDropdown';
+import SiteLink from './SiteLink';
 import useSectionInView from './useSectionInView';
 import { holdsCurrent, isCurrent, resolve } from './navHref';
 import { PhoneIcon, GiftIcon } from '../components/icons';
@@ -60,21 +61,21 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
 
             <div className="nav-wrap" ref={header}>
                 <div className="container nav">
-                    <a href="/" className="brand">
+                    <SiteLink href="/" className="brand">
                         <img className="mark" src={logo.src} alt={logo.alt} />
-                    </a>
+                    </SiteLink>
                     <ul>
                         {links.map((l) => (
                             <li key={l.label}>
                                 {l.children?.length ? (
                                     <NavDropdown link={l} here={here} current={holdsCurrent(l, here)} />
                                 ) : (
-                                    <a
+                                    <SiteLink
                                         href={resolve(l.href, here)}
                                         className={currentFor(l) ? 'active' : undefined}
                                     >
                                         {l.label}
-                                    </a>
+                                    </SiteLink>
                                 )}
                             </li>
                         ))}
@@ -119,25 +120,25 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
                                         <ul className="nav-drawer__sub">
                                             {l.children.map((child) => (
                                                 <li key={child.label}>
-                                                    <a
+                                                    <SiteLink
                                                         href={resolve(child.href, here)}
                                                         className={isCurrent(child.href, here, child.active) ? 'active' : undefined}
                                                         onClick={() => setOpen(false)}
                                                     >
                                                         {child.label}
-                                                    </a>
+                                                    </SiteLink>
                                                 </li>
                                             ))}
                                         </ul>
                                     </>
                                 ) : (
-                                    <a
+                                    <SiteLink
                                         href={resolve(l.href, here)}
                                         className={currentFor(l) ? 'active' : undefined}
                                         onClick={() => setOpen(false)}
                                     >
                                         {l.label}
-                                    </a>
+                                    </SiteLink>
                                 )}
                             </li>
                         ))}

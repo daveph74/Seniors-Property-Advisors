@@ -1,3 +1,5 @@
+import SiteLink from './SiteLink';
+
 export default function ActionButton({ cta, className, actions = {}, tight = false }) {
     if (!cta) return null;
 
@@ -24,8 +26,8 @@ export default function ActionButton({ cta, className, actions = {}, tight = fal
     }
 
     return (
-        <a href={cta.href || '#'} className={className}>
+        <SiteLink href={cta.href || '#'} className={className}>
             {label}
-        </a>
+        </SiteLink>
     );
 }
