@@ -21,26 +21,43 @@ return new class extends Migration
     ];
 
     /**
-     * Matched on name, so a category the client has already created or renamed to one of these
-     * is left exactly as it is and never duplicated.
+     * Matched on name, so a category the client has already created or renamed to one of these is
+     * never duplicated — it is adopted, and moved into the order §6 lists them in. Anything the
+     * client added beyond the seven keeps its relative order, after them.
+     *
+     * Bails out entirely once all seven exist, so a re-run cannot undo a reorder made in the CMS.
      */
     public function up(): void
     {
-        $order = (int) DB::table('faq_categories')->max('sort_order');
+        $existing = DB::table('faq_categories')->pluck('id', 'name');
 
-        foreach (self::CATEGORIES as $name) {
-            if (DB::table('faq_categories')->where('name', $name)->exists()) {
+        if (count(array_intersect(self::CATEGORIES, $existing->keys()->all())) === count(self::CATEGORIES)) {
+            return;
+        }
+
+        foreach (array_values(self::CATEGORIES) as $index => $name) {
+            $order = $index + 1;
+
+            if ($existing->has($name)) {
+                DB::table('faq_categories')
+                    ->where('id', $existing[$name])
+                    ->update(['sort_order' => $order, 'updated_at' => now()]);
+
                 continue;
             }
 
             DB::table('faq_categories')->insert([
                 'name' => $name,
-                'sort_order' => ++$order,
+                'sort_order' => $order,
                 'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }
+
+        DB::table('faq_categories')
+            ->whereNotIn('name', self::CATEGORIES)
+            ->update(['sort_order' => DB::raw('sort_order + '.count(self::CATEGORIES))]);
     }
 
     /**

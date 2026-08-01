@@ -109,12 +109,21 @@ class FaqTest extends TestCase
         $this->assertSame('Fees and costs', $category->refresh()->name);
     }
 
-    public function test_the_scope_categories_are_seeded_and_never_duplicated(): void
+    public function test_the_seeded_categories_are_exactly_the_scope_list_in_its_order(): void
     {
-        foreach (['General', 'Selling', 'Fees', 'The advisory process', 'Property agents'] as $name) {
-            $this->assertDatabaseHas('faq_categories', ['name' => $name]);
-        }
+        $this->assertSame([
+            'General',
+            'Selling',
+            'Downsizing',
+            'Fees',
+            'The advisory process',
+            'Property agents',
+            'Legal and financial considerations',
+        ], FaqCategory::orderBy('sort_order')->orderBy('id')->pluck('name')->all());
+    }
 
+    public function test_the_scope_categories_are_never_duplicated(): void
+    {
         $before = FaqCategory::count();
 
         $this->artisan('migrate', ['--force' => true])->assertSuccessful();
