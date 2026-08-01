@@ -19,9 +19,32 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
         setRevealed(step);
     }, [library.posts, library.page, library.hasMorePosts, step]);
 
+    /**
+     * The section can be pinned to one category by an editor; a reader's own choice arrives
+     * already filtered from the server, so it needs no second pass here.
+     */
     const matches = (article) => ! data.category
         || article.category === data.category
         || (article.categories || []).includes(data.category);
+
+    const chosen = library.postCategory || null;
+    const filters = data.showFilters === false || data.category
+        ? []
+        : (library.postCategories || []);
+
+    const filterHref = (slug) => {
+        if (typeof window === 'undefined') return slug ? `?category=${slug}` : '?';
+
+        const url = new URL(window.location.href);
+
+        if (slug) {
+            url.searchParams.set('category', slug);
+        } else {
+            url.searchParams.delete('category');
+        }
+
+        return `${url.pathname}${url.search}`;
+    };
 
     const pulled = [...(library.posts || []), ...fetched].filter(matches);
 
@@ -49,7 +72,11 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
 
         setLoading(true);
 
-        fetch(`/blog/articles?page=${page + 1}`, { headers: { Accept: 'application/json' } })
+        const next = new URLSearchParams({ page: String(page + 1) });
+
+        if (chosen) next.set('category', chosen);
+
+        fetch(`/blog/articles?${next}`, { headers: { Accept: 'application/json' } })
             .then((r) => r.json())
             .then((batch) => {
                 setFetched((held) => [...held, ...(batch.posts || [])]);
@@ -61,14 +88,41 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
             .finally(() => setLoading(false));
     };
 
-    if (articles.length === 0 && ! editing) return null;
+    /**
+     * A chosen filter keeps the section on the page even when it matches nothing, or a reader
+     * would land on an empty page with no way back to the other categories.
+     */
+    if (articles.length === 0 && ! editing && ! chosen) return null;
+
+    const chips = filters.length > 1 ? (
+        <div className="blog-filters">
+            <a className={`blog-filters__chip ${chosen ? '' : 'blog-filters__chip--on'}`} href={filterHref(null)}>
+                All articles
+            </a>
+            {filters.map((c) => (
+                <a
+                    key={c.slug}
+                    className={`blog-filters__chip ${chosen === c.slug ? 'blog-filters__chip--on' : ''}`}
+                    href={filterHref(c.slug)}
+                >
+                    {c.name}
+                </a>
+            ))}
+        </div>
+    ) : null;
 
     return (
         <section className="blog-list" id={anchor}>
             <div className="container">
                 <SectionHead {...data} />
 
-                {articles.length === 0 ? (
+                {editing ? null : chips}
+
+                {articles.length === 0 && chosen ? (
+                    <p className="blog-list__none">
+                        Nothing in that category yet. <a href={filterHref(null)}>See all articles</a>.
+                    </p>
+                ) : articles.length === 0 ? (
                     <PendingModule
                         title="Blog articles"
                         waitingFor="blog module"
@@ -77,6 +131,9 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
                             limit ? `Showing the ${limit} most recent` : 'Showing the most recent articles',
                             'Each card shows the featured image, published date and summary',
                             data.showMore !== false ? 'With a load-more control' : 'Without a load-more control',
+                            data.showFilters === false || data.category
+                                ? 'Without category filters'
+                                : 'With category filters, once two categories have articles',
                         ]}
                     />
                 ) : (

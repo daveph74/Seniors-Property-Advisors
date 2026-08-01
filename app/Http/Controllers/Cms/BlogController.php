@@ -8,6 +8,7 @@ use App\Http\Requests\SaveBlogCategoryRequest;
 use App\Http\Requests\SaveBlogPostRequest;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
+use App\Models\PageRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -68,6 +69,8 @@ class BlogController extends Controller
 
         if ($slug !== null && $slug !== $post->slug) {
             $changes['slug'] = $this->availableSlug($slug, $post->id);
+
+            $this->keepOldAddressWorking($post, $changes['slug']);
         }
 
         if ($request->status() !== null) {
@@ -174,6 +177,27 @@ class BlogController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Renaming a published article would otherwise kill every link already shared to it. The
+     * same `page_redirects` table pages use serves this, with the two traps it already
+     * handles: chains are collapsed so a→b→c leaves a→c rather than stacking hops, and a row
+     * that would shadow the new address is removed in case an article moves back.
+     *
+     * Drafts are skipped — an unpublished article has no address worth preserving.
+     */
+    private function keepOldAddressWorking(BlogPost $post, string $newSlug): void
+    {
+        $from = "/blog/{$post->slug}";
+        $to = "/blog/{$newSlug}";
+
+        if ($post->status === 'published') {
+            PageRedirect::where('to_url', $from)->update(['to_url' => $to]);
+            PageRedirect::updateOrCreate(['from_url' => $from], ['to_url' => $to]);
+        }
+
+        PageRedirect::where('from_url', $to)->delete();
     }
 
     private function setStatus(BlogPost $post, string $status): RedirectResponse

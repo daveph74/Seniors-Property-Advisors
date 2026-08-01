@@ -139,6 +139,7 @@ const CONTENT_SCHEMAS = {
         TEXT('category', 'Category to show'),
         NUM('limit', 'How many to show'),
         FLAGON('showMore', 'Show a load-more control'),
+        FLAGON('showFilters', 'Let readers filter by category'),
     ],
 };
 

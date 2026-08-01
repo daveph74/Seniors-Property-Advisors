@@ -10,19 +10,29 @@ class ContentLibrary
 {
     public const PER_PAGE = 12;
 
-    public function for(?string $slug = null): array
+    public function for(?string $slug = null, ?string $category = null): array
     {
-        return ['faqs' => $this->faqs($slug)] + $this->posts();
+        return ['faqs' => $this->faqs($slug)] + $this->posts(1, $category);
     }
 
     /**
      * One page of published articles, newest first. Capped because this ships with every
      * page render; the load-more route asks for later pages.
+     *
+     * Filtering happens here rather than in the browser so that a filtered listing is a real
+     * address a reader can share or bookmark, works with JavaScript off, and pages correctly —
+     * a client-side filter would only ever sift the batch already loaded.
      */
-    public function posts(int $page = 1): array
+    public function posts(int $page = 1, ?string $category = null): array
     {
-        $total = BlogPost::published()->count();
-        $posts = BlogPost::published()
+        $query = fn () => BlogPost::published()
+            ->when($category, fn ($q) => $q->whereHas(
+                'categories',
+                fn ($c) => $c->where('blog_categories.slug', $category)->where('blog_categories.active', true),
+            ));
+
+        $total = $query()->count();
+        $posts = $query()
             ->ordered()
             ->with('categories')
             ->skip(($page - 1) * self::PER_PAGE)
@@ -34,6 +44,7 @@ class ContentLibrary
             'page' => $page,
             'hasMorePosts' => $total > $page * self::PER_PAGE,
             'postCategories' => $this->postCategories(),
+            'postCategory' => $category,
         ];
     }
 
@@ -61,12 +72,17 @@ class ContentLibrary
             ->all();
     }
 
+    /**
+     * Only categories that actually have something published behind them — an empty filter
+     * a reader can click is worse than no filter.
+     */
     private function postCategories(): array
     {
         return BlogCategory::active()
             ->ordered()
             ->whereHas('posts', fn ($query) => $query->where('status', 'published'))
-            ->pluck('name')
+            ->get(['name', 'slug'])
+            ->map(fn (BlogCategory $category) => ['name' => $category->name, 'slug' => $category->slug])
             ->all();
     }
 

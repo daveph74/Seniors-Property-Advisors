@@ -7,6 +7,7 @@ use App\Content\Html;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\Page;
+use App\Models\PageRedirect;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -220,7 +221,7 @@ class BlogTest extends TestCase
 
         $library = (new ContentLibrary)->posts();
 
-        $this->assertSame(['Finance'], $library['postCategories']);
+        $this->assertSame(['Finance'], array_column($library['postCategories'], 'name'));
         $this->assertCount(1, $library['posts']);
         $this->get("/blog/{$post->slug}")->assertOk();
     }
@@ -260,6 +261,137 @@ class BlogTest extends TestCase
         $this->assertCount(3, $second['posts']);
         $this->assertFalse($second['hasMorePosts']);
         $this->assertNotContains('a-draft', array_column($second['posts'], 'slug'));
+    }
+
+    public function test_a_reader_can_filter_the_listing_by_category(): void
+    {
+        $downsizing = $this->category('Downsizing');
+        $finance = $this->category('Finance');
+
+        $this->article(['slug' => 'about-downsizing'])->categories()->sync([$downsizing->id]);
+        $this->article(['slug' => 'about-money'])->categories()->sync([$finance->id]);
+
+        $library = new ContentLibrary;
+
+        $this->assertCount(2, $library->posts()['posts']);
+        $this->assertSame(['about-downsizing'], array_column($library->posts(1, 'downsizing')['posts'], 'slug'));
+        $this->assertSame('downsizing', $library->posts(1, 'downsizing')['postCategory']);
+
+        $this->assertSame(
+            ['Downsizing', 'Finance'],
+            array_column($library->posts()['postCategories'], 'name'),
+        );
+    }
+
+    public function test_the_filter_reaches_the_listing_page_from_the_address(): void
+    {
+        $downsizing = $this->category('Downsizing');
+        $finance = $this->category('Finance');
+
+        $this->article(['slug' => 'about-downsizing'])->categories()->sync([$downsizing->id]);
+        $this->article(['slug' => 'about-money'])->categories()->sync([$finance->id]);
+
+        $this->artisan('pages:scaffold')->assertSuccessful();
+
+        $page = Page::where('slug', 'blog')->sole();
+        $page->forceFill(['status' => 'published', 'published' => $page->draft, 'draft' => null])->save();
+
+        auth()->logout();
+
+        $this->get('/blog?category=finance')->assertOk()->assertInertia(function ($props) {
+            $library = $props->toArray()['props']['library'];
+
+            $this->assertSame('finance', $library['postCategory']);
+            $this->assertSame(['about-money'], array_column($library['posts'], 'slug'));
+        });
+    }
+
+    public function test_an_empty_or_unknown_category_is_ignored_rather_than_erroring(): void
+    {
+        $this->article()->categories()->sync([$this->category()->id]);
+
+        $this->assertCount(0, (new ContentLibrary)->posts(1, 'no-such-category')['posts']);
+        $this->assertCount(1, (new ContentLibrary)->posts(1, null)['posts']);
+
+        $this->get('/blog/articles?category=not%20a%20slug')->assertOk()->assertJsonPath('postCategory', null);
+    }
+
+    public function test_a_disabled_category_cannot_be_filtered_to(): void
+    {
+        $hidden = $this->category('Retired topic', active: false);
+
+        $this->article()->categories()->sync([$hidden->id]);
+
+        $this->assertCount(0, (new ContentLibrary)->posts(1, 'retired-topic')['posts']);
+    }
+
+    public function test_load_more_stays_inside_the_chosen_category(): void
+    {
+        $downsizing = $this->category('Downsizing');
+        $finance = $this->category('Finance');
+
+        foreach (range(1, ContentLibrary::PER_PAGE + 2) as $n) {
+            $this->article(['slug' => "downsizing-{$n}", 'published_at' => now()->subDays($n)])
+                ->categories()->sync([$downsizing->id]);
+        }
+
+        $this->article(['slug' => 'money-one'])->categories()->sync([$finance->id]);
+
+        $second = $this->get('/blog/articles?page=2&category=downsizing')->assertOk()->json();
+
+        $this->assertCount(2, $second['posts']);
+        $this->assertNotContains('money-one', array_column($second['posts'], 'slug'));
+        $this->assertFalse($second['hasMorePosts']);
+    }
+
+    public function test_renaming_a_published_article_keeps_the_old_address_working(): void
+    {
+        $post = $this->article(['slug' => 'old-name']);
+
+        $this->patch("/cms/blog/{$post->id}", [
+            'title' => $post->title,
+            'slug' => 'new-name',
+        ])->assertRedirect();
+
+        $this->assertSame('new-name', $post->refresh()->slug);
+
+        $this->get('/blog/old-name')->assertRedirect('/blog/new-name')->assertStatus(301);
+        $this->get('/blog/new-name')->assertOk();
+    }
+
+    public function test_renaming_a_draft_article_leaves_no_redirect(): void
+    {
+        $post = $this->article(['slug' => 'old-name', 'status' => 'draft']);
+
+        $this->patch("/cms/blog/{$post->id}", ['title' => $post->title, 'slug' => 'new-name'])
+            ->assertRedirect();
+
+        $this->assertSame(0, PageRedirect::count());
+    }
+
+    public function test_moving_an_article_twice_collapses_the_chain(): void
+    {
+        $post = $this->article(['slug' => 'a']);
+
+        $this->patch("/cms/blog/{$post->id}", ['title' => $post->title, 'slug' => 'b'])->assertRedirect();
+        $this->patch("/cms/blog/{$post->id}", ['title' => $post->title, 'slug' => 'c'])->assertRedirect();
+
+        $this->assertSame(
+            ['/blog/a' => '/blog/c', '/blog/b' => '/blog/c'],
+            PageRedirect::pluck('to_url', 'from_url')->all(),
+        );
+        $this->get('/blog/a')->assertRedirect('/blog/c');
+    }
+
+    public function test_moving_an_article_back_removes_the_redirect_that_would_shadow_it(): void
+    {
+        $post = $this->article(['slug' => 'a']);
+
+        $this->patch("/cms/blog/{$post->id}", ['title' => $post->title, 'slug' => 'b'])->assertRedirect();
+        $this->patch("/cms/blog/{$post->id}", ['title' => $post->title, 'slug' => 'a'])->assertRedirect();
+
+        $this->assertSame(0, PageRedirect::where('from_url', '/blog/a')->count());
+        $this->get('/blog/a')->assertOk();
     }
 
     public function test_a_client_administrator_can_write_and_publish_but_not_delete(): void

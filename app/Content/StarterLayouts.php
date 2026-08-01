@@ -49,6 +49,7 @@ class StarterLayouts
                 'category' => '',
                 'limit' => 9,
                 'showMore' => true,
+                'showFilters' => true,
                 'articles' => [],
             ]),
             self::cta(),
