@@ -31,12 +31,32 @@ class RecordsActivity
 
     public function updated(Model $model): void
     {
+        /* Restoring saves the row, so this fires alongside `restored` and would log an edit that
+           nobody made. The restore itself is recorded below. */
+        if (array_keys($model->getChanges()) === ['deleted_at']) {
+            return;
+        }
+
         Activity::record($this->verbFor($model), $model);
     }
 
     public function deleted(Model $model): void
     {
         Activity::record('deleted', $model);
+    }
+
+    /**
+     * Told apart from a deletion on purpose. "Deleted" is recoverable and "destroyed" is not, and
+     * an editor asking what happened to something needs to know which of the two it was.
+     */
+    public function forceDeleted(Model $model): void
+    {
+        Activity::record('destroyed', $model);
+    }
+
+    public function restored(Model $model): void
+    {
+        Activity::record('restored', $model);
     }
 
     private function verbFor(Model $model): string

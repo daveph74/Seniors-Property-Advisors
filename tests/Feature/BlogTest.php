@@ -563,7 +563,10 @@ class BlogTest extends TestCase
 
         $this->delete("/cms/blog/{$post->id}")->assertRedirect();
 
-        $this->assertDatabaseMissing('blog_posts', ['id' => $post->id]);
+        /* Recoverable, not gone: it leaves the CMS lists and the website, and waits under
+           Recently deleted until somebody removes it for good. */
+        $this->assertSoftDeleted('blog_posts', ['id' => $post->id]);
+        $this->assertSame(0, BlogPost::count());
     }
 
     public function test_a_guest_cannot_reach_the_blog_module_or_a_draft_preview(): void

@@ -4,7 +4,7 @@ import { NAV_ITEMS } from '../data/mockData';
 import { DropdownMenu, MenuItem, MenuSeparator } from '../components/ui';
 import {
     DashboardIcon, PagesIcon, BlogIcon, FaqsIcon, TestimonialsIcon, MediaIcon,
-    NavigationIcon, GlobalIcon, UsersIcon, SettingsIcon, ExternalLinkIcon, ChevronDownIcon, HistoryIcon,
+    NavigationIcon, GlobalIcon, UsersIcon, SettingsIcon, ExternalLinkIcon, ChevronDownIcon, HistoryIcon, TrashIcon,
 } from '../components/icons';
 
 const ICONS = {
@@ -15,6 +15,7 @@ const ICONS = {
     testimonials: TestimonialsIcon,
     media: MediaIcon,
     activity: HistoryIcon,
+    deleted: TrashIcon,
     navigation: NavigationIcon,
     global: GlobalIcon,
     users: UsersIcon,
@@ -29,6 +30,7 @@ const HREFS = {
     testimonials: '/cms/testimonials',
     media: '/cms/media',
     activity: '/cms/activity',
+    deleted: '/cms/deleted',
     navigation: '/cms/navigation',
     global: '/cms/global-content',
     users: '/cms/users',

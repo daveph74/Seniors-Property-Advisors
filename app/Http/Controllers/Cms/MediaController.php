@@ -391,11 +391,13 @@ class MediaController extends Controller
          * tree, so the tree scan above cannot see them. Without this an editor could delete the
          * photo out from under a published article and be told nothing was using it.
          */
-        foreach (BlogPost::where('featured_image', $url)->orWhere($this->mentions('body', $url))->get() as $post) {
+        /* Deleted articles and testimonials still count as using an image: they can be restored,
+           and restoring one whose picture was deleted in the meantime would be a quiet loss. */
+        foreach (BlogPost::withTrashed()->where('featured_image', $url)->orWhere($this->mentions('body', $url))->get() as $post) {
             $usedBy[] = $post->title.' ('.($post->status === 'published' ? 'article' : 'draft article').')';
         }
 
-        foreach (Testimonial::where('image', $url)->pluck('name') as $name) {
+        foreach (Testimonial::withTrashed()->where('image', $url)->pluck('name') as $name) {
             $usedBy[] = 'Testimonial: '.$name;
         }
 

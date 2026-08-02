@@ -31,6 +31,7 @@ class Permissions
         'testimonials' => 'content.manage',
         'media' => 'content.manage',
         'activity' => 'content.manage',
+        'deleted' => 'content.restore',
         'navigation' => 'content.manage',
         'global' => 'content.manage',
         'users' => 'users.manage',

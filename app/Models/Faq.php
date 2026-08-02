@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Faq extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'faq_category_id', 'question', 'answer', 'page_slug', 'sort_order', 'active', 'last_updated_by',
     ];
