@@ -3,8 +3,10 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\Cms\AccountController;
+use App\Http\Controllers\Cms\ActivityController;
 use App\Http\Controllers\Cms\BlogController as CmsBlogController;
 use App\Http\Controllers\Cms\CmsPageController;
+use App\Http\Controllers\Cms\DeletedContentController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\ReusableSectionController;
@@ -103,6 +105,13 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::post('/testimonials/{testimonial}/consent', [TestimonialController::class, 'consent'])->name('testimonials.consent');
     Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])
         ->middleware('permit:content.delete')->name('testimonials.destroy');
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
+    Route::get('/deleted', [DeletedContentController::class, 'index'])
+        ->middleware('permit:content.restore')->name('deleted.index');
+    Route::post('/deleted/{kind}/{id}/restore', [DeletedContentController::class, 'restore'])
+        ->whereNumber('id')->middleware('permit:content.restore')->name('deleted.restore');
+    Route::delete('/deleted/{kind}/{id}', [DeletedContentController::class, 'destroy'])
+        ->whereNumber('id')->middleware('permit:content.delete')->name('deleted.destroy');
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::get('/media/library', [MediaController::class, 'library'])->name('media.library');
     Route::post('/media/sign', [MediaController::class, 'sign'])->name('media.sign');

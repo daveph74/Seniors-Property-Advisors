@@ -102,7 +102,9 @@ class PermissionsTest extends TestCase
         $this->actingAs($this->superAdmin());
         $this->delete("/cms/faqs/{$faq->id}")->assertRedirect();
 
-        $this->assertDatabaseMissing('faqs', ['id' => $faq->id]);
+        /* Off the website and out of the lists, but recoverable — see DeletedContentTest. */
+        $this->assertSoftDeleted('faqs', ['id' => $faq->id]);
+        $this->assertSame(0, Faq::count());
     }
 
     public function test_a_client_administrator_still_creates_and_hides_questions(): void

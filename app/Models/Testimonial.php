@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Testimonial extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name', 'quote', 'location', 'headline', 'image', 'image_alt', 'rating',
         'sort_order', 'featured', 'active',

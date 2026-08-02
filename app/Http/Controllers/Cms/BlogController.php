@@ -245,8 +245,11 @@ class BlogController extends Controller
         $candidate = $base;
         $n = 1;
 
+        /* Deleted articles count. The slug column is unique in the database and a deleted article
+           keeps its row, so skipping them here would hand back a slug that cannot be inserted. */
         while (in_array($candidate, BlogPost::RESERVED_SLUGS, true)
-            || BlogPost::where('slug', $candidate)->when($ignore, fn ($q) => $q->whereKeyNot($ignore))->exists()) {
+            || BlogPost::withTrashed()->where('slug', $candidate)
+                ->when($ignore, fn ($q) => $q->whereKeyNot($ignore))->exists()) {
             $n++;
             $candidate = "{$base}-{$n}";
         }
