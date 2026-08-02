@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Cms;
 
+use App\Content\Text;
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
 use App\Models\FaqCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -80,24 +82,49 @@ class FaqController extends Controller
         return back();
     }
 
+    /**
+     * These two were the only write paths in the CMS with no validation at all: an empty name
+     * created a nameless row in the sidebar, and a long one threw a database error rather than a
+     * message. Names are unique so the list cannot fill with three categories called Selling.
+     */
     public function storeCategory(Request $request): RedirectResponse
     {
-        FaqCategory::create([
-            'name' => trim(strip_tags((string) $request->input('name'))),
-            'sort_order' => (int) FaqCategory::max('sort_order') + 1,
-        ]);
+        $data = $this->validatedCategory($request);
+
+        FaqCategory::create($data + ['sort_order' => (int) FaqCategory::max('sort_order') + 1]);
 
         return back();
     }
 
     public function updateCategory(Request $request, FaqCategory $category): RedirectResponse
     {
-        $category->update(array_filter([
-            'name' => $request->filled('name') ? trim(strip_tags((string) $request->input('name'))) : null,
-            'active' => $request->has('active') ? $request->boolean('active') : null,
-        ], fn ($v) => $v !== null));
+        $data = $this->validatedCategory($request, $category);
+
+        if ($request->has('active')) {
+            $data['active'] = $request->boolean('active');
+        }
+
+        $category->update($data);
 
         return back();
+    }
+
+    private function validatedCategory(Request $request, ?FaqCategory $existing = null): array
+    {
+        $request->merge(Text::cleanAll($request->only('name'), ['name']));
+
+        $needed = $existing === null ? ['required'] : ['sometimes', 'required'];
+
+        return $request->validate([
+            'name' => [
+                ...$needed,
+                'string',
+                'max:120',
+                Rule::unique('faq_categories', 'name')->ignore($existing),
+            ],
+        ], [
+            'name.unique' => 'There is already a category with that name.',
+        ]);
     }
 
     public function reorderCategories(Request $request): RedirectResponse
@@ -123,18 +150,19 @@ class FaqController extends Controller
 
     private function validated(Request $request): array
     {
-        $data = $request->validate([
+        /* Stripped first, so `required` judges what will actually be stored — "<hr>" used to pass
+           and then be saved as an empty question that still showed on the website. */
+        $request->merge(Text::cleanAll($request->only(['question', 'answer', 'page_slug']), [
+            'question', 'answer', 'page_slug',
+        ]));
+
+        return $request->validate([
             'question' => ['required', 'string', 'max:300'],
             'answer' => ['required', 'string', 'max:4000'],
             'faq_category_id' => ['nullable', 'integer', 'exists:faq_categories,id'],
             'page_slug' => ['nullable', 'string', 'max:190'],
             'active' => ['sometimes', 'boolean'],
         ]);
-
-        $data['question'] = trim(strip_tags($data['question']));
-        $data['answer'] = trim(strip_tags($data['answer']));
-
-        return $data;
     }
 
     private function author(): string

@@ -39,9 +39,14 @@ export default function BlogIndex({ articles = [], categories = [], auth }) {
         }),
     });
 
+    /* A rejected rename used to leave the typed text in the box looking saved — the field is
+       uncontrolled, which made the illusion convincing. */
+    const failed = (bag) => flash(Object.values(bag)[0] || 'That could not be saved');
+
     const toggle = (c) => router.patch(`/cms/blog-categories/${c.id}`, { name: c.name, active: ! c.active }, {
         preserveScroll: true,
         onSuccess: () => flash(c.active ? 'Category disabled' : 'Category enabled'),
+        onError: failed,
     });
 
     return (
@@ -154,7 +159,7 @@ export default function BlogIndex({ articles = [], categories = [], auth }) {
                                             router.patch(`/cms/blog-categories/${c.id}`, {
                                                 name: e.target.value,
                                                 active: c.active,
-                                            }, { preserveScroll: true });
+                                            }, { preserveScroll: true, onError: failed });
                                         }
                                     }}
                                 />
@@ -203,6 +208,7 @@ export default function BlogIndex({ articles = [], categories = [], auth }) {
                             router.post('/cms/blog-categories', { name: newCategory }, {
                                 preserveScroll: true,
                                 onSuccess: () => { setNewCategory(''); flash('Category added'); },
+                                onError: failed,
                             });
                         }}
                     />

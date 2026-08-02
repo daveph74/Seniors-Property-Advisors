@@ -256,7 +256,7 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
                 open={pendingDelete !== null}
                 danger
                 title="Delete this testimonial?"
-                lead="It disappears from every page showing it. Hiding it instead keeps it for later."
+                lead="It comes off every page showing it. You can bring it back from Recently deleted, or hide it instead to keep it where you can see it."
                 detail={pendingDelete?.name}
                 confirmLabel="Delete"
                 onClose={() => setPendingDelete(null)}

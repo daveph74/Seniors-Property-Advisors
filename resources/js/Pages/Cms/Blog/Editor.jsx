@@ -47,6 +47,7 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
 
     const [pickImageInto, setPickImageInto] = useState(null);
     const [pendingDelete, setPendingDelete] = useState(false);
+    const [pendingAct, setPendingAct] = useState(null);
     const [renamed, setRenamed] = useState(false);
 
     const save = (onDone) => {
@@ -99,12 +100,15 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
                             >
                                 Preview
                             </a>
+                            {/* Taking a live article off the website asks first, the way the same
+                                action on a page already did. Publishing does not — putting content
+                                up is what the button is for, and it is undone by the one beside it. */}
                             {status === 'published'
-                                ? <button type="button" className="cms-btn cms-btn--sm" onClick={() => act('unpublish', 'Taken off the website')}>Unpublish</button>
+                                ? <button type="button" className="cms-btn cms-btn--sm" onClick={() => setPendingAct('unpublish')}>Unpublish</button>
                                 : <button type="button" className="cms-btn cms-btn--sm" onClick={() => act('publish', 'Published')}>Publish</button>}
                             {status === 'archived'
                                 ? <button type="button" className="cms-btn cms-btn--sm" onClick={() => act('unarchive', 'Restored')}>Restore</button>
-                                : <button type="button" className="cms-btn cms-btn--sm" onClick={() => act('archive', 'Archived')}>Archive</button>}
+                                : <button type="button" className="cms-btn cms-btn--sm" onClick={() => setPendingAct('archive')}>Archive</button>}
                             {canDelete ? (
                                 <button
                                     type="button"
@@ -322,13 +326,30 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
                 open={pendingDelete}
                 danger
                 title="Delete this article?"
-                lead="It disappears from the website and cannot be brought back. Archiving instead keeps it out of sight but recoverable."
+                /* It used to say this could not be undone. Soft deletes made that untrue, and a
+                   warning that overstates the danger is as misleading as one that understates it. */
+                lead="It disappears from the website and from this list. You can bring it back from Recently deleted until somebody removes it for good."
                 detail={article?.title}
                 confirmLabel="Delete"
                 onClose={() => setPendingDelete(false)}
                 onConfirm={() => {
                     router.delete(`/cms/blog/${article.id}`, { onSuccess: () => flash('Article deleted') });
                     setPendingDelete(false);
+                }}
+            />
+
+            <ConfirmModal
+                open={pendingAct !== null}
+                title={pendingAct === 'archive' ? 'Archive this article?' : 'Take this article off the website?'}
+                lead={pendingAct === 'archive'
+                    ? 'It comes off the website and out of the way. You can restore it whenever you like.'
+                    : 'Anyone reading it now will get a page-not-found. It stays here as a draft, and you can publish it again at any time.'}
+                detail={article?.title}
+                confirmLabel={pendingAct === 'archive' ? 'Archive' : 'Unpublish'}
+                onClose={() => setPendingAct(null)}
+                onConfirm={() => {
+                    act(pendingAct, pendingAct === 'archive' ? 'Archived' : 'Taken off the website');
+                    setPendingAct(null);
                 }}
             />
         </div>

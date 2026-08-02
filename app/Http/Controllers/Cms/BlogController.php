@@ -165,9 +165,23 @@ class BlogController extends Controller
         return back();
     }
 
+    /**
+     * Renaming moves the slug with it, unless somebody is already using that address. The slug is
+     * what a reader's filtered link carries, so a category renamed from Downsizing to Aged Care
+     * used to keep answering to /blog?category=downsizing — a name nobody recognised.
+     */
     public function updateCategory(SaveBlogCategoryRequest $request, BlogCategory $category): RedirectResponse
     {
-        $category->forceFill(['name' => $request->name(), 'active' => $request->active()])->save();
+        $name = $request->name();
+        $wanted = Str::slug($name);
+
+        $category->forceFill([
+            'name' => $name,
+            'active' => $request->active(),
+            'slug' => $category->isFallback() || $wanted === '' || $wanted === $category->slug
+                ? $category->slug
+                : $this->availableCategorySlug($wanted),
+        ])->save();
 
         return back();
     }

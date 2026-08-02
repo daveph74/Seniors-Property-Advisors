@@ -13,6 +13,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
     const flash = useCmsToast();
     const canDelete = auth?.can?.['content.delete'] === true;
     const [pendingCategory, setPendingCategory] = useState(null);
+    const [errors, setErrors] = useState({});
 
     const sortableCategories = useSortableList({
         items: categories,
@@ -25,12 +26,17 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
         }),
     });
 
+    /* Every one of these used to have no onError, so a rejected rename left the typed text sitting
+       in the box looking saved. The field is uncontrolled, which is what made it convincing. */
+    const failed = (bag) => flash(Object.values(bag)[0] || 'That could not be saved');
+
     const toggleCategory = (c) => router.patch(`/cms/faq-categories/${c.id}`, {
         name: c.name,
         active: ! c.active,
     }, {
         preserveScroll: true,
         onSuccess: () => flash(c.active ? 'Category hidden from the website' : 'Category showing again'),
+        onError: failed,
     });
 
     const [search, setSearch] = useState('');
@@ -76,7 +82,13 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
             faq_category_id: form.faq_category_id || null,
             page_slug: form.page_slug || null,
         };
-        const done = { preserveScroll: true, onSuccess: () => { setEditing(null); flash('FAQ saved'); } };
+        /* Without onError a rejected save closed nothing, said nothing and lost nothing — the
+           editor was left looking at a form that had quietly failed. */
+        const done = {
+            preserveScroll: true,
+            onSuccess: () => { setEditing(null); setErrors({}); flash('FAQ saved'); },
+            onError: setErrors,
+        };
 
         if (editing === 'new') {
             router.post('/cms/faqs', body, done);
@@ -216,7 +228,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                                             router.patch(`/cms/faq-categories/${c.id}`, {
                                                 name: e.target.value,
                                                 active: c.active,
-                                            }, { preserveScroll: true });
+                                            }, { preserveScroll: true, onError: failed });
                                         }
                                     }}
                                 />
@@ -261,6 +273,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                             router.post('/cms/faq-categories', { name: newCategory }, {
                                 preserveScroll: true,
                                 onSuccess: () => { setNewCategory(''); flash('Category added'); },
+                                onError: failed,
                             });
                         }}
                     />
@@ -294,7 +307,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                 open={pendingDelete !== null}
                 danger
                 title="Delete this question?"
-                lead="It disappears from every page showing it. Hiding it instead keeps it for later."
+                lead="It comes off every page showing it. You can bring it back from Recently deleted, or hide it instead to keep it where you can see it."
                 detail={pendingDelete?.question}
                 confirmLabel="Delete"
                 onClose={() => setPendingDelete(null)}
@@ -322,6 +335,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                                 value={form.question}
                                 onChange={(e) => setForm({ ...form, question: e.target.value })}
                             />
+                            {errors.question ? <div className="cms-field-error">{errors.question}</div> : null}
                         </div>
 
                         <div className="cms-field">
@@ -332,6 +346,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                                 value={form.answer}
                                 onChange={(e) => setForm({ ...form, answer: e.target.value })}
                             />
+                            {errors.answer ? <div className="cms-field-error">{errors.answer}</div> : null}
                         </div>
 
                         <div className="cms-field">
@@ -354,6 +369,7 @@ export default function FaqsIndex({ faqs = [], categories = [], auth }) {
                                 placeholder="Leave empty to allow every page"
                                 onChange={(e) => setForm({ ...form, page_slug: e.target.value })}
                             />
+                            {errors.page_slug ? <div className="cms-field-error">{errors.page_slug}</div> : null}
                             <div className="cms-hint">A page slug, for example &quot;contact&quot;.</div>
                         </div>
 

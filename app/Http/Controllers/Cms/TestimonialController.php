@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Cms;
 
+use App\Content\Text;
 use App\Http\Controllers\Controller;
 use App\Models\Testimonial;
 use Illuminate\Http\RedirectResponse;
@@ -110,6 +111,14 @@ class TestimonialController extends Controller
          */
         $needed = $existing === null ? ['required'] : ['sometimes', 'required'];
 
+        /* Stripped before the rules run, not after. Validating first and sanitising second let
+           "<hr>" pass `required` and reach the database as null, where a NOT NULL column turned an
+           editor's typo into a 500. */
+        $request->merge(Text::cleanAll(
+            $request->only(['name', 'quote', 'location', 'headline', 'image_alt']),
+            ['name', 'quote', 'location', 'headline', 'image_alt'],
+        ));
+
         $data = $request->validate([
             'name' => [...$needed, 'string', 'max:190'],
             'quote' => [...$needed, 'string', 'max:2000'],
@@ -121,12 +130,6 @@ class TestimonialController extends Controller
             'featured' => ['sometimes', 'boolean'],
             'active' => ['sometimes', 'boolean'],
         ]);
-
-        foreach (['name', 'quote', 'location', 'headline', 'image_alt'] as $field) {
-            if (isset($data[$field])) {
-                $data[$field] = trim(strip_tags((string) $data[$field])) ?: null;
-            }
-        }
 
         $wantsPublishing = ($data['active'] ?? false) || ($data['featured'] ?? false);
 
