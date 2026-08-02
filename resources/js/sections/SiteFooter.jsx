@@ -31,7 +31,7 @@ export default function SiteFooter({ globals = {} }) {
                     </div>
                     {(footer.columns || []).map((col) => (
                         <div key={col.heading}>
-                            <h5>{col.heading}</h5>
+                            <h2>{col.heading}</h2>
                             <ul>
                                 {col.links.map((l) => (
                                     <li key={l.label}>

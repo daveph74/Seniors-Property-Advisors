@@ -1,4 +1,8 @@
+import { useHeadingLevel } from './headingLevel';
+
 export default function SectionHead({ eyebrow, heading, headingEm, lead, centred = true }) {
+    const Heading = `h${useHeadingLevel()}`;
+
     if (! eyebrow && ! heading && ! headingEm && ! lead) return null;
 
     return (
@@ -7,9 +11,9 @@ export default function SectionHead({ eyebrow, heading, headingEm, lead, centred
                 {eyebrow ? <div className="eyebrow-line">{eyebrow}</div> : null}
 
                 {heading || headingEm ? (
-                    <h2>
+                    <Heading className="section-head__title">
                         {heading} {headingEm ? <em>{headingEm}</em> : null}
-                    </h2>
+                    </Heading>
                 ) : null}
 
                 {lead ? <p className="section-lead">{lead}</p> : null}

@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react';
 import SectionHead from './SectionHead';
 import SiteLink from './SiteLink';
 import PendingModule from './PendingModule';
+import { useHeadingLevel } from './headingLevel';
 
 export default function BlogListSection({ data, anchor, library = {}, editing = false }) {
+    /* One below whatever the section's own heading is, so the listing does not skip a level on a
+       page where it opens the page and its heading is the h1. */
+    const CardTitle = `h${useHeadingLevel() + 1}`;
     const limit = Number(data.limit) > 0 ? Number(data.limit) : null;
     const step = limit ?? 12;
 
@@ -154,7 +158,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
                                         ) : null}
                                         <div className="article-card__body">
                                             {a.category ? <span className="article-card__tag">{a.category}</span> : null}
-                                            <h3 className="article-card__title">{a.title}</h3>
+                                            <CardTitle className="article-card__title">{a.title}</CardTitle>
                                             {a.date ? <time className="article-card__date">{a.date}</time> : null}
                                             <p className="article-card__summary">{a.summary}</p>
                                         </div>

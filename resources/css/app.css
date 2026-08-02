@@ -468,7 +468,8 @@ section.tight{ padding: 96px 0; }
 .eyebrow-line::before{
   content:""; width: 32px; height: 1.5px; background: var(--blue-deep);
 }
-h2{
+h2,
+.section-head__title{
   font-family: var(--font-display);
   font-weight: 700;
   font-size: clamp(32px, 3.4vw, 48px);
@@ -478,14 +479,15 @@ h2{
   margin: 0 0 18px;
   text-wrap: pretty;
 }
-h2 em{ font-style: normal; color: var(--blue-deep); }
+h2 em,
+.section-head__title em{ font-style: normal; color: var(--blue-deep); }
 .section-lead{ color: var(--text-mid); font-size: 18px; line-height: 1.6; max-width: 640px; }
 
 .section-head{ display:flex; align-items:flex-end; justify-content:space-between; gap: 40px; margin-bottom: 56px; }
 .section-head .left{ max-width: 640px; }
 .section-head.center{ justify-content: center; text-align: center; flex-direction: column; align-items: center; margin-bottom: 72px; }
 .section-head.center .eyebrow-line{ justify-content:center; }
-.section-head.center h2{ text-align:center; }
+.section-head.center .section-head__title{ text-align:center; }
 .section-head.center .section-lead{ text-align:center; margin: 0 auto; }
 
 /* ===================== Trust section ===================== */
@@ -553,7 +555,7 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
   content:""; position:absolute; inset: 6px;
   border-radius: 50%; border: 1px dashed rgba(88,148,213,0.45);
 }
-.step h4{ font-size: 19px; color: var(--navy); font-weight: 600; margin: 0 0 8px; letter-spacing: -0.005em;}
+.step h3{ font-size: 19px; color: var(--navy); font-weight: 600; margin: 0 0 8px; letter-spacing: -0.005em;}
 .step p{ color: var(--text-mid); margin: 0; font-size: 15px; line-height: 1.6;}
 
 /* ===================== Why use ===================== */
@@ -565,7 +567,7 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
   z-index: 0;
 }
 .why .container{ position: relative; z-index: 1;}
-.why h2{ color: var(--white); }
+.why .section-head__title{ color: var(--white); }
 .why h2 em{ color: var(--blue); }
 .why .eyebrow-line{ color: var(--blue);}
 .why .eyebrow-line::before{ background: var(--blue);}
@@ -749,7 +751,7 @@ h2 em{ font-style: normal; color: var(--blue-deep); }
     radial-gradient(600px 400px at 0% 100%, rgba(88,148,213,0.10), transparent 60%);
 }
 .cta .container{ position:relative; text-align: center;}
-.cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
+.cta .section-head__title{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
 .cta h2 em{ color: var(--blue);}
 .cta p{ color: #B6C2DB; max-width: 540px; margin: 0 auto 36px; font-size: 19px;}
 .cta .row{ display:flex; gap: 14px; justify-content:center; flex-wrap: wrap;}
@@ -774,7 +776,7 @@ footer{
 .foot-grid{
   display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 56px;
 }
-.foot-grid h5{
+.foot-grid h2{
   color: var(--white); font-size: 14px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   margin: 0 0 18px;

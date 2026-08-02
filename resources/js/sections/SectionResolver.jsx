@@ -1,9 +1,13 @@
 import { Fragment } from 'react';
 import { resolveSection } from './registry';
+import { HeadingLevel, ownerOfTheH1 } from './headingLevel';
 
 const BREAKPOINTS = ['desktop', 'tablet', 'mobile'];
 
 export default function SectionResolver({ sections = [], actions = {}, library = {}, depth = 0 }) {
+    /* Only the outermost run decides; a nested section is never the page's opening heading. */
+    const topHeading = depth === 0 ? ownerOfTheH1(sections) : null;
+
     return sections.map((section) => {
         const Section = resolveSection(section.type);
 
@@ -14,14 +18,16 @@ export default function SectionResolver({ sections = [], actions = {}, library =
             : null;
 
         const rendered = (
-            <Section
-                data={section.data || {}}
-                anchor={section.anchor}
-                actions={actions}
-                library={library}
-            >
-                {nested}
-            </Section>
+            <HeadingLevel.Provider value={section.id === topHeading ? 1 : 2}>
+                <Section
+                    data={section.data || {}}
+                    anchor={section.anchor}
+                    actions={actions}
+                    library={library}
+                >
+                    {nested}
+                </Section>
+            </HeadingLevel.Provider>
         );
 
         const hidden = section.data?.hidden || {};
