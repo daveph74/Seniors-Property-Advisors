@@ -1,3 +1,6 @@
+import { useForm, usePage } from '@inertiajs/react';
+import { useHeadingLevel } from './headingLevel';
+
 const FIELDS = [
     { name: 'name', label: 'Your name', type: 'text', autoComplete: 'name' },
     { name: 'email', label: 'Email address', type: 'email', autoComplete: 'email' },
@@ -5,7 +8,27 @@ const FIELDS = [
     { name: 'suburb', label: 'Suburb', type: 'text', autoComplete: 'address-level2' },
 ];
 
-export default function ContactFormSection({ data, anchor }) {
+/**
+ * The wording here is the editor's; the fields, the validation and where an enquiry goes are not.
+ * Scope §12 keeps those with the development team, so they are in code and absent from the builder.
+ */
+export default function ContactFormSection({ data, anchor, editing = false }) {
+    const Heading = `h${useHeadingLevel()}`;
+    const sent = usePage().props.enquiry === 'sent';
+
+    const { data: form, setData, post, processing, errors } = useForm({
+        name: '', email: '', phone: '', suburb: '', message: '', consent: false,
+        page: typeof window === 'undefined' ? null : window.location.pathname,
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+
+        if (editing) return;
+
+        post('/enquiries', { preserveScroll: true });
+    };
+
     return (
         <section className="contact-form" id={anchor}>
             <div className="container contact-form__grid">
@@ -13,38 +36,68 @@ export default function ContactFormSection({ data, anchor }) {
                     {data.eyebrow ? <div className="eyebrow-line">{data.eyebrow}</div> : null}
 
                     {data.heading || data.headingEm ? (
-                        <h2>
+                        <Heading className="section-head__title">
                             {data.heading} {data.headingEm ? <em>{data.headingEm}</em> : null}
-                        </h2>
+                        </Heading>
                     ) : null}
 
                     {data.intro ? <p className="section-lead">{data.intro}</p> : null}
                 </div>
 
-                <form className="contact-form__form" method="post">
-                    {FIELDS.map((f) => (
-                        <label className="contact-form__field" key={f.name}>
-                            <span>{f.label}</span>
-                            <input type={f.type} name={f.name} autoComplete={f.autoComplete} />
+                {sent && ! editing ? (
+                    /* The confirmation the editor wrote. It was an editable field with nothing
+                       rendering it, so whatever was typed there had never been seen by anybody. */
+                    <p className="contact-form__sent" role="status">
+                        {data.confirmation || 'Thank you — we have your enquiry and will be in touch.'}
+                    </p>
+                ) : (
+                    <form className="contact-form__form" method="post" onSubmit={submit} noValidate>
+                        {FIELDS.map((f) => (
+                            <label className="contact-form__field" key={f.name}>
+                                <span>{f.label}</span>
+                                <input
+                                    type={f.type}
+                                    name={f.name}
+                                    autoComplete={f.autoComplete}
+                                    value={form[f.name]}
+                                    onChange={(e) => setData(f.name, e.target.value)}
+                                    aria-invalid={errors[f.name] ? 'true' : undefined}
+                                />
+                                {errors[f.name] ? <em className="contact-form__error">{errors[f.name]}</em> : null}
+                            </label>
+                        ))}
+
+                        <label className="contact-form__field">
+                            <span>How can we help?</span>
+                            <textarea
+                                name="message"
+                                rows="4"
+                                value={form.message}
+                                onChange={(e) => setData('message', e.target.value)}
+                            />
+                            {errors.message ? <em className="contact-form__error">{errors.message}</em> : null}
                         </label>
-                    ))}
 
-                    <label className="contact-form__field">
-                        <span>How can we help?</span>
-                        <textarea name="message" rows="4" />
-                    </label>
-
-                    {data.consent ? (
+                        {/* Always shown, wording or not. Consent is required on the way in, so an
+                            editor clearing this field would otherwise leave a form nobody can
+                            submit and no way to see why. */}
                         <label className="contact-form__consent">
-                            <input type="checkbox" name="consent" />
-                            <span>{data.consent}</span>
+                            <input
+                                type="checkbox"
+                                name="consent"
+                                checked={form.consent}
+                                onChange={(e) => setData('consent', e.target.checked)}
+                            />
+                            <span>{data.consent || 'I agree to be contacted about this enquiry.'}</span>
                         </label>
-                    ) : null}
 
-                    <button type="submit" className="btn primary">
-                        {data.submitLabel || 'Send enquiry'}
-                    </button>
-                </form>
+                        {errors.consent ? <em className="contact-form__error">{errors.consent}</em> : null}
+
+                        <button type="submit" className="btn primary" disabled={processing}>
+                            {processing ? 'Sending…' : (data.submitLabel || 'Send enquiry')}
+                        </button>
+                    </form>
+                )}
             </div>
         </section>
     );

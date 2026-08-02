@@ -10,6 +10,7 @@ use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\ReusableSectionController;
 use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
+use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -136,6 +137,10 @@ Route::get('/media/{key}', [MediaController::class, 'show'])
 | "articles" is a reserved article slug and a page cannot be given a blog/... slug.
 */
 Route::get('/blog/articles', [BlogController::class, 'articles'])->name('blog.articles');
+
+/* Throttled like the sign-in form: a public endpoint that writes a row invites a script. */
+Route::post('/enquiries', [EnquiryController::class, 'store'])
+    ->middleware('throttle:6,1')->name('enquiries.store');
 Route::get('/blog/{article}', [BlogController::class, 'show'])
     ->where('article', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('blog.show');
 
