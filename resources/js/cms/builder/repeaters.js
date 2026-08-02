@@ -10,7 +10,7 @@ export const PICKMANY = (path, label, source, empty) => ({ path, label, type: 'c
 export const FLAG = (path, label) => ({ path, label, type: 'toggle' });
 export const FLAGON = (path, label) => ({ path, label, type: 'toggle', whenAbsent: true });
 export const NUM = (path, label) => ({ path, label, type: 'number' });
-export const IMG = (path, label, altPath = null) => ({ path, label, type: 'image', altPath });
+export const IMG = (path, label, altPath = null, captionPath = null) => ({ path, label, type: 'image', altPath, captionPath });
 
 const BUTTON_FIELDS = [
     TEXT('label', 'Label'),
@@ -124,7 +124,7 @@ const SCHEMAS = {
                 TEXT('name', 'Name'),
                 TEXT('role', 'Role'),
                 AREA('bio', 'Short bio'),
-                IMG('photo', 'Photo'),
+                IMG('photo', 'Photo', 'photoAlt'),
             ],
         },
     },

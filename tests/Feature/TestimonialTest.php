@@ -52,6 +52,21 @@ class TestimonialTest extends TestCase
         $this->assertFalse($saved->hasConsent());
     }
 
+    public function test_a_photo_carries_its_description_to_the_reader(): void
+    {
+        $this->post('/cms/testimonials', [
+            'name' => 'Janet R.',
+            'quote' => 'They took the worry out of it.',
+            'image' => '/media/2026/08/janet.jpg',
+            'image_alt' => 'Janet on her front step',
+        ])->assertRedirect();
+
+        $saved = Testimonial::sole();
+
+        $this->assertSame('Janet on her front step', $saved->image_alt);
+        $this->assertSame('Janet on her front step', $saved->toCard()['avatarAlt']);
+    }
+
     public function test_a_name_and_a_quote_are_required_and_a_rating_is_not(): void
     {
         $this->post('/cms/testimonials', ['name' => '', 'quote' => ''])

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Cms;
 
+use App\Auth\Permissions;
+use App\Content\ImageOptimiser;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Testimonial;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +22,20 @@ class MediaController extends Controller
     public const MAX_BYTES = 26214400;
 
     public const EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+
+    /** Where a small copy lives: the original's key, under a prefix content never points at. */
+    public const THUMBS = 'thumbs/';
+
+    /**
+     * What the bytes are allowed to be, and the extension each one must arrive under. Checked
+     * against the file itself rather than against the name, and used as the stored Content-Type.
+     */
+    public const MIMES = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp',
+    ];
 
     public function index()
     {
@@ -35,7 +52,12 @@ class MediaController extends Controller
         return response()->json([
             'items' => Media::query()
                 ->where('mime', 'like', 'image/%')
-                ->when($search !== '', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
+                /* Also the description and caption: an editor looking for a photo remembers what is
+                   in it long before they remember that it is called 134021038407023939.jpg. */
+                ->when($search !== '', fn ($q) => $q->where(fn ($find) => $find
+                    ->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('alt', 'like', '%'.$search.'%')
+                    ->orWhere('caption', 'like', '%'.$search.'%')))
                 ->latest('id')
                 ->limit(60)
                 ->get()
@@ -64,7 +86,15 @@ class MediaController extends Controller
 
         if (! in_array($extension, self::EXTENSIONS, true)) {
             return response()->json([
-                'message' => 'That file type is not supported. Use a JPG, PNG, GIF, WEBP or SVG.',
+                'message' => 'That file type is not supported. Use a JPG, PNG, GIF or WEBP.',
+            ], 422);
+        }
+
+        /* An SVG is a document that can carry script. It is served with headers that neutralise it,
+           but scope §7's "trusted administrators" is about who can put one there at all. */
+        if ($extension === 'svg' && ! Permissions::allows($request->user(), 'media.upload_svg')) {
+            return response()->json([
+                'message' => 'Only a super administrator can upload an SVG. Use a PNG or a JPG.',
             ], 422);
         }
 
@@ -105,17 +135,102 @@ class MediaController extends Controller
             ], 422);
         }
 
+        $extension = strtolower(pathinfo($key, PATHINFO_EXTENSION));
+        $extension = $extension === 'jpeg' ? 'jpg' : $extension;
+        $optimiser = new ImageOptimiser;
+        $bytes = $extension === 'svg' ? null : (string) $disk->get($key);
+        $mime = $this->safeMime((string) $request->input('mime'));
+        $width = $this->dimension($request->input('width'));
+        $height = $this->dimension($request->input('height'));
+
+        if ($bytes !== null) {
+            [$real, $tall, $sniffed] = $optimiser->measure($bytes);
+
+            /* The only type check until now was the extension on the name the browser sent, so a
+               .jpg could hold anything at all. This is the first look at the bytes themselves. */
+            if ($sniffed === null || ! isset(self::MIMES[$sniffed]) || self::MIMES[$sniffed] !== $extension) {
+                $disk->delete($key);
+
+                return response()->json([
+                    'message' => 'That file is not the kind of image its name says it is.',
+                ], 422);
+            }
+
+            if ($optimiser->tooLarge($bytes)) {
+                $disk->delete($key);
+
+                return response()->json([
+                    'message' => 'That image has too many pixels to process. Resize it to under '
+                        .round(ImageOptimiser::MAX_PIXELS / 1000000).' megapixels and try again.',
+                ], 422);
+            }
+
+            $mime = $sniffed;
+            $width = $real;
+            $height = $tall;
+
+            /* Written back over the same key, before the row exists and therefore before anything
+               can have asked for it — the URL never changes, so every reference to this image keeps
+               working and the immutable cache header stays honest. */
+            $smaller = $optimiser->optimise($bytes, $sniffed);
+
+            if ($smaller !== null) {
+                $disk->put($key, $smaller['bytes']);
+                $bytes = $smaller['bytes'];
+                $size = (int) $disk->size($key);
+                $width = $smaller['width'];
+                $height = $smaller['height'];
+            }
+
+            $thumbKey = $this->makeThumb($bytes, $sniffed, $key);
+        }
+
         $media = Media::create([
             'key' => $key,
+            'thumb_key' => $thumbKey ?? null,
             'name' => $this->safeName((string) $request->input('name')),
-            'mime' => $this->safeMime((string) $request->input('mime')),
+            'mime' => $mime,
             'size' => $size,
-            'width' => $this->dimension($request->input('width')),
-            'height' => $this->dimension($request->input('height')),
+            'width' => $width,
+            'height' => $height,
             'disk' => 's3',
         ]);
 
         return response()->json($this->item($media), 201);
+    }
+
+    /** Returns the key it wrote, or null when a small copy could not be made. */
+    public function makeThumb(string $bytes, string $mime, string $key): ?string
+    {
+        $thumb = (new ImageOptimiser)->thumbnail($bytes, $mime);
+
+        if ($thumb === null) {
+            return null;
+        }
+
+        Storage::disk('s3')->put(self::THUMBS.$key, $thumb['bytes']);
+
+        return self::THUMBS.$key;
+    }
+
+    /**
+     * The description and caption the library holds for an image. A placement keeps its own and
+     * overrides these; these are what a placement starts from.
+     */
+    public function update(Request $request, Media $medium): RedirectResponse
+    {
+        $data = $request->validate([
+            'alt' => ['sometimes', 'nullable', 'string', 'max:300'],
+            'caption' => ['sometimes', 'nullable', 'string', 'max:300'],
+        ]);
+
+        foreach ($data as $field => $value) {
+            $data[$field] = trim(strip_tags((string) $value)) ?: null;
+        }
+
+        $medium->update($data);
+
+        return back();
     }
 
     public function usageFor(Request $request)
@@ -166,7 +281,11 @@ class MediaController extends Controller
 
     public function show(string $key)
     {
-        $media = Media::where('key', $key)->first();
+        /* A small copy is served through the same route as its original, so it inherits the same
+           headers — including the immutable cache, which holds because the key never gets reused. */
+        $media = str_starts_with($key, self::THUMBS)
+            ? Media::where('thumb_key', $key)->first()
+            : Media::where('key', $key)->first();
 
         if ($media === null) {
             abort(404);
@@ -190,7 +309,8 @@ class MediaController extends Controller
             200,
             [
                 'Content-Type' => $media->mime,
-                'Content-Length' => $media->size,
+                /* Measured, not taken from the row: a small copy is a different length. */
+                'Content-Length' => (int) $disk->size($key),
                 'Cache-Control' => 'public, max-age=31536000, immutable',
                 'X-Content-Type-Options' => 'nosniff',
                 'Content-Security-Policy' => "default-src 'none'; style-src 'unsafe-inline'",
@@ -204,7 +324,10 @@ class MediaController extends Controller
             'id' => $media->id,
             'key' => $media->key,
             'url' => $media->url(),
+            'thumb' => $media->thumbUrl(),
             'name' => $media->name,
+            'alt' => $media->alt,
+            'caption' => $media->caption,
             'mime' => $media->mime,
             'size' => $media->size,
             'width' => $media->width,
@@ -224,7 +347,7 @@ class MediaController extends Controller
     private function erase(Media $medium): void
     {
         try {
-            Storage::disk($medium->disk)->delete($medium->key);
+            Storage::disk($medium->disk)->delete(array_filter([$medium->key, $medium->thumb_key]));
         } catch (Throwable $e) {
             report($e);
         }
@@ -302,11 +425,19 @@ class MediaController extends Controller
         return preg_match('#^\d{4}/\d{2}/[0-9a-z]+\.[a-z0-9]+$#', $key) === 1;
     }
 
+    /**
+     * An allowlist, not a shape check. This value is handed straight back as the Content-Type on
+     * every request for the file, so "looks like a mime type" was never enough.
+     */
     private function safeMime(string $value): string
     {
-        return preg_match('#^[a-z]+/[a-z0-9.+-]+$#i', $value) === 1
-            ? Str::lower(Str::limit($value, 120, ''))
-            : 'application/octet-stream';
+        $mime = Str::lower(trim($value));
+
+        if ($mime === 'image/svg+xml' || isset(self::MIMES[$mime])) {
+            return $mime;
+        }
+
+        return 'application/octet-stream';
     }
 
     private function dimension(mixed $value): ?int

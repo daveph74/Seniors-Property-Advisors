@@ -17,6 +17,7 @@ class Permissions
     public const ABILITIES = [
         'content.manage' => [User::SUPER_ADMIN, User::CLIENT_ADMIN],
         'content.delete' => [User::SUPER_ADMIN],
+        'media.upload_svg' => [User::SUPER_ADMIN],
         'content.restore' => [User::SUPER_ADMIN],
         'users.manage' => [User::SUPER_ADMIN],
         'settings.manage' => [User::SUPER_ADMIN],

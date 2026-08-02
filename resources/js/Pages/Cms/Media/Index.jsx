@@ -31,7 +31,9 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
 
     const filtered = items.filter((m) => {
         const q = search.trim().toLowerCase();
-        return ! q || m.name.toLowerCase().includes(q);
+
+        return ! q || [m.name, m.alt, m.caption]
+            .some((field) => (field || '').toLowerCase().includes(q));
     });
 
     const selected = items.find((m) => m.id === selectedId) || null;
@@ -43,6 +45,17 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
     };
 
     const toggle = (id) => setPicked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+    const describe = (media, field, value) => {
+        if ((media[field] || '') === value.trim()) return;
+
+        router.patch(`/cms/media/${media.id}`, { [field]: value }, {
+            preserveScroll: true,
+            preserveState: true,
+            only: ['items'],
+            onSuccess: () => flash(field === 'alt' ? 'Description saved' : 'Caption saved'),
+        });
+    };
 
     const askToDelete = async (ids) => {
         const response = await fetch('/cms/media/usage', {
@@ -166,7 +179,7 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
                                     className={`cms-media-item ${m.id === selectedId ? 'cms-media-item--selected' : ''} ${picked.includes(m.id) ? 'cms-media-item--picked' : ''}`}
                                 >
                                     {m.isImage ? (
-                                        <img className="cms-media-item__thumb cms-media-item__thumb--img" src={m.url} alt="" loading="lazy" />
+                                        <img className="cms-media-item__thumb cms-media-item__thumb--img" src={m.thumb || m.url} alt="" loading="lazy" decoding="async" />
                                     ) : (
                                         <div className="cms-media-item__thumb" />
                                     )}
@@ -201,12 +214,38 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
                     </button>
 
                     {selected.isImage ? (
-                        <img className="cms-media-side__preview cms-media-side__preview--img" src={selected.url} alt="" />
+                        <img className="cms-media-side__preview cms-media-side__preview--img" src={selected.thumb || selected.url} alt="" decoding="async" />
                     ) : (
                         <div className="cms-media-side__preview" />
                     )}
                     <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{selected.name}</div>
                     <div style={{ fontSize: 12, color: 'var(--cms-text-mid)', marginBottom: 16 }}>{selected.meta}</div>
+
+                    <div className="cms-field">
+                        <label className="cms-field-label">Describe the image</label>
+                        <input
+                            key={`alt-${selected.id}`}
+                            className="cms-input"
+                            defaultValue={selected.alt || ''}
+                            placeholder="Advisor guiding a senior couple"
+                            onBlur={(e) => describe(selected, 'alt', e.target.value)}
+                        />
+                        <div className="cms-hint">
+                            Read aloud to visitors who cannot see it. Used wherever this image is
+                            placed, unless that placement says something different.
+                        </div>
+                    </div>
+
+                    <div className="cms-field">
+                        <label className="cms-field-label">Caption</label>
+                        <input
+                            key={`caption-${selected.id}`}
+                            className="cms-input"
+                            defaultValue={selected.caption || ''}
+                            placeholder="Optional — shown under the image"
+                            onBlur={(e) => describe(selected, 'caption', e.target.value)}
+                        />
+                    </div>
 
                     <div className="cms-field">
                         <label className="cms-field-label">Address</label>

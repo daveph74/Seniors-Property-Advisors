@@ -18,6 +18,7 @@ class SaveBlogPostRequest extends FormRequest
             'summary' => ['nullable', 'string', 'max:400'],
             'body' => ['nullable', 'string', 'max:200000'],
             'featured_image' => ['nullable', 'string', 'max:400'],
+            'featured_image_alt' => ['nullable', 'string', 'max:300'],
             'author_name' => ['nullable', 'string', 'max:120'],
             'status' => ['sometimes', Rule::in(BlogPost::STATUSES)],
             'published_at' => ['nullable', 'date'],
@@ -68,6 +69,7 @@ class SaveBlogPostRequest extends FormRequest
              */
             'body' => Html::clean($data['body'] ?? null) ?: null,
             'featured_image' => $data['featured_image'] ?? null,
+            'featured_image_alt' => $this->clean($data['featured_image_alt'] ?? null),
             'author_name' => $this->clean($data['author_name'] ?? null),
             'published_at' => $data['published_at'] ?? null,
             'seo' => array_filter([

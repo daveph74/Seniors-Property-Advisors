@@ -22,6 +22,7 @@ class TestimonialController extends Controller
                 'location' => $t->location,
                 'headline' => $t->headline,
                 'image' => $t->image,
+                'imageAlt' => $t->image_alt,
                 'rating' => $t->rating,
                 'featured' => $t->featured,
                 'active' => $t->active,
@@ -115,12 +116,13 @@ class TestimonialController extends Controller
             'location' => ['nullable', 'string', 'max:190'],
             'headline' => ['nullable', 'string', 'max:190'],
             'image' => ['nullable', 'string', 'max:500'],
+            'image_alt' => ['nullable', 'string', 'max:300'],
             'rating' => ['nullable', 'integer', 'min:1', 'max:5'],
             'featured' => ['sometimes', 'boolean'],
             'active' => ['sometimes', 'boolean'],
         ]);
 
-        foreach (['name', 'quote', 'location', 'headline'] as $field) {
+        foreach (['name', 'quote', 'location', 'headline', 'image_alt'] as $field) {
             if (isset($data[$field])) {
                 $data[$field] = trim(strip_tags((string) $data[$field])) ?: null;
             }

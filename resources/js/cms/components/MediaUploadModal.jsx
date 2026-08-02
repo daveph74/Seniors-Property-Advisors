@@ -41,7 +41,7 @@ export default function MediaUploadModal({ open, onClose, files = null, maxBytes
                     <div className="cms-library__grid" style={{ marginTop: 4 }}>
                         {added.map((item) => (
                             <div key={item.id} className="cms-library__tile" style={{ cursor: 'default' }}>
-                                <img src={item.url} alt="" loading="lazy" />
+                                <img src={item.thumb || item.url} alt="" loading="lazy" decoding="async" />
                                 <span className="cms-library__name">{item.name}</span>
                                 <span className="cms-library__meta">{item.meta}</span>
                             </div>

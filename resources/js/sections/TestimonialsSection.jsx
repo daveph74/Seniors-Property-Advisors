@@ -49,7 +49,7 @@ function card(t, i, eager = false) {
             <blockquote className="testimonial__quote">{t.quote}</blockquote>
 
             <figcaption className="testimonial__by">
-                {t.avatar ? <img src={t.avatar} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" /> : null}
+                {t.avatar ? <img src={t.avatar} alt={t.avatarAlt || ''} loading={eager ? 'eager' : 'lazy'} decoding="async" /> : null}
                 <span>
                     <b>{t.name}</b>
                     {t.location ? <small>{t.location}</small> : null}

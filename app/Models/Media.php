@@ -8,7 +8,9 @@ class Media extends Model
 {
     protected $table = 'media';
 
-    protected $fillable = ['key', 'name', 'mime', 'size', 'width', 'height', 'disk'];
+    protected $fillable = [
+        'key', 'thumb_key', 'name', 'alt', 'caption', 'mime', 'size', 'width', 'height', 'disk',
+    ];
 
     protected $casts = [
         'size' => 'integer',
@@ -19,6 +21,12 @@ class Media extends Model
     public function url(): string
     {
         return '/media/'.$this->key;
+    }
+
+    /** What the CMS should show. Falls back to the original for anything with no small copy. */
+    public function thumbUrl(): string
+    {
+        return '/media/'.($this->thumb_key ?: $this->key);
     }
 
     public function meta(): string

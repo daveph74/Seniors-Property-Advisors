@@ -9,7 +9,7 @@ import useSortableList from '../../../cms/useSortableList';
 import { useCmsToast } from '../../../cms/ToastContext';
 
 const BLANK = {
-    name: '', quote: '', location: '', headline: '', image: '', rating: '',
+    name: '', quote: '', location: '', headline: '', image: '', image_alt: '', rating: '',
     featured: false, active: false,
 };
 
@@ -39,7 +39,7 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
         setForm(t
             ? {
                 name: t.name, quote: t.quote, location: t.location || '', headline: t.headline || '',
-                image: t.image || '', rating: t.rating || '', featured: t.featured, active: t.active,
+                image: t.image || '', image_alt: t.imageAlt || '', rating: t.rating || '', featured: t.featured, active: t.active,
             }
             : BLANK);
     };
@@ -50,6 +50,7 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
             location: form.location || null,
             headline: form.headline || null,
             image: form.image || null,
+            image_alt: form.image_alt || null,
             rating: form.rating === '' ? null : Number(form.rating),
         };
         const done = {
@@ -331,7 +332,9 @@ export default function TestimonialsIndex({ testimonials = [], auth }) {
                         <ImageField
                             label="Client photo"
                             value={form.image}
+                            alt={form.image_alt}
                             onChange={(src) => setForm({ ...form, image: src })}
+                            onAltChange={(v) => setForm({ ...form, image_alt: v })}
                             hint="Optional. Only use a photo the client has agreed to."
                         />
 

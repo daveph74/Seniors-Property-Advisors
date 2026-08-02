@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Testimonial extends Model
 {
     protected $fillable = [
-        'name', 'quote', 'location', 'headline', 'image', 'rating',
+        'name', 'quote', 'location', 'headline', 'image', 'image_alt', 'rating',
         'sort_order', 'featured', 'active',
         'consent_confirmed_at', 'consent_confirmed_by', 'last_updated_by',
     ];
@@ -54,6 +54,7 @@ class Testimonial extends Model
             'location' => $this->location,
             'headline' => $this->headline,
             'avatar' => $this->image,
+            'avatarAlt' => $this->image_alt,
             'rating' => $this->rating,
             'featured' => $this->featured,
         ];

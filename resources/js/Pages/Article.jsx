@@ -94,7 +94,13 @@ export default function Article({ article, seo = {}, related = [], globals = {},
                         </header>
 
                         {article.image ? (
-                            <img className="article__hero" src={article.image} alt="" width="1200" height="675" />
+                            <img
+                                className="article__hero"
+                                src={article.image}
+                                alt={article.imageAlt || ''}
+                                width="1200"
+                                height="675"
+                            />
                         ) : null}
 
                         {article.summary ? <p className="article__lead">{article.summary}</p> : null}

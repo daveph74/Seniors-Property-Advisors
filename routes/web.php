@@ -107,6 +107,8 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::post('/media/sign', [MediaController::class, 'sign'])->name('media.sign');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::post('/media/usage', [MediaController::class, 'usageFor'])->name('media.usage');
+    Route::patch('/media/{medium}', [MediaController::class, 'update'])
+        ->whereNumber('medium')->name('media.update');
     Route::delete('/media', [MediaController::class, 'destroyMany'])
         ->middleware('permit:content.delete')->name('media.destroy-many');
     Route::delete('/media/{medium}', [MediaController::class, 'destroy'])
