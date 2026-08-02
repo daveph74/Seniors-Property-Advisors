@@ -173,10 +173,13 @@ class FaqTest extends TestCase
 
     public function test_a_category_can_be_hidden_without_touching_its_questions(): void
     {
-        $category = $this->category();
+        /* Its own name: "Downsizing" is one of the seeded seven, and category names are unique
+           now, so reusing the default would fail validation rather than hide anything. */
+        $category = $this->category('Moving house');
         $faq = $this->faq(['faq_category_id' => $category->id]);
 
         $this->patch("/cms/faq-categories/{$category->id}", ['name' => $category->name, 'active' => false])
+            ->assertSessionHasNoErrors()
             ->assertRedirect();
 
         $this->assertFalse($category->refresh()->active);
