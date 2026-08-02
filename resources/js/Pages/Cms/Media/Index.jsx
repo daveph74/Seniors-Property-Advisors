@@ -54,6 +54,7 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
             preserveState: true,
             only: ['items'],
             onSuccess: () => flash(field === 'alt' ? 'Description saved' : 'Caption saved'),
+            onError: (bag) => flash(Object.values(bag)[0] || 'That could not be saved'),
         });
     };
 

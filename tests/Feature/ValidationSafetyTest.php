@@ -87,6 +87,17 @@ class ValidationSafetyTest extends TestCase
         $this->assertSame('aged-care', $category->refresh()->slug);
     }
 
+    public function test_a_rejected_save_says_which_field_was_wrong(): void
+    {
+        /* The screens read these keys to put a message under the offending field. A validation
+           error with no field name can only ever become a toast. */
+        $this->post('/cms/faqs', ['question' => '', 'answer' => ''])
+            ->assertSessionHasErrors(['question', 'answer']);
+
+        $this->post('/cms/testimonials', ['name' => '', 'quote' => ''])
+            ->assertSessionHasErrors(['name', 'quote']);
+    }
+
     public function test_uncategorised_keeps_its_address_when_renamed(): void
     {
         $fallback = BlogCategory::fallback();
