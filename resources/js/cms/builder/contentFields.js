@@ -90,7 +90,7 @@ const CONTENT_SCHEMAS = {
         TEXT('note', 'Sub-note'),
     ],
     image: [
-        IMG('src', 'Image', 'alt'),
+        IMG('src', 'Image', 'alt', 'caption'),
         TEXT('caption', 'Caption'),
     ],
     'quote-card': [

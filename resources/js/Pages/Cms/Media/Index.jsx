@@ -31,7 +31,9 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
 
     const filtered = items.filter((m) => {
         const q = search.trim().toLowerCase();
-        return ! q || m.name.toLowerCase().includes(q);
+
+        return ! q || [m.name, m.alt, m.caption]
+            .some((field) => (field || '').toLowerCase().includes(q));
     });
 
     const selected = items.find((m) => m.id === selectedId) || null;

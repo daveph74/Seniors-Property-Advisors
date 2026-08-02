@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { uploadMedia } from './uploadMedia';
 import MediaLibraryModal from './MediaLibraryModal';
 
-export default function ImageField({ label, value, alt, onChange, onAltChange, hint }) {
+export default function ImageField({
+    label, value, alt, caption, onChange, onAltChange, onCaptionChange, hint,
+}) {
     const [failed, setFailed] = useState(false);
     const [percent, setPercent] = useState(null);
     const [error, setError] = useState(null);
@@ -117,9 +119,14 @@ export default function ImageField({ label, value, alt, onChange, onAltChange, h
                     setError(null);
                     onChange(media.url);
 
-                    /* The library's description is a starting point, never an overwrite — whatever
-                       this placement already says about the image was written for this placement. */
+                    /* The library's description and caption are a starting point, never an
+                       overwrite — whatever this placement already says was written for it. The
+                       caption has no input here because the block that supports one renders its
+                       own; this only fills it in. */
                     if (onAltChange && ! (alt || '').trim() && media.alt) onAltChange(media.alt);
+                    if (onCaptionChange && ! (caption || '').trim() && media.caption) {
+                        onCaptionChange(media.caption);
+                    }
                 }}
             />
         </div>

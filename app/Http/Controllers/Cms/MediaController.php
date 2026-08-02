@@ -52,7 +52,12 @@ class MediaController extends Controller
         return response()->json([
             'items' => Media::query()
                 ->where('mime', 'like', 'image/%')
-                ->when($search !== '', fn ($q) => $q->where('name', 'like', '%'.$search.'%'))
+                /* Also the description and caption: an editor looking for a photo remembers what is
+                   in it long before they remember that it is called 134021038407023939.jpg. */
+                ->when($search !== '', fn ($q) => $q->where(fn ($find) => $find
+                    ->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('alt', 'like', '%'.$search.'%')
+                    ->orWhere('caption', 'like', '%'.$search.'%')))
                 ->latest('id')
                 ->limit(60)
                 ->get()

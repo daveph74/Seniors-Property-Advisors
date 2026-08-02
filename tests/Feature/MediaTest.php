@@ -98,6 +98,29 @@ class MediaTest extends TestCase
         $this->assertSame(['garden-terrace.png'], array_column($items, 'name'));
     }
 
+    public function test_the_picker_library_searches_what_is_in_the_picture_too(): void
+    {
+        Storage::fake('s3');
+
+        $this->record([
+            'key' => '2026/07/134021038407023939.jpg',
+            'name' => '134021038407023939.jpg',
+            'alt' => 'An advisor guiding a senior couple',
+        ]);
+        $this->record([
+            'key' => '2026/07/other.png',
+            'name' => 'other.png',
+            'caption' => 'Taken in Geelong',
+        ]);
+
+        /* A camera filename tells an editor nothing; what is in the picture is what they remember. */
+        $found = $this->getJson('/cms/media/library?search=couple')->json('items');
+        $byCaption = $this->getJson('/cms/media/library?search=geelong')->json('items');
+
+        $this->assertSame(['134021038407023939.jpg'], array_column($found, 'name'));
+        $this->assertSame(['other.png'], array_column($byCaption, 'name'));
+    }
+
     public function test_the_picker_library_caps_how_much_it_returns(): void
     {
         Storage::fake('s3');

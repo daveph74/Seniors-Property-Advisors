@@ -96,8 +96,10 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                     label={f.label}
                     value={value}
                     alt={f.altPath ? readPath(data, f.altPath) : null}
+                    caption={f.captionPath ? readPath(data, f.captionPath) : null}
                     onChange={set}
                     onAltChange={f.altPath ? (v) => patch(f.altPath, v) : null}
+                    onCaptionChange={f.captionPath ? (v) => patch(f.captionPath, v) : null}
                 />
             );
         }
