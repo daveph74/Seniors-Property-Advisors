@@ -18,6 +18,8 @@ class SavePageDetailsRequest extends FormRequest
             'seo.title' => ['nullable', 'string', 'max:160'],
             'seo.description' => ['nullable', 'string', 'max:320'],
             'seo.image' => ['nullable', 'string', 'max:400'],
+            'seo.canonical' => ['nullable', 'string', 'max:400', 'url'],
+            'seo.noindex' => ['sometimes', 'boolean'],
         ];
     }
 

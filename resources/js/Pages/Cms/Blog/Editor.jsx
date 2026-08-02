@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, router, useForm } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
-import { Badge } from '../../../cms/components/ui';
+import { Badge, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import ImageField from '../../../cms/builder/ImageField';
 import MediaLibraryModal from '../../../cms/builder/MediaLibraryModal';
@@ -40,6 +40,8 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
             title: article?.seo?.title ?? '',
             description: article?.seo?.description ?? '',
             image: article?.seo?.image ?? '',
+            canonical: article?.seo?.canonical ?? '',
+            noindex: article?.seo?.noindex ?? false,
         },
     });
 
@@ -276,6 +278,33 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
                             onChange={(src) => setData('seo', { ...data.seo, image: src })}
                             hint="Shown when the article is shared. The featured image is used if this is empty. Use 1200 x 630 pixels, and keep any wording centred - X crops the sides. JPG or PNG, not SVG."
                         />
+
+                        <div className="cms-field">
+                            <label className="cms-field-label">Canonical address</label>
+                            <input
+                                className="cms-input"
+                                value={data.seo.canonical || ''}
+                                placeholder="Leave empty to point at this article"
+                                onChange={(e) => setData('seo', { ...data.seo, canonical: e.target.value })}
+                            />
+                            <div className="cms-hint">
+                                For an article published somewhere else first — it tells search engines
+                                which address is the original. The full address, including https://.
+                            </div>
+                        </div>
+
+                        <div className="cms-toggle-row">
+                            <span className="cms-toggle-row__label">Hide from search engines</span>
+                            <Toggle
+                                on={data.seo.noindex === true}
+                                label="Hide from search engines"
+                                onChange={() => setData('seo', { ...data.seo, noindex: ! (data.seo.noindex === true) })}
+                            />
+                        </div>
+                        <div className="cms-hint">
+                            The article stays readable to anyone with the link. It simply stops
+                            appearing in search results.
+                        </div>
                     </section>
                 </aside>
             </div>

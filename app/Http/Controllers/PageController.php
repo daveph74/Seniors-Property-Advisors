@@ -52,9 +52,12 @@ class PageController extends Controller
     {
         abort_if($page === null, 404);
 
+        $seo = Seo::forSharing($page['seo'] ?? [], null, url()->current());
+
         return Inertia::render('AgentFinder', [
             'title' => $page['title'],
-            'seo' => Seo::forSharing($page['seo'] ?? [], null, url()->current()),
+            'seo' => $seo,
+            'head' => Seo::head($seo, $page['title']),
             'sections' => $page['sections'],
             'globals' => $this->store->globals(),
             'library' => $this->library->for($slug, $this->requestedCategory()),

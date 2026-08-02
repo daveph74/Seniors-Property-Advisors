@@ -28,6 +28,58 @@ class Seo
         ] + self::dimensions($image));
     }
 
+    /**
+     * The finished tag values, resolved on the server.
+     *
+     * They have to exist in the HTML before any JavaScript runs. Google renders a page and would
+     * find them either way, but Facebook, LinkedIn, X, WhatsApp, Slack and iMessage do not — they
+     * read the document as delivered, so a link shared anywhere but search was arriving with no
+     * image, no description, and every page reporting the site title.
+     */
+    public static function head(array $seo, string $fallbackTitle, string $type = 'website'): array
+    {
+        $title = trim((string) ($seo['title'] ?? '')) ?: $fallbackTitle;
+        $description = trim((string) ($seo['description'] ?? '')) ?: null;
+
+        return array_filter([
+            'title' => $title,
+            'description' => $description,
+            'canonical' => trim((string) ($seo['canonical'] ?? '')) ?: ($seo['url'] ?? null),
+            'robots' => ($seo['noindex'] ?? false) ? 'noindex, follow' : null,
+            'ogType' => $type,
+            'ogUrl' => $seo['url'] ?? null,
+            'image' => $seo['image'] ?? null,
+            'imageWidth' => $seo['imageWidth'] ?? null,
+            'imageHeight' => $seo['imageHeight'] ?? null,
+            'twitterCard' => ($seo['image'] ?? null) ? 'summary_large_image' : 'summary',
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    /**
+     * What a search engine needs to treat an article as an article rather than a page of text.
+     * Only fields we actually hold are included — a guessed date or an empty author is worse than
+     * an absent one, because structured data that disagrees with the page is distrusted.
+     */
+    public static function articleSchema(array $head, array $article): array
+    {
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'Article',
+            'headline' => $head['title'] ?? null,
+            'description' => $head['description'] ?? null,
+            'image' => isset($head['image']) ? [$head['image']] : null,
+            'datePublished' => $article['publishedAt'] ?? null,
+            'dateModified' => $article['updatedAt'] ?? null,
+            'author' => isset($article['author'])
+                ? ['@type' => 'Person', 'name' => $article['author']]
+                : null,
+            'publisher' => ['@type' => 'Organization', 'name' => 'Seniors Property Advisors'],
+            'mainEntityOfPage' => isset($head['canonical'])
+                ? ['@type' => 'WebPage', '@id' => $head['canonical']]
+                : null,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
     public static function absolute(?string $image): ?string
     {
         $image = trim((string) $image);

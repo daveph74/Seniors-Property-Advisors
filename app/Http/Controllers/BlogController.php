@@ -33,9 +33,18 @@ class BlogController extends Controller
             abort(404);
         }
 
+        $seo = $this->sharing($post);
+        $article = $post->toArticle();
+        $head = Seo::head($seo, $post->title, 'article');
+
         return Inertia::render('Article', [
-            'article' => $post->toArticle(),
-            'seo' => $this->sharing($post),
+            'article' => $article,
+            'seo' => $seo,
+            /* No structured data on anything hidden from search: marking up a page as an article
+               while asking not to be listed sends a crawler two different instructions. */
+            'head' => $head + (isset($head['robots'])
+                ? []
+                : ['schema' => Seo::articleSchema($head, $article)]),
             'related' => $this->library->related($post),
             'globals' => $this->store->globals(),
         ]);

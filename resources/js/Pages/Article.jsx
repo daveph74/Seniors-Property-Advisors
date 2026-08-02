@@ -55,19 +55,9 @@ export default function Article({ article, seo = {}, related = [], globals = {},
 
     return (
         <>
-            <Head title={title}>
-                {description && <meta name="description" content={description} />}
-                <meta property="og:type" content="article" />
-                <meta property="og:title" content={title} />
-                {description && <meta property="og:description" content={description} />}
-                {seo.image && <meta property="og:image" content={seo.image} />}
-                {seo.imageWidth && <meta property="og:image:width" content={String(seo.imageWidth)} />}
-                {seo.imageHeight && <meta property="og:image:height" content={String(seo.imageHeight)} />}
-                <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
-                {seo.url && <meta property="og:url" content={seo.url} />}
-                {seo.url && <link rel="canonical" href={seo.url} />}
-                {preview && <meta name="robots" content="noindex" />}
-            </Head>
+            {/* The rest of the head, and the structured data, are printed by the server — see
+                AgentFinder for why. */}
+            <Head title={title} />
 
             {preview && <PreviewBanner {...preview} />}
 

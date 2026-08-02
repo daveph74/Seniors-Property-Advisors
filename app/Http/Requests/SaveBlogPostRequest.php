@@ -28,6 +28,8 @@ class SaveBlogPostRequest extends FormRequest
             'seo.title' => ['nullable', 'string', 'max:160'],
             'seo.description' => ['nullable', 'string', 'max:320'],
             'seo.image' => ['nullable', 'string', 'max:400'],
+            'seo.canonical' => ['nullable', 'string', 'max:400', 'url'],
+            'seo.noindex' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -76,6 +78,9 @@ class SaveBlogPostRequest extends FormRequest
                 'title' => $this->clean($data['seo']['title'] ?? null),
                 'description' => $this->clean($data['seo']['description'] ?? null),
                 'image' => $data['seo']['image'] ?? null,
+                'canonical' => $this->clean($data['seo']['canonical'] ?? null),
+                /* Stored only when switched on, so an ordinary article carries no noindex at all. */
+                'noindex' => ($data['seo']['noindex'] ?? false) ? true : null,
             ], fn ($value) => $value !== null),
         ];
     }
