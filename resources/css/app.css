@@ -1433,6 +1433,18 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 }
 .contact-form__consent{ display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-mid); }
 .contact-form__consent input{ margin-top: 3px; accent-color: var(--blue-deep); flex: none; }
+.contact-form__error{
+  display: block; margin-top: 6px; font-style: normal; font-size: 13.5px; color: #B42318;
+}
+.contact-form__field input[aria-invalid="true"], .contact-form__field textarea[aria-invalid="true"]{
+  border-color: #B42318;
+}
+/* Replaces the form once an enquiry lands, so there is nothing left to press twice. */
+.contact-form__sent{
+  align-self: start; margin: 0; padding: 28px 30px; background: var(--white);
+  border: 1px solid var(--line-soft); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); font-size: 17px; line-height: 1.6; color: var(--navy);
+}
 
 /* ===================== Blog articles ===================== */
 .blog-list{ padding: 96px 0; background: var(--blue-wash-2); }

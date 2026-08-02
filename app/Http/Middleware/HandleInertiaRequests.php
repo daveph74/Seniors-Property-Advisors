@@ -52,6 +52,8 @@ class HandleInertiaRequests extends Middleware
                 'can' => Permissions::abilities($user),
                 'modules' => Permissions::modules($user),
             ],
+            /* So a form knows its enquiry arrived after the redirect back. */
+            'enquiry' => fn () => $request->session()->get('enquiry'),
         ];
     }
 }
