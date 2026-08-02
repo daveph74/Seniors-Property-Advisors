@@ -12,19 +12,12 @@ export default function AgentFinder({ title, seo = {}, sections = [], globals = 
 
     return (
         <>
-            <Head title={seo.title || title}>
-                {seo.description && <meta name="description" content={seo.description} />}
-                <meta property="og:type" content="website" />
-                <meta property="og:title" content={seo.title || title} />
-                {seo.description && <meta property="og:description" content={seo.description} />}
-                {seo.image && <meta property="og:image" content={seo.image} />}
-                {seo.imageWidth && <meta property="og:image:width" content={String(seo.imageWidth)} />}
-                {seo.imageHeight && <meta property="og:image:height" content={String(seo.imageHeight)} />}
-                <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
-                {seo.url && <meta property="og:url" content={seo.url} />}
-                {(seo.canonical || seo.url) && <link rel="canonical" href={seo.canonical || seo.url} />}
-                {(preview || seo.noindex) && <meta name="robots" content="noindex, follow" />}
-            </Head>
+            {/*
+              * Only the title. Everything else is printed by the server into the document, because
+              * a link scraper never runs this. Inertia keeps a single title across navigation;
+              * duplicating the rest here would leave two of each tag in the head after hydration.
+              */}
+            <Head title={seo.title || title} />
 
             {preview && <PreviewBanner {...preview} />}
 

@@ -95,6 +95,63 @@ class SeoControlsTest extends TestCase
         $this->assertArrayNotHasKey('noindex', BlogPost::sole()->seo);
     }
 
+    /**
+     * These assert the *delivered HTML*, not the Inertia props. Every one of these tags used to be
+     * added by JavaScript, so a link scraper — Facebook, LinkedIn, X, WhatsApp, Slack — received a
+     * document with no image, no description and the site title on every page. Props being right is
+     * what made that invisible, which is why these read the markup.
+     */
+    public function test_the_sharing_tags_reach_a_scraper_that_runs_no_javascript(): void
+    {
+        $page = $this->page('services');
+
+        $this->details($page, ['title' => 'What we do', 'description' => 'Independent advice.']);
+
+        $html = $this->get('/services')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<title inertia>What we do</title>', $html);
+        $this->assertStringContainsString('property="og:title" content="What we do"', $html);
+        $this->assertStringContainsString('name="description" content="Independent advice."', $html);
+        $this->assertStringContainsString('rel="canonical"', $html);
+    }
+
+    public function test_an_article_carries_its_own_title_and_picture_in_the_html(): void
+    {
+        $this->post('/cms/blog', [
+            'title' => 'Planning a downsize',
+            'summary' => 'Where to start.',
+            'body' => '<p>Words.</p>',
+            'featured_image' => '/media/2026/08/hero.jpg',
+        ])->assertRedirect();
+
+        BlogPost::sole()->update(['status' => 'published', 'published_at' => now()]);
+
+        $html = $this->get('/blog/planning-a-downsize')->assertOk()->getContent();
+
+        /* The bug in one line: every page used to report the site title here. */
+        $this->assertStringContainsString('<title inertia>Planning a downsize</title>', $html);
+        $this->assertStringContainsString('property="og:type" content="article"', $html);
+        $this->assertStringContainsString('/media/2026/08/hero.jpg', $html);
+        $this->assertStringContainsString('application/ld+json', $html);
+        $this->assertStringContainsString('"@type":"Article"', $html);
+    }
+
+    public function test_an_article_hidden_from_search_is_not_marked_up_as_an_article(): void
+    {
+        $this->post('/cms/blog', [
+            'title' => 'Quietly published',
+            'body' => '<p>Words.</p>',
+            'seo' => ['noindex' => true],
+        ])->assertRedirect();
+
+        BlogPost::sole()->update(['status' => 'published', 'published_at' => now()]);
+
+        $html = $this->get('/blog/quietly-published')->assertOk()->getContent();
+
+        $this->assertStringContainsString('name="robots" content="noindex, follow"', $html);
+        $this->assertStringNotContainsString('application/ld+json', $html);
+    }
+
     public function test_a_published_article_carries_the_dates_its_structured_data_needs(): void
     {
         $this->post('/cms/blog', [

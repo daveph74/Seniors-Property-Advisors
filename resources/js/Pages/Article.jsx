@@ -7,26 +7,6 @@ import SiteLink from '../sections/SiteLink';
 import SiteFooter from '../sections/SiteFooter';
 import { list as recentlyRead, remember } from '../recentlyRead';
 
-/*
- * What a search engine needs to show this as an article rather than as a page of text. Only fields
- * we actually hold are emitted — an empty author or a guessed date is worse than leaving it out,
- * because structured data that disagrees with the page is treated as untrustworthy.
- */
-function articleSchema(article, seo, title, description) {
-    return {
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: title,
-        ...(description ? { description } : {}),
-        ...(seo.image ? { image: [seo.image] } : {}),
-        ...(article.publishedAt ? { datePublished: article.publishedAt } : {}),
-        ...(article.updatedAt ? { dateModified: article.updatedAt } : {}),
-        ...(article.author ? { author: { '@type': 'Person', name: article.author } } : {}),
-        publisher: { '@type': 'Organization', name: 'Seniors Property Advisors' },
-        ...(seo.url ? { mainEntityOfPage: { '@type': 'WebPage', '@id': seo.canonical || seo.url } } : {}),
-    };
-}
-
 function RailList({ title, articles }) {
     if (articles.length === 0) return null;
 
@@ -75,30 +55,9 @@ export default function Article({ article, seo = {}, related = [], globals = {},
 
     return (
         <>
-            <Head title={title}>
-                {description && <meta name="description" content={description} />}
-                <meta property="og:type" content="article" />
-                <meta property="og:title" content={title} />
-                {description && <meta property="og:description" content={description} />}
-                {seo.image && <meta property="og:image" content={seo.image} />}
-                {seo.imageWidth && <meta property="og:image:width" content={String(seo.imageWidth)} />}
-                {seo.imageHeight && <meta property="og:image:height" content={String(seo.imageHeight)} />}
-                <meta name="twitter:card" content={seo.image ? 'summary_large_image' : 'summary'} />
-                {seo.url && <meta property="og:url" content={seo.url} />}
-                {(seo.canonical || seo.url) && <link rel="canonical" href={seo.canonical || seo.url} />}
-                {(preview || seo.noindex) && <meta name="robots" content="noindex, follow" />}
-            </Head>
-
-            {/*
-              * Article structured data. Left out entirely while previewing — the draft is not the
-              * published article, and marking it up as one invites a crawler to treat it as such.
-              */}
-            {! preview && ! seo.noindex ? (
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema(article, seo, title, description)) }}
-                />
-            ) : null}
+            {/* The rest of the head, and the structured data, are printed by the server — see
+                AgentFinder for why. */}
+            <Head title={title} />
 
             {preview && <PreviewBanner {...preview} />}
 
