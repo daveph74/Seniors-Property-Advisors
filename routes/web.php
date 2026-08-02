@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\Cms\AccountController;
+use App\Http\Controllers\Cms\ActivityController;
 use App\Http\Controllers\Cms\BlogController as CmsBlogController;
 use App\Http\Controllers\Cms\CmsPageController;
 use App\Http\Controllers\Cms\FaqController;
@@ -103,6 +104,7 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::post('/testimonials/{testimonial}/consent', [TestimonialController::class, 'consent'])->name('testimonials.consent');
     Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])
         ->middleware('permit:content.delete')->name('testimonials.destroy');
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::get('/media/library', [MediaController::class, 'library'])->name('media.library');
     Route::post('/media/sign', [MediaController::class, 'sign'])->name('media.sign');

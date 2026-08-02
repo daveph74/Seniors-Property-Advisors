@@ -30,6 +30,7 @@ class Permissions
         'faqs' => 'content.manage',
         'testimonials' => 'content.manage',
         'media' => 'content.manage',
+        'activity' => 'content.manage',
         'navigation' => 'content.manage',
         'global' => 'content.manage',
         'users' => 'users.manage',
