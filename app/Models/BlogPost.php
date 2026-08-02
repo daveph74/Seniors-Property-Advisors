@@ -111,6 +111,9 @@ class BlogPost extends Model
             'body' => $this->renderedBody(),
             'author' => $this->author_name,
             'seo' => $this->seo ?? [],
+            /* Machine-readable dates for the structured data; `date` beside them is for reading. */
+            'publishedAt' => $this->published_at?->toIso8601String(),
+            'updatedAt' => $this->updated_at?->toIso8601String(),
         ];
     }
 

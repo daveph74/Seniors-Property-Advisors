@@ -235,7 +235,12 @@ class PageContentStore
 
         $changes = [
             'title' => $title,
-            'seo' => array_filter(array_merge($page->seo ?? [], $seo), fn ($value) => $value !== null),
+            /* Null and empty are dropped, but `false` is kept: switching "hide from search engines"
+               off writes false, and discarding it would merge the old true straight back in. */
+            'seo' => array_filter(
+                array_merge($page->seo ?? [], $seo),
+                fn ($value) => $value !== null && $value !== '',
+            ),
             'last_updated_by' => $by,
         ];
 

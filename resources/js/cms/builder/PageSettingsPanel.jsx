@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ImageField from './ImageField';
 import ConfirmModal from '../components/ConfirmModal';
+import { Toggle } from '../components/ui';
 
 export default function PageSettingsPanel({ page, onSave }) {
     const seo = page.seo || {};
@@ -27,7 +28,15 @@ export default function PageSettingsPanel({ page, onSave }) {
     };
 
     const saveSeo = (key, value) => {
-        const next = typeof value === 'string' ? value.trim() : value;
+        if (typeof value === 'boolean') {
+            /* Sent as-is. `false || null` is null, and a null merges the old true straight back in,
+               so switching a setting off would never take. */
+            onSave({ ...base, seo: { ...seo, [key]: value } });
+
+            return;
+        }
+
+        const next = value.trim();
 
         if (next === (seo[key] || '')) return;
 
@@ -124,6 +133,34 @@ export default function PageSettingsPanel({ page, onSave }) {
                         ? 'The home page always lives at the site root.'
                         : 'Lowercase letters, numbers and hyphens. Changing this on a live page leaves a redirect behind.'}
                 </div>
+            </div>
+
+            <div className="cms-field">
+                <label className="cms-field-label">Canonical address</label>
+                <input
+                    key={`seo-canonical-${seo.canonical || ''}`}
+                    className="cms-input"
+                    defaultValue={seo.canonical || ''}
+                    placeholder="Leave empty to point at this page"
+                    onBlur={(e) => saveSeo('canonical', e.target.value)}
+                />
+                <div className="cms-hint">
+                    Only for a page that repeats another one — it tells search engines which address
+                    is the real one. The full address, including https://.
+                </div>
+            </div>
+
+            <div className="cms-toggle-row">
+                <span className="cms-toggle-row__label">Hide from search engines</span>
+                <Toggle
+                    on={seo.noindex === true}
+                    label="Hide from search engines"
+                    onChange={() => saveSeo('noindex', ! (seo.noindex === true))}
+                />
+            </div>
+            <div className="cms-hint" style={{ marginBottom: 14 }}>
+                The page stays public and anyone with the link can read it. It simply stops appearing
+                in search results.
             </div>
 
             <ConfirmModal
