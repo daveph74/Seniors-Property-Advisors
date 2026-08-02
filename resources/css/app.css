@@ -567,7 +567,9 @@ h2 em,
   z-index: 0;
 }
 .why .container{ position: relative; z-index: 1;}
-.why .section-head__title{ color: var(--white); }
+/* Both selectors on purpose: sections that go through SectionHead carry the class, and the ones
+   that render their own heading still use the tag. Dropping the tag turned these navy on navy. */
+.why .section-head__title, .why h2{ color: var(--white); }
 .why h2 em{ color: var(--blue); }
 .why .eyebrow-line{ color: var(--blue);}
 .why .eyebrow-line::before{ background: var(--blue);}
@@ -751,7 +753,7 @@ h2 em,
     radial-gradient(600px 400px at 0% 100%, rgba(88,148,213,0.10), transparent 60%);
 }
 .cta .container{ position:relative; text-align: center;}
-.cta .section-head__title{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
+.cta .section-head__title, .cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
 .cta h2 em{ color: var(--blue);}
 .cta p{ color: #B6C2DB; max-width: 540px; margin: 0 auto 36px; font-size: 19px;}
 .cta .row{ display:flex; gap: 14px; justify-content:center; flex-wrap: wrap;}
@@ -1118,7 +1120,7 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
    those fields are rendered. pre-line keeps newlines and still collapses runs
    of spaces, so nothing else about the typography changes. */
 .hero h1, .hero .lead,
-.trust h2, .how h2, .why h2, .compare h2, .family h2, .cta h2,
+.trust h2, .how h2, .why h2, .compare h2, .family h2, .cta h2, .section-head__title,
 .section-lead,
 .cta > .container > p,
 .trust .card p, .how .step p, .why li span, .family li span,
