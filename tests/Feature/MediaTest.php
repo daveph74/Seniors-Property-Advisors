@@ -159,15 +159,15 @@ class MediaTest extends TestCase
     public function test_a_large_image_is_shrunk_in_place_and_keeps_its_address(): void
     {
         Storage::fake('s3');
-        $original = $this->image(4000, 2000, 'jpg');
+        $original = $this->image(3000, 1500, 'jpg');
         Storage::disk('s3')->put('2026/08/big.jpg', $original);
 
         $this->postJson('/cms/media', [
             'key' => '2026/08/big.jpg',
             'name' => 'big.jpg',
             'mime' => 'image/jpeg',
-            'width' => 4000,
-            'height' => 2000,
+            'width' => 3000,
+            'height' => 1500,
         ])->assertCreated()
             /* Same key, so every reference to it and the usage scanner keep working. */
             ->assertJsonPath('url', '/media/2026/08/big.jpg')
@@ -179,6 +179,66 @@ class MediaTest extends TestCase
         $this->assertLessThan(strlen($original), strlen($stored));
         $this->assertSame([2400, 1200], array_slice(getimagesizefromstring($stored), 0, 2));
         $this->assertSame(strlen($stored), Media::sole()->size);
+    }
+
+    public function test_an_upload_gets_a_small_copy_for_the_cms_to_browse_with(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/08/portrait.jpg', $this->image(1000, 1500, 'jpg'));
+
+        $response = $this->postJson('/cms/media', [
+            'key' => '2026/08/portrait.jpg', 'name' => 'portrait.jpg', 'mime' => 'image/jpeg',
+        ])->assertCreated();
+
+        $thumb = $response->json('thumb');
+
+        $this->assertSame('/media/thumbs/2026/08/portrait.jpg', $thumb);
+        Storage::disk('s3')->assertExists('thumbs/2026/08/portrait.jpg');
+
+        $small = Storage::disk('s3')->get('thumbs/2026/08/portrait.jpg');
+        $full = Storage::disk('s3')->get('2026/08/portrait.jpg');
+
+        /* The point of the exercise: the CMS grid stops pulling megabytes to fill a small box. */
+        $this->assertLessThan(strlen($full), strlen($small));
+        $this->assertSame(480, getimagesizefromstring($small)[1]);
+    }
+
+    public function test_a_small_copy_is_served_with_its_own_length(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/08/a.png', $this->image(1000, 800));
+        Storage::disk('s3')->put('thumbs/2026/08/a.png', $this->image(200, 160));
+
+        $media = $this->record([
+            'key' => '2026/08/a.png',
+            'thumb_key' => 'thumbs/2026/08/a.png',
+            'size' => 999999,
+        ]);
+
+        $this->get($media->thumbUrl())
+            ->assertOk()
+            ->assertHeader('Content-Length', (string) strlen(Storage::disk('s3')->get('thumbs/2026/08/a.png')));
+    }
+
+    public function test_deleting_an_image_takes_its_small_copy_with_it(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/08/b.png', 'x');
+        Storage::disk('s3')->put('thumbs/2026/08/b.png', 'x');
+
+        $media = $this->record(['key' => '2026/08/b.png', 'thumb_key' => 'thumbs/2026/08/b.png']);
+
+        $this->deleteJson("/cms/media/{$media->id}")->assertOk();
+
+        Storage::disk('s3')->assertMissing('2026/08/b.png');
+        Storage::disk('s3')->assertMissing('thumbs/2026/08/b.png');
+    }
+
+    public function test_an_image_with_no_small_copy_falls_back_to_itself(): void
+    {
+        $media = $this->record();
+
+        $this->assertSame($media->url(), $media->thumbUrl());
     }
 
     public function test_an_image_already_small_enough_is_left_alone(): void

@@ -51,8 +51,12 @@ class ImageOptimiser
         }
 
         $scale = self::MAX_EDGE / max($width, $height);
-        $target = [(int) round($width * $scale), (int) round($height * $scale)];
 
+        return $this->rescale($bytes, $mime, (int) round($width * $scale), (int) round($height * $scale));
+    }
+
+    private function rescale(string $bytes, string $mime, int $width, int $height): ?array
+    {
         $limit = ini_get('memory_limit');
         ini_set('memory_limit', '512M');
 
@@ -63,7 +67,7 @@ class ImageOptimiser
                 return null;
             }
 
-            $resized = imagescale($source, $target[0], $target[1]);
+            $resized = imagescale($source, max(1, $width), max(1, $height));
             imagedestroy($source);
 
             if (! $resized instanceof GdImage) {
@@ -73,13 +77,13 @@ class ImageOptimiser
             $encoded = $this->encode($resized, $mime);
             imagedestroy($resized);
         } finally {
-            ini_set('memory_limit', $limit);
+            $this->restore($limit);
         }
 
         return $encoded === null ? null : [
             'bytes' => $encoded,
-            'width' => $target[0],
-            'height' => $target[1],
+            'width' => $width,
+            'height' => $height,
         ];
     }
 
@@ -100,11 +104,59 @@ class ImageOptimiser
         return [(int) $read[0], (int) $read[1], $read['mime'] ?? null];
     }
 
+    /**
+     * A small copy for the CMS to browse with. The library grid and its preview were loading the
+     * full-size original — four megabytes to fill a 270px box — which is why an image took a moment
+     * to appear when you clicked it.
+     *
+     * This one is a separate object rather than a resize of the original, because the original is
+     * what the website serves and what every reference points at.
+     *
+     * @return array{bytes: string, width: int, height: int}|null
+     */
+    public function thumbnail(string $bytes, string $mime, int $edge = 480): ?array
+    {
+        if (! isset(self::READERS[$mime])) {
+            return null;
+        }
+
+        [$width, $height] = $this->measure($bytes);
+
+        if ($width === null) {
+            return null;
+        }
+
+        $scale = min(1, $edge / max($width, $height));
+
+        return $this->rescale($bytes, $mime, (int) round($width * $scale), (int) round($height * $scale));
+    }
+
     public function tooLarge(string $bytes): bool
     {
         [$width, $height] = $this->measure($bytes);
 
         return $width !== null && $width * $height > self::MAX_PIXELS;
+    }
+
+    /**
+     * Putting the limit back is conditional, because PHP refuses to lower it below what is already
+     * allocated and raises an error doing so — which would fail the request on exactly the large
+     * image this exists to shrink. When the decoded bitmap has not been reclaimed yet, the raised
+     * limit simply stands for the rest of a request that is about to end.
+     */
+    private function restore(string|false $limit): void
+    {
+        if ($limit === false || trim($limit) === '' || (int) $limit === -1) {
+            return;
+        }
+
+        $units = ['k' => 1024, 'm' => 1048576, 'g' => 1073741824];
+        $suffix = strtolower(substr(trim($limit), -1));
+        $bytes = (int) $limit * ($units[$suffix] ?? 1);
+
+        if (memory_get_usage(true) < $bytes) {
+            ini_set('memory_limit', $limit);
+        }
     }
 
     private function encode(GdImage $image, string $mime): ?string

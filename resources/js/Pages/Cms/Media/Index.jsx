@@ -177,7 +177,7 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
                                     className={`cms-media-item ${m.id === selectedId ? 'cms-media-item--selected' : ''} ${picked.includes(m.id) ? 'cms-media-item--picked' : ''}`}
                                 >
                                     {m.isImage ? (
-                                        <img className="cms-media-item__thumb cms-media-item__thumb--img" src={m.url} alt="" loading="lazy" />
+                                        <img className="cms-media-item__thumb cms-media-item__thumb--img" src={m.thumb || m.url} alt="" loading="lazy" decoding="async" />
                                     ) : (
                                         <div className="cms-media-item__thumb" />
                                     )}
@@ -212,7 +212,7 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
                     </button>
 
                     {selected.isImage ? (
-                        <img className="cms-media-side__preview cms-media-side__preview--img" src={selected.url} alt="" />
+                        <img className="cms-media-side__preview cms-media-side__preview--img" src={selected.thumb || selected.url} alt="" decoding="async" />
                     ) : (
                         <div className="cms-media-side__preview" />
                     )}

@@ -84,7 +84,7 @@ export default function MediaLibraryModal({ open, onClose, onPick }) {
                                 title={item.name}
                                 onClick={() => { onPick(item); onClose(); }}
                             >
-                                <img src={item.url} alt="" loading="lazy" />
+                                <img src={item.thumb || item.url} alt="" loading="lazy" decoding="async" />
                                 <span className="cms-library__name">{item.name}</span>
                                 <span className="cms-library__meta">{item.meta}</span>
                             </button>

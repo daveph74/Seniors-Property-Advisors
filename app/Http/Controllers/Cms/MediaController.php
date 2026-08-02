@@ -23,6 +23,9 @@ class MediaController extends Controller
 
     public const EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
 
+    /** Where a small copy lives: the original's key, under a prefix content never points at. */
+    public const THUMBS = 'thumbs/';
+
     /**
      * What the bytes are allowed to be, and the extension each one must arrive under. Checked
      * against the file itself rather than against the name, and used as the stored Content-Type.
@@ -168,14 +171,18 @@ class MediaController extends Controller
 
             if ($smaller !== null) {
                 $disk->put($key, $smaller['bytes']);
+                $bytes = $smaller['bytes'];
                 $size = (int) $disk->size($key);
                 $width = $smaller['width'];
                 $height = $smaller['height'];
             }
+
+            $thumbKey = $this->makeThumb($bytes, $sniffed, $key);
         }
 
         $media = Media::create([
             'key' => $key,
+            'thumb_key' => $thumbKey ?? null,
             'name' => $this->safeName((string) $request->input('name')),
             'mime' => $mime,
             'size' => $size,
@@ -185,6 +192,20 @@ class MediaController extends Controller
         ]);
 
         return response()->json($this->item($media), 201);
+    }
+
+    /** Returns the key it wrote, or null when a small copy could not be made. */
+    public function makeThumb(string $bytes, string $mime, string $key): ?string
+    {
+        $thumb = (new ImageOptimiser)->thumbnail($bytes, $mime);
+
+        if ($thumb === null) {
+            return null;
+        }
+
+        Storage::disk('s3')->put(self::THUMBS.$key, $thumb['bytes']);
+
+        return self::THUMBS.$key;
     }
 
     /**
@@ -255,7 +276,11 @@ class MediaController extends Controller
 
     public function show(string $key)
     {
-        $media = Media::where('key', $key)->first();
+        /* A small copy is served through the same route as its original, so it inherits the same
+           headers — including the immutable cache, which holds because the key never gets reused. */
+        $media = str_starts_with($key, self::THUMBS)
+            ? Media::where('thumb_key', $key)->first()
+            : Media::where('key', $key)->first();
 
         if ($media === null) {
             abort(404);
@@ -279,7 +304,8 @@ class MediaController extends Controller
             200,
             [
                 'Content-Type' => $media->mime,
-                'Content-Length' => $media->size,
+                /* Measured, not taken from the row: a small copy is a different length. */
+                'Content-Length' => (int) $disk->size($key),
                 'Cache-Control' => 'public, max-age=31536000, immutable',
                 'X-Content-Type-Options' => 'nosniff',
                 'Content-Security-Policy' => "default-src 'none'; style-src 'unsafe-inline'",
@@ -293,6 +319,7 @@ class MediaController extends Controller
             'id' => $media->id,
             'key' => $media->key,
             'url' => $media->url(),
+            'thumb' => $media->thumbUrl(),
             'name' => $media->name,
             'alt' => $media->alt,
             'caption' => $media->caption,
@@ -315,7 +342,7 @@ class MediaController extends Controller
     private function erase(Media $medium): void
     {
         try {
-            Storage::disk($medium->disk)->delete($medium->key);
+            Storage::disk($medium->disk)->delete(array_filter([$medium->key, $medium->thumb_key]));
         } catch (Throwable $e) {
             report($e);
         }
