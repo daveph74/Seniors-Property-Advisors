@@ -8,7 +8,7 @@ class Media extends Model
 {
     protected $table = 'media';
 
-    protected $fillable = ['key', 'name', 'mime', 'size', 'width', 'height', 'disk'];
+    protected $fillable = ['key', 'name', 'alt', 'caption', 'mime', 'size', 'width', 'height', 'disk'];
 
     protected $casts = [
         'size' => 'integer',

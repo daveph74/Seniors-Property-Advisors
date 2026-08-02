@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Cms;
 
+use App\Auth\Permissions;
+use App\Content\ImageOptimiser;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Testimonial;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -19,6 +22,17 @@ class MediaController extends Controller
     public const MAX_BYTES = 26214400;
 
     public const EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+
+    /**
+     * What the bytes are allowed to be, and the extension each one must arrive under. Checked
+     * against the file itself rather than against the name, and used as the stored Content-Type.
+     */
+    public const MIMES = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp',
+    ];
 
     public function index()
     {
@@ -64,7 +78,15 @@ class MediaController extends Controller
 
         if (! in_array($extension, self::EXTENSIONS, true)) {
             return response()->json([
-                'message' => 'That file type is not supported. Use a JPG, PNG, GIF, WEBP or SVG.',
+                'message' => 'That file type is not supported. Use a JPG, PNG, GIF or WEBP.',
+            ], 422);
+        }
+
+        /* An SVG is a document that can carry script. It is served with headers that neutralise it,
+           but scope §7's "trusted administrators" is about who can put one there at all. */
+        if ($extension === 'svg' && ! Permissions::allows($request->user(), 'media.upload_svg')) {
+            return response()->json([
+                'message' => 'Only a super administrator can upload an SVG. Use a PNG or a JPG.',
             ], 422);
         }
 
@@ -105,17 +127,84 @@ class MediaController extends Controller
             ], 422);
         }
 
+        $extension = strtolower(pathinfo($key, PATHINFO_EXTENSION));
+        $extension = $extension === 'jpeg' ? 'jpg' : $extension;
+        $optimiser = new ImageOptimiser;
+        $bytes = $extension === 'svg' ? null : (string) $disk->get($key);
+        $mime = $this->safeMime((string) $request->input('mime'));
+        $width = $this->dimension($request->input('width'));
+        $height = $this->dimension($request->input('height'));
+
+        if ($bytes !== null) {
+            [$real, $tall, $sniffed] = $optimiser->measure($bytes);
+
+            /* The only type check until now was the extension on the name the browser sent, so a
+               .jpg could hold anything at all. This is the first look at the bytes themselves. */
+            if ($sniffed === null || ! isset(self::MIMES[$sniffed]) || self::MIMES[$sniffed] !== $extension) {
+                $disk->delete($key);
+
+                return response()->json([
+                    'message' => 'That file is not the kind of image its name says it is.',
+                ], 422);
+            }
+
+            if ($optimiser->tooLarge($bytes)) {
+                $disk->delete($key);
+
+                return response()->json([
+                    'message' => 'That image has too many pixels to process. Resize it to under '
+                        .round(ImageOptimiser::MAX_PIXELS / 1000000).' megapixels and try again.',
+                ], 422);
+            }
+
+            $mime = $sniffed;
+            $width = $real;
+            $height = $tall;
+
+            /* Written back over the same key, before the row exists and therefore before anything
+               can have asked for it — the URL never changes, so every reference to this image keeps
+               working and the immutable cache header stays honest. */
+            $smaller = $optimiser->optimise($bytes, $sniffed);
+
+            if ($smaller !== null) {
+                $disk->put($key, $smaller['bytes']);
+                $size = (int) $disk->size($key);
+                $width = $smaller['width'];
+                $height = $smaller['height'];
+            }
+        }
+
         $media = Media::create([
             'key' => $key,
             'name' => $this->safeName((string) $request->input('name')),
-            'mime' => $this->safeMime((string) $request->input('mime')),
+            'mime' => $mime,
             'size' => $size,
-            'width' => $this->dimension($request->input('width')),
-            'height' => $this->dimension($request->input('height')),
+            'width' => $width,
+            'height' => $height,
             'disk' => 's3',
         ]);
 
         return response()->json($this->item($media), 201);
+    }
+
+    /**
+     * The description and caption the library holds for an image. A placement keeps its own and
+     * overrides these; these are what a placement starts from.
+     */
+    public function update(Request $request, Media $medium): RedirectResponse
+    {
+        $data = $request->validate([
+            'alt' => ['sometimes', 'nullable', 'string', 'max:300'],
+            'caption' => ['sometimes', 'nullable', 'string', 'max:300'],
+        ]);
+
+        foreach ($data as $field => $value) {
+            $data[$field] = trim(strip_tags((string) $value)) ?: null;
+        }
+
+        $medium->update($data);
+
+        return back();
     }
 
     public function usageFor(Request $request)
@@ -205,6 +294,8 @@ class MediaController extends Controller
             'key' => $media->key,
             'url' => $media->url(),
             'name' => $media->name,
+            'alt' => $media->alt,
+            'caption' => $media->caption,
             'mime' => $media->mime,
             'size' => $media->size,
             'width' => $media->width,
@@ -302,11 +393,19 @@ class MediaController extends Controller
         return preg_match('#^\d{4}/\d{2}/[0-9a-z]+\.[a-z0-9]+$#', $key) === 1;
     }
 
+    /**
+     * An allowlist, not a shape check. This value is handed straight back as the Content-Type on
+     * every request for the file, so "looks like a mime type" was never enough.
+     */
     private function safeMime(string $value): string
     {
-        return preg_match('#^[a-z]+/[a-z0-9.+-]+$#i', $value) === 1
-            ? Str::lower(Str::limit($value, 120, ''))
-            : 'application/octet-stream';
+        $mime = Str::lower(trim($value));
+
+        if ($mime === 'image/svg+xml' || isset(self::MIMES[$mime])) {
+            return $mime;
+        }
+
+        return 'application/octet-stream';
     }
 
     private function dimension(mixed $value): ?int

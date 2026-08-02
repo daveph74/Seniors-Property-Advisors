@@ -45,6 +45,19 @@ class BlogTest extends TestCase
         ], $body));
     }
 
+    public function test_the_featured_image_carries_a_description_to_the_reader(): void
+    {
+        $this->write([
+            'featured_image' => '/media/2026/08/hero.jpg',
+            'featured_image_alt' => 'A couple reading paperwork at a kitchen table',
+        ])->assertRedirect();
+
+        $post = BlogPost::sole();
+
+        $this->assertSame('A couple reading paperwork at a kitchen table', $post->featured_image_alt);
+        $this->assertSame($post->featured_image_alt, $post->toCard()['imageAlt']);
+    }
+
     public function test_an_article_can_be_written_edited_and_published(): void
     {
         $this->write()->assertRedirect();

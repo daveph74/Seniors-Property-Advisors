@@ -124,7 +124,7 @@ const SCHEMAS = {
                 TEXT('name', 'Name'),
                 TEXT('role', 'Role'),
                 AREA('bio', 'Short bio'),
-                IMG('photo', 'Photo'),
+                IMG('photo', 'Photo', 'photoAlt'),
             ],
         },
     },

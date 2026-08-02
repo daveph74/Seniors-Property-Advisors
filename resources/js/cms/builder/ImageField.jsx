@@ -116,6 +116,10 @@ export default function ImageField({ label, value, alt, onChange, onAltChange, h
                     setFailed(false);
                     setError(null);
                     onChange(media.url);
+
+                    /* The library's description is a starting point, never an overwrite — whatever
+                       this placement already says about the image was written for this placement. */
+                    if (onAltChange && ! (alt || '').trim() && media.alt) onAltChange(media.alt);
                 }}
             />
         </div>

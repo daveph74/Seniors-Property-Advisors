@@ -18,7 +18,7 @@ class BlogPost extends Model
     public const RESERVED_SLUGS = ['articles'];
 
     protected $fillable = [
-        'slug', 'title', 'summary', 'body', 'featured_image',
+        'slug', 'title', 'summary', 'body', 'featured_image', 'featured_image_alt',
         'author_name', 'status', 'published_at', 'seo', 'last_updated_by',
     ];
 
@@ -98,6 +98,7 @@ class BlogPost extends Model
             'url' => $this->url(),
             'summary' => $this->cardSummary(),
             'image' => $this->featured_image,
+            'imageAlt' => $this->featured_image_alt,
             'date' => $this->published_at?->format('j F Y'),
             'category' => $shown->first()?->name,
             'categories' => $shown->pluck('name')->values()->all(),
@@ -122,6 +123,7 @@ class BlogPost extends Model
             'url' => $this->url(),
             'summary' => $this->summary,
             'image' => $this->featured_image,
+            'imageAlt' => $this->featured_image_alt,
             'author' => $this->author_name,
             'status' => $this->status,
             'publishedAt' => $this->published_at?->toIso8601String(),

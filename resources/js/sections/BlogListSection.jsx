@@ -147,7 +147,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
                                             <img
                                                 className="article-card__image"
                                                 src={a.image}
-                                                alt={a.title || ''}
+                                                alt={a.imageAlt || ''}
                                                 loading="lazy"
                                                 decoding="async"
                                             />

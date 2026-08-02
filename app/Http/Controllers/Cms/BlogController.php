@@ -116,7 +116,7 @@ class BlogController extends Controller
     public function duplicate(BlogPost $post): RedirectResponse
     {
         $copy = BlogPost::create($post->only([
-            'summary', 'body', 'featured_image', 'author_name', 'seo',
+            'summary', 'body', 'featured_image', 'featured_image_alt', 'author_name', 'seo',
         ]) + [
             'title' => "{$post->title} (copy)",
             'slug' => $this->availableSlug($post->slug.'-copy'),

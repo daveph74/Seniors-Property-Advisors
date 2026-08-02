@@ -20,7 +20,7 @@ export default function TeamIntroSection({ data, anchor }) {
                                     <img
                                         className="team-member__photo"
                                         src={m.photo}
-                                        alt={m.name || ''}
+                                        alt={m.photoAlt || m.name || ''}
                                         style={photo}
                                         loading="lazy"
                                         decoding="async"

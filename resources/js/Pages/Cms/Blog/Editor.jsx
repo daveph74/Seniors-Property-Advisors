@@ -32,6 +32,7 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
         summary: article?.summary ?? '',
         body: article?.body ?? '',
         featured_image: article?.image ?? '',
+        featured_image_alt: article?.imageAlt ?? '',
         author_name: article?.author ?? defaultAuthor ?? '',
         published_at: dateValue(article?.publishedAt),
         categories: article?.categoryIds ?? [],
@@ -172,7 +173,9 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
                         <h2 className="cms-settings-section__title">Featured image</h2>
                         <ImageField
                             value={data.featured_image}
+                            alt={data.featured_image_alt}
                             onChange={(src) => setData('featured_image', src)}
+                            onAltChange={(v) => setData('featured_image_alt', v)}
                             hint="Used on the article cards and at the top of the article."
                         />
                     </section>
