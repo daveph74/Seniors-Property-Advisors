@@ -108,26 +108,6 @@ export default function Dashboard({
                         ))}
                     </section>
 
-                    <section className="cms-card">
-                        <div className="cms-card__header">
-                            <h2 className="cms-card__title">Recently published articles</h2>
-                            <Link href={CMS_HREFS.blog} className="cms-card__link-action">View all articles</Link>
-                        </div>
-                        {recentlyPublished.length === 0 ? (
-                            <Empty>No articles have been published yet.</Empty>
-                        ) : recentlyPublished.map((item) => (
-                            <div key={item.href} className="cms-list-row">
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div className="cms-list-row__title">{item.title}</div>
-                                    <div className="cms-list-row__sub">{item.sub}</div>
-                                </div>
-                                <Link href={item.href} className="cms-btn cms-btn--xs">Edit</Link>
-                                <a className="cms-btn cms-btn--xs" href={item.url} target="_blank" rel="noreferrer">
-                                    View
-                                </a>
-                            </div>
-                        ))}
-                    </section>
                 </div>
 
                 <div className="cms-dash-col">
@@ -184,6 +164,30 @@ export default function Dashboard({
                                 ))}
                             </div>
                         )}
+                    </section>
+
+                    {/* Under the activity feed rather than below the left column's long lists: the
+                        right column ran out of content well before the left one did, leaving a tall
+                        empty gap beside it. */}
+                    <section className="cms-card">
+                        <div className="cms-card__header">
+                            <h2 className="cms-card__title">Recently published</h2>
+                            <Link href={CMS_HREFS.blog} className="cms-card__link-action">View all articles</Link>
+                        </div>
+                        {recentlyPublished.length === 0 ? (
+                            <Empty>No articles have been published yet.</Empty>
+                        ) : recentlyPublished.map((item) => (
+                            <div key={item.href} className="cms-list-row">
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div className="cms-list-row__title">{item.title}</div>
+                                    <div className="cms-list-row__sub">{item.sub}</div>
+                                </div>
+                                <Link href={item.href} className="cms-btn cms-btn--xs">Edit</Link>
+                                <a className="cms-btn cms-btn--xs" href={item.url} target="_blank" rel="noreferrer">
+                                    View
+                                </a>
+                            </div>
+                        ))}
                     </section>
                 </div>
             </div>
