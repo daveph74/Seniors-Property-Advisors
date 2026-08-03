@@ -51,14 +51,17 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
 
     return (
         <>
-            <div className="topbar">
-                <div className="container">
-                    <a className="notice" href={notice.href || '#'}>
-                        <GiftIcon />
-                        {notice.text}
-                    </a>
+            {/* Absent means showing: the bar predates the switch and was always visible. */}
+            {notice.active !== false && notice.text ? (
+                <div className="topbar">
+                    <div className="container">
+                        <a className="notice" href={notice.href || '#'}>
+                            <GiftIcon />
+                            {notice.text}
+                        </a>
+                    </div>
                 </div>
-            </div>
+            ) : null}
 
             <div className="nav-wrap" ref={header}>
                 <div className="container nav">

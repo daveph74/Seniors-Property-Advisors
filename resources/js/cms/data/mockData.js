@@ -100,15 +100,6 @@ export const FAQ_GROUPS = [
     ] },
 ];
 
-export const GLOBAL_CARDS = [
-    { title: 'Header', usage: 'All 18 pages', body: 'Logo, main navigation and the header enquiry button.' },
-    { title: 'Footer', usage: 'All 18 pages', body: 'Footer columns, office details, legal links and acknowledgements.' },
-    { title: 'Contact details', usage: 'Used on 12 pages', body: 'Phone, email, postal address and consultation hours.' },
-    { title: 'Social links', usage: 'Used on 18 pages', body: 'Facebook and LinkedIn profiles shown in the footer.' },
-    { title: 'Site-wide announcement', usage: 'Currently hidden', body: 'A single banner above the header for seasonal or urgent notices.' },
-    { title: 'Default call to action', usage: 'Used on 9 pages', body: 'The standard “Request a consultation” block used at the end of pages.' },
-];
-
 export const VERSIONS = [
     { n: 17, tag: 'current', when: 'Just now', who: 'Helen Marsh · autosaved draft', changes: ['Hero heading updated', 'Statistics section added'] },
     { n: 16, tag: 'live', when: '2 hours ago', who: 'Helen Marsh · published', changes: ['Featured testimonials reordered'] },
