@@ -36,10 +36,11 @@ class Seo
      * read the document as delivered, so a link shared anywhere but search was arriving with no
      * image, no description, and every page reporting the site title.
      */
-    public static function head(array $seo, string $fallbackTitle, string $type = 'website'): array
+    public static function head(array $seo, string $fallbackTitle, string $type = 'website', array $defaults = []): array
     {
-        $title = trim((string) ($seo['title'] ?? '')) ?: $fallbackTitle;
-        $description = trim((string) ($seo['description'] ?? '')) ?: null;
+        $title = self::formatted(trim((string) ($seo['title'] ?? '')) ?: $fallbackTitle, $defaults);
+        $description = trim((string) ($seo['description'] ?? ''))
+            ?: (trim((string) ($defaults['description'] ?? '')) ?: null);
 
         return array_filter([
             'title' => $title,
@@ -56,11 +57,30 @@ class Seo
     }
 
     /**
+     * The site-wide title pattern, applied to whichever title won.
+     *
+     * Skipped when the title already contains the site's name — the home page is titled
+     * "Agent Finder — Seniors Property Advisors", and blindly appending would deliver
+     * "… Advisors | Seniors Property Advisors" to every search result and shared link.
+     */
+    private static function formatted(string $title, array $defaults): string
+    {
+        $format = trim((string) ($defaults['titleFormat'] ?? ''));
+        $name = trim((string) ($defaults['name'] ?? ''));
+
+        if ($format === '' || $name === '' || Str::contains($title, $name)) {
+            return $title;
+        }
+
+        return trim(str_replace(['{title}', '{site}'], [$title, $name], $format));
+    }
+
+    /**
      * What a search engine needs to treat an article as an article rather than a page of text.
      * Only fields we actually hold are included — a guessed date or an empty author is worse than
      * an absent one, because structured data that disagrees with the page is distrusted.
      */
-    public static function articleSchema(array $head, array $article): array
+    public static function articleSchema(array $head, array $article, ?string $publisher = null): array
     {
         return array_filter([
             '@context' => 'https://schema.org',
@@ -73,7 +93,8 @@ class Seo
             'author' => isset($article['author'])
                 ? ['@type' => 'Person', 'name' => $article['author']]
                 : null,
-            'publisher' => ['@type' => 'Organization', 'name' => 'Seniors Property Advisors'],
+            /* The website's name, once the settings screen holds one — it was hardcoded here. */
+            'publisher' => ['@type' => 'Organization', 'name' => $publisher ?: 'Seniors Property Advisors'],
             'mainEntityOfPage' => isset($head['canonical'])
                 ? ['@type' => 'WebPage', '@id' => $head['canonical']]
                 : null,

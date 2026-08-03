@@ -33,7 +33,7 @@ function RailList({ title, articles }) {
     );
 }
 
-export default function Article({ article, seo = {}, related = [], globals = {}, preview = null }) {
+export default function Article({ article, seo = {}, related = [], globals = {}, site = {}, preview = null }) {
     const [modalOpen, setModalOpen] = useState(false);
     const actions = { 'open-finder': () => setModalOpen(true) };
 
@@ -107,7 +107,7 @@ export default function Article({ article, seo = {}, related = [], globals = {},
                 </div>
             </div>
 
-            <SiteFooter globals={globals} />
+            <SiteFooter globals={globals} site={site} />
 
             <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} />
         </>

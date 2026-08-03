@@ -4,7 +4,7 @@ import { HeadingLevel, ownerOfTheH1 } from './headingLevel';
 
 const BREAKPOINTS = ['desktop', 'tablet', 'mobile'];
 
-export default function SectionResolver({ sections = [], actions = {}, library = {}, depth = 0 }) {
+export default function SectionResolver({ sections = [], actions = {}, library = {}, site = {}, depth = 0 }) {
     /* Only the outermost run decides; a nested section is never the page's opening heading. */
     const topHeading = depth === 0 ? ownerOfTheH1(sections) : null;
 
@@ -14,7 +14,7 @@ export default function SectionResolver({ sections = [], actions = {}, library =
         if (!Section || section.active === false) return null;
 
         const nested = depth < 5 && Array.isArray(section.children)
-            ? <SectionResolver sections={section.children} actions={actions} library={library} depth={depth + 1} />
+            ? <SectionResolver sections={section.children} actions={actions} library={library} site={site} depth={depth + 1} />
             : null;
 
         const rendered = (
@@ -24,6 +24,7 @@ export default function SectionResolver({ sections = [], actions = {}, library =
                     anchor={section.anchor}
                     actions={actions}
                     library={library}
+                    site={site}
                 >
                     {nested}
                 </Section>

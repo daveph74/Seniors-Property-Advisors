@@ -1,0 +1,21 @@
+{
+    "name": "Seniors Property Advisors",
+    "favicon": null,
+    "seo": {
+        "titleFormat": "{title} | {site}",
+        "description": null,
+        "image": null
+    },
+    "social": {
+        "facebook": null,
+        "linkedin": null
+    },
+    "tracking": {
+        "ga4": null,
+        "gtm": null
+    },
+    "legal": {
+        "disclaimer": null,
+        "privacyPage": null
+    }
+}

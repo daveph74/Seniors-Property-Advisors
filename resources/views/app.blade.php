@@ -9,6 +9,10 @@
          `inertia` attribute, so the client head manager takes ownership on hydration and keeps them
          current as somebody moves around the site rather than leaving a second copy behind. --}}
     @php($head = $page['props']['head'] ?? [])
+    @php($site = App\Content\Site::all())
+    @isset($site['favicon'])
+        <link rel="icon" href="{{ $site['favicon'] }}" />
+    @endisset
     <title inertia>{{ $head['title'] ?? 'Agent Finder — Seniors Property Advisors' }}</title>
     @isset($head['description'])
         <meta inertia name="description" content="{{ $head['description'] }}" />
@@ -52,6 +56,20 @@
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     @inertiaHead
+    {{-- Readers only. Measuring the admin would count the people editing the site as visitors, and
+         load a third-party script for staff who never asked for one. Ids are format-checked twice,
+         at the save and again in `Site::tracking()`, because this prints inside a <script> where
+         Blade's escaping would not help. --}}
+    @if (! request()->is('cms', 'cms/*', 'login'))
+        @php($tracking = App\Content\Site::tracking())
+        @isset($tracking['gtm'])
+            <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{{ $tracking['gtm'] }}');</script>
+        @endisset
+        @isset($tracking['ga4'])
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $tracking['ga4'] }}"></script>
+            <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $tracking['ga4'] }}');</script>
+        @endisset
+    @endif
 </head>
 <body>
     @inertia

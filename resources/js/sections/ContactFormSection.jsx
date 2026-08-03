@@ -12,7 +12,7 @@ const FIELDS = [
  * The wording here is the editor's; the fields, the validation and where an enquiry goes are not.
  * Scope §12 keeps those with the development team, so they are in code and absent from the builder.
  */
-export default function ContactFormSection({ data, anchor, editing = false }) {
+export default function ContactFormSection({ data, anchor, editing = false, site = {} }) {
     const Heading = `h${useHeadingLevel()}`;
     const sent = usePage().props.enquiry === 'sent';
 
@@ -88,7 +88,19 @@ export default function ContactFormSection({ data, anchor, editing = false }) {
                                 checked={form.consent}
                                 onChange={(e) => setData('consent', e.target.checked)}
                             />
-                            <span>{data.consent || 'I agree to be contacted about this enquiry.'}</span>
+                            <span>
+                                {data.consent || 'I agree to be contacted about this enquiry.'}
+                                {/* The privacy page chosen in Settings, appended rather than typed
+                                    into the wording: the consent field is plain text, so an editor
+                                    cannot put a link in it, and asking somebody to agree to how
+                                    their details are handled without showing them is not consent. */}
+                                {site.privacyUrl ? (
+                                    <>
+                                        {' '}
+                                        <a href={site.privacyUrl}>Read our privacy policy</a>.
+                                    </>
+                                ) : null}
+                            </span>
                         </label>
 
                         {errors.consent ? <em className="contact-form__error">{errors.consent}</em> : null}

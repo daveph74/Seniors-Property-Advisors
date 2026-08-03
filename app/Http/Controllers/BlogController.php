@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Content\ContentLibrary;
 use App\Content\PageContentStore;
 use App\Content\Seo;
+use App\Content\Site;
 use App\Models\BlogPost;
 use App\Models\PageRedirect;
 use Illuminate\Http\JsonResponse;
@@ -33,9 +34,10 @@ class BlogController extends Controller
             abort(404);
         }
 
-        $seo = $this->sharing($post);
+        $defaults = Site::seoDefaults();
+        $seo = $this->sharing($post, $defaults['image']);
         $article = $post->toArticle();
-        $head = Seo::head($seo, $post->title, 'article');
+        $head = Seo::head($seo, $post->title, 'article', $defaults);
 
         return Inertia::render('Article', [
             'article' => $article,
@@ -44,9 +46,10 @@ class BlogController extends Controller
                while asking not to be listed sends a crawler two different instructions. */
             'head' => $head + (isset($head['robots'])
                 ? []
-                : ['schema' => Seo::articleSchema($head, $article)]),
+                : ['schema' => Seo::articleSchema($head, $article, $defaults['name'])]),
             'related' => $this->library->related($post),
             'globals' => $this->store->globals(),
+            'site' => Site::forPublic(),
         ]);
     }
 
@@ -55,14 +58,16 @@ class BlogController extends Controller
      * fallback is resolved here rather than in the page component so the sharing tags have one
      * source. `Cms\BlogController::preview()` builds the same shape.
      */
-    public static function sharing(BlogPost $post): array
+    public static function sharing(BlogPost $post, ?string $fallbackImage = null): array
     {
         return Seo::forSharing(
             array_merge(
                 ['title' => $post->title, 'description' => $post->summary],
                 array_filter($post->seo ?? [], fn ($value) => $value !== null && $value !== ''),
             ),
-            $post->featured_image,
+            /* The article's own picture first, then the site default — the site image is a
+               last resort, not a replacement for a picture chosen for this piece. */
+            $post->featured_image ?: $fallbackImage,
             url($post->url()),
         );
     }

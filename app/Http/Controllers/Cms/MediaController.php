@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Cms;
 
 use App\Auth\Permissions;
 use App\Content\ImageOptimiser;
+use App\Content\Site;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use App\Models\Media;
@@ -401,10 +402,15 @@ class MediaController extends Controller
             $usedBy[] = 'Testimonial: '.$name;
         }
 
-        $chrome = DB::table('settings')->where('key', 'globals')->where($this->mentions('value', $url))->exists();
+        /* Both settings rows. `site` holds the favicon and the default sharing image, and scanning
+           only `globals` would let either be deleted while every page in the website used it. */
+        $chrome = DB::table('settings')
+            ->whereIn('key', ['globals', Site::KEY])
+            ->where($this->mentions('value', $url))
+            ->pluck('key');
 
-        if ($chrome) {
-            $usedBy[] = 'Site header and footer';
+        foreach ($chrome as $key) {
+            $usedBy[] = $key === Site::KEY ? 'Site settings' : 'Site header and footer';
         }
 
         foreach (DB::table('reusable_sections')->where($this->mentions('block', $url))->pluck('name') as $name) {

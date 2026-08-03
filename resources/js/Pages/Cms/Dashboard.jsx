@@ -20,7 +20,7 @@ const SAID = {
 
 const THING = {
     Page: 'page', BlogPost: 'article', Faq: 'question', Testimonial: 'testimonial', Media: 'image',
-    Navigation: 'navigation', GlobalContent: 'global content',
+    Navigation: 'navigation', GlobalContent: 'global content', Settings: 'settings',
 };
 
 const initials = (name) => name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
