@@ -369,7 +369,9 @@
 .cms-main{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; }
 .cms-page{ padding: 22px 32px 48px; }
-.cms-page--dash{ padding: 28px 32px 48px; max-width: 1240px; min-width: 760px; }
+/* No cap. The two columns are already proportional, so the dashboard fills the content area the way
+   the media and testimonial screens do — a 1240px cap left 236px of nothing on a wide window. */
+.cms-page--dash{ padding: 28px 32px 48px; min-width: 760px; }
 .cms-page--narrow{ max-width: 1000px; }
 .cms-page--medium{ max-width: 1020px; }
 .cms-page--builder-modal{ max-width: 1080px; }
