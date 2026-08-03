@@ -132,20 +132,8 @@ export default function GlobalIndex({ globals }) {
                 <h2 className="cms-card__title">Logo</h2>
 
                 <Field
-                    label="Image address"
-                    hint="A file already uploaded to the media library, or a file in the website’s own folder."
-                    error={errors['logo.src']}
-                >
-                    <input
-                        className="cms-input"
-                        value={data.logo.src}
-                        onChange={(e) => set('logo', 'src', e.target.value)}
-                    />
-                </Field>
-
-                <Field
                     label="Describe the logo"
-                    hint="Read aloud to anyone using a screen reader, and shown if the image cannot load."
+                    hint="Read aloud to anyone using a screen reader in place of the logo."
                     error={errors['logo.alt']}
                 >
                     <input
@@ -154,6 +142,11 @@ export default function GlobalIndex({ globals }) {
                         onChange={(e) => set('logo', 'alt', e.target.value)}
                     />
                 </Field>
+
+                <p className="cms-hint cms-global-section__note">
+                    The logo itself is drawn as part of the website’s design rather than being an
+                    image file, so it is not editable here. Changing it is a job for your developer.
+                </p>
             </section>
 
             <section className="cms-card cms-global-section">

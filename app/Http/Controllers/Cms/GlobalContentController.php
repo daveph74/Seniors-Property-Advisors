@@ -33,10 +33,8 @@ class GlobalContentController extends Controller
                     'text' => $globals['notice']['text'] ?? '',
                     'href' => $globals['notice']['href'] ?? '',
                 ],
-                'logo' => [
-                    'src' => $globals['logo']['src'] ?? '',
-                    'alt' => $globals['logo']['alt'] ?? '',
-                ],
+                /* No `src`: the logo is drawn inline, not fetched, so there is nothing to point at. */
+                'logo' => ['alt' => $globals['logo']['alt'] ?? ''],
                 'phone' => [
                     'label' => $globals['phone']['label'] ?? '',
                     'href' => $globals['phone']['href'] ?? '',
@@ -58,7 +56,9 @@ class GlobalContentController extends Controller
         $globals = $before;
 
         $globals['notice'] = $request->notice();
-        $globals['logo'] = $request->logo();
+        /* Merged, not assigned: `src` is a developer's setting that this screen stopped showing, and a
+           screen must not delete a value it no longer offers. */
+        $globals['logo'] = array_merge($globals['logo'] ?? [], $request->logo());
         $globals['phone'] = $request->phone();
         $globals['nav']['cta']['label'] = $request->ctaLabel();
         $globals['footer'] = array_merge($globals['footer'] ?? [], $request->footer());

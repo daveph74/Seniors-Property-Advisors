@@ -18,7 +18,7 @@ class GlobalContentTest extends TestCase
     {
         return $this->put('/cms/global-content', array_merge([
             'notice' => ['active' => true, 'text' => 'A free guide', 'href' => '/guide'],
-            'logo' => ['src' => '/logo.svg', 'alt' => 'Seniors Property Advisors'],
+            'logo' => ['alt' => 'Seniors Property Advisors'],
             'phone' => ['label' => '1300 000 111'],
             'cta' => ['label' => 'Find My Agent'],
             'footer' => [
@@ -137,6 +137,27 @@ class GlobalContentTest extends TestCase
             $this->assertStringContainsString("\n", $globals['footer']['address']);
             $this->assertTrue($globals['notice']['active']);
         });
+    }
+
+    public function test_the_logo_image_cannot_be_changed_through_this_screen(): void
+    {
+        $was = $this->globals()['logo']['src'];
+
+        $this->save(['logo' => ['src' => '/media/2026/08/anything.png', 'alt' => 'Still described']])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $logo = $this->globals()['logo'];
+
+        /* The lockup is an inline <svg>, so an address never chose the artwork — it only switched
+           `BrandLogo` to an <img>, and a wide one blows out the header. The description is content;
+           the drawing is design. */
+        $this->assertSame($was, $logo['src']);
+        $this->assertSame('Still described', $logo['alt']);
+    }
+
+    public function test_the_logo_still_needs_a_description(): void
+    {
+        $this->save(['logo' => ['alt' => '']])->assertSessionHasErrors('logo.alt');
     }
 
     public function test_a_change_is_recorded_against_the_part_that_moved(): void

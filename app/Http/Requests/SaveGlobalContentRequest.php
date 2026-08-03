@@ -16,10 +16,9 @@ class SaveGlobalContentRequest extends FormRequest
                 'text' => Text::clean($this->input('notice.text')),
                 'href' => Text::clean($this->input('notice.href')),
             ],
-            'logo' => [
-                'src' => Text::clean($this->input('logo.src')),
-                'alt' => Text::clean($this->input('logo.alt')),
-            ],
+            /* Only the wording. The logo is drawn inline by `BrandMark`, not fetched, so there is no
+               image address for an editor to change — see `logo()`. */
+            'logo' => ['alt' => Text::clean($this->input('logo.alt'))],
             'phone' => ['label' => Text::clean($this->input('phone.label'))],
             'cta' => ['label' => Text::clean($this->input('cta.label'))],
             'footer' => [
@@ -42,7 +41,6 @@ class SaveGlobalContentRequest extends FormRequest
             'notice.text' => ['nullable', 'required_if:notice.active,true', 'string', 'max:120'],
             'notice.href' => ['nullable', 'string', 'max:200'],
 
-            'logo.src' => ['required', 'string', 'max:300'],
             'logo.alt' => ['required', 'string', 'max:120'],
 
             'phone.label' => ['required', 'string', 'max:40'],
@@ -75,9 +73,18 @@ class SaveGlobalContentRequest extends FormRequest
         ];
     }
 
+    /**
+     * The description alone, and never the image address.
+     *
+     * The lockup is an inline `<svg>` compiled into the bundle (`BrandMark`), so `logo.src` never
+     * chose the artwork — it only decided, by string equality against one magic path, whether to draw
+     * inline or fall back to an `<img>`. Offered as a field it was worse than useless: a wide upload
+     * blows out the header, which `.brand .mark` has no `max-width` to stop. The description is real
+     * content, and feeds both branches.
+     */
     public function logo(): array
     {
-        return $this->validated()['logo'];
+        return ['alt' => $this->validated()['logo']['alt']];
     }
 
     /**

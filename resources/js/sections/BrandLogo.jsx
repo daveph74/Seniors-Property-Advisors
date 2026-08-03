@@ -5,9 +5,13 @@ const DRAWN_INLINE = '/Seniors_Property_Advisors_Logo.svg';
 
 /**
  * Draws the brand inline when it is the standard lockup, and falls back to an <img> for anything
- * else. Keeping the fallback matters: the logo is editable content (globals.logo.src), so once
- * the global-content screen is real, somebody replacing it must still get the logo they chose
- * rather than the one compiled into the bundle.
+ * else.
+ *
+ * `globals.logo.src` is a developer's setting, not editable content — the global-content screen
+ * offers the description and nothing more. It was briefly a field, which was a mistake: it never
+ * chose the artwork, only which of these two branches runs, and an arbitrary image has no
+ * `max-width` in `.brand .mark` to stop it blowing out the header. The fallback stays for a
+ * developer pointing `src` at a different file in seed data.
  */
 export default function BrandLogo({ logo = {}, className = 'mark' }) {
     const src = logo.src || DRAWN_INLINE;
