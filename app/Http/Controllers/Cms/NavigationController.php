@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cms;
 use App\Content\PageContentStore;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveNavigationRequest;
+use App\Models\Activity;
 use App\Models\Page;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
@@ -49,7 +50,8 @@ class NavigationController extends Controller
 
     public function update(SaveNavigationRequest $request): RedirectResponse
     {
-        $globals = Setting::find('globals')?->value ?? [];
+        $before = Setting::find('globals')?->value ?? [];
+        $globals = $before;
 
         $globals['nav']['links'] = $request->navLinks();
         $globals['footer']['columns'] = $request->footerColumns();
@@ -60,6 +62,25 @@ class NavigationController extends Controller
         /* No cache to clear: the page cache holds section trees, and `globals()` is read fresh on
            every request. A menu change is live immediately. */
 
+        $this->record($before, $globals);
+
         return back();
+    }
+
+    /**
+     * §13 watches content models, and a menu is not one. A link removed from every page in the
+     * website left no trace at all until this.
+     */
+    private function record(array $before, array $after): void
+    {
+        $menus = array_keys(array_filter([
+            'Header menu' => ($before['nav']['links'] ?? null) !== $after['nav']['links'],
+            'Footer columns' => ($before['footer']['columns'] ?? null) !== $after['footer']['columns'],
+            'Small print' => ($before['footer']['links'] ?? null) !== $after['footer']['links'],
+        ]));
+
+        if ($menus !== []) {
+            Activity::note('edited', 'Navigation', implode(', ', $menus));
+        }
     }
 }

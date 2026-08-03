@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Setting;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -136,6 +137,34 @@ class GlobalContentTest extends TestCase
             $this->assertStringContainsString("\n", $globals['footer']['address']);
             $this->assertTrue($globals['notice']['active']);
         });
+    }
+
+    public function test_a_change_is_recorded_against_the_part_that_moved(): void
+    {
+        $this->save(['footer' => [
+            'word' => 'Agent Finder',
+            'blurb' => 'Reworded.',
+            'address' => '',
+            'legal' => '© 2026',
+        ]])->assertRedirect();
+
+        $entry = Activity::where('subject_type', 'GlobalContent')->latest('id')->first();
+
+        /* Without this a person could reword every page in the website and leave no trace, while a
+           typo fixed in one article shows up twice. */
+        $this->assertNotNull($entry);
+        $this->assertSame('edited', $entry->action);
+        $this->assertStringContainsString('Footer', $entry->subject_label);
+    }
+
+    public function test_saving_without_changing_anything_is_not_an_event(): void
+    {
+        $this->save()->assertRedirect();
+        $count = Activity::where('subject_type', 'GlobalContent')->count();
+
+        $this->save()->assertRedirect();
+
+        $this->assertSame($count, Activity::where('subject_type', 'GlobalContent')->count());
     }
 
     public function test_a_guest_cannot_read_or_change_it(): void

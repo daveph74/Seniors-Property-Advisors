@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Cms;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveGlobalContentRequest;
+use App\Models\Activity;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -53,7 +54,8 @@ class GlobalContentController extends Controller
 
     public function update(SaveGlobalContentRequest $request): RedirectResponse
     {
-        $globals = Setting::find('globals')?->value ?? [];
+        $before = Setting::find('globals')?->value ?? [];
+        $globals = $before;
 
         $globals['notice'] = $request->notice();
         $globals['logo'] = $request->logo();
@@ -63,6 +65,32 @@ class GlobalContentController extends Controller
 
         Setting::updateOrCreate(['key' => 'globals'], ['value' => $globals]);
 
+        $this->record($before, $globals);
+
         return back();
+    }
+
+    /**
+     * §13 watches content models, and this is not one — nothing here is a row, so an observer has
+     * nothing to hang off. Without this a person could reword every page in the website and the log
+     * would show no trace of it, while a typo fixed in one article shows up twice.
+     *
+     * Named by what moved rather than logged as one flat "edited": the whole screen saves at once,
+     * so "edited the global content" alone would never say which part.
+     */
+    private function record(array $before, array $after): void
+    {
+        $areas = array_keys(array_filter([
+            'Announcement bar' => ($before['notice'] ?? null) !== $after['notice'],
+            'Logo' => ($before['logo'] ?? null) !== $after['logo'],
+            'Phone number' => ($before['phone'] ?? null) !== $after['phone'],
+            'Header button' => ($before['nav']['cta']['label'] ?? null) !== $after['nav']['cta']['label'],
+            'Footer' => ($before['footer'] ?? null) !== $after['footer'],
+        ]));
+
+        /* Saving a screen without changing anything is not an event. */
+        if ($areas !== []) {
+            Activity::note('edited', 'GlobalContent', implode(', ', $areas));
+        }
     }
 }

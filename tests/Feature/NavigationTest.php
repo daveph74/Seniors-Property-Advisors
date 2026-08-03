@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Page;
 use App\Models\Setting;
 use Illuminate\Testing\TestResponse;
@@ -137,6 +138,28 @@ class NavigationTest extends TestCase
             /* Offering a draft would put a menu item in front of a 404. */
             $this->assertNotContains('/hidden', $targets);
         });
+    }
+
+    public function test_a_menu_change_is_recorded(): void
+    {
+        $this->save()->assertRedirect();
+
+        $entry = Activity::where('subject_type', 'Navigation')->latest('id')->first();
+
+        /* A link removed from every page in the website left no trace at all until this. */
+        $this->assertNotNull($entry);
+        $this->assertStringContainsString('Header menu', $entry->subject_label);
+        $this->assertSame(auth()->user()->name, $entry->by_name);
+    }
+
+    public function test_saving_the_same_menus_again_is_not_an_event(): void
+    {
+        $this->save()->assertRedirect();
+        $count = Activity::where('subject_type', 'Navigation')->count();
+
+        $this->save()->assertRedirect();
+
+        $this->assertSame($count, Activity::where('subject_type', 'Navigation')->count());
     }
 
     public function test_a_guest_cannot_read_or_change_the_menus(): void

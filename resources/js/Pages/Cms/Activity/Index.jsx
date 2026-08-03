@@ -29,6 +29,9 @@ const THING = {
     Faq: 'question',
     Testimonial: 'testimonial',
     Media: 'image',
+    /* Not content rows: these two name the screen, and the label says which part of it moved. */
+    Navigation: 'navigation',
+    GlobalContent: 'global content',
 };
 
 export default function ActivityIndex({ entries = [], filters = {}, actions = [], types = [], perPage = 60 }) {
