@@ -6,6 +6,7 @@ use App\Http\Controllers\Cms\AccountController;
 use App\Http\Controllers\Cms\ActivityController;
 use App\Http\Controllers\Cms\BlogController as CmsBlogController;
 use App\Http\Controllers\Cms\CmsPageController;
+use App\Http\Controllers\Cms\DashboardController;
 use App\Http\Controllers\Cms\DeletedContentController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
@@ -37,7 +38,7 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
     Route::patch('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
 
-    Route::get('/', fn () => Inertia::render('Cms/Dashboard'))->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
     Route::post('/pages', [CmsPageController::class, 'store'])->name('pages.store');

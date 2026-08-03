@@ -217,6 +217,11 @@
 .cms-badge--danger{ color: var(--cms-danger-text); background: var(--cms-danger-bg); border-color: var(--cms-danger-border); }
 
 /* ---------- Cards / surfaces ---------- */
+/* The public stylesheet loads on CMS routes too, and it sets `section { padding: 120px 0 }` for the
+   website's own sections. Any <section> in the admin inherited that — the dashboard cards each had
+   120px of empty space above their heading, and the ones that looked right only did so because they
+   set padding inline. Reset once here rather than per card. */
+.cms-shell section{ padding: 0; }
 .cms-card{
   background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg);
   box-shadow: var(--cms-shadow-card);

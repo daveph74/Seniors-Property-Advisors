@@ -40,33 +40,6 @@ export const QUICK_ACTIONS = [
     { label: 'Edit navigation', screen: 'navigation' },
 ];
 
-export const RECENT_PAGES = [
-    { title: 'Downsizing Support', url: '/downsizing-support', status: 'changes', meta: 'Helen Marsh · 18 min ago' },
-    { title: 'Retirement Living Advice', url: '/retirement-living-advice', status: 'published', meta: 'Helen Marsh · 3 days ago' },
-    { title: 'Independent Property Guidance', url: '/independent-property-guidance', status: 'draft', meta: 'Daniel Ruiz · 4 days ago' },
-    { title: 'Request a Consultation', url: '/request-a-consultation', status: 'published', meta: 'Daniel Ruiz · 1 week ago' },
-];
-
-export const REVIEW_ITEMS = [
-    { title: 'Five questions to ask before selling a family home', meta: 'Blog article · submitted by Daniel Ruiz' },
-    { title: 'Testimonial — Margaret W., Brighton', meta: 'Testimonial · awaiting consent confirmation' },
-];
-
-export const DASHBOARD_COUNTS = [
-    { n: '18', label: 'Pages' },
-    { n: '24', label: 'Articles' },
-    { n: '31', label: 'FAQs' },
-    { n: '12', label: 'Testimonials' },
-];
-
-export const RECENT_ACTIVITY = [
-    { who: 'HM', text: 'Helen edited the hero on Downsizing Support', when: '18 minutes ago' },
-    { who: 'DR', text: 'Daniel published Retirement Living Advice', when: '2 hours ago' },
-    { who: 'HM', text: 'Helen uploaded 6 images to Client photography', when: 'Yesterday' },
-    { who: 'DR', text: 'Daniel reordered the header navigation', when: 'Yesterday' },
-    { who: 'HM', text: 'Helen restored version 14 of the Home page', when: '3 days ago' },
-];
-
 export const STATUS_LABEL = {
     published: 'Published',
     draft: 'Draft',
