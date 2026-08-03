@@ -570,7 +570,10 @@
 .cms-settings-tab:hover{ background: #F1F4F8; }
 .cms-settings-tab--active{ background: var(--cms-accent-bg); color: var(--cms-navy); }
 .cms-settings-content{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-.cms-settings-section{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 20px; box-shadow: var(--cms-shadow-card); }
+/* `.cms-shell` prefix for the same reason as `.cms-global-section`: `.cms-shell section` zeroes
+   padding to keep the public stylesheet out of the admin, and a type selector outweighs a lone
+   class. Without it these cards render with their fields flush to the edge. */
+.cms-shell .cms-settings-section{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 20px; box-shadow: var(--cms-shadow-card); }
 .cms-settings-section__title{ margin: 0 0 3px; font-size: 15px; font-weight: 600; }
 .cms-settings-section__lead{ margin: 0 0 16px; font-size: 13px; color: var(--cms-text-mid); }
 .cms-settings-grid-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
