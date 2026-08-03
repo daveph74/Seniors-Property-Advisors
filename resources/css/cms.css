@@ -217,6 +217,11 @@
 .cms-badge--danger{ color: var(--cms-danger-text); background: var(--cms-danger-bg); border-color: var(--cms-danger-border); }
 
 /* ---------- Cards / surfaces ---------- */
+/* The public stylesheet loads on CMS routes too, and it sets `section { padding: 120px 0 }` for the
+   website's own sections. Any <section> in the admin inherited that — the dashboard cards each had
+   120px of empty space above their heading, and the ones that looked right only did so because they
+   set padding inline. Reset once here rather than per card. */
+.cms-shell section{ padding: 0; }
 .cms-card{
   background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg);
   box-shadow: var(--cms-shadow-card);
@@ -364,7 +369,9 @@
 .cms-main{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; }
 .cms-page{ padding: 22px 32px 48px; }
-.cms-page--dash{ padding: 28px 32px 48px; max-width: 1240px; min-width: 760px; }
+/* No cap. The two columns are already proportional, so the dashboard fills the content area the way
+   the media and testimonial screens do — a 1240px cap left 236px of nothing on a wide window. */
+.cms-page--dash{ padding: 28px 32px 48px; min-width: 760px; }
 .cms-page--narrow{ max-width: 1000px; }
 .cms-page--medium{ max-width: 1020px; }
 .cms-page--builder-modal{ max-width: 1080px; }

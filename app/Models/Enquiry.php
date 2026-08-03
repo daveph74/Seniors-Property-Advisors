@@ -10,6 +10,9 @@ class Enquiry extends Model
 
     protected $fillable = [
         'name', 'email', 'phone', 'suburb', 'message', 'consented', 'page_slug',
+        /* The column existed but was not fillable, so marking an enquiry dealt with would have
+           silently done nothing whenever that screen gets built. */
+        'handled_at',
     ];
 
     protected $casts = [

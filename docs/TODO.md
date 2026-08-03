@@ -4,14 +4,28 @@ Known gaps, in the order they are worth doing. Scope references are to the CMS d
 
 ## Scope sections not yet built
 
-**§3 CMS Dashboard.** The last screen still rendering `mockData.js` — the counts, the recently
-edited list and the drafts awaiting publication are all invented. Every count it asks for now has a
-real table behind it, so this is mostly wiring, and it retires the last of the mock data.
+Every section §1–§14 is built. What remains is checking rather than building:
 
-**§13 Audit History.** Nothing records who did what. Page publishing keeps `published_by` and a
-revision per publish, but creating, editing, unpublishing, archiving and deleting leave no trail,
-and there is none at all for articles, FAQs, testimonials or media. §13 also asks for restoring
-recently deleted content "where practical" — pages can be unarchived today, nothing else can.
+**§15 Responsive administration interface.** Never audited. The scope asks for a CMS usable on
+desktop, laptop and tablet. The drag handles on the list screens were justified by tablet use and
+have only ever been exercised with synthetic pointer events, so this is the section most likely to
+be wrong.
+
+**§16 Acceptance criteria.** Fifteen numbered statements, which is what the client will judge
+"complete" against. Most map onto finished work, but point 14 — "content editing does not allow
+users to break the approved website layout" — is not obviously covered by anything, and is worth
+deciding deliberately rather than assuming the section allowlist is enough.
+
+## Decisions waiting on somebody
+
+**SVG uploads are never inspected.** Only a super administrator can upload one and it is served
+with `nosniff` plus a locked-down CSP, so script inside it cannot execute — but the file itself is
+trusted, and that safety rests entirely on those headers surviving whatever CDN or proxy ends up in
+front of the route. Either parse the XML and reject scripts, or drop SVG support.
+
+**Page revision restore is not behind `content.restore`.** A client administrator can roll a page
+back to an old version but cannot unarchive one, which contradicts §2's split. Which way to resolve
+it is a permissions decision.
 
 ## Gaps in what is built
 
@@ -21,9 +35,12 @@ exists for a mark-as-handled control that was never built. §12 puts enquiry han
 so this is defensible — but until SyncID exists, an enquiry that nobody can see is close to an
 enquiry lost. Nothing emails anyone either: an enquiry arrives silently.
 
-**Look for a third write-only field.** Two editable fields turned out to save and never render:
-the media caption and the contact form's confirmation message. Both were found by accident. Worth
-walking the builder's field schemas against what each section actually renders, once, deliberately.
+**Look for a third write-only field.** Two editable fields turned out to save and never render: the
+media caption and the contact form's confirmation message. A third of the same shape has since
+turned up in a different place — `enquiries.handled_at` existed but was not fillable, so marking an
+enquiry dealt with would have quietly done nothing. All three were found by accident. Worth walking
+the field schemas against what each section renders, and the model `$fillable` lists against their
+columns, once, deliberately.
 
 **The page builder cannot be reordered by touch.** It still uses the HTML5 drag API, where
 `dragstart` never fires on a tablet. `resources/js/cms/useSortableList.js` is the pointer-based
@@ -37,6 +54,26 @@ not by resizing a window.
 
 **§15 Responsive administration interface** has never been audited as a section in its own right.
 The scope asks for a CMS usable on a tablet.
+
+## Three screens are still prototypes
+
+None of these is a numbered scope section — §4–§8 cover pages, blog, FAQs, testimonials and media,
+and site chrome is mentioned only in passing. But they sit in the sidebar looking finished, and one
+of them accepts input and throws it away, which is worse than a screen that shows nothing.
+
+**Navigation** is the one that matters. The header and footer links are real data in
+`settings.globals`, and so far only migrations have ever edited them — that is why adding the blog
+and FAQ links each needed one. The screen drags items around local state from `MENU_ITEMS` and saves
+nothing.
+
+**Global content** renders `GLOBAL_CARDS`. The real values live in the same `settings.globals` row:
+the notice bar, the phone number, the footer blurb and address, the legal line.
+
+**Settings** renders `SETTINGS_TABS`. Nothing behind it, and no scope section asks for it — worth
+deciding whether it should exist at all rather than building it because the prototype had it.
+
+The dashboard was the last mock screen among the numbered sections, which is a narrower claim than
+"the last mock screen" and easy to conflate.
 
 ## Content, not code
 
