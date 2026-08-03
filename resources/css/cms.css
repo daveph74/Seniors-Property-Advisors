@@ -1029,3 +1029,19 @@
   .cms-skeleton__bar{ animation: none; background: #EDF1F6; }
   .cms-sort--lifted{ transition: none; }
 }
+
+/* ---------- Navigation editor ---------- */
+.cms-nav-row{ position: relative; padding: 4px 0; }
+.cms-nav-row__line{ display: flex; align-items: center; gap: 8px; }
+.cms-nav-row__note{ margin: 4px 0 0 48px; }
+.cms-nav-row__children{ margin: 8px 0 0 48px; display: flex; flex-direction: column; gap: 8px; }
+/* The little elbow that says "this belongs to the row above". */
+.cms-nav-row__branch{
+  width: 12px; height: 12px; flex: none; border-left: 1px solid var(--cms-border-input-2);
+  border-bottom: 1px solid var(--cms-border-input-2); border-bottom-left-radius: 4px; margin-bottom: 6px;
+}
+.cms-nav-row__nest{ margin: 8px 0 0 48px; }
+.cms-nav-column{
+  padding: 14px 0; border-top: 1px solid var(--cms-border-softer);
+}
+.cms-nav-column:first-of-type{ border-top: none; padding-top: 0; }
