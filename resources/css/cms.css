@@ -551,11 +551,17 @@
 /* ---------- Global content ---------- */
 .cms-impact-banner{ display: flex; align-items: center; gap: 11px; padding: 12px 14px; border: 1px solid var(--cms-warning-border); background: var(--cms-warning-soft-bg); border-radius: var(--cms-radius-md); margin-bottom: 18px; }
 .cms-impact-banner__text{ font-size: 13px; color: var(--cms-warning-soft-text); line-height: 1.5; }
-.cms-global-grid{ display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
-.cms-global-card{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 18px; box-shadow: var(--cms-shadow-card); }
-.cms-global-card__head{ display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
-.cms-global-card__title{ font-size: 14px; font-weight: 600; }
-.cms-global-card__body{ margin: 0 0 14px; font-size: 13px; color: var(--cms-text-mid); line-height: 1.55; }
+/* `.cms-shell section` zeroes padding to keep the public stylesheet out of here, and a type
+   selector outweighs a lone class — hence the shell prefix rather than a bare `.cms-global-section`. */
+.cms-shell .cms-global-section{ padding: 18px; margin-bottom: 18px; }
+.cms-global-section:last-child{ margin-bottom: 0; }
+.cms-global-section__head{ display: flex; align-items: center; gap: 12px; }
+.cms-global-section__switch{ display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.cms-global-section__note{ margin: 6px 0 14px; }
+.cms-global-section__note:last-child{ margin-bottom: 0; }
+.cms-shell .cms-global-section .cms-card__title{ margin-bottom: 12px; }
+.cms-global-section__head .cms-card__title{ margin-bottom: 0; }
+.cms-field-hint{ display: block; margin-top: 5px; }
 
 /* ---------- Settings ---------- */
 .cms-settings-layout{ display: flex; gap: 26px; }

@@ -34,6 +34,25 @@ class Activity extends Model
         ]);
     }
 
+    /**
+     * Records something that is not a content row. The header and footer menus and the site-wide
+     * wording both live in one `settings` row keyed by a string, so there is no numeric id to point
+     * at and "edited Setting #globals" would say nothing — the label carries the meaning instead.
+     */
+    public static function note(string $action, string $type, string $label): void
+    {
+        $user = Auth::user();
+
+        static::create([
+            'action' => $action,
+            'subject_type' => $type,
+            'subject_id' => null,
+            'subject_label' => Str::limit($label, 180, ''),
+            'by_id' => $user?->id,
+            'by_name' => $user?->name,
+        ]);
+    }
+
     public static function labelFor(Model $subject): string
     {
         foreach (['title', 'question', 'name'] as $field) {
