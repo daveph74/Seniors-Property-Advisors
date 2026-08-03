@@ -3,10 +3,11 @@ import { resolve } from './navHref';
 import BrandLogo from './BrandLogo';
 import SiteLink from './SiteLink';
 
-export default function SiteFooter({ globals = {} }) {
+export default function SiteFooter({ globals = {}, site = {} }) {
     const { logo = {}, footer = {} } = globals;
     const here = usePage().url;
     const address = footer.address || [];
+    const social = site.social || [];
 
     return (
         <footer>
@@ -28,6 +29,19 @@ export default function SiteFooter({ globals = {} }) {
                                 </span>
                             ))}
                         </p>
+                        {social.length > 0 ? (
+                            <ul className="foot-social">
+                                {social.map((s) => (
+                                    <li key={s.label}>
+                                        {/* Off-site, so a plain anchor rather than SiteLink, and
+                                            noopener because these open in a new tab. */}
+                                        <a href={s.href} target="_blank" rel="noopener noreferrer">
+                                            {s.label}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : null}
                     </div>
                     {(footer.columns || []).map((col) => (
                         <div key={col.heading}>
@@ -42,6 +56,9 @@ export default function SiteFooter({ globals = {} }) {
                         </div>
                     ))}
                 </div>
+                {/* Its own block above the bottom bar: `.foot-bottom` is a space-between flex row,
+                    so a paragraph dropped in there would fight the legal links for the same line. */}
+                {site.disclaimer ? <p className="foot-disclaimer">{site.disclaimer}</p> : null}
                 <div className="foot-bottom">
                     <span>{footer.legal}</span>
                     <span className="links">

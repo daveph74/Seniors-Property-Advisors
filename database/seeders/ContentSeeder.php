@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Content\Site;
 use App\Models\Page;
 use App\Models\Setting;
 use Illuminate\Database\Seeder;
@@ -34,13 +35,15 @@ class ContentSeeder extends Seeder
             );
         }
 
-        $globals = resource_path('content/globals.json');
+        foreach (['globals', Site::KEY] as $key) {
+            $path = resource_path('content/'.$key.'.json');
 
-        if (is_file($globals)) {
-            Setting::updateOrCreate(
-                ['key' => 'globals'],
-                ['value' => json_decode(file_get_contents($globals), true) ?: []],
-            );
+            if (is_file($path)) {
+                Setting::updateOrCreate(
+                    ['key' => $key],
+                    ['value' => json_decode(file_get_contents($path), true) ?: []],
+                );
+            }
         }
     }
 }

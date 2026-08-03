@@ -109,8 +109,10 @@ class SeoControlsTest extends TestCase
 
         $html = $this->get('/services')->assertOk()->getContent();
 
-        $this->assertStringContainsString('<title inertia>What we do</title>', $html);
-        $this->assertStringContainsString('property="og:title" content="What we do"', $html);
+        /* The site-wide title pattern from Settings is applied here — the page's own title still
+           leads, which is the part that matters to a reader scanning search results. */
+        $this->assertStringContainsString('<title inertia>What we do | Seniors Property Advisors</title>', $html);
+        $this->assertStringContainsString('property="og:title" content="What we do | Seniors Property Advisors"', $html);
         $this->assertStringContainsString('name="description" content="Independent advice."', $html);
         $this->assertStringContainsString('rel="canonical"', $html);
     }
@@ -129,7 +131,7 @@ class SeoControlsTest extends TestCase
         $html = $this->get('/blog/planning-a-downsize')->assertOk()->getContent();
 
         /* The bug in one line: every page used to report the site title here. */
-        $this->assertStringContainsString('<title inertia>Planning a downsize</title>', $html);
+        $this->assertStringContainsString('<title inertia>Planning a downsize | Seniors Property Advisors</title>', $html);
         $this->assertStringContainsString('property="og:type" content="article"', $html);
         $this->assertStringContainsString('/media/2026/08/hero.jpg', $html);
         $this->assertStringContainsString('application/ld+json', $html);

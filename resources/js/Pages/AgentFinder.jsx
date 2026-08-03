@@ -6,7 +6,7 @@ import SectionResolver from '../sections/SectionResolver';
 import SiteHeader from '../sections/SiteHeader';
 import SiteFooter from '../sections/SiteFooter';
 
-export default function AgentFinder({ title, seo = {}, sections = [], globals = {}, library = {}, preview = null }) {
+export default function AgentFinder({ title, seo = {}, sections = [], globals = {}, site = {}, library = {}, preview = null }) {
     const [modalOpen, setModalOpen] = useState(false);
     const actions = { 'open-finder': () => setModalOpen(true) };
 
@@ -23,9 +23,9 @@ export default function AgentFinder({ title, seo = {}, sections = [], globals = 
 
             <SiteHeader globals={globals} actions={actions} />
 
-            <SectionResolver sections={sections} actions={actions} library={library} />
+            <SectionResolver sections={sections} actions={actions} library={library} site={site} />
 
-            <SiteFooter globals={globals} />
+            <SiteFooter globals={globals} site={site} />
 
             <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} />
         </>

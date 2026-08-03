@@ -13,12 +13,12 @@ use App\Http\Controllers\Cms\GlobalContentController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\NavigationController;
 use App\Http\Controllers\Cms\ReusableSectionController;
+use App\Http\Controllers\Cms\SettingsController;
 use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
 use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', [PageController::class, 'home'])->name('agent-finder');
 
@@ -138,8 +138,10 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
-    Route::get('/settings', fn () => Inertia::render('Cms/Settings/Index'))
-        ->middleware('permit:settings.manage')->name('settings.index');
+    Route::middleware('permit:settings.manage')->group(function () {
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    });
 });
 
 Route::get('/media/{key}', [MediaController::class, 'show'])

@@ -32,6 +32,7 @@ const THING = {
     /* Not content rows: these two name the screen, and the label says which part of it moved. */
     Navigation: 'navigation',
     GlobalContent: 'global content',
+    Settings: 'settings',
 };
 
 export default function ActivityIndex({ entries = [], filters = {}, actions = [], types = [], perPage = 60 }) {

@@ -793,6 +793,16 @@ footer{
   background: #fff; border-radius: 8px;
 }
 .foot-brand .muted{ opacity: 0.7; }
+.foot-social{ list-style: none; padding: 0; margin: 0; display: flex; gap: 18px; font-size: 14px; }
+/* Its own measure, size and leading. At the footer's 13px and 0.7 opacity this was the hardest
+   thing on the page to read, which is the wrong thing to do to a disclaimer — and worse for the
+   readers this site is for. Dimmer than the body copy, but deliberately not dim. */
+.foot-disclaimer{
+  margin: 56px 0 0; padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.10);
+  max-width: 80ch; font-size: 14px; line-height: 1.7; opacity: 0.85;
+}
+.foot-disclaimer + .foot-bottom{ border-top: none; margin-top: 20px; padding-top: 0; }
 .foot-bottom{
   border-top: 1px solid rgba(255,255,255,0.10);
   margin-top: 64px; padding-top: 24px;

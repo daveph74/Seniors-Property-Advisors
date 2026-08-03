@@ -153,10 +153,3 @@ export const COMPONENT_LIBRARY = [
         { type: 'blog-list', label: 'Blog articles', d: 'M4 5h16v5H4zM4 13h7v6H4zM13 13h7v2h-7zM13 17h7v2h-7z' },
     ] },
 ];
-
-export const SETTINGS_TABS = [
-    { id: 'general', label: 'General' },
-    { id: 'seo', label: 'SEO defaults' },
-    { id: 'tracking', label: 'Tracking' },
-    { id: 'legal', label: 'Legal' },
-];
