@@ -10,6 +10,7 @@ use App\Http\Controllers\Cms\DashboardController;
 use App\Http\Controllers\Cms\DeletedContentController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\MediaController;
+use App\Http\Controllers\Cms\NavigationController;
 use App\Http\Controllers\Cms\ReusableSectionController;
 use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
@@ -124,7 +125,8 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
         ->middleware('permit:content.delete')->name('media.destroy-many');
     Route::delete('/media/{medium}', [MediaController::class, 'destroy'])
         ->whereNumber('medium')->middleware('permit:content.delete')->name('media.destroy');
-    Route::get('/navigation', fn () => Inertia::render('Cms/Navigation/Index'))->name('navigation.index');
+    Route::get('/navigation', [NavigationController::class, 'index'])->name('navigation.index');
+    Route::put('/navigation', [NavigationController::class, 'update'])->name('navigation.update');
     Route::get('/global-content', fn () => Inertia::render('Cms/Global/Index'))->name('global.index');
 
     Route::middleware('permit:users.manage')->group(function () {

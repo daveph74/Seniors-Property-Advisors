@@ -100,26 +100,6 @@ export const FAQ_GROUPS = [
     ] },
 ];
 
-export const MENUS = [
-    { id: 'header', label: 'Header navigation' },
-    { id: 'footer', label: 'Footer navigation' },
-    { id: 'mobile', label: 'Mobile navigation' },
-    { id: 'utility', label: 'Utility links' },
-];
-
-export const MENU_ITEMS = [
-    { label: 'Downsizing support', target: '/downsizing-support', depth: 0 },
-    { label: 'Selling the family home', target: '/downsizing-support/selling-the-family-home', depth: 1 },
-    { label: 'Preparing to move', target: '/downsizing-support/preparing-to-move', depth: 1 },
-    { label: 'Retirement living advice', target: '/retirement-living-advice', depth: 0 },
-    { label: 'About our advisors', target: '/about', depth: 0 },
-    { label: 'FAQs', target: '/faqs', depth: 0 },
-    { label: 'Seniors housing guide (PDF)', target: 'External link', depth: 0, newTab: true },
-    { label: 'Request a consultation', target: '/request-a-consultation', depth: 0 },
-];
-
-export const ADDABLE_PAGES = ['Home', 'Independent Property Guidance', 'Blog', 'Privacy Policy', 'Contact'];
-
 export const GLOBAL_CARDS = [
     { title: 'Header', usage: 'All 18 pages', body: 'Logo, main navigation and the header enquiry button.' },
     { title: 'Footer', usage: 'All 18 pages', body: 'Footer columns, office details, legal links and acknowledgements.' },
