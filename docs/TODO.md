@@ -55,6 +55,26 @@ not by resizing a window.
 **§15 Responsive administration interface** has never been audited as a section in its own right.
 The scope asks for a CMS usable on a tablet.
 
+## Three screens are still prototypes
+
+None of these is a numbered scope section — §4–§8 cover pages, blog, FAQs, testimonials and media,
+and site chrome is mentioned only in passing. But they sit in the sidebar looking finished, and one
+of them accepts input and throws it away, which is worse than a screen that shows nothing.
+
+**Navigation** is the one that matters. The header and footer links are real data in
+`settings.globals`, and so far only migrations have ever edited them — that is why adding the blog
+and FAQ links each needed one. The screen drags items around local state from `MENU_ITEMS` and saves
+nothing.
+
+**Global content** renders `GLOBAL_CARDS`. The real values live in the same `settings.globals` row:
+the notice bar, the phone number, the footer blurb and address, the legal line.
+
+**Settings** renders `SETTINGS_TABS`. Nothing behind it, and no scope section asks for it — worth
+deciding whether it should exist at all rather than building it because the prototype had it.
+
+The dashboard was the last mock screen among the numbered sections, which is a narrower claim than
+"the last mock screen" and easy to conflate.
+
 ## Content, not code
 
 - Five of the six testimonials are sample data, with permission recorded as "Sample data" and
