@@ -4,12 +4,7 @@ Known gaps, in the order they are worth doing. Scope references are to the CMS d
 
 ## Scope sections not yet built
 
-Every section §1–§14 is built. What remains is checking rather than building:
-
-**§15 Responsive administration interface.** Never audited. The scope asks for a CMS usable on
-desktop, laptop and tablet. The drag handles on the list screens were justified by tablet use and
-have only ever been exercised with synthetic pointer events, so this is the section most likely to
-be wrong.
+Every section §1–§15 is built. What remains is checking rather than building:
 
 **§16 Acceptance criteria.** Fifteen numbered statements, which is what the client will judge
 "complete" against. Most map onto finished work, but point 14 — "content editing does not allow
@@ -42,6 +37,12 @@ enquiry dealt with would have quietly done nothing. All three were found by acci
 the field schemas against what each section renders, and the model `$fillable` lists against their
 columns, once, deliberately.
 
+**The admin header's search box and notification bell do nothing.** `Header.jsx` renders a search
+input with a `⌘K` hint and a bell with an unread dot, and neither has ever had a handler behind it —
+the dot is hardcoded. They are the last of the prototype's furniture. The search is hidden below
+1024px by the responsive layer, which shrinks the problem without fixing it: on a laptop it still
+invites a search that never runs. Either build them or take them out.
+
 **The page builder cannot be reordered by touch.** It still uses the HTML5 drag API, where
 `dragstart` never fires on a tablet. `resources/js/cms/useSortableList.js` is the pointer-based
 replacement, already used by the FAQ, testimonial and blog lists. Migrating the builder to it would
@@ -52,8 +53,11 @@ the public testimonial slider and the CMS handles — has only ever been exercis
 pointer events. And the FAQ page's 980px layout breakpoint was checked by applying its declarations,
 not by resizing a window.
 
-**§15 Responsive administration interface** has never been audited as a section in its own right.
-The scope asks for a CMS usable on a tablet.
+**The responsive layer has no test.** §15 was audited by measuring every admin screen in a real
+768px and 1024px viewport, and the numbers are in the commit message — but nothing stops a later
+change reintroducing a fixed width. Playwright is in `package.json` and completely unused: no
+config, no specs, no script. Standing it up would give the breakpoints a regression test and the
+touch-drag work above somewhere to live.
 
 ## No screen is a prototype any more
 
