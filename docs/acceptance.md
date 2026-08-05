@@ -1,105 +1,47 @@
 # Acceptance evidence — scope §16 and §17
 
-> **Provisional.** The scope document is not in this repository, so the criteria below are
-> **reconstructed** from `CLAUDE.md`, `docs/TODO.md`, `docs/specs/page-section-module.spec.md` and
-> the code itself. Only point 14 is quoted from a source. Nothing here is confirmed against §16
-> until somebody diffs it against the real document — see [Verifying this document](#verifying-this-document).
->
-> A criterion that exists in the scope and not in this list stays invisible until that diff
-> happens. That is the one failure this document cannot protect against.
+Checked against the real scope, now transcribed at `docs/specs/cms-scope.md`. Every criterion below
+is **quoted verbatim** from §16; every exclusion is quoted from §17.
 
-This answers one question for every acceptance criterion: **how do we know?** Each row names the
-thing that satisfies it and the test that proves it. A row with no named test is written as a gap,
-not as "covered".
+This answers one question per criterion: **how do we know?** Each row names the thing that
+satisfies it and the test that proves it. A row with no named test would be written as a gap.
 
-The tests are cited, not restated. The suite is 453 tests and most of this was a mapping exercise
-rather than new work.
+**All fifteen criteria are met.** Eighty-two cited tests, all verified present in `tests/`.
 
-## How the criteria were reconstructed
+## §16 — Acceptance criteria
 
-`docs/TODO.md` records two facts about §16: it holds **fifteen numbered statements**, and point 14
-reads *"content editing does not allow users to break the approved website layout"*. Everything
-else is inferred from the sections the scope is known to contain, which are recoverable from `§`
-references scattered through the code and notes:
+> "The CMS will be considered complete when:"
 
-| § | Subject | Recovered from |
-|---|---|---|
-| 2 | Two roles and their split | `app/Auth/Permissions.php` — "Scope section 2, expressed once" |
-| 3 | Dashboard, "draft content awaiting publication" | `DashboardController`, `docs/TODO.md` |
-| 5 | The editor's format list | `app/Content/Html.php` — "scope §5's editor list and nothing more" |
-| 6 | Media | `CLAUDE.md` |
-| 7 | Testimonials — consent as a constraint, not a field | `CLAUDE.md`, `TestimonialTest` |
-| 12 | Contact forms; CRM boundary sits outside the CMS | `CLAUDE.md`, `EnquiryController` |
-| 13 | Audit trail; restoring recently deleted content | `ActivityTest`, `DeletedContentTest` |
-| 14 | Validation and data safety | `ValidationSafetyTest` — "Scope §14" |
-| 15 | Responsive administration interface | closed by `c707a14` |
+| # | Criterion | Satisfied by | Evidence |
+|---|---|---|---|
+| 1 | Super administrators and client administrators can securely sign in. | `Auth\LoginController`, `auth.session` on `/cms` | `AuthTest::test_correct_details_sign_a_user_in`, `::test_a_wrong_password_is_refused`, `::test_a_deactivated_account_cannot_sign_in`, `::test_repeated_failures_are_rate_limited`, `::test_a_guest_is_sent_to_the_sign_in_page`, `::test_signing_out_ends_the_session` |
+| 2 | Permissions correctly limit access based on user role. | `app/Auth/Permissions.php`, `permit:` middleware | `PermissionsTest::test_a_client_administrator_reaches_the_content_modules`, `::test_a_client_administrator_cannot_reach_users_or_settings`, `::test_a_super_administrator_reaches_users_and_settings`, `::test_only_a_super_administrator_restores_archived_content`, `::test_the_sidebar_only_offers_modules_the_role_can_open` |
+| 3 | Users can create, edit, reorder, publish and archive page content. | `CmsPageController`, builder, `page_revisions` | `CreatePageTest::test_creating_a_page_opens_its_builder`, `PageDetailsTest::test_a_page_can_be_renamed`, `PageActionsTest::test_publishing_from_the_list_promotes_the_draft`, `::test_archiving_hides_the_page_and_can_be_undone`, `HomePageTest::test_it_passes_every_section_in_content_order`, `SectionDiffTest::test_it_reports_a_move_without_reporting_an_edit` |
+| 4 | Users can manage predefined page sections. | `PageContentStore::BLOCK_TYPES`, `SettingsPanel` | `CmsBuilderTest::test_the_scoped_section_types_are_registered`, `::test_it_saves_a_section_with_nested_children`, `::test_a_section_persists_its_anchor`, `SectionFieldsTest::test_a_hero_persists_its_nested_content`, `::test_agent_compare_persists_its_labels_sort_and_filter_flags` |
+| 5 | Users can create and publish blog articles. | `blog_posts`, TipTap editor | `BlogTest::test_an_article_can_be_written_edited_and_published`, `::test_every_format_the_scope_asks_for_survives_saving` |
+| 6 | Users can manage blog categories. | `blog_categories` + pivot | `BlogTest::test_categories_can_be_created_reordered_and_disabled`, `::test_an_article_can_hold_more_than_one_category`, `::test_a_disabled_category_disappears_from_filters_but_keeps_its_articles_live`, `::test_deleting_a_category_refiles_its_articles_rather_than_orphaning_them` |
+| 7 | Users can create, order and disable FAQs. | `FaqController` | `FaqTest::test_it_creates_a_question_and_puts_it_last`, `::test_it_reorders`, `::test_it_updates_and_hides_a_question`, `::test_a_category_can_be_hidden_without_touching_its_questions` |
+| 8 | Users can create, order and disable testimonials. | `testimonials` | `TestimonialTest::test_it_saves_every_field_the_scope_asks_for`, `::test_it_reorders`, `::test_toggling_one_flag_leaves_the_other_alone` |
+| 9 | Users can upload and reuse images. | `MediaController`, S3 | `MediaTest::test_it_signs_an_upload_and_generates_the_key_itself`, `::test_it_records_an_upload_that_arrived`, `::test_the_picker_library_lists_images_and_leaves_out_other_files`, `::test_it_keeps_an_image_a_published_page_still_uses` |
+| 10 | Draft content can be previewed before publication. | `CmsPreviewController` | `CmsPreviewTest::test_preview_renders_the_draft_not_the_published_tree`, `::test_preview_is_never_cached`, `BlogTest::test_a_draft_is_previewable_before_publishing` |
+| 11 | Only published and active content appears publicly. | `renderable()`, `scopeActive`, status columns | `CreatePageTest::test_a_new_page_is_not_public_until_it_is_published`, `PageActionsTest::test_unpublishing_takes_the_page_off_the_public_site`, `BlogTest::test_only_published_articles_are_public`, `TestimonialTest::test_the_library_only_carries_consented_active_testimonials_in_order`, `FaqTest::test_the_library_only_offers_active_questions_in_order`, `HomePageTest::test_it_drops_inactive_and_unregistered_sections` |
+| 12 | SEO fields are reflected correctly on the public website. | `seo_*` columns, `site` setting, blade head | `SeoControlsTest::test_the_sharing_tags_reach_a_scraper_that_runs_no_javascript`, `::test_a_page_can_name_a_different_canonical_address`, `::test_a_page_can_be_hidden_from_search_engines_and_shown_again`, `SeoTest::test_a_page_shares_an_absolute_image_with_its_size`, `SettingsTest::test_the_title_pattern_reaches_the_delivered_html` |
+| 13 | CMS changes are recorded against the responsible user. | `activity_log` | `ActivityTest::test_it_records_who_did_it_and_when`, `::test_the_screen_lists_what_happened_newest_first`, `PermissionsTest::test_a_change_is_recorded_against_the_signed_in_user`, `BlogTest::test_the_change_is_recorded_against_the_signed_in_user` |
+| 14 | Content editing does not allow users to break the approved website layout. | four server-side layers | see [Criterion 14](#criterion-14--the-layout-guarantee) |
+| 15 | Publishing updates the website without requiring a code deployment. | `PageContentStore`, cache clearing | `CmsBuilderTest::test_saving_a_draft_does_not_change_the_public_page`, `::test_publishing_promotes_the_draft_and_writes_one_revision`, `PageActionsTest::test_unpublishing_clears_the_cached_public_page`, `GlobalContentTest::test_a_change_reaches_every_page` |
 
-Note §14 is **validation**, not layout. Point 14 of §16 is a different thing that happens to share
-a number; the two are easy to confuse and are kept apart here deliberately.
+## Criterion 14 — the layout guarantee
 
-## §16 — the fifteen criteria
-
-Status is one of **met** (evidence named), **met, untested** (true but nothing guards it), or
-**gap**.
-
-| # | Criterion | Satisfied by | Evidence | Status |
-|---|---|---|---|---|
-| 1 | Two roles with the agreed split — client administrators create, edit, publish and unpublish; super administrators additionally delete, restore, manage accounts and reach settings `[reconstructed]` | `app/Auth/Permissions.php`, `permit:` middleware | `PermissionsTest::test_a_client_administrator_reaches_the_content_modules`, `::test_a_client_administrator_cannot_reach_users_or_settings`, `::test_only_a_super_administrator_restores_archived_content`, `::test_the_sidebar_only_offers_modules_the_role_can_open` | met |
-| 2 | Content can be created, edited and published without a developer `[reconstructed]` | `CmsPageController`, the builder | `CreatePageTest::test_creating_a_page_opens_its_builder`, `PermissionsTest::test_a_client_administrator_can_edit_and_publish_a_page`, `CmsBuilderTest::test_publishing_promotes_the_draft_and_writes_one_revision` | met |
-| 3 | The public website renders from stored content, not hardcoded markup `[reconstructed]` | `PageContentStore`, `resources/js/sections/` | `ContentStorageTest::test_a_published_tree_round_trips_byte_for_byte`, `CmsBuilderTest::test_the_builder_receives_the_real_home_sections`, `CreatePageTest::test_a_nested_page_renders_at_its_nested_url` | met |
-| 4 | Drafts can be previewed, and a published version can be rolled back `[reconstructed]` | `CmsPreviewController`, `page_revisions` | `CmsPreviewTest::test_preview_renders_the_draft_not_the_published_tree`, `CmsRestoreTest::test_restoring_writes_the_snapshot_back_as_a_draft`, `::test_restoring_leaves_the_public_page_untouched`, `RevisionHistoryTest::test_publishing_a_changed_tree_records_a_new_version` | met |
-| 5 | Blog articles can be written, categorised and published `[reconstructed]` | `blog_posts`, TipTap editor | `BlogTest::test_an_article_can_be_written_edited_and_published`, `::test_every_format_the_scope_asks_for_survives_saving`, `::test_only_published_articles_are_public` | met |
-| 6 | FAQs can be managed and grouped `[reconstructed]` | `FaqController` | `FaqTest::test_it_creates_a_question_and_puts_it_last`, `::test_the_seeded_categories_are_exactly_the_scope_list_in_its_order`, `::test_a_category_can_be_hidden_without_touching_its_questions` | met |
-| 7 | Testimonials publish only where the client has given permission `[reconstructed]` | `consent_confirmed_at`, `scopeActive` | `TestimonialTest::test_it_cannot_be_published_before_permission_is_recorded`, `::test_recording_permission_records_who_and_when`, `::test_withdrawing_permission_takes_it_off_the_website` | met |
-| 8 | Images can be uploaded and reused without a developer `[reconstructed]` | `MediaController`, S3 | `MediaTest::test_it_signs_an_upload_and_generates_the_key_itself`, `::test_it_records_an_upload_that_arrived`, `::test_it_keeps_an_image_a_published_page_still_uses` | met |
-| 9 | Navigation menus are editable `[reconstructed]` | `globals` setting | `NavigationTest::test_a_menu_change_reaches_the_website`, `::test_the_order_is_kept_exactly_as_given` | met |
-| 10 | Wording that appears on every page is editable `[reconstructed]` | `globals` setting | `GlobalContentTest::test_a_change_reaches_every_page`, `::test_saving_leaves_the_menus_alone` | met |
-| 11 | SEO text and sharing images are editable per page and article `[reconstructed]` | `seo_*` columns, `site` setting | `SeoControlsTest::test_a_page_can_name_a_different_canonical_address`, `SeoTest::test_a_page_shares_an_absolute_image_with_its_size`, `SettingsTest::test_the_default_description_fills_in_for_a_page_that_has_none` | met |
-| 12 | Enquiries from the contact form are captured `[reconstructed]` | `EnquiryController`, `enquiries` | `EnquiryTest::test_an_enquiry_is_kept`, `::test_nothing_is_kept_without_consent` | **gap** — see below |
-| 13 | Every change is attributable, and recently deleted content can be restored `[reconstructed]` | `activity_log`, soft deletes | `ActivityTest::test_it_records_who_did_it_and_when`, `::test_the_screen_lists_what_happened_newest_first`, `DeletedContentTest::test_a_deleted_question_leaves_the_website_but_can_be_brought_back` | met |
-| 14 | *"Content editing does not allow users to break the approved website layout."* `[quoted]` | four server-side layers | see [Point 14](#point-14--the-layout-guarantee) | met |
-| 15 | The administration interface is usable on desktop, laptop and tablet `[reconstructed]` | `resources/css/cms.css` responsive layer | measured in `c707a14`; **no automated test** | met, untested |
-
-### Row 12 — the gap
-
-Enquiries are captured, validated and consent-gated, but **there is no screen that lists them**, so
-reading one means opening the database. `enquiries.handled_at` exists for a mark-as-handled control
-that was never built, and nothing emails anyone on arrival.
-
-This is defensible — §12 puts enquiry handling in CRM scope, and the CRM is outside the CMS — but
-until SyncID exists, an enquiry nobody can see is close to an enquiry lost. Whether this fails the
-criterion depends on wording nobody here has read. **Flagged for the scope diff.**
-
-### Row 15 — met but unguarded
-
-§15 was closed by measuring every admin screen in real 768px and 1024px viewports, and the numbers
-are in `c707a14`'s message. Nothing stops a later change reintroducing a fixed width. Playwright is
-in `package.json` and entirely unused — no config, no specs, no script. That is where a regression
-test for this belongs.
-
-Touch drag in the page builder is still broken: it uses the HTML5 drag API, where `dragstart` never
-fires on a tablet. The builder is now *sized* for a tablet but section reordering by touch is not
-possible. Depending on how the criterion is worded, this may downgrade row 15 to a gap.
-
-### The likeliest reconstruction error
-
-Fifteen criteria had to be allocated across roughly fourteen recoverable subjects, so at least one
-row is probably split or merged wrongly. The most likely candidates: the dashboard (§3) has no row
-of its own here, and "draft preview" and "version rollback" are merged into row 4 when they may be
-two separate statements. Check those first.
-
-## Point 14 — the layout guarantee
-
-> *"Content editing does not allow users to break the approved website layout."*
+> "Content editing does not allow users to break the approved website layout."
 
 `docs/TODO.md` recorded this as "not obviously covered by anything, and worth deciding deliberately
-rather than assuming the section allowlist is enough". Having traced it: **the criterion is met**,
-and by rather more than the allowlist.
+rather than assuming the section allowlist is enough". Having traced it: **met**, and by rather
+more than the allowlist.
 
-The spec makes it an architectural commitment rather than a behaviour —
-`docs/specs/page-section-module.spec.md` locks it in: *"The section-type registry (constrained Puck
-config) is the guardrail that enforces 'predefined sections, no free-form builder' and 'editing
-cannot break the approved layout'. No arbitrary containers, no raw-HTML block."*
+§4 states the same requirement as a design rule — *"The CMS should prevent users from creating
+layouts that break the approved website design"* — and `docs/specs/page-section-module.spec.md`
+locks the mechanism in: *"The section-type registry (constrained Puck config) is the guardrail that
+enforces 'predefined sections, no free-form builder'. No arbitrary containers, no raw-HTML block."*
 
 Four layers enforce it:
 
@@ -111,11 +53,11 @@ Four layers enforce it:
 | Markup stripping | `strip_tags` over every string in the tree, so no `data` key can carry markup into a rendered page. | `SaveSectionsRequest::sanitise()` |
 
 **What makes this a guarantee rather than a convention is that all four run on the server.** The
-builder's own restrictions are a convenience; a hand-crafted POST is rejected on exactly the same
+builder's own restrictions are a convenience; a hand-crafted POST is refused on exactly the same
 rules as a bad drag. `SaveSectionsRequest` is the single door, and both CMS controllers go through
 `PageContentStore`.
 
-Proven by, in `tests/Feature/CmsBuilderTest.php`:
+Proven in `tests/Feature/CmsBuilderTest.php`:
 
 - `test_it_rejects_a_section_type_outside_the_registry` — unknown type refused
 - `test_a_near_miss_element_type_is_rejected` — a plausible-looking type is still refused
@@ -130,58 +72,68 @@ Proven by, in `tests/Feature/CmsBuilderTest.php`:
 
 Two further protections sit outside the section tree: `Html::ALLOWED` bounds what an article body
 may contain (`BlogTest::test_the_allowlist_keeps_styling_out_of_the_approved_design`), and
-`PageContentStore::renderable()` drops illegal blocks at render time, so a tree that predates a
-type's removal cannot break a live page (`CmsPreviewTest::test_preview_drops_hidden_and_illegal_blocks`).
+`renderable()` drops illegal blocks at render time, so a tree predating a type's removal cannot
+break a live page (`HomePageTest::test_it_drops_a_row_nested_three_deep`).
 
-**Conclusion: met.** Recorded here with the reasoning visible so it can be re-checked rather than
-trusted.
+**Conclusion: met.** Recorded with the reasoning visible so it can be re-checked rather than trusted.
 
-## §17 — exclusions
+## §17 — Out of scope
 
-§17 lists what is deliberately *not* built. Nothing needs building; the work is proving absence and
-making sure an exclusion cannot be reintroduced by accident.
+Fifteen exclusions. Nothing needs building; the work is confirming absence and noting what would
+stop each being reintroduced by accident.
 
-| Exclusion | Enforced by | Guard |
+| Exclusion | Status | What holds the line |
 |---|---|---|
-| Editing raw HTML | `Html::ALLOWED` — the allowlist is §5's editor list and nothing more. No source view exists in the editor (`RichTextEditor.jsx`). | `BlogTest::test_dangerous_markup_is_stripped_on_the_way_in`, `::test_the_allowlist_keeps_styling_out_of_the_approved_design`, `::test_a_reader_never_receives_unsafe_markup` |
-| Scheduled publishing | `published_at` is the date readers see, never a scheduler. `BlogPost` deliberately ignores a future date. | `BlogTest::test_a_future_date_does_not_hide_a_published_article` |
-| CRM integration and field mappings | §12 puts these outside the CMS. `handled_at` exists on `enquiries` but no CMS surface acts on it. | none needed — nothing to regress |
+| Full drag-and-drop website builder | absent | The builder is a **constrained** registry, not a free-form canvas — see criterion 14. Note §4 *requires* drag-and-drop **reordering**; what is excluded is a general website builder, not the drag controls. |
+| Editing raw HTML, CSS or JavaScript | absent | `Html::ALLOWED`; no source view in `RichTextEditor.jsx`; `sanitise()` strips tags from section data. `BlogTest::test_dangerous_markup_is_stripped_on_the_way_in`, `::test_a_reader_never_receives_unsafe_markup` |
+| Custom page templates created by client users | absent | Starter layouts are fixed in code and validated. `CreatePageTest::test_an_unknown_parent_or_layout_is_rejected`, `::test_every_starter_layout_saves_cleanly` |
+| Website analytics dashboard | absent | Settings hold analytics ids only; no dashboard exists. `SettingsTest::test_analytics_loads_for_a_reader_and_not_inside_the_admin` |
+| Email marketing platform | absent | Nothing built |
+| Newsletter sending | absent | Nothing built |
+| Customer login portal | absent | Sign-in is staff-only; the public site stays open to guests. `AuthTest::test_the_public_website_stays_open_to_guests` |
+| Membership management | absent | Nothing built |
+| Multilingual content | absent | Single-locale content model |
+| Advanced content approval workflows | absent | Publishing is immediate; there is no approval chain |
+| Scheduled publishing | absent | `published_at` is a display date, never a scheduler. `BlogTest::test_a_future_date_does_not_hide_a_published_article` |
+| AI content generation | absent | Nothing built |
+| Full document or file-management system | absent | The library is images only. `MediaTest::test_it_refuses_to_sign_anything_that_is_not_an_image`, `::test_the_picker_library_lists_images_and_leaves_out_other_files` |
+| Changes to SyncID workflows or CRM automations | absent | No SyncID integration exists. §12 keeps field mappings and routing with the development team |
+| Ongoing content entry after the initial agreed content population | n/a | Commercial, not code |
 
-Both enforced exclusions already have named guard tests, so no new tests were written. The
-allowlist one is the model to copy: widening `Html::ALLOWED` fails `BlogTest`, which is what stops
-the exclusion eroding quietly.
+Five exclusions have real guard tests. The allowlist one is the model: widening `Html::ALLOWED`
+fails `BlogTest`, which is what stops an exclusion eroding quietly.
 
-**This list is certainly incomplete.** Only three exclusions are recoverable from the repo. The
-real §17 will name others, and each will need the same treatment: name it, name what enforces it,
-name the guard — and add a guard where an exclusion rests on convention alone.
+## Notes on things that are *not* acceptance failures
 
-## Open decisions
+Two items previously carried as possible gaps turned out not to bear on §16 at all:
 
-Two items bear on acceptance but are rulings to make, not work to carry out. Both are recorded in
-`docs/TODO.md`:
+- **Enquiries cannot be read in the CMS.** §12 puts contact and lead enquiry forms in "the broader
+  website and CRM scope, **not** the content-management modules", and no §16 criterion mentions
+  them. Still worth building for the reason in `docs/TODO.md` — an enquiry nobody can see is close
+  to an enquiry lost — but it does not block acceptance.
+- **The responsive admin interface.** §15 requires it and it is built, but it is not one of the
+  fifteen acceptance criteria. Its remaining weaknesses — no automated test, and no touch drag in
+  the page builder — are quality gaps against §15, not acceptance failures. §15 also explicitly
+  allows that "complex page-section management may be optimised primarily for desktop and tablet".
 
-- **SVG uploads are never inspected.** Only a super administrator can upload one, and it is served
-  with `nosniff` and a locked-down CSP, so script inside cannot execute — but that safety rests on
-  those headers surviving whatever CDN ends up in front of the route. Either parse the XML and
-  reject scripts, or drop SVG support. Bears on rows 8 and 14.
-- **Revision restore is not behind `content.restore`.** A client administrator can roll a page back
-  to an old version but cannot unarchive one, which contradicts §2's split. Bears on rows 1 and 4.
+## §18 development notes
 
-## Verifying this document
+Not acceptance criteria, but the scope asks for them and they are worth recording:
 
-1. **Diff against the real scope.** Put the scope at `docs/specs/cms-scope.md`, then compare §16's
-   fifteen statements against the table above. Confirm the count is fifteen, replace every
-   `[reconstructed]` wording with the real wording, and add any criterion missing entirely. Until
-   this is done the document stays marked provisional.
-2. **Confirm every cited test exists and passes.** The citations are the whole value here; a matrix
-   naming a renamed or deleted test is worse than no matrix. Check mechanically rather than by eye:
+- *"Include automated tests for permissions and core content workflows"* — 453 tests, with
+  `PermissionsTest` and `AuthTest` covering the permissions half directly.
+- *"Include clear handover notes for future developers"* — `CLAUDE.md`, `docs/TODO.md`, this
+  document, and `docs/specs/`.
 
-   ```sh
-   grep -oh 'test_[a-z0-9_]\{3,\}' docs/acceptance.md | sort -u > /tmp/cited.txt
-   grep -roh 'function test_[a-z0-9_]*' tests/ | sed 's/function //' | sort -u > /tmp/actual.txt
-   comm -23 /tmp/cited.txt /tmp/actual.txt   # must print nothing
-   ```
+## Re-verifying this document
 
-   Last run: 55 citations, all present.
+The citations are the value here; a matrix naming a renamed or deleted test is worse than no
+matrix. Check mechanically rather than by eye:
 
-3. **`php artisan test`** — 453 passing. This document cites behaviour; it does not change any.
+```sh
+grep -oh 'test_[a-z0-9_]\{3,\}' docs/acceptance.md | sort -u > /tmp/cited.txt
+grep -roh 'function test_[a-z0-9_]*' tests/ | sed 's/function //' | sort -u > /tmp/actual.txt
+comm -23 /tmp/cited.txt /tmp/actual.txt   # must print nothing
+```
+
+Last run: 82 citations, all present. `php artisan test` — 453 passing.

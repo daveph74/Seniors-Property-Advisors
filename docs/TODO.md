@@ -4,25 +4,29 @@ Known gaps, in the order they are worth doing. Scope references are to the CMS d
 
 ## Scope sections not yet built
 
-Every section §1–§15 is built. §16 and §17 are checking rather than building, and that pass is
-done — see `docs/acceptance.md`, which names the test proving each criterion.
+None. §1–§15 are built, and §16 and §17 have been checked against the scope — now transcribed at
+`docs/specs/cms-scope.md`, so the section numbers used throughout these notes resolve to something
+in the repository.
 
-Point 14 turned out to be the opposite of the worry recorded here. "Content editing does not allow
-users to break the approved website layout" is enforced in four server-side layers — the type
-allowlist, the nesting rules, `SaveSectionsRequest::checkTree()` and `sanitise()` — with about
-twenty negative tests already behind it. It is met, and the write-up says why so the conclusion can
-be re-checked rather than trusted. Both §17 exclusions that are recoverable from this repo already
-have named guard tests.
+**All fifteen acceptance criteria are met**, each against a named passing test. See
+`docs/acceptance.md`. All fifteen §17 exclusions are absent, five of them held in place by a guard
+test rather than only by convention.
 
-Two things keep that document provisional:
+Criterion 14 turned out to be the opposite of the worry once recorded here. "Content editing does
+not allow users to break the approved website layout" is enforced in four server-side layers — the
+type allowlist, the nesting rules, `SaveSectionsRequest::checkTree()` and `sanitise()` — with about
+twenty negative tests already behind it. What makes it a guarantee is that all four run on the
+server: a hand-crafted POST is refused on the same rules as a bad drag.
 
-**The scope is not in the repo,** so §16's fifteen statements are reconstructed rather than quoted
-— only point 14's wording is known. Put the scope at `docs/specs/cms-scope.md` and diff it against
-the matrix; until then a criterion that exists in the scope and not in the matrix stays invisible.
-`docs/acceptance.md` names the rows most likely to be wrong.
+Two things this pass corrected, both worth remembering:
 
-**Two rows are not clean.** Row 12, enquiries, is a gap for the reason below. Row 15, the
-responsive admin, is met but has no automated test and still cannot be reordered by touch.
+- **Enquiries not being readable is not an acceptance failure.** §12 puts contact and lead enquiry
+  forms in "the broader website and CRM scope, not the content-management modules", and no §16
+  criterion mentions them. Still worth building, for the reason below — but it does not block sign-off.
+- **The responsive interface is not an acceptance criterion either.** §15 requires it and it is
+  built; §16 never mentions it. Its remaining weaknesses are quality gaps against §15, not
+  acceptance failures, and §15 itself allows that "complex page-section management may be optimised
+  primarily for desktop and tablet".
 
 ## Decisions waiting on somebody
 
