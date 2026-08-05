@@ -1122,10 +1122,19 @@
   .cms-settings-tab{ flex: none; }
 
   .cms-media-main{ padding: 18px 20px 40px; }
-  /* Fixed rather than stacked: the detail panel already has a close button, and letting it
-     hold 308px of a 768px screen left the grid one 170px column wide. */
+  /* Media, Blog and FAQs all use this layout, but only Media's panel is a dismissible detail
+     view — the other two are permanent category rails with no close button. They stack under
+     the list; only the detail panel may cover it. */
+  .cms-media-layout{ flex-direction: column; height: auto; }
   .cms-media-side{
-    position: fixed; top: 0; right: 0; bottom: 0; z-index: 62; width: min(340px, 88vw);
+    width: auto; border-left: none; border-top: 1px solid var(--cms-border); overflow: visible;
+  }
+  /* Fixed rather than stacked: it already has a close button, and letting it hold 308px of a
+     768px screen left the grid one 170px column wide. Below the sidebar's layer, never above —
+     a panel inside the content must not cover the menu that navigates away from it. */
+  .cms-media-side--detail{
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 58; width: min(340px, 88vw);
+    border-top: none; overflow: auto;
     box-shadow: -16px 0 40px rgba(16,32,58,0.18);
   }
 }
