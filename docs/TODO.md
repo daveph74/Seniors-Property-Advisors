@@ -4,12 +4,29 @@ Known gaps, in the order they are worth doing. Scope references are to the CMS d
 
 ## Scope sections not yet built
 
-Every section §1–§15 is built. What remains is checking rather than building:
+None. §1–§15 are built, and §16 and §17 have been checked against the scope — now transcribed at
+`docs/specs/cms-scope.md`, so the section numbers used throughout these notes resolve to something
+in the repository.
 
-**§16 Acceptance criteria.** Fifteen numbered statements, which is what the client will judge
-"complete" against. Most map onto finished work, but point 14 — "content editing does not allow
-users to break the approved website layout" — is not obviously covered by anything, and is worth
-deciding deliberately rather than assuming the section allowlist is enough.
+**All fifteen acceptance criteria are met**, each against a named passing test. See
+`docs/acceptance.md`. All fifteen §17 exclusions are absent, five of them held in place by a guard
+test rather than only by convention.
+
+Criterion 14 turned out to be the opposite of the worry once recorded here. "Content editing does
+not allow users to break the approved website layout" is enforced in four server-side layers — the
+type allowlist, the nesting rules, `SaveSectionsRequest::checkTree()` and `sanitise()` — with about
+twenty negative tests already behind it. What makes it a guarantee is that all four run on the
+server: a hand-crafted POST is refused on the same rules as a bad drag.
+
+Two things this pass corrected, both worth remembering:
+
+- **Enquiries not being readable is not an acceptance failure.** §12 puts contact and lead enquiry
+  forms in "the broader website and CRM scope, not the content-management modules", and no §16
+  criterion mentions them. Still worth building, for the reason below — but it does not block sign-off.
+- **The responsive interface is not an acceptance criterion either.** §15 requires it and it is
+  built; §16 never mentions it. Its remaining weaknesses are quality gaps against §15, not
+  acceptance failures, and §15 itself allows that "complex page-section management may be optimised
+  primarily for desktop and tablet".
 
 ## Decisions waiting on somebody
 
