@@ -3,7 +3,7 @@ import { Head, usePage } from '@inertiajs/react';
 import '../../../css/cms.css';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { SCREEN_TITLES } from '../data/mockData';
+import { SCREEN_TITLES } from '../data/constants';
 import { ToastProvider } from '../ToastContext';
 
 function navIdFromUrl(url) {

@@ -28,6 +28,12 @@ Two things this pass corrected, both worth remembering:
   acceptance failures, and §15 itself allows that "complex page-section management may be optimised
   primarily for desktop and tablet".
 
+§18's development notes are met too, now that a `README.md` exists — it was the one thing a
+developer inheriting this repo had no entry point for. One line of §18 cannot be closed by code:
+
+**The client has not confirmed the database structure and CMS screens.** §18 asks the developer to
+do that "before completing the full implementation". It is a conversation, not a commit.
+
 ## Decisions waiting on somebody
 
 **SVG uploads are never inspected.** Only a super administrator can upload one and it is served
@@ -114,13 +120,20 @@ the other, and the screen says so rather than silently syncing them.
 The dashboard was the last mock screen among the *numbered* sections; Navigation, Global content and
 Settings came after it and were not numbered.
 
-`mockData.js` is still imported, but almost all of what is left are UI constants sitting in a
-badly-named file — `STATUS_LABEL`, `STATUS_TONE`, `NAV_ITEMS`, `SCREEN_TITLES`, `QUICK_ACTIONS`,
-`COMPONENT_LIBRARY`. One real remnant survives: `Builder.jsx` still falls back to the invented `PAGES`
-list when its `page` prop is null. The controller always passes one, so it is unreachable today —
-which is exactly why it would be believed if it ever fired, showing titles like "Downsizing Support"
-for a page that does not exist. Worth deleting along with the constants being moved somewhere honestly
-named.
+`mockData.js` is gone. Its six real UI constants moved to `constants.js`; the seven invented
+fixtures were deleted.
+
+**The note that used to sit here was wrong, and the way it was wrong is the useful part.** It said
+`Builder.jsx`'s fallback to the invented `PAGES` list was "unreachable today, the controller always
+passes one". The controller did not: `edit()` rendered the builder with only a `pageId` when the id
+matched no page, so `/cms/pages/2/edit` on a database without a page 2 displayed "Downsizing
+Support" — and saving it then 404'd. `test_design_only_pages_receive_no_sections` visited ids 2, 5
+and 9 and asserted the screen loaded, so the path was not merely reachable but expected; the test
+never checked the title, which is why nobody caught it. The edit route now 404s an unknown id like
+the save route always did, and that test is `test_an_unknown_page_id_cannot_be_opened`.
+
+The claim was written from reading the JSX without following the prop back to the controller. Worth
+remembering the next time something here says "unreachable".
 
 ## Content, not code
 

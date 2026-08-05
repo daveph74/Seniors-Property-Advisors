@@ -1,5 +1,10 @@
-/* Counts are deliberately empty: invented numbers beside a real module read as fact.
-   The dashboard workstream (§3) is what puts true counts here. */
+/* Fixed labels and menus for the admin shell. Everything here is configuration, not content —
+   nothing in this file stands in for something the database should be answering. The file this
+   replaced was called mockData.js and mixed both, which is how an invented page list survived
+   long enough to be rendered in the builder. */
+
+/* Counts stay empty. A number beside a module reads as fact, and the sidebar has no cheap way to
+   know the true one; the dashboard is where real counts are reported. */
 export const NAV_ITEMS = [
     { id: 'dashboard', label: 'Dashboard', count: '' },
     { id: 'pages', label: 'Pages', count: '' },
@@ -54,59 +59,9 @@ export const STATUS_TONE = {
     archived: 'neutral',
 };
 
-export const PAGES = [
-    { id: 1, title: 'Home', url: '/', template: 'Landing page', status: 'published', updated: '2 hours ago', by: 'Helen Marsh', depth: 0 },
-    { id: 2, title: 'Downsizing Support', url: '/downsizing-support', template: 'Service page', status: 'changes', updated: '18 minutes ago', by: 'Helen Marsh', depth: 0 },
-    { id: 3, title: 'Selling the Family Home', url: '/downsizing-support/selling-the-family-home', template: 'Standard content', status: 'published', updated: 'Yesterday', by: 'Daniel Ruiz', depth: 1 },
-    { id: 4, title: 'Retirement Living Advice', url: '/retirement-living-advice', template: 'Service page', status: 'published', updated: '3 days ago', by: 'Helen Marsh', depth: 0 },
-    { id: 5, title: 'Independent Property Guidance', url: '/independent-property-guidance', template: 'Service page', status: 'draft', updated: '4 days ago', by: 'Daniel Ruiz', depth: 0 },
-    { id: 6, title: 'About Our Advisors', url: '/about', template: 'About page', status: 'published', updated: '1 week ago', by: 'Helen Marsh', depth: 0 },
-    { id: 7, title: 'Request a Consultation', url: '/request-a-consultation', template: 'Contact page', status: 'published', updated: '1 week ago', by: 'Daniel Ruiz', depth: 0 },
-    { id: 8, title: 'Frequently Asked Questions', url: '/faqs', template: 'FAQ page', status: 'published', updated: '2 weeks ago', by: 'Helen Marsh', depth: 0 },
-    { id: 9, title: 'Privacy Policy', url: '/privacy-policy', template: 'Legal page', status: 'archived', updated: '3 months ago', by: 'Daniel Ruiz', depth: 0 },
-];
-
-export const PAGE_TEMPLATES = [
-    'Standard content', 'Service page', 'Landing page', 'About page', 'Contact page',
-    'FAQ page', 'Blog listing', 'Legal page', 'Blank page',
-];
-
-export const ARTICLES = [
-    { title: 'Five questions to ask before selling a family home', meta: 'Daniel Ruiz · 12 July 2026', category: 'Selling', status: 'review' },
-    { title: 'Downsizing without downsizing your life', meta: 'Helen Marsh · 28 June 2026', category: 'Downsizing', status: 'published' },
-    { title: 'What the age pension means when you sell', meta: 'Helen Marsh · 14 June 2026', category: 'Finance', status: 'published' },
-    { title: 'Choosing between a unit, a villa and a village', meta: 'Daniel Ruiz · 2 June 2026', category: 'Retirement living', status: 'published' },
-    { title: 'Preparing a home for sale on a modest budget', meta: 'Helen Marsh · draft', category: 'Selling', status: 'draft' },
-    { title: 'A daughter’s guide to helping Mum move', meta: 'Daniel Ruiz · 18 May 2026', category: 'Family', status: 'published' },
-];
-
-export const ARTICLE_STATUS_LABEL = { published: 'Published', draft: 'Draft', review: 'In review' };
-export const ARTICLE_STATUS_TONE = { published: 'success', draft: 'warning', review: 'info' };
-
-export const FAQ_GROUPS = [
-    { name: 'Downsizing', items: [
-        { q: 'When is the right time to start planning a downsize?', featured: true, active: true },
-        { q: 'How long does the whole process usually take?', active: true },
-        { q: 'Can you help if we are moving interstate?', active: true },
-    ] },
-    { name: 'Selling a home', items: [
-        { q: 'Should we sell before we buy?', featured: true, active: true },
-        { q: 'How do you choose which agent to recommend?', active: true },
-        { q: 'Do we need to renovate before selling?', active: true },
-    ] },
-    { name: 'Fees and process', items: [
-        { q: 'What does your service cost?', active: true },
-        { q: 'Do you take a commission from agents?', active: true },
-    ] },
-];
-
-export const VERSIONS = [
-    { n: 17, tag: 'current', when: 'Just now', who: 'Helen Marsh · autosaved draft', changes: ['Hero heading updated', 'Statistics section added'] },
-    { n: 16, tag: 'live', when: '2 hours ago', who: 'Helen Marsh · published', changes: ['Featured testimonials reordered'] },
-    { n: 15, tag: null, when: 'Yesterday', who: 'Daniel Ruiz · published', changes: ['Services section text updated', 'Call to action image changed'] },
-    { n: 14, tag: null, when: '3 days ago', who: 'Helen Marsh · draft', changes: ['FAQ component added'] },
-];
-
+/* The builder's palette. Types here must exist in PageContentStore::BLOCK_TYPES and
+   childTypes.js — offering one the server would refuse is caught by
+   CmsBuilderTest::test_the_js_type_mirror_matches_php. */
 export const COMPONENT_LIBRARY = [
     { name: 'Layout', items: [
         { type: 'section', label: 'Section', d: 'M3 4h18v16H3zM3 10h18' },

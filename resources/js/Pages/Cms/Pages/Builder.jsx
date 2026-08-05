@@ -2,7 +2,6 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import '../../../../css/cms.css';
 import { ToastProvider, useCmsToast } from '../../../cms/ToastContext';
-import { PAGES } from '../../../cms/data/mockData';
 import { defaultSectionData } from '../../../sections/defaults';
 import { canContain, isContainerType, MAX_ROW_DEPTH } from '../../../sections/childTypes';
 import { SECTION_LABELS } from '../../../sections/registry';
@@ -1108,14 +1107,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
 }
 
 export default function Builder({ pageId, sections = null, page = null, revisions = null, globals = null, library = {}, reusables = [] }) {
-    const meta = useMemo(() => {
-        if (page) return { id: pageId, ...page };
-
-        const found = PAGES.find((p) => String(p.id) === String(pageId))
-            || { id: pageId, title: 'New page', slug: String(pageId) };
-
-        return { ...found, slug: found.url ? found.url.replace(/^\//, '') : found.slug };
-    }, [page, pageId]);
+    const meta = useMemo(() => ({ id: pageId, ...page }), [page, pageId]);
 
     return (
         <ToastProvider>

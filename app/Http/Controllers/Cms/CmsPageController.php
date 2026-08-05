@@ -48,9 +48,10 @@ class CmsPageController extends Controller
     {
         $slug = $this->store->findByCmsId($page);
 
-        if ($slug === null) {
-            return Inertia::render('Cms/Pages/Builder', ['pageId' => $page]);
-        }
+        /* The save route already 404s an unknown id, so rendering the builder for one only ever
+           offered a page that could never be saved — and the prototype's fallback titled it from
+           an invented list, so an id that happened to match showed a page that does not exist. */
+        abort_if($slug === null, 404);
 
         $document = $this->store->document($slug);
 

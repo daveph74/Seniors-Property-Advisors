@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import CmsLayout from '../../cms/layout/CmsLayout';
 import { Badge } from '../../cms/components/ui';
-import { QUICK_ACTIONS, STATUS_LABEL, STATUS_TONE } from '../../cms/data/mockData';
+import { QUICK_ACTIONS, STATUS_LABEL, STATUS_TONE } from '../../cms/data/constants';
 import { CMS_HREFS } from '../../cms/layout/Sidebar';
 import { relative } from '../../cms/relativeTime';
 import {

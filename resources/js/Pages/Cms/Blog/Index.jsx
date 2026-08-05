@@ -4,7 +4,7 @@ import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import { useCmsToast } from '../../../cms/ToastContext';
-import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
+import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/constants';
 import { relative } from '../../../cms/relativeTime';
 import { DragHandleIcon, PlusIcon } from '../../../cms/components/icons';
 import useSortableList from '../../../cms/useSortableList';
