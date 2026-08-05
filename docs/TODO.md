@@ -4,12 +4,25 @@ Known gaps, in the order they are worth doing. Scope references are to the CMS d
 
 ## Scope sections not yet built
 
-Every section §1–§15 is built. What remains is checking rather than building:
+Every section §1–§15 is built. §16 and §17 are checking rather than building, and that pass is
+done — see `docs/acceptance.md`, which names the test proving each criterion.
 
-**§16 Acceptance criteria.** Fifteen numbered statements, which is what the client will judge
-"complete" against. Most map onto finished work, but point 14 — "content editing does not allow
-users to break the approved website layout" — is not obviously covered by anything, and is worth
-deciding deliberately rather than assuming the section allowlist is enough.
+Point 14 turned out to be the opposite of the worry recorded here. "Content editing does not allow
+users to break the approved website layout" is enforced in four server-side layers — the type
+allowlist, the nesting rules, `SaveSectionsRequest::checkTree()` and `sanitise()` — with about
+twenty negative tests already behind it. It is met, and the write-up says why so the conclusion can
+be re-checked rather than trusted. Both §17 exclusions that are recoverable from this repo already
+have named guard tests.
+
+Two things keep that document provisional:
+
+**The scope is not in the repo,** so §16's fifteen statements are reconstructed rather than quoted
+— only point 14's wording is known. Put the scope at `docs/specs/cms-scope.md` and diff it against
+the matrix; until then a criterion that exists in the scope and not in the matrix stays invisible.
+`docs/acceptance.md` names the rows most likely to be wrong.
+
+**Two rows are not clean.** Row 12, enquiries, is a gap for the reason below. Row 15, the
+responsive admin, is met but has no automated test and still cannot be reordered by touch.
 
 ## Decisions waiting on somebody
 
