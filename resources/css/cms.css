@@ -367,7 +367,12 @@
 
 /* ---------- Main content ---------- */
 .cms-main{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; }
+/* Positioned so it is the containing block for its own content. The drag-reorder screens end
+   with an absolutely positioned `.cms-sr-only` live region; with nothing positioned between it
+   and the document, it resolved against the initial containing block and kept its static offset
+   — a page scrolled 1400px deep put a 1px element at document y=1400, so the body itself grew a
+   scrollbar and left half a screen of white below the shell. */
+.cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; position: relative; }
 .cms-page{ padding: 22px 32px 48px; }
 /* No cap. The two columns are already proportional, so the dashboard fills the content area the way
    the media and testimonial screens do — a 1240px cap left 236px of nothing on a wide window. */
