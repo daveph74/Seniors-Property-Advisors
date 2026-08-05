@@ -204,7 +204,7 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
             </div>
 
             {selected ? (
-                <aside className="cms-media-side">
+                <aside className="cms-media-side cms-media-side--detail">
                     <button
                         type="button"
                         className="cms-media-side__close"

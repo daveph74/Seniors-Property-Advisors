@@ -23,6 +23,7 @@ import { relative } from '../../../cms/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
     MoveIcon, DuplicateIcon, ReusableIcon, HideIcon, TrashIcon, PlusIcon, ChevronUpSmallIcon,
+    PanelLeftIcon, PanelRightIcon,
 } from '../../../cms/components/icons';
 
 const DEVICE_WIDTH = { desktop: '1240px', tablet: '820px', mobile: '420px' };
@@ -178,6 +179,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     const [roomForCanvas, setRoomForCanvas] = useState(0);
     const canvasOuter = useRef(null);
     const [leftPanel, setLeftPanel] = useState('components');
+    /* Only consulted below the builder's narrow breakpoint, where the two side panels become
+       drawers over the canvas. Wider than that the stylesheet ignores these entirely and both
+       panels stay in the flex row, so nothing here needs to know the viewport width. */
+    const [drawer, setDrawer] = useState(null);
     const [openPanels, setOpenPanels] = useState(() => new Set(['content']));
     const [saveState, setSaveState] = useState('saved');
     const [historyOpen, setHistoryOpen] = useState(
@@ -204,6 +209,22 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
 
         return () => watch.disconnect();
     }, []);
+
+    /* Selecting a block is a request to edit it, and below the breakpoint the settings panel is a
+       closed drawer — without this, tapping a block on a tablet looks like it did nothing. */
+    useEffect(() => {
+        if (selectedId) setDrawer('right');
+    }, [selectedId]);
+
+    useEffect(() => {
+        if (! drawer) return undefined;
+
+        const onKey = (e) => { if (e.key === 'Escape') setDrawer(null); };
+
+        window.addEventListener('keydown', onKey);
+
+        return () => window.removeEventListener('keydown', onKey);
+    }, [drawer]);
 
     const deviceWidth = parseInt(DEVICE_WIDTH[device], 10);
     const zoom = roomForCanvas > 0
@@ -846,7 +867,16 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                         Pages
                     </button>
                     <div className="cms-builder-topbar__divider" />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+                    <button
+                        type="button"
+                        className="cms-drawer-toggle"
+                        aria-label="Components and layers"
+                        aria-expanded={drawer === 'left'}
+                        onClick={() => setDrawer((open) => (open === 'left' ? null : 'left'))}
+                    >
+                        <PanelLeftIcon size={16} />
+                    </button>
+                    <div className="cms-builder-topbar__ident">
                         <input
                             key={`page-title-${page.title}`}
                             className="cms-builder-topbar__title cms-builder-topbar__title--input"
@@ -868,7 +898,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                         <span className="cms-builder-topbar__save">{saveLabel}</span>
                     </div>
 
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div className="cms-builder-topbar__actions">
                         <div className="cms-segmented cms-segmented--tint">
                             <button type="button" title="Undo" disabled={!canUndo} className="cms-segmented__btn cms-segmented__btn--icon" onClick={doUndo}>
                                 <UndoIcon size={15} stroke="#415064" />
@@ -897,11 +927,20 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                         <button type="button" className="cms-btn" onClick={openPreview}>Preview</button>
                         <button type="button" className="cms-btn" onClick={saveDraft}>Save draft</button>
                         <button type="button" className="cms-btn cms-btn--primary" style={{ padding: '0 16px' }} onClick={openPublish}>Publish</button>
+                        <button
+                            type="button"
+                            className="cms-drawer-toggle"
+                            aria-label="Settings"
+                            aria-expanded={drawer === 'right'}
+                            onClick={() => setDrawer((open) => (open === 'right' ? null : 'right'))}
+                        >
+                            <PanelRightIcon size={16} />
+                        </button>
                     </div>
                 </div>
 
                 <div className="cms-builder-body">
-                    <div className="cms-builder-left">
+                    <div className={`cms-builder-left ${drawer === 'left' ? 'cms-builder-left--open' : ''}`}>
                         <div className="cms-builder-left__tabs">
                             <div className="cms-segmented">
                                 <button type="button" className={`cms-segmented__btn ${leftPanel === 'components' ? 'cms-segmented__btn--active' : ''}`} style={{ flex: 1 }} onClick={() => setLeftPanel('components')}>Components</button>
@@ -998,7 +1037,16 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                         </div>
                     </div>
 
-                    <div className="cms-builder-right">
+                    {drawer ? (
+                        <button
+                            type="button"
+                            className="cms-builder-scrim"
+                            aria-label="Close the panel"
+                            onClick={() => setDrawer(null)}
+                        />
+                    ) : null}
+
+                    <div className={`cms-builder-right ${drawer === 'right' ? 'cms-builder-right--open' : ''}`}>
                         {selected ? (
                             <SettingsPanel
                                 block={selected}

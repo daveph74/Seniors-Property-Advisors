@@ -367,7 +367,12 @@
 
 /* ---------- Main content ---------- */
 .cms-main{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; }
+/* Positioned so it is the containing block for its own content. The drag-reorder screens end
+   with an absolutely positioned `.cms-sr-only` live region; with nothing positioned between it
+   and the document, it resolved against the initial containing block and kept its static offset
+   — a page scrolled 1400px deep put a 1px element at document y=1400, so the body itself grew a
+   scrollbar and left half a screen of white below the shell. */
+.cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; position: relative; }
 .cms-page{ padding: 22px 32px 48px; }
 /* No cap. The two columns are already proportional, so the dashboard fills the content area the way
    the media and testimonial screens do — a 1240px cap left 236px of nothing on a wide window. */
@@ -1061,3 +1066,130 @@
   padding: 14px 0; border-top: 1px solid var(--cms-border-softer);
 }
 .cms-nav-column:first-of-type{ border-top: none; padding-top: 0; }
+
+/* =========================================================================
+   Responsive administration (scope §15)
+   The admin is a fixed three-column desktop layout: a 242px sidebar beside the
+   content, and in the builder a 268px and a 308px panel either side of the canvas.
+   On a tablet that chrome costs more than the work surface it frames — at 768px
+   the builder canvas measured 188px, narrower than either panel beside it. Below
+   the breakpoints here those columns stop holding space and become drawers over
+   the content, which is the only way the middle survives.
+
+   The drawers are opened by a class but positioned only inside these queries, so
+   above the breakpoint the panels stay in the flex row and the open/closed state
+   is inert. No component needs to measure the viewport.
+   ========================================================================= */
+.cms-nav-toggle, .cms-nav-scrim, .cms-drawer-toggle, .cms-builder-scrim{ display: none; }
+.cms-builder-topbar__ident{ display: flex; align-items: center; gap: 9px; min-width: 0; }
+.cms-builder-topbar__actions{ margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+@media (max-width: 1024px){
+  .cms-nav-toggle{
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; flex: none;
+    border: 1px solid var(--cms-border-input-2); border-radius: var(--cms-radius);
+    background: var(--cms-surface); color: var(--cms-ink-soft); cursor: pointer;
+  }
+  .cms-nav-toggle:hover{ background: #F1F4F8; }
+
+  /* visibility, not transform alone: an off-screen sidebar is still in the tab order,
+     so keyboard focus would walk into a menu nobody can see. */
+  .cms-sidebar{
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 60; width: 268px;
+    box-shadow: 12px 0 34px rgba(16,32,58,0.16);
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform 180ms ease, visibility 0s linear 180ms;
+  }
+  .cms-shell--nav-open .cms-sidebar{
+    transform: none; visibility: visible;
+    transition: transform 180ms ease, visibility 0s;
+  }
+  .cms-nav-scrim{
+    display: block; position: fixed; inset: 0; z-index: 59;
+    border: 0; padding: 0; background: rgba(12,27,49,0.4);
+  }
+
+  .cms-header{ padding: 0 16px; gap: 12px; }
+  .cms-header__search{ display: none; }
+
+  .cms-page{ padding: 18px 20px 40px; }
+  /* The 760px floor was set to keep the two dashboard columns proportional. They stack
+     here instead, so the floor only forced the whole screen to scroll sideways. */
+  .cms-page--dash{ padding: 20px 20px 40px; min-width: 0; }
+  .cms-dash-grid, .cms-nav-grid, .cms-blog-editor{ grid-template-columns: minmax(0,1fr); }
+
+  .cms-settings-layout{ flex-direction: column; gap: 16px; }
+  .cms-settings-nav{
+    flex-direction: row; width: auto; position: static;
+    gap: 6px; overflow-x: auto; padding-bottom: 4px;
+  }
+  .cms-settings-tab{ flex: none; }
+
+  .cms-media-main{ padding: 18px 20px 40px; }
+  /* Media, Blog and FAQs all use this layout, but only Media's panel is a dismissible detail
+     view — the other two are permanent category rails with no close button. They stack under
+     the list; only the detail panel may cover it. */
+  .cms-media-layout{ flex-direction: column; height: auto; }
+  .cms-media-side{
+    width: auto; border-left: none; border-top: 1px solid var(--cms-border); overflow: visible;
+  }
+  /* Fixed rather than stacked: it already has a close button, and letting it hold 308px of a
+     768px screen left the grid one 170px column wide. Below the sidebar's layer, never above —
+     a panel inside the content must not cover the menu that navigates away from it. */
+  .cms-media-side--detail{
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 58; width: min(340px, 88vw);
+    border-top: none; overflow: auto;
+    box-shadow: -16px 0 40px rgba(16,32,58,0.18);
+  }
+}
+
+@media (max-width: 1180px){
+  .cms-drawer-toggle{
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; flex: none;
+    border: 1px solid var(--cms-border-input-2); border-radius: var(--cms-radius);
+    background: var(--cms-surface); color: var(--cms-ink-soft); cursor: pointer;
+  }
+  .cms-drawer-toggle:hover{ background: #F1F4F8; }
+  .cms-drawer-toggle[aria-expanded="true"]{
+    border-color: var(--cms-navy); background: var(--cms-accent-bg); color: var(--cms-navy);
+  }
+
+  /* Two rows. One row shrank the page name, its status and the save state into 46px between
+     the back button and the actions — the editor could not see which page was open. */
+  .cms-builder-topbar{ height: auto; flex-wrap: wrap; padding: 8px 12px; row-gap: 8px; }
+  .cms-builder-topbar__divider{ display: none; }
+  .cms-builder-topbar__ident{ flex: 1 1 auto; }
+  .cms-builder-topbar__actions{ flex: 1 0 100%; margin-left: 0; flex-wrap: wrap; }
+
+  .cms-builder-body{ position: relative; }
+  .cms-builder-left, .cms-builder-right{
+    position: absolute; top: 0; bottom: 0; z-index: 30;
+    visibility: hidden; transition: transform 180ms ease, visibility 0s linear 180ms;
+  }
+  .cms-builder-left{ left: 0; transform: translateX(-100%); box-shadow: 12px 0 34px rgba(16,32,58,0.16); }
+  .cms-builder-right{ right: 0; transform: translateX(100%); box-shadow: -12px 0 34px rgba(16,32,58,0.16); }
+  .cms-builder-left--open, .cms-builder-right--open{
+    transform: none; visibility: visible;
+    transition: transform 180ms ease, visibility 0s;
+  }
+  .cms-builder-scrim{
+    display: block; position: absolute; inset: 0; z-index: 29;
+    border: 0; padding: 0; background: rgba(12,27,49,0.35);
+  }
+  .cms-canvas-outer{ padding: 16px 16px 80px; }
+}
+
+@media (max-width: 680px){
+  .cms-page{ padding: 16px 14px 36px; }
+  .cms-page--dash{ padding: 16px 14px 36px; }
+  .cms-media-main{ padding: 16px 14px 36px; }
+  .cms-settings-grid-2, .cms-count-grid{ grid-template-columns: minmax(0,1fr); }
+  .cms-shell .cms-settings-section{ padding: 16px; }
+  .cms-shell .cms-global-section{ padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .cms-sidebar, .cms-builder-left, .cms-builder-right{ transition: none; }
+}

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import '../../../css/cms.css';
 import Sidebar from './Sidebar';
@@ -28,14 +29,40 @@ export default function CmsLayout({ children }) {
     const navId = navIdFromUrl(url);
     const title = SCREEN_TITLES[navId] || '';
     const crumb = navId === 'dashboard' ? 'Seniors Property Advisors' : `Seniors Property Advisors / ${title}`;
+    const [navOpen, setNavOpen] = useState(false);
+
+    useEffect(() => setNavOpen(false), [url]);
+
+    useEffect(() => {
+        if (! navOpen) return undefined;
+
+        const onKey = (e) => { if (e.key === 'Escape') setNavOpen(false); };
+
+        window.addEventListener('keydown', onKey);
+
+        return () => window.removeEventListener('keydown', onKey);
+    }, [navOpen]);
 
     return (
         <ToastProvider>
             <Head title={`${title} — Seniors Property Advisors CMS`} />
-            <div className="cms-shell">
+            <div className={`cms-shell ${navOpen ? 'cms-shell--nav-open' : ''}`}>
                 <Sidebar active={navId} />
+                {navOpen ? (
+                    <button
+                        type="button"
+                        className="cms-nav-scrim"
+                        aria-label="Close the menu"
+                        onClick={() => setNavOpen(false)}
+                    />
+                ) : null}
                 <div className="cms-main">
-                    <Header crumb={crumb} title={title} />
+                    <Header
+                        crumb={crumb}
+                        title={title}
+                        navOpen={navOpen}
+                        onToggleNav={() => setNavOpen((open) => ! open)}
+                    />
                     <main className="cms-view">{children}</main>
                 </div>
             </div>

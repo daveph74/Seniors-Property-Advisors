@@ -100,6 +100,30 @@ export function SettingsIcon(props) {
     );
 }
 
+export function MenuIcon(props) {
+    return (
+        <Svg {...props}>
+            <path d="M4 6h16M4 12h16M4 18h16" />
+        </Svg>
+    );
+}
+
+export function PanelLeftIcon(props) {
+    return (
+        <Svg {...props}>
+            <path d="M4 4h16v16H4zM10 4v16" />
+        </Svg>
+    );
+}
+
+export function PanelRightIcon(props) {
+    return (
+        <Svg {...props}>
+            <path d="M4 4h16v16H4zM14 4v16" />
+        </Svg>
+    );
+}
+
 export function SearchIcon(props) {
     return (
         <Svg strokeWidth={2} stroke="#93A0B4" {...props}>

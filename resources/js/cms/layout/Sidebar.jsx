@@ -44,7 +44,7 @@ export default function Sidebar({ active }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
-        <aside className="cms-sidebar">
+        <aside className="cms-sidebar" id="cms-sidebar">
             <div className="cms-sidebar__brand">
                 <div className="cms-sidebar__mark">SP</div>
                 <div style={{ minWidth: 0 }}>
