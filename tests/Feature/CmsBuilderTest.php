@@ -544,12 +544,13 @@ class CmsBuilderTest extends TestCase
         });
     }
 
-    public function test_design_only_pages_receive_no_sections(): void
+    /* The pair with test_an_unknown_page_id_cannot_be_saved: the builder used to open for an id
+       with no page behind it, titling itself from a hardcoded list, so a low id showed a page that
+       does not exist and then refused every save. */
+    public function test_an_unknown_page_id_cannot_be_opened(): void
     {
         foreach ([2, 5, 9] as $id) {
-            $this->get("/cms/pages/{$id}/edit")->assertOk()->assertInertia(function ($page) {
-                $this->assertArrayNotHasKey('sections', $page->toArray()['props']);
-            });
+            $this->get("/cms/pages/{$id}/edit")->assertNotFound();
         }
     }
 

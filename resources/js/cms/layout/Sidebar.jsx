@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
-import { NAV_ITEMS } from '../data/mockData';
+import { NAV_ITEMS } from '../data/constants';
 import { DropdownMenu, MenuItem, MenuSeparator } from '../components/ui';
 import {
     DashboardIcon, PagesIcon, BlogIcon, FaqsIcon, TestimonialsIcon, MediaIcon,

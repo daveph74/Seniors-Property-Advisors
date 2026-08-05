@@ -7,7 +7,7 @@ import ImageField from '../../../cms/builder/ImageField';
 import MediaLibraryModal from '../../../cms/builder/MediaLibraryModal';
 import RichTextEditor from '../../../cms/components/RichTextEditor';
 import { useCmsToast } from '../../../cms/ToastContext';
-import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
+import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/constants';
 
 const dateValue = (iso) => (iso ? String(iso).slice(0, 10) : '');
 

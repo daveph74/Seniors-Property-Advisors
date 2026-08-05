@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { SearchInput } from '../components/ui';
-import { COMPONENT_LIBRARY } from '../data/mockData';
+import { COMPONENT_LIBRARY } from '../data/constants';
 
 const SAVED_ICON = 'M5 4h11l3 3v13H5zM9 4v6h6V4M8 15h8';
 

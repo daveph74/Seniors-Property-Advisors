@@ -5,7 +5,7 @@ import { Badge, SearchInput, DropdownMenu, MenuItem, MenuSeparator } from '../..
 import CreatePageModal from '../../../cms/components/CreatePageModal';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import { useCmsToast } from '../../../cms/ToastContext';
-import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/mockData';
+import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/constants';
 import { relative } from '../../../cms/relativeTime';
 import { DotsVerticalIcon, FileIcon, PlusIcon } from '../../../cms/components/icons';
 
