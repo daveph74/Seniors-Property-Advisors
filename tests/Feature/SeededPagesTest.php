@@ -61,6 +61,30 @@ class SeededPagesTest extends TestCase
                 ->count('sections', 1));
     }
 
+    /**
+     * The two-section page. It exists so the full-bleed hero can be compared against the boxed
+     * one on the home page, which is why it is reachable but kept out of search and the menu.
+     */
+    public function test_the_hero_preview_carries_both_sections_and_stays_out_of_search(): void
+    {
+        $page = Page::where('slug', 'hero-preview')->firstOrFail();
+
+        $this->assertSame('published', $page->status);
+        $this->assertSame(['hero-full', 'trust-cards'], array_column($page->published, 'type'));
+        $this->assertTrue($page->seo['noindex']);
+
+        $this->get('/hero-preview')
+            ->assertOk()
+            ->assertSee('name="robots" content="noindex, follow"', false);
+
+        $globals = Setting::where('key', 'globals')->value('value');
+        $linked = collect($globals['nav']['links'])
+            ->concat(collect($globals['footer']['columns'])->flatMap(fn ($c) => $c['links'] ?? []))
+            ->pluck('href');
+
+        $this->assertNotContains('/hero-preview', $linked, 'a review page should not be in the menu');
+    }
+
     public function test_the_steps_are_content_an_editor_can_change(): void
     {
         $this->post('/cms/pages/5/publish', ['sections' => [[
