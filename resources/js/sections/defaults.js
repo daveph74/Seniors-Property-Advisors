@@ -195,6 +195,7 @@ const TEMPLATES = {
         heading: '',
         headingEm: '',
         body: '',
+        background: 'navy',
         image: { src: '', alt: '' },
         buttons: [],
         trustMarks: [],

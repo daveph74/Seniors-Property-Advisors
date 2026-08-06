@@ -2,10 +2,15 @@ import ActionButton from './ActionButton';
 
 export default function CtaSection({ data, actions, anchor }) {
     const { image = {} } = data;
+    /* Falls back to navy: every call to action written before this field existed has none. */
+    const background = data.background || 'navy';
+    const showPhoto = background === 'image' && !! image.src;
+    /* `on-navy` is a white-on-dark button. On the light background it would be white on white. */
+    const dark = background !== 'white';
 
     return (
-        <section className={`cta${image.src ? ' cta--photo' : ''}`} id={anchor}>
-            {image.src ? (
+        <section className={`cta cta--${background}`} id={anchor}>
+            {showPhoto ? (
                 <div
                     className="cta-bg"
                     style={{ backgroundImage: `url('${image.src}')` }}
@@ -29,7 +34,7 @@ export default function CtaSection({ data, actions, anchor }) {
                             key={i}
                             cta={cta}
                             actions={actions}
-                            className={`btn ${cta.variant} lg${cta.onNavy ? ' on-navy' : ''}`}
+                            className={`btn ${cta.variant} lg${cta.onNavy && dark ? ' on-navy' : ''}`}
                         />
                     ))}
                 </div>

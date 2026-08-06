@@ -844,7 +844,8 @@ h2 em,
   background: rgba(13,34,63,0.88);
 }
 /* The radial wash reads as noise on top of a photograph; the scrim replaces it. */
-.cta--photo::before{ display: none; }
+.cta--image::before{ display: none; }
+
 .cta .container{ position:relative; z-index: 1; text-align: center;}
 .cta .section-head__title, .cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
 .cta h2 em{ color: var(--blue);}
@@ -861,6 +862,20 @@ h2 em,
 }
 .cta .marks span{ display:flex; align-items:center; gap: 10px;}
 .cta .marks span::before{ content:""; width: 8px; height: 8px; border-radius:50%; background: var(--blue); opacity:0.5;}
+
+/* The light variant, for a call to action that has to sit between two dark sections.
+   Every colour above is chosen against navy, so each one needs inverting here — anything
+   left behind is white on white. These must stay *after* the rules they override: they are
+   the same specificity, so source order is the only thing deciding them. */
+.cta--white{ background: var(--white); }
+.cta--white::before{ display: none; }
+.cta--white .section-head__title, .cta--white h2{ color: var(--navy); }
+.cta--white h2 em{ color: var(--blue-deep); }
+.cta--white p{ color: var(--text-mid); }
+.cta--white .eyebrow-line{ color: var(--blue-deep); }
+.cta--white .eyebrow-line::before,
+.cta--white .eyebrow-line span{ background: var(--blue-deep); }
+.cta--white .marks{ color: var(--text-mid); }
 
 /* ===================== Footer ===================== */
 footer{

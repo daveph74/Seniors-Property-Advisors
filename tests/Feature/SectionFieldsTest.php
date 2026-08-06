@@ -139,22 +139,52 @@ class SectionFieldsTest extends TestCase
         $this->assertSame('years of experience', $data['stamp']['text']);
     }
 
-    public function test_a_call_to_action_persists_its_background_picture(): void
+    public function test_a_call_to_action_persists_its_chosen_background(): void
     {
         $data = $this->publish($this->block('cta', [
             'heading' => 'Ready?',
             'body' => 'Get in touch.',
+            'background' => 'image',
             'image' => ['src' => '/images/cta.jpg', 'alt' => 'An advisor and a couple talking'],
             'buttons' => [],
             'trustMarks' => [],
         ]));
 
+        $this->assertSame('image', $data['background']);
         $this->assertSame('/images/cta.jpg', $data['image']['src']);
         $this->assertSame('An advisor and a couple talking', $data['image']['alt']);
 
         $this->get('/')
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $p) => $p->where('sections.0.data.image.src', '/images/cta.jpg'));
+            ->assertInertia(fn (AssertableInertia $p) => $p
+                ->where('sections.0.data.background', 'image')
+                ->where('sections.0.data.image.src', '/images/cta.jpg'));
+    }
+
+    public function test_a_call_to_action_can_be_switched_to_the_light_background(): void
+    {
+        $data = $this->publish($this->block('cta', [
+            'heading' => 'Ready?',
+            'body' => 'Get in touch.',
+            'background' => 'white',
+            'buttons' => [],
+            'trustMarks' => [],
+        ]));
+
+        $this->assertSame('white', $data['background']);
+    }
+
+    /** Everything written before the field existed has no `background` key at all. */
+    public function test_a_call_to_action_without_a_choice_is_left_as_it_was(): void
+    {
+        $data = $this->publish($this->block('cta', [
+            'heading' => 'Ready?',
+            'body' => 'Get in touch.',
+            'buttons' => [],
+            'trustMarks' => [],
+        ]));
+
+        $this->assertArrayNotHasKey('background', $data);
     }
 
     public function test_a_cta_button_persists_the_dark_background_flag(): void
