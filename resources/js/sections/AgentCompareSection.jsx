@@ -75,7 +75,7 @@ export default function AgentCompareSection({ data, actions, anchor }) {
                 <div className="section-head">
                     <div className="left">
                         <div className="eyebrow-line">{data.eyebrow}</div>
-                        <Heading>
+                        <Heading className="section-head__title">
                             {data.heading} <em>{data.headingEm}</em>
                         </Heading>
                         <p className="section-lead">{data.lead}</p>

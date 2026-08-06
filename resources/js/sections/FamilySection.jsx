@@ -35,7 +35,7 @@ export default function FamilySection({ data, actions, anchor }) {
 
                     <div>
                         <div className="eyebrow-line">{data.eyebrow}</div>
-                        <Heading>
+                        <Heading className="section-head__title">
                             {data.heading} <em>{data.headingEm}</em>
                         </Heading>
                         <p className="section-lead">{data.lead}</p>

@@ -644,7 +644,7 @@ h2 em,
 /* Both selectors on purpose: sections that go through SectionHead carry the class, and the ones
    that render their own heading still use the tag. Dropping the tag turned these navy on navy. */
 .why .section-head__title, .why h2{ color: var(--white); }
-.why h2 em{ color: var(--blue); }
+.why .section-head__title em, .why h2 em{ color: var(--blue); }
 .why .eyebrow-line{ color: var(--blue);}
 .why .eyebrow-line::before{ background: var(--blue);}
 .why .section-lead{ color: #B6C2DB; }

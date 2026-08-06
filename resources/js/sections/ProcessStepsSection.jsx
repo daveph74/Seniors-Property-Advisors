@@ -8,7 +8,7 @@ export default function ProcessStepsSection({ data, anchor }) {
             <div className="container">
                 <div className="section-head center">
                     <div className="eyebrow-line">{data.eyebrow}</div>
-                    <Heading>
+                    <Heading className="section-head__title">
                         {data.heading} <em>{data.headingEm}</em>
                     </Heading>
                     <p className="section-lead">{data.lead}</p>
