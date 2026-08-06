@@ -119,9 +119,15 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
 
             reset.setAttribute('data-canvas-style', '');
             reset.setAttribute('data-canvas-key', 'reset');
+            /* The frame's height is measured from its content, so any section sized in viewport
+               units feeds back on itself: taller frame → taller 100vh → taller content → taller
+               frame, without end. Viewport-height sections are pinned to a representative height
+               in here instead. The public site keeps its full-viewport hero; only the canvas,
+               which has no viewport of its own worth the name, is capped. */
             reset.textContent = 'html,body{margin:0;padding:0;background:#fff;scrollbar-width:none;'
                 + '-ms-overflow-style:none;}'
-                + 'html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none;}';
+                + 'html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none;}'
+                + '.hero-full{min-height:640px;}';
             doc.head.appendChild(reset);
 
             doc.addEventListener('click', stayPut, true);

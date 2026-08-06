@@ -381,6 +381,31 @@ class CmsBuilderTest extends TestCase
         }
     }
 
+    /**
+     * The canvas measures its own height from its content, so a section sized in viewport units
+     * grows without end inside it: taller frame, taller 100vh, taller content, taller frame.
+     * `.hero-full` is the one such section today, and the canvas pins it. Deleting that pin
+     * brings the runaway back, and nothing else would catch it — the loop only happens in a
+     * browser, and there is no JavaScript test runner here.
+     */
+    public function test_the_canvas_pins_sections_sized_in_viewport_units(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+        $canvas = file_get_contents(resource_path('js/cms/builder/CanvasFrame.jsx'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.hero-full\{[^}]*min-height:\s*calc\(100[sd]?vh/s',
+            $css,
+            'the public hero no longer uses viewport units — the canvas pin may be unnecessary',
+        );
+
+        $this->assertStringContainsString(
+            '.hero-full{min-height:',
+            $canvas,
+            'CanvasFrame must cap viewport-height sections or the builder scrolls forever',
+        );
+    }
+
     public function test_the_js_type_mirror_matches_php(): void
     {
         $js = file_get_contents(resource_path('js/sections/childTypes.js'));
