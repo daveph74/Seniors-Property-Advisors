@@ -1,8 +1,19 @@
 import ActionButton from './ActionButton';
 
 export default function CtaSection({ data, actions, anchor }) {
+    const { image = {} } = data;
+
     return (
-        <section className="cta" id={anchor}>
+        <section className={`cta${image.src ? ' cta--photo' : ''}`} id={anchor}>
+            {image.src ? (
+                <div
+                    className="cta-bg"
+                    style={{ backgroundImage: `url('${image.src}')` }}
+                    role="img"
+                    aria-label={image.alt || ''}
+                />
+            ) : null}
+
             <div className="container">
                 <div className="eyebrow-line">
                     <span style={{ background: 'var(--blue)' }} />

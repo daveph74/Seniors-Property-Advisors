@@ -139,6 +139,24 @@ class SectionFieldsTest extends TestCase
         $this->assertSame('years of experience', $data['stamp']['text']);
     }
 
+    public function test_a_call_to_action_persists_its_background_picture(): void
+    {
+        $data = $this->publish($this->block('cta', [
+            'heading' => 'Ready?',
+            'body' => 'Get in touch.',
+            'image' => ['src' => '/images/cta.jpg', 'alt' => 'An advisor and a couple talking'],
+            'buttons' => [],
+            'trustMarks' => [],
+        ]));
+
+        $this->assertSame('/images/cta.jpg', $data['image']['src']);
+        $this->assertSame('An advisor and a couple talking', $data['image']['alt']);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('sections.0.data.image.src', '/images/cta.jpg'));
+    }
+
     public function test_a_cta_button_persists_the_dark_background_flag(): void
     {
         $data = $this->publish($this->block('cta', [

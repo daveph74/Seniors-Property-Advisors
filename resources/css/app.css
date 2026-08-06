@@ -826,7 +826,26 @@ h2 em,
     radial-gradient(800px 500px at 80% 0%, rgba(88,148,213,0.22), transparent 60%),
     radial-gradient(600px 400px at 0% 100%, rgba(88,148,213,0.10), transparent 60%);
 }
-.cta .container{ position:relative; text-align: center;}
+/* An optional photograph behind the call to action, chosen from the media library. It sits
+   under the navy scrim rather than replacing the background: the copy here is white and the
+   paragraph a pale blue-grey, and neither survives an arbitrary photo unaided. The scrim is
+   flat rather than a gradient because this section is centred — there is no empty side for
+   the text to sit in, as there is on the full-bleed hero. */
+.cta-bg{
+  position:absolute; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  background-color: var(--navy);
+}
+/* 0.88 is a floor, not a preference. The trust marks are 13px at 55% white, and against this
+   scrim over a white photograph — the worst case an editor can produce — they measure 4.59:1.
+   Lightening the scrim drops small text below the 4.5:1 it needs. */
+.cta-bg::after{
+  content:""; position:absolute; inset: 0;
+  background: rgba(13,34,63,0.88);
+}
+/* The radial wash reads as noise on top of a photograph; the scrim replaces it. */
+.cta--photo::before{ display: none; }
+.cta .container{ position:relative; z-index: 1; text-align: center;}
 .cta .section-head__title, .cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
 .cta h2 em{ color: var(--blue);}
 .cta p{ color: #B6C2DB; max-width: 540px; margin: 0 auto 36px; font-size: 19px;}

@@ -86,6 +86,7 @@ const CONTENT_SCHEMAS = {
         AREA('heading', 'Heading'),
         TEXT('headingEm', 'Highlighted heading'),
         AREA('body', 'Supporting text'),
+        IMG('image.src', 'Background image', 'image.alt'),
     ],
     'info-card': [
         PICK('cardStyle', 'Card style', ['rating', 'saving']),
