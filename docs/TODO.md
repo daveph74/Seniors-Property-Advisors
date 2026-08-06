@@ -66,13 +66,6 @@ the dot is hardcoded. They are the last of the prototype's furniture. The search
 1024px by the responsive layer, which shrinks the problem without fixing it: on a laptop it still
 invites a search that never runs. Either build them or take them out.
 
-**A fresh install ships two dead menu links.** The header offers FAQs and Blog, and the footer
-repeats them, but `/faqs` and `/blog` are created by `php artisan pages:scaffold` — which is not
-part of `composer setup`, `migrate --seed`, or anything the README tells a new developer to run. So
-a clean database answers 404 on both. Either seed those two pages the way the four content pages
-are seeded, or make setup run the scaffold. `HowItWorksPageTest::SCAFFOLD_ONLY` lists them, so the
-test that checks every menu link resolves will fail if a third one joins them.
-
 **Four section types still cannot carry the h1.** `ownerOfTheH1()` in
 `resources/js/sections/headingLevel.js` nominates a section to own the page's h1 when no hero is
 present, and `SectionHead` honours it — but a section that hardcodes `<h2>` ignores the nomination,
@@ -155,9 +148,14 @@ remembering the next time something here says "unreachable".
 
 ## Content, not code
 
-- Five of the six testimonials are sample data, with permission recorded as "Sample data" and
-  generated placeholder portraits in `public/sample-portraits/` (gitignored). They need replacing.
-- Two blog articles are fixtures written during development, not client copy.
+- **The testimonials are gone.** The six that existed only in the local database were destroyed by
+  `migrate:fresh` during development and were never in a seeder, so nothing brings them back. The
+  home page's testimonial section has nothing to show until real ones are entered — which is the
+  right outcome for client copy, but it means that section is unexercised.
+- `SampleContentSeeder` writes three articles and ten questions so the blog and FAQ listings have
+  something to list. All of it is placeholder, marked `Sample data`, and all of it wants replacing
+  with client copy. It runs from `DatabaseSeeder` only — never in tests, and it should never run in
+  production, for the same reason `UserSeeder` should not.
 - The footer still has dead `#` links for Pricing, Free guide, Selling checklist, Glossary, Privacy,
   Terms and Complaints. Each needs a page or removing.
 - `php artisan media:optimise` must be run once on any environment that has existing images — the

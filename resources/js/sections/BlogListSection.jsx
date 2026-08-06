@@ -7,7 +7,10 @@ import { useHeadingLevel } from './headingLevel';
 export default function BlogListSection({ data, anchor, library = {}, editing = false }) {
     /* One below whatever the section's own heading is, so the listing does not skip a level on a
        page where it opens the page and its heading is the h1. */
-    const CardTitle = `h${useHeadingLevel() + 1}`;
+    const level = useHeadingLevel();
+    const CardTitle = `h${level + 1}`;
+    /* Level 1 means ownerOfTheH1() nominated this section, so it is what the page is for. */
+    const leadsPage = level === 1;
     const limit = Number(data.limit) > 0 ? Number(data.limit) : null;
     const step = limit ?? 12;
 
@@ -96,8 +99,13 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
     /**
      * A chosen filter keeps the section on the page even when it matches nothing, or a reader
      * would land on an empty page with no way back to the other categories.
+     *
+     * The same holds when the section *is* the page: disappearing takes the heading and intro
+     * with it, leaving /blog as a call to action under no title and with no h1 at all. Nothing
+     * to list is a normal state before anyone has written — it should read as an empty page,
+     * not a broken one.
      */
-    if (articles.length === 0 && ! editing && ! chosen) return null;
+    if (articles.length === 0 && ! editing && ! chosen && ! leadsPage) return null;
 
     const chips = filters.length > 1 ? (
         <div className="filter-chips">
@@ -127,7 +135,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
                     <p className="blog-list__none">
                         Nothing in that category yet. <SiteLink href={filterHref(null)}>See all articles</SiteLink>.
                     </p>
-                ) : articles.length === 0 ? (
+                ) : articles.length === 0 && ! editing ? null : articles.length === 0 ? (
                     <PendingModule
                         title="Blog articles"
                         waitingFor="blog module"

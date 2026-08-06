@@ -156,16 +156,11 @@ class PageFieldsTest extends TestCase
      */
     public function test_the_menu_label_follows_the_blog_page_even_when_nested(): void
     {
-        $blog = Page::create([
-            'cms_id' => Page::max('cms_id') + 1,
-            'slug' => 'blog',
-            'url' => '/blog',
-            'title' => 'Blog',
-            'nav_label' => 'Advice',
-            'status' => 'published',
-            'seo' => [],
-            'published' => [],
-        ]);
+        /* The blog page ships in the seed now, so this relabels it rather than creating a
+           second one — the slug is unique and a duplicate would fail on insert. */
+        $blog = Page::where('slug', 'blog')->firstOrFail();
+
+        $blog->forceFill(['nav_label' => 'Advice'])->save();
 
         $child = collect($this->resourcesMenu()['children'])->firstWhere('href', '/blog');
 
@@ -290,9 +285,10 @@ class PageFieldsTest extends TestCase
     {
         $this->artisan('pages:scaffold')->assertSuccessful();
 
-        /* how-it-works is not in this list: it ships with real content from the seed and is
-           published, so scaffolding must leave it alone rather than create an empty draft. */
-        foreach (['about-us', 'our-services', 'resources', 'faqs', 'contact', 'privacy-policy', 'terms-and-conditions'] as $slug) {
+        /* Only the pages with no content of their own. how-it-works, blog and faqs ship from
+           the seed already published, so scaffolding must leave them alone rather than replace
+           them with empty drafts. */
+        foreach (['about-us', 'our-services', 'resources', 'contact', 'privacy-policy', 'terms-and-conditions'] as $slug) {
             $page = Page::where('slug', $slug)->first();
 
             $this->assertNotNull($page, "{$slug} was not created");
@@ -300,10 +296,12 @@ class PageFieldsTest extends TestCase
             $this->assertNotNull($page->nav_label);
         }
 
-        $seeded = Page::where('slug', 'how-it-works')->firstOrFail();
+        foreach (['how-it-works', 'blog', 'faqs'] as $slug) {
+            $seeded = Page::where('slug', $slug)->firstOrFail();
 
-        $this->assertSame('published', $seeded->status);
-        $this->assertNotEmpty($seeded->published);
+            $this->assertSame('published', $seeded->status, "{$slug} was overwritten by the scaffold");
+            $this->assertNotEmpty($seeded->published);
+        }
     }
 
     public function test_the_scaffold_command_is_safe_to_run_twice(): void

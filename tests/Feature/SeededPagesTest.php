@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\BlogPost;
+use App\Models\Faq;
 use App\Models\Page;
 use App\Models\Setting;
 use Inertia\Testing\AssertableInertia;
@@ -9,20 +11,12 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
- * The four menu pages ship as default content rather than as hardcoded page components, so
+ * The menu pages ship as default content rather than as hardcoded page components, so
  * every word of them is editable. Composition follows docs/new-pages/pages/*.jsx: one section
  * per page, and that section carries the h1. These guard the shape; the copy is free to change.
  */
 class SeededPagesTest extends TestCase
 {
-    /**
-     * Pages the menu names but the seed does not ship. `pages:scaffold` creates these, and
-     * nothing in the documented setup runs it — so a fresh install really does offer two menu
-     * items that 404. That predates these pages and is recorded in docs/TODO.md; it is listed
-     * here rather than filtered out silently, so a third dead link fails this test.
-     */
-    private const SCAFFOLD_ONLY = ['/faqs', '/blog'];
-
     public static function pages(): array
     {
         return [
@@ -30,6 +24,8 @@ class SeededPagesTest extends TestCase
             'why agent finder' => ['why-agent-finder', 12, 'Why Agent Finder', 'why-list'],
             'compare agents' => ['compare-agents', 13, 'Compare agents', 'agent-compare'],
             'for families' => ['for-families', 14, 'For families', 'family'],
+            'blog' => ['blog', 16, 'Blog', 'blog-list'],
+            'faqs' => ['faqs', 17, 'FAQs', 'faq-list'],
         ];
     }
 
@@ -87,6 +83,42 @@ class SeededPagesTest extends TestCase
         $this->assertNotContains('/hero-preview', $linked, 'a review page should not be in the menu');
     }
 
+    /**
+     * A client's first day has no articles and no questions. Both listings hide themselves when
+     * empty, which is right for a section partway down a page and wrong when the section is the
+     * page — /blog and /faqs rendered a call to action under no heading and with no h1 at all.
+     */
+    public static function emptyListings(): array
+    {
+        return [
+            'blog' => ['/blog', 'blog-list'],
+            'faqs' => ['/faqs', 'faq-list'],
+        ];
+    }
+
+    /**
+     * Whether the section then *renders* its heading is decided in React from the heading level,
+     * so PHPUnit cannot see it — this asserts only that the page serves with the section and its
+     * heading in the payload, which is what the component needs to do the rest. The rendering
+     * itself, and the other half of the rule (an empty listing partway down a page still hides),
+     * were checked in a browser.
+     */
+    #[DataProvider('emptyListings')]
+    public function test_a_listing_page_still_serves_its_heading_with_nothing_to_list(string $path, string $type): void
+    {
+        BlogPost::query()->forceDelete();
+        Faq::query()->forceDelete();
+
+        $this->get($path)->assertOk()->assertInertia(function (AssertableInertia $p) use ($type) {
+            $props = $p->toArray()['props'];
+
+            $this->assertSame($type, $props['sections'][0]['type']);
+            $this->assertNotEmpty($props['sections'][0]['data']['heading']);
+            $this->assertSame([], $props['library']['posts'] ?? []);
+            $this->assertSame([], $props['library']['faqs'] ?? []);
+        });
+    }
+
     public function test_the_steps_are_content_an_editor_can_change(): void
     {
         $this->post('/cms/pages/5/publish', ['sections' => [[
@@ -114,7 +146,6 @@ class SeededPagesTest extends TestCase
             ->concat(collect($globals['footer']['columns'])->flatMap(fn ($c) => $c['links'] ?? []))
             ->pluck('href')
             ->filter(fn ($href) => is_string($href) && str_starts_with($href, '/'))
-            ->reject(fn ($href) => in_array($href, self::SCAFFOLD_ONLY, true))
             ->unique()
             ->values();
 

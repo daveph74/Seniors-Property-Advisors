@@ -1,0 +1,63 @@
+{
+    "slug": "faqs",
+    "url": "/faqs",
+    "cmsId": 17,
+    "title": "FAQs",
+    "navLabel": "FAQs",
+    "status": "published",
+    "seo": {
+        "title": "FAQs — Seniors Property Advisors",
+        "description": "Straight answers on costs, timing, the pension and how we choose the agents we recommend."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "faq-list",
+            "type": "faq-list",
+            "label": "Questions",
+            "active": true,
+            "data": {
+                "eyebrow": "Questions we are asked",
+                "heading": "The things people ask",
+                "headingEm": "before they start.",
+                "lead": "If your question is not here, ring us — no one will try to sign you up.",
+                "category": "",
+                "openFirst": true,
+                "showFilters": true,
+                "items": []
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "Member, REIA"
+                ]
+            }
+        }
+    ]
+}

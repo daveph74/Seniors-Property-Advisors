@@ -1,0 +1,64 @@
+{
+    "slug": "blog",
+    "url": "/blog",
+    "cmsId": 16,
+    "title": "Blog",
+    "navLabel": "Blog",
+    "status": "published",
+    "seo": {
+        "title": "Blog — Seniors Property Advisors",
+        "description": "Plain-English articles on downsizing, selling and choosing an agent, written for Australians over 60 and the families helping them."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "blog-list",
+            "type": "blog-list",
+            "label": "Articles",
+            "active": true,
+            "data": {
+                "eyebrow": "Reading room",
+                "heading": "Guidance worth",
+                "headingEm": "reading twice.",
+                "lead": "Downsizing, selling and choosing an agent — explained plainly, with no one trying to win your listing.",
+                "category": "",
+                "limit": 9,
+                "showMore": true,
+                "showFilters": true,
+                "articles": []
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "Member, REIA"
+                ]
+            }
+        }
+    ]
+}

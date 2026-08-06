@@ -635,14 +635,21 @@ class BlogTest extends TestCase
             ->assertSessionHasErrors('title');
     }
 
-    public function test_the_listing_page_is_scaffolded_with_a_pulling_section(): void
+    /**
+     * The listing page ships from the seed, published and already pulling. It used to be an
+     * empty draft the scaffold created, which is why /blog was one of two menu links that 404ed
+     * on a fresh install.
+     */
+    public function test_the_listing_page_ships_published_with_a_pulling_section(): void
     {
-        $this->artisan('pages:scaffold')->assertSuccessful();
-
         $page = Page::where('slug', 'blog')->sole();
 
-        $this->assertSame('draft', $page->status);
-        $this->assertContains('blog-list', array_column($page->draft, 'type'));
+        $this->assertSame('published', $page->status);
+        $this->assertContains('blog-list', array_column($page->published, 'type'));
+
+        $this->artisan('pages:scaffold')->assertSuccessful();
+
+        $this->assertSame('published', $page->refresh()->status, 'the scaffold overwrote the seeded page');
     }
 
     public function test_an_article_can_be_duplicated_as_a_draft(): void
