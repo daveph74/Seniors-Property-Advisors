@@ -17,6 +17,9 @@ Route::get('/why-agent-finder', fn () => Inertia::render('WhyAgentFinder'))->nam
 Route::get('/compare-agents', fn () => Inertia::render('CompareAgents'))->name('compare-agents');
 Route::get('/for-families', fn () => Inertia::render('ForFamilies'))->name('for-families');
 
+// Client review: alternative full-bleed hero treatment. Not linked from nav.
+Route::get('/hero-preview', fn () => Inertia::render('HeroPreview'))->name('hero-preview');
+
 // Suburb autocomplete for the Find My Agent modal. Throttled because an
 // unbounded autocomplete endpoint is a billing amplifier.
 Route::get('/api/suburbs', SuburbLookupController::class)

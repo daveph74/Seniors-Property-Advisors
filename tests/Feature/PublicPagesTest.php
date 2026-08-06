@@ -21,6 +21,7 @@ class PublicPagesTest extends TestCase
             'why agent finder' => ['/why-agent-finder', 'WhyAgentFinder'],
             'compare agents' => ['/compare-agents', 'CompareAgents'],
             'for families' => ['/for-families', 'ForFamilies'],
+            'hero preview' => ['/hero-preview', 'HeroPreview'],
         ];
     }
 
