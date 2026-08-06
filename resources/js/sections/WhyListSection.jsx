@@ -1,5 +1,8 @@
+import { useHeadingLevel } from './headingLevel';
+
 export default function WhyListSection({ data, anchor }) {
     const { image = {}, stamp = {} } = data;
+    const Heading = `h${useHeadingLevel()}`;
 
     return (
         <section className="why" id={anchor}>
@@ -7,9 +10,9 @@ export default function WhyListSection({ data, anchor }) {
                 <div className="why-grid">
                     <div>
                         <div className="eyebrow-line">{data.eyebrow}</div>
-                        <h2>
+                        <Heading>
                             {data.heading} <em>{data.headingEm}</em>
-                        </h2>
+                        </Heading>
                         <p className="section-lead">{data.lead}</p>
 
                         <ul className="why-list">

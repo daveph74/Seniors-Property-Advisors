@@ -12,36 +12,6 @@
     "draft": null,
     "published": [
         {
-            "id": "hero-full",
-            "type": "hero-full",
-            "label": "Hero banner",
-            "active": true,
-            "data": {
-                "eyebrow": "For families",
-                "heading": "Helping a parent sell",
-                "headingEm": "their home?",
-                "lead": "Agent Finder is built for family conversations — plain explanations, no pressure, and time to think.",
-                "image": {
-                    "src": "/images/hero-advisor.jpg",
-                    "alt": "A property advisor with a tablet guiding a senior couple in their living room"
-                },
-                "ctas": [
-                    {
-                        "label": "Find My Agent",
-                        "variant": "secondary",
-                        "action": "open-finder",
-                        "arrow": true
-                    },
-                    {
-                        "label": "Speak to an Advisor",
-                        "variant": "ghost",
-                        "href": "/contact",
-                        "onNavy": true
-                    }
-                ]
-            }
-        },
-        {
             "id": "family",
             "type": "family",
             "label": "For families",
@@ -80,38 +50,6 @@
                     "by": "— Rachel, helping her mother sell in Glenelg, SA",
                     "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"
                 }
-            }
-        },
-        {
-            "id": "cta",
-            "type": "cta",
-            "label": "Call to action",
-            "active": true,
-            "data": {
-                "eyebrow": "Ready when you are",
-                "heading": "Ready to find",
-                "headingEm": "the right agent?",
-                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
-                "buttons": [
-                    {
-                        "label": "Get Started",
-                        "variant": "secondary",
-                        "action": "open-finder",
-                        "arrow": true
-                    },
-                    {
-                        "label": "Call 1300 277 228",
-                        "variant": "ghost",
-                        "href": "tel:1300277228",
-                        "onNavy": true
-                    }
-                ],
-                "trustMarks": [
-                    "Independent advice",
-                    "No agent commissions",
-                    "Australian owned",
-                    "Member, REIA"
-                ]
             }
         }
     ]

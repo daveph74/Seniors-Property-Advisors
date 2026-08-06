@@ -73,15 +73,16 @@ a clean database answers 404 on both. Either seed those two pages the way the fo
 are seeded, or make setup run the scaffold. `HowItWorksPageTest::SCAFFOLD_ONLY` lists them, so the
 test that checks every menu link resolves will fail if a third one joins them.
 
-**Eight section types can never carry the h1.** `ownerOfTheH1()` in
+**Four section types still cannot carry the h1.** `ownerOfTheH1()` in
 `resources/js/sections/headingLevel.js` nominates a section to own the page's h1 when no hero is
-present, and `SectionHead` honours it — but `ProcessStepsSection`, `TrustCardsSection`,
-`WhyListSection`, `AgentCompareSection`, `FamilySection`, `CtaSection`, `TextImageSection` and
-`FaqListSection` all hardcode `<h2>` and ignore the context. A page whose first heading-bearing
-section is any of them therefore renders with **no h1 at all**, silently — the resolver believes it
-handed the job to someone. Found while building the How it works page, which is why that page opens
-on a hero rather than on its steps. The fix is to route those eight through `SectionHead`, or at
-least through `useHeadingLevel()`.
+present, and `SectionHead` honours it — but a section that hardcodes `<h2>` ignores the nomination,
+so the page renders with **no h1 at all** while the resolver believes it handed the job to someone.
+
+`ProcessStepsSection`, `WhyListSection`, `AgentCompareSection` and `FamilySection` were fixed when
+the four menu pages shipped, because each of those pages is a single section that has to carry its
+own h1. `CtaSection`, `TrustCardsSection`, `TextImageSection` and `FaqListSection` still hardcode
+it. None of them leads a page today, so nothing is broken — but the first page built on one will be,
+silently. `SiteFooter` also hardcodes `<h2>`, which is correct: it is chrome, never a page's subject.
 
 **The page builder cannot be reordered by touch.** It still uses the HTML5 drag API, where
 `dragstart` never fires on a tablet. `resources/js/cms/useSortableList.js` is the pointer-based

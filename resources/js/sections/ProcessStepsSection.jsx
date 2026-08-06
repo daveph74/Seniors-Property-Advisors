@@ -1,12 +1,16 @@
+import { useHeadingLevel } from './headingLevel';
+
 export default function ProcessStepsSection({ data, anchor }) {
+    const Heading = `h${useHeadingLevel()}`;
+
     return (
         <section className="how" id={anchor}>
             <div className="container">
                 <div className="section-head center">
                     <div className="eyebrow-line">{data.eyebrow}</div>
-                    <h2>
+                    <Heading>
                         {data.heading} <em>{data.headingEm}</em>
-                    </h2>
+                    </Heading>
                     <p className="section-lead">{data.lead}</p>
                 </div>
 
