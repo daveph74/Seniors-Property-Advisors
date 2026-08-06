@@ -18,7 +18,8 @@ export const useHeadingLevel = () => useContext(HeadingLevel);
 export function ownerOfTheH1(sections = []) {
     const visible = sections.filter((s) => s && s.active !== false);
 
-    if (visible.some((s) => s.type === 'hero')) {
+    /* Every hero variant renders its own h1, so none of them may nominate a second one. */
+    if (visible.some((s) => s.type === 'hero' || s.type === 'hero-full')) {
         return null;
     }
 

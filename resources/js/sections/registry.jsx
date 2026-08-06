@@ -1,4 +1,5 @@
 import HeroSection from './HeroSection';
+import HeroFullSection from './HeroFullSection';
 import TrustCardsSection from './TrustCardsSection';
 import ProcessStepsSection from './ProcessStepsSection';
 import WhyListSection from './WhyListSection';
@@ -37,6 +38,7 @@ export const SECTIONS = {
     row: RowContainer,
     column: ColumnContainer,
     hero: HeroSection,
+    'hero-full': HeroFullSection,
     'trust-cards': TrustCardsSection,
     'process-steps': ProcessStepsSection,
     'why-list': WhyListSection,
@@ -73,6 +75,7 @@ export const SECTION_LABELS = {
     row: 'Row',
     column: 'Column',
     hero: 'Hero banner',
+    'hero-full': 'Hero banner (full bleed)',
     'trust-cards': 'Trust cards',
     'process-steps': 'Process steps',
     'why-list': 'Why list',

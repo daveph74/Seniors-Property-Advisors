@@ -66,6 +66,16 @@ the dot is hardcoded. They are the last of the prototype's furniture. The search
 1024px by the responsive layer, which shrinks the problem without fixing it: on a laptop it still
 invites a search that never runs. Either build them or take them out.
 
+**Eight section types can never carry the h1.** `ownerOfTheH1()` in
+`resources/js/sections/headingLevel.js` nominates a section to own the page's h1 when no hero is
+present, and `SectionHead` honours it — but `ProcessStepsSection`, `TrustCardsSection`,
+`WhyListSection`, `AgentCompareSection`, `FamilySection`, `CtaSection`, `TextImageSection` and
+`FaqListSection` all hardcode `<h2>` and ignore the context. A page whose first heading-bearing
+section is any of them therefore renders with **no h1 at all**, silently — the resolver believes it
+handed the job to someone. Found while building the How it works page, which is why that page opens
+on a hero rather than on its steps. The fix is to route those eight through `SectionHead`, or at
+least through `useHeadingLevel()`.
+
 **The page builder cannot be reordered by touch.** It still uses the HTML5 drag API, where
 `dragstart` never fires on a tablet. `resources/js/cms/useSortableList.js` is the pointer-based
 replacement, already used by the FAQ, testimonial and blog lists. Migrating the builder to it would

@@ -456,6 +456,80 @@ h1.headline em{
 }
 .hero-steps b{ color: var(--navy); font-size: 16px; font-weight: 600; }
 
+/* ===================== Hero (full-bleed variant) ===================== */
+/* Photo runs edge to edge for one viewport; copy sits on the empty left of the frame.
+   Everything is scoped under .hero-full so the boxed hero above is untouched.
+   The picture itself is set inline from the section's own data — it is a media-library
+   field, not a stylesheet constant, so an editor can change it. */
+.hero-full{
+  position: relative;
+  display: flex; align-items: center;
+  padding: 72px 0;
+  overflow: hidden;
+  min-height: calc(100vh - 126px);      /* 42px topbar + 84px nav */
+  min-height: calc(100svh - 126px);     /* no jump when the mobile URL bar hides */
+}
+.hero-full-bg{
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center right;
+  background-color: var(--navy);
+  z-index: 0;
+}
+/* Navy scrim, heaviest over the copy. Brand shading rather than a grey wash. The stops
+   are set by measurement, not taste: the bright window behind the middle of the frame is
+   near-white, so the scrim has to still be ~0.74 where the lead paragraph ends for 18px
+   text to clear 4.5:1. It clears to nothing before it reaches the people. */
+.hero-full-bg::after{
+  content:""; position:absolute; inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(13,34,63,0.92) 0%,
+    rgba(13,34,63,0.88) 26%,
+    rgba(13,34,63,0.74) 44%,
+    rgba(13,34,63,0.40) 60%,
+    rgba(13,34,63,0.12) 78%,
+    rgba(13,34,63,0.00) 92%
+  );
+}
+/* width:100% — as a flex item the container would otherwise shrink to its content and
+   the auto margins would centre it, pulling the copy off the page gutter. */
+.hero-full .container{ position: relative; z-index: 1; width: 100%; }
+.hero-full-copy{ max-width: 580px; }
+
+.eyebrow-rule{
+  display: inline-flex; align-items: center; gap: 14px;
+  font-size: 12.5px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+}
+.eyebrow-rule::before{
+  content:""; width: 34px; height: 2px;
+  background: var(--blue-pale);
+  flex-shrink: 0;
+}
+
+.hero-full h1{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(40px, 4.6vw, 60px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--white);
+  margin: 24px 0 20px;
+}
+/* Inline, not display:block — "without the stress." should wrap mid-line. */
+.hero-full h1 em{
+  font-style: italic;
+  color: var(--blue-pale);
+}
+.hero-full p{
+  color: rgba(255,255,255,0.92);
+  font-size: 18px; line-height: 1.6;
+  max-width: 500px;
+  margin: 0 0 36px;
+}
+
 /* ===================== Section base ===================== */
 section{ padding: 120px 0; position: relative; }
 section.tight{ padding: 96px 0; }
@@ -919,6 +993,17 @@ footer{
   .hero-card.saving{ right: 0; }
   .hero-pentagon{ display: none; }
   .hero-steps, .block-steps-strip{ flex-wrap: wrap; gap: 8px; }
+  .hero-full-bg{ background-position: 72% center; }
+  .hero-full-bg::after{
+    background: linear-gradient(
+      100deg,
+      rgba(13,34,63,0.94) 0%,
+      rgba(13,34,63,0.90) 34%,
+      rgba(13,34,63,0.80) 56%,
+      rgba(13,34,63,0.45) 74%,
+      rgba(13,34,63,0.15) 90%
+    );
+  }
   .why-grid, .family-grid{ grid-template-columns: 1fr; gap: 56px;}
   .steps, .block-step-grid{ grid-template-columns: 1fr 1fr; }
   .steps::before, .block-step-grid::before{ display: none;}
@@ -929,6 +1014,20 @@ footer{
   section{ padding: 80px 0;}
   .hero{ padding: 32px 0 72px;}
   .hero-card{ display: none;}
+  /* No room for copy beside the subjects — stack it over the photo instead, so the
+     scrim runs top to bottom rather than left to right. */
+  .hero-full{ min-height: auto; padding: 56px 0 72px; }
+  .hero-full-bg{ background-position: 68% center; }
+  .hero-full-bg::after{
+    background: linear-gradient(
+      180deg,
+      rgba(13,34,63,0.90) 0%,
+      rgba(13,34,63,0.70) 55%,
+      rgba(13,34,63,0.55) 100%
+    );
+  }
+  .hero-full h1{ font-size: 38px; }
+  .hero-full .hero-ctas .btn{ flex: 1 1 auto; justify-content: center; }
   .hero-steps, .block-steps-strip{ flex-direction: column; gap: 0; padding: 8px 20px;}
   .hero-steps .hs-item, .block-steps-strip .hs-item{ justify-content: flex-start; padding: 14px 0;}
   .hero-steps .hs-item + .hs-item, .block-steps-strip .hs-item + .hs-item{ border-left: none; border-top: 1px solid var(--line-soft);}

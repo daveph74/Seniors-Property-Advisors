@@ -360,7 +360,7 @@ class CmsBuilderTest extends TestCase
             $this->assertContains($type, PageContentStore::BLOCK_TYPES, "{$type} is missing");
         }
 
-        $this->assertCount(30, PageContentStore::BLOCK_TYPES);
+        $this->assertCount(31, PageContentStore::BLOCK_TYPES);
     }
 
     public function test_the_scoped_section_types_are_registered(): void
@@ -549,7 +549,7 @@ class CmsBuilderTest extends TestCase
        does not exist and then refused every save. */
     public function test_an_unknown_page_id_cannot_be_opened(): void
     {
-        foreach ([2, 5, 9] as $id) {
+        foreach ([404, 405, 999] as $id) {
             $this->get("/cms/pages/{$id}/edit")->assertNotFound();
         }
     }

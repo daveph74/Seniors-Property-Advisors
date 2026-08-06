@@ -137,10 +137,12 @@ class ContentStorageTest extends TestCase
 
     public function test_the_seeder_is_idempotent_and_creates_no_revisions(): void
     {
+        $before = Page::count();
+
         $this->seed(ContentSeeder::class);
         $this->seed(ContentSeeder::class);
 
-        $this->assertSame(1, Page::count());
+        $this->assertSame($before, Page::count());
         $this->assertSame(0, PageRevision::count());
     }
 

@@ -93,6 +93,7 @@ export const COMPONENT_LIBRARY = [
     ] },
     { name: 'Website sections', items: [
         { type: 'hero', label: 'Hero banner', d: 'M3 4h18v9H3zM6 17h8M6 20h5' },
+        { type: 'hero-full', label: 'Hero, full bleed', d: 'M2 4h20v16H2zM6 10h7M6 14h5' },
         { type: 'trust-cards', label: 'Trust cards', d: 'M4 5h6v6H4zM14 5h6v6h-6zM4 13h6v6H4zM14 13h6v6h-6z' },
         { type: 'process-steps', label: 'Process steps', d: 'M5 6h14M5 12h14M5 18h14' },
         { type: 'why-list', label: 'Why list', d: 'M4 6h16M4 12h16M4 18h9' },

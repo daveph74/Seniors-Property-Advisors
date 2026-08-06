@@ -290,13 +290,20 @@ class PageFieldsTest extends TestCase
     {
         $this->artisan('pages:scaffold')->assertSuccessful();
 
-        foreach (['about-us', 'our-services', 'how-it-works', 'resources', 'faqs', 'contact', 'privacy-policy', 'terms-and-conditions'] as $slug) {
+        /* how-it-works is not in this list: it ships with real content from the seed and is
+           published, so scaffolding must leave it alone rather than create an empty draft. */
+        foreach (['about-us', 'our-services', 'resources', 'faqs', 'contact', 'privacy-policy', 'terms-and-conditions'] as $slug) {
             $page = Page::where('slug', $slug)->first();
 
             $this->assertNotNull($page, "{$slug} was not created");
             $this->assertSame('draft', $page->status);
             $this->assertNotNull($page->nav_label);
         }
+
+        $seeded = Page::where('slug', 'how-it-works')->firstOrFail();
+
+        $this->assertSame('published', $seeded->status);
+        $this->assertNotEmpty($seeded->published);
     }
 
     public function test_the_scaffold_command_is_safe_to_run_twice(): void

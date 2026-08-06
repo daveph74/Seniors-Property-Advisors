@@ -58,12 +58,14 @@ class ContentImportTest extends TestCase
 
     public function test_it_imports_new_pages_and_is_idempotent(): void
     {
+        $before = Page::count();
+
         $this->writeOverlay($this->document('about', 'About us'));
 
         $this->artisan('content:import')->assertSuccessful();
         $this->artisan('content:import')->assertSuccessful();
 
-        $this->assertSame(2, Page::count());
+        $this->assertSame($before + 1, Page::count());
         $this->assertSame('About us', Page::where('slug', 'about')->value('title'));
     }
 
@@ -99,10 +101,12 @@ class ContentImportTest extends TestCase
 
     public function test_it_reports_nothing_to_import_without_an_overlay(): void
     {
+        $before = Page::count();
+
         File::deleteDirectory(storage_path('app/content'));
 
         $this->artisan('content:import')->assertSuccessful();
 
-        $this->assertSame(1, Page::count());
+        $this->assertSame($before, Page::count());
     }
 }

@@ -1,5 +1,6 @@
 const BLOCK_TYPES = [
     'hero',
+    'hero-full',
     'trust-cards',
     'process-steps',
     'why-list',

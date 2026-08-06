@@ -41,6 +41,10 @@ const CONTENT_SCHEMAS = {
             TEXT('savingCard.note', 'Sub-note'),
         ]),
     ],
+    'hero-full': [
+        ...HEAD,
+        IMG('image.src', 'Background image', 'image.alt'),
+    ],
     'trust-cards': [
         ...HEAD,
         GROUP('Header button', LINK_FIELDS('cta')),

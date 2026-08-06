@@ -129,6 +129,14 @@ const TEMPLATES = {
         savingCard: { label: '', value: '', note: '' },
         steps: [],
     },
+    'hero-full': {
+        eyebrow: '',
+        heading: '',
+        headingEm: '',
+        lead: '',
+        image: { src: '', alt: '' },
+        ctas: [],
+    },
     'trust-cards': {
         eyebrow: '',
         heading: '',

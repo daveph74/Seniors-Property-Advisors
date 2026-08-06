@@ -28,14 +28,16 @@ class CreatePageTest extends TestCase
 
     public function test_creating_a_page_opens_its_builder(): void
     {
+        $expected = Page::max('cms_id') + 1;
+
         $this->create(['layout' => 'standard'])
-            ->assertRedirect('/cms/pages/2/edit')
+            ->assertRedirect("/cms/pages/{$expected}/edit")
             ->assertSessionHasNoErrors();
 
         $page = Page::where('slug', 'preparing-to-move')->first();
 
         $this->assertNotNull($page);
-        $this->assertSame(2, $page->cms_id);
+        $this->assertSame($expected, $page->cms_id);
         $this->assertSame('/preparing-to-move', $page->url);
         $this->assertSame('draft', $page->status);
         $this->assertSame([], $page->published);
@@ -93,34 +95,40 @@ class CreatePageTest extends TestCase
 
     public function test_reserved_names_are_rejected(): void
     {
+        $before = Page::count();
+
         foreach (['CMS', 'Build', 'Storage', 'Up', 'Home', 'api'] as $name) {
             $this->create(['title' => $name])->assertSessionHasErrors('title');
         }
 
-        $this->assertSame(1, Page::count());
+        $this->assertSame($before, Page::count());
     }
 
     public function test_a_name_with_no_letters_or_numbers_is_rejected(): void
     {
+        $before = Page::count();
+
         $this->create(['title' => '!!!'])->assertSessionHasErrors('title');
         $this->create(['title' => ''])->assertSessionHasErrors('title');
 
-        $this->assertSame(1, Page::count());
+        $this->assertSame($before, Page::count());
     }
 
     public function test_an_unknown_parent_or_layout_is_rejected(): void
     {
+        $before = Page::count();
+
         $this->create(['parent' => 'nope'])->assertSessionHasErrors('parent');
         $this->create(['layout' => 'wat'])->assertSessionHasErrors('layout');
 
-        $this->assertSame(1, Page::count());
+        $this->assertSame($before, Page::count());
     }
 
     public function test_markup_is_stripped_from_the_name(): void
     {
         $this->create(['title' => '<b>Bold Page</b>'])->assertRedirect();
 
-        $this->assertSame('Bold Page', Page::where('cms_id', 2)->value('title'));
+        $this->assertSame('Bold Page', Page::where('slug', 'bold-page')->value('title'));
     }
 
     public function test_every_starter_layout_saves_cleanly(): void
@@ -131,7 +139,7 @@ class CreatePageTest extends TestCase
             $slug = 'layout-'.$key;
             $tree = (new PageContentStore)->editable($slug);
 
-            $this->post('/cms/pages/'.($i + 2).'/draft', ['sections' => $tree])
+            $this->post('/cms/pages/'.Page::where('slug', $slug)->value('cms_id').'/draft', ['sections' => $tree])
                 ->assertRedirect()
                 ->assertSessionHasNoErrors();
 
@@ -147,13 +155,13 @@ class CreatePageTest extends TestCase
 
         $this->get('/about-us')->assertNotFound();
 
-        $this->post('/cms/pages/2/publish-now')->assertRedirect();
+        $this->post('/cms/pages/'.Page::where('slug', 'about-us')->value('cms_id').'/publish-now')->assertRedirect();
 
         $this->get('/about-us')
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $p) => $p->component('AgentFinder')->where('title', 'About Us'));
 
-        $this->post('/cms/pages/2/archive')->assertRedirect();
+        $this->post('/cms/pages/'.Page::where('slug', 'about-us')->value('cms_id').'/archive')->assertRedirect();
         $this->get('/about-us')->assertNotFound();
     }
 
@@ -162,7 +170,7 @@ class CreatePageTest extends TestCase
         $this->create(['title' => 'About Us'])->assertRedirect();
         $this->create(['title' => 'Selling Guide', 'parent' => 'about-us', 'layout' => 'standard'])->assertRedirect();
 
-        $this->post('/cms/pages/3/publish-now')->assertRedirect();
+        $this->post('/cms/pages/'.Page::where('slug', 'about-us/selling-guide')->value('cms_id').'/publish-now')->assertRedirect();
 
         $this->get('/about-us/selling-guide')
             ->assertOk()
@@ -175,11 +183,11 @@ class CreatePageTest extends TestCase
 
         $this->create(['title' => 'About Us'])->assertRedirect();
         $this->create(['title' => 'Selling Guide', 'parent' => 'about-us', 'layout' => 'standard'])->assertRedirect();
-        $this->post('/cms/pages/3/publish-now')->assertRedirect();
+        $this->post('/cms/pages/'.Page::where('slug', 'about-us/selling-guide')->value('cms_id').'/publish-now')->assertRedirect();
 
         $this->get('/about-us/selling-guide')->assertOk();
 
-        $this->post('/cms/pages/3/unpublish')->assertRedirect();
+        $this->post('/cms/pages/'.Page::where('slug', 'about-us/selling-guide')->value('cms_id').'/unpublish')->assertRedirect();
 
         $this->get('/about-us/selling-guide')->assertNotFound();
     }

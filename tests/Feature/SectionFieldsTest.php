@@ -51,6 +51,31 @@ class SectionFieldsTest extends TestCase
             ->assertInertia(fn (AssertableInertia $p) => $p->where('sections.0.data.image.src', '/images/hero.jpg'));
     }
 
+    public function test_a_full_bleed_hero_persists_its_background_and_buttons(): void
+    {
+        $data = $this->publish($this->block('hero-full', [
+            'eyebrow' => 'Finding your agent',
+            'heading' => 'Find the right agent,',
+            'headingEm' => 'without the stress.',
+            'lead' => 'Independent guidance at every step.',
+            'image' => ['src' => '/images/full.jpg', 'alt' => 'An advisor with a couple'],
+            'ctas' => [
+                ['label' => 'Find My Agent', 'variant' => 'secondary', 'action' => 'open-finder', 'arrow' => true],
+                ['label' => 'Speak to an Advisor', 'variant' => 'ghost', 'href' => '/contact', 'onNavy' => true],
+            ],
+        ]));
+
+        $this->assertSame('/images/full.jpg', $data['image']['src']);
+        $this->assertSame('An advisor with a couple', $data['image']['alt']);
+        $this->assertSame('without the stress.', $data['headingEm']);
+        $this->assertSame('open-finder', $data['ctas'][0]['action']);
+        $this->assertTrue($data['ctas'][1]['onNavy']);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $p) => $p->where('sections.0.data.image.src', '/images/full.jpg'));
+    }
+
     public function test_a_header_button_persists_including_its_arrow_flag(): void
     {
         $data = $this->publish($this->block('trust-cards', [

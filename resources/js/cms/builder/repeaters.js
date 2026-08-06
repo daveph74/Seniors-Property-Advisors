@@ -55,6 +55,9 @@ const SCHEMAS = {
         avatars: { title: 'Avatars', fields: [IMG('', 'Image URL')] },
         steps: { title: 'Steps', fields: [TEXT('n', 'Number'), TEXT('label', 'Label')] },
     },
+    'hero-full': {
+        ctas: { title: 'Buttons', fields: CTA_BUTTON_FIELDS },
+    },
     'trust-cards': {
         items: {
             title: 'Cards',
