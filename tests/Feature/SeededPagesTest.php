@@ -34,7 +34,7 @@ class SeededPagesTest extends TestCase
     }
 
     #[DataProvider('pages')]
-    public function test_it_is_seeded_published_with_one_section(string $slug, int $cmsId, string $title, string $type): void
+    public function test_it_is_seeded_published_with_its_section_and_the_call_to_action(string $slug, int $cmsId, string $title, string $type): void
     {
         $page = Page::where('slug', $slug)->firstOrFail();
 
@@ -43,9 +43,10 @@ class SeededPagesTest extends TestCase
         $this->assertSame($cmsId, $page->cms_id);
         $this->assertSame($title, $page->title);
 
-        /* One section, as the prototype composes it. A second would take the h1 from the first. */
-        $this->assertCount(1, $page->published);
-        $this->assertSame($type, $page->published[0]['type']);
+        /* The prototype's page file holds one section, but PublicLayout appends FinalCta to
+           every public page, so the rendered page has two. The layout is chrome there and
+           content here, which is why the call to action is part of the page's own tree. */
+        $this->assertSame([$type, 'cta'], array_column($page->published, 'type'));
         $this->assertNotEmpty($page->published[0]['data']['heading']);
     }
 
@@ -58,7 +59,8 @@ class SeededPagesTest extends TestCase
                 ->component('AgentFinder')
                 ->where('title', $title)
                 ->where('sections.0.type', $type)
-                ->count('sections', 1));
+                ->where('sections.1.type', 'cta')
+                ->count('sections', 2));
     }
 
     /**
@@ -70,7 +72,7 @@ class SeededPagesTest extends TestCase
         $page = Page::where('slug', 'hero-preview')->firstOrFail();
 
         $this->assertSame('published', $page->status);
-        $this->assertSame(['hero-full', 'trust-cards'], array_column($page->published, 'type'));
+        $this->assertSame(['hero-full', 'trust-cards', 'cta'], array_column($page->published, 'type'));
         $this->assertTrue($page->seo['noindex']);
 
         $this->get('/hero-preview')
