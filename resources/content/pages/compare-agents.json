@@ -1,0 +1,210 @@
+{
+    "slug": "compare-agents",
+    "url": "/compare-agents",
+    "cmsId": 13,
+    "title": "Compare agents",
+    "navLabel": "Compare agents",
+    "status": "published",
+    "seo": {
+        "title": "Compare agents — Seniors Property Advisors",
+        "description": "See local agents side by side — experience, recent sales, commission and marketing budget — with your advisor's notes added in."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "hero-full",
+            "type": "hero-full",
+            "label": "Hero banner",
+            "active": true,
+            "data": {
+                "eyebrow": "Compare your shortlist",
+                "heading": "A clear, honest view of",
+                "headingEm": "every option.",
+                "lead": "See local agents side by side — experience, recent sales, commission and marketing budget — with your advisor’s notes added in.",
+                "image": {
+                    "src": "/images/hero-advisor.jpg",
+                    "alt": "A property advisor with a tablet guiding a senior couple in their living room"
+                },
+                "ctas": [
+                    {
+                        "label": "Find My Agent",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Speak to an Advisor",
+                        "variant": "ghost",
+                        "href": "/contact",
+                        "onNavy": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "compare",
+            "type": "agent-compare",
+            "label": "Agent comparison",
+            "active": true,
+            "anchor": "compare",
+            "data": {
+                "eyebrow": "Compare your shortlist",
+                "heading": "A clear, honest view of",
+                "headingEm": "every option.",
+                "lead": "Below is the kind of comparison you’ll receive — three real local agents, side‑by‑side, with your advisor’s notes added in.",
+                "cta": {
+                    "label": "See a sample report",
+                    "href": "#",
+                    "arrow": true
+                },
+                "filters": [
+                    {
+                        "label": "Mosman, NSW 2088",
+                        "active": true,
+                        "removable": true
+                    },
+                    {
+                        "label": "4‑bed home"
+                    },
+                    {
+                        "label": "Sell in 3 – 6 months"
+                    },
+                    {
+                        "label": "3 agents shortlisted",
+                        "count": true
+                    }
+                ],
+                "sort": "Sort: Advisor pick ▾",
+                "labels": {
+                    "shortlist": "Your shortlist",
+                    "experience": "Local experience",
+                    "sales": "Recent sales (12 mo)",
+                    "commission": "Commission estimate",
+                    "marketing": "Marketing budget",
+                    "notes": "Advisor notes",
+                    "next": "Next step"
+                },
+                "agents": [
+                    {
+                        "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=160&q=80",
+                        "name": "Sarah Whitford",
+                        "firm": "Whitford & Co · Mosman",
+                        "experience": {
+                            "strong": "12 years",
+                            "rest": "in Mosman & Beauty Point",
+                            "meter": 70
+                        },
+                        "sales": {
+                            "strong": "24 sold",
+                            "sub": "Median $3.4M · 98% of guide"
+                        },
+                        "commission": {
+                            "price": "2.20%",
+                            "sub": "~ $77,000 on $3.5M sale"
+                        },
+                        "marketing": {
+                            "strong": "$8,400",
+                            "sub": "Print + digital, 4‑week campaign"
+                        },
+                        "note": "“Warm, careful communicator. Strong with downsizers but fewer recent prestige sales.”",
+                        "cta": {
+                            "label": "View profile",
+                            "variant": "ghost",
+                            "href": "#"
+                        }
+                    },
+                    {
+                        "best": true,
+                        "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=160&q=80",
+                        "name": "James Patel",
+                        "firm": "Harbour Realty · Cremorne",
+                        "experience": {
+                            "strong": "18 years",
+                            "rest": "across Lower North Shore",
+                            "meter": 92
+                        },
+                        "sales": {
+                            "strong": "41 sold",
+                            "sub": "Median $3.7M · 104% of guide"
+                        },
+                        "commission": {
+                            "price": "1.95%",
+                            "sub": "~ $68,250 on $3.5M sale"
+                        },
+                        "marketing": {
+                            "strong": "$6,900",
+                            "sub": "Digital‑led, includes premium listing"
+                        },
+                        "note": "“Best fit for your home and timeline. Consistent results, fair fee, calm style.”",
+                        "cta": {
+                            "label": "Book intro call",
+                            "variant": "primary",
+                            "action": "open-finder",
+                            "arrow": true
+                        }
+                    },
+                    {
+                        "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=160&q=80",
+                        "name": "Elaine Murray",
+                        "firm": "Coastline Group · Neutral Bay",
+                        "experience": {
+                            "strong": "9 years",
+                            "rest": "in Neutral Bay & Mosman",
+                            "meter": 55
+                        },
+                        "sales": {
+                            "strong": "17 sold",
+                            "sub": "Median $2.9M · 96% of guide"
+                        },
+                        "commission": {
+                            "price": "2.35%",
+                            "sub": "~ $82,250 on $3.5M sale"
+                        },
+                        "marketing": {
+                            "strong": "$11,200",
+                            "sub": "Includes magazine & video tour"
+                        },
+                        "note": "“Polished but marketing budget is on the higher side — push back if you shortlist.”",
+                        "cta": {
+                            "label": "View profile",
+                            "variant": "ghost",
+                            "href": "#"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "Member, REIA"
+                ]
+            }
+        }
+    ]
+}

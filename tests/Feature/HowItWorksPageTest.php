@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Page;
+use App\Models\Setting;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
@@ -12,6 +13,38 @@ use Tests\TestCase;
  */
 class HowItWorksPageTest extends TestCase
 {
+    /**
+     * Pages the menu names but the seed does not ship. `pages:scaffold` creates these, and
+     * nothing in the documented setup runs it — so a fresh install really does offer two menu
+     * items that 404. That predates the pages below and is recorded in docs/TODO.md; it is
+     * listed here rather than filtered out silently, so a third dead link fails this test.
+     */
+    private const SCAFFOLD_ONLY = ['/faqs', '/blog'];
+
+    /**
+     * The menu used to scroll to home-page anchors — #how, #why — so these pages could be
+     * published and still be unreachable from the site. Every menu item that names a page
+     * must lead to one that answers.
+     */
+    public function test_every_menu_link_to_a_page_reaches_a_published_one(): void
+    {
+        $globals = Setting::where('key', 'globals')->value('value');
+
+        $paths = collect($globals['nav']['links'])
+            ->concat(collect($globals['footer']['columns'])->flatMap(fn ($c) => $c['links'] ?? []))
+            ->pluck('href')
+            ->filter(fn ($href) => is_string($href) && str_starts_with($href, '/'))
+            ->reject(fn ($href) => in_array($href, self::SCAFFOLD_ONLY, true))
+            ->unique()
+            ->values();
+
+        $this->assertNotEmpty($paths, 'the menu names no pages at all');
+
+        foreach ($paths as $path) {
+            $this->get($path)->assertOk("{$path} is in the menu but does not answer");
+        }
+    }
+
     public function test_it_is_seeded_published_into_the_existing_draft(): void
     {
         $page = Page::where('slug', 'how-it-works')->firstOrFail();

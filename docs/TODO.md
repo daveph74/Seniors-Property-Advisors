@@ -66,6 +66,13 @@ the dot is hardcoded. They are the last of the prototype's furniture. The search
 1024px by the responsive layer, which shrinks the problem without fixing it: on a laptop it still
 invites a search that never runs. Either build them or take them out.
 
+**A fresh install ships two dead menu links.** The header offers FAQs and Blog, and the footer
+repeats them, but `/faqs` and `/blog` are created by `php artisan pages:scaffold` — which is not
+part of `composer setup`, `migrate --seed`, or anything the README tells a new developer to run. So
+a clean database answers 404 on both. Either seed those two pages the way the four content pages
+are seeded, or make setup run the scaffold. `HowItWorksPageTest::SCAFFOLD_ONLY` lists them, so the
+test that checks every menu link resolves will fail if a third one joins them.
+
 **Eight section types can never carry the h1.** `ownerOfTheH1()` in
 `resources/js/sections/headingLevel.js` nominates a section to own the page's h1 when no hero is
 present, and `SectionHead` honours it — but `ProcessStepsSection`, `TrustCardsSection`,

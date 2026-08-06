@@ -1,0 +1,118 @@
+{
+    "slug": "for-families",
+    "url": "/for-families",
+    "cmsId": 14,
+    "title": "For families",
+    "navLabel": "For families",
+    "status": "published",
+    "seo": {
+        "title": "For families — Seniors Property Advisors",
+        "description": "Helping a parent sell their home? Agent Finder is built for family conversations — plain explanations, no pressure, and time to think."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "hero-full",
+            "type": "hero-full",
+            "label": "Hero banner",
+            "active": true,
+            "data": {
+                "eyebrow": "For families",
+                "heading": "Helping a parent sell",
+                "headingEm": "their home?",
+                "lead": "Agent Finder is built for family conversations — plain explanations, no pressure, and time to think.",
+                "image": {
+                    "src": "/images/hero-advisor.jpg",
+                    "alt": "A property advisor with a tablet guiding a senior couple in their living room"
+                },
+                "ctas": [
+                    {
+                        "label": "Find My Agent",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Speak to an Advisor",
+                        "variant": "ghost",
+                        "href": "/contact",
+                        "onNavy": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "family",
+            "type": "family",
+            "label": "For families",
+            "active": true,
+            "anchor": "family",
+            "data": {
+                "eyebrow": "For families",
+                "heading": "Helping a parent sell",
+                "headingEm": "their home?",
+                "lead": "Many of the people we help aren’t selling themselves — they’re adult children supporting a parent through a downsize, a move closer to family, or the next chapter of care. Agent Finder is designed for these conversations.",
+                "checks": [
+                    "Loop the whole family in — your advisor speaks with everyone, at a pace that suits.",
+                    "Plain explanations of contracts, commission, marketing and timelines.",
+                    "Time to think — no agent contact until your parent feels ready.",
+                    "Support for the practical side too: stylists, conveyancers, moving services."
+                ],
+                "ctas": [
+                    {
+                        "label": "Start as a family",
+                        "variant": "primary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Family guide (PDF)",
+                        "variant": "ghost",
+                        "href": "#"
+                    }
+                ],
+                "image": {
+                    "src": "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=80",
+                    "alt": "Adult daughter sitting with her mother going through paperwork"
+                },
+                "testimonial": {
+                    "quote": "“Mum felt heard the whole way through. We finally had a plan we all agreed on.”",
+                    "by": "— Rachel, helping her mother sell in Glenelg, SA",
+                    "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"
+                }
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "Member, REIA"
+                ]
+            }
+        }
+    ]
+}

@@ -14,20 +14,19 @@
     "nav": {
         "links": [
             {
-                "href": "#how",
-                "label": "How it works",
-                "active": true
+                "href": "/how-it-works",
+                "label": "How it works"
             },
             {
-                "href": "#why",
+                "href": "/why-agent-finder",
                 "label": "Why Agent Finder"
             },
             {
-                "href": "#compare",
+                "href": "/compare-agents",
                 "label": "Compare agents"
             },
             {
-                "href": "#family",
+                "href": "/for-families",
                 "label": "For families"
             },
             {
@@ -63,15 +62,15 @@
                 "heading": "Service",
                 "links": [
                     {
-                        "href": "#how",
+                        "href": "/how-it-works",
                         "label": "How it works"
                     },
                     {
-                        "href": "#compare",
+                        "href": "/compare-agents",
                         "label": "Compare agents"
                     },
                     {
-                        "href": "#family",
+                        "href": "/for-families",
                         "label": "For families"
                     },
                     {

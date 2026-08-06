@@ -1,0 +1,120 @@
+{
+    "slug": "why-agent-finder",
+    "url": "/why-agent-finder",
+    "cmsId": 12,
+    "title": "Why Agent Finder",
+    "navLabel": "Why Agent Finder",
+    "status": "published",
+    "seo": {
+        "title": "Why Agent Finder — Seniors Property Advisors",
+        "description": "Save time, avoid sales pressure and understand commission before you sign anything — backed by 30+ years of property advisory experience."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "hero-full",
+            "type": "hero-full",
+            "label": "Hero banner",
+            "active": true,
+            "data": {
+                "eyebrow": "Why use Agent Finder",
+                "heading": "Confidence before you ever",
+                "headingEm": "sign anything.",
+                "lead": "Save time, avoid sales pressure and understand commission before you sign anything — backed by more than 30 years of property advisory experience.",
+                "image": {
+                    "src": "/images/hero-advisor.jpg",
+                    "alt": "A property advisor with a tablet guiding a senior couple in their living room"
+                },
+                "ctas": [
+                    {
+                        "label": "Find My Agent",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Speak to an Advisor",
+                        "variant": "ghost",
+                        "href": "/contact",
+                        "onNavy": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "why",
+            "type": "why-list",
+            "label": "Why use Agent Finder",
+            "active": true,
+            "anchor": "why",
+            "data": {
+                "eyebrow": "Why use Agent Finder",
+                "heading": "Confidence before you ever",
+                "headingEm": "sign anything.",
+                "lead": "Selling the family home is one of life’s biggest financial decisions. Agent Finder gives you the time, the information and the independent support to make it feel calm — not pressured.",
+                "items": [
+                    {
+                        "title": "Save time researching agents",
+                        "body": "We do the long‑listing, vetting and reference checks for you."
+                    },
+                    {
+                        "title": "Avoid pressure from sales calls",
+                        "body": "You stay in control. Agents only contact you when you’re ready."
+                    },
+                    {
+                        "title": "Understand commission and marketing",
+                        "body": "Plain‑English breakdowns so you can compare like for like."
+                    },
+                    {
+                        "title": "Guidance from experienced advisors",
+                        "body": "30+ years of negotiating, listing and selling experience on your side."
+                    },
+                    {
+                        "title": "Feel confident before listing",
+                        "body": "Go to market with a clear plan, a fair price and an agent you trust."
+                    }
+                ],
+                "image": {
+                    "src": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1100&q=80",
+                    "alt": "Charming Australian home exterior"
+                },
+                "stamp": {
+                    "value": "30+",
+                    "text": "years of property advisory experience guiding Australian families."
+                }
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "Member, REIA"
+                ]
+            }
+        }
+    ]
+}
