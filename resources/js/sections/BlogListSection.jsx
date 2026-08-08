@@ -4,6 +4,10 @@ import SiteLink from './SiteLink';
 import PendingModule from './PendingModule';
 import { useHeadingLevel } from './headingLevel';
 
+/* The article list is the only thing a category changes. `errors` rides along because Inertia
+   carries validation state in it and a partial reload that omits it drops whatever was there. */
+const FILTER_PROPS = ['library', 'errors'];
+
 export default function BlogListSection({ data, anchor, library = {}, editing = false }) {
     /* One below whatever the section's own heading is, so the listing does not skip a level on a
        page where it opens the page and its heading is the h1. */
@@ -107,9 +111,21 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
      */
     if (articles.length === 0 && ! editing && ! chosen && ! leadsPage) return null;
 
+    /**
+     * A category is answered by the server — it is the only way the filter can reach articles on
+     * later pages, and it keeps a filtered listing at an address a reader can send to somebody.
+     * But it is a change to one section, not a move to another page, so it asks for one prop and
+     * leaves the reader where they were.
+     *
+     * Without `only` the whole page came back to change the article list: sections, menus and
+     * settings the filter cannot affect, about two thirds of the payload. Without preserveScroll
+     * a reader choosing a category partway down a page was thrown to the top of it.
+     */
+    const chipVisit = { preserveScroll: true, only: FILTER_PROPS };
+
     const chips = filters.length > 1 ? (
         <div className="filter-chips">
-            <SiteLink className={`filter-chip ${chosen ? '' : 'filter-chip--on'}`} href={filterHref(null)}>
+            <SiteLink className={`filter-chip ${chosen ? '' : 'filter-chip--on'}`} href={filterHref(null)} {...chipVisit}>
                 All articles
             </SiteLink>
             {filters.map((c) => (
@@ -117,6 +133,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
                     key={c.slug}
                     className={`filter-chip ${chosen === c.slug ? 'filter-chip--on' : ''}`}
                     href={filterHref(c.slug)}
+                    {...chipVisit}
                 >
                     {c.name}
                 </SiteLink>
@@ -133,7 +150,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
 
                 {articles.length === 0 && chosen ? (
                     <p className="blog-list__none">
-                        Nothing in that category yet. <SiteLink href={filterHref(null)}>See all articles</SiteLink>.
+                        Nothing in that category yet. <SiteLink href={filterHref(null)} {...chipVisit}>See all articles</SiteLink>.
                     </p>
                 ) : articles.length === 0 && ! editing ? null : articles.length === 0 ? (
                     <PendingModule

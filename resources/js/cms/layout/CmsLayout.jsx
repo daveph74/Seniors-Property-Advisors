@@ -13,6 +13,7 @@ function navIdFromUrl(url) {
     if (path.startsWith('/cms/blog')) return 'blog';
     if (path.startsWith('/cms/faqs')) return 'faqs';
     if (path.startsWith('/cms/testimonials')) return 'testimonials';
+    if (path.startsWith('/cms/enquiries')) return 'enquiries';
     if (path.startsWith('/cms/media')) return 'media';
     if (path.startsWith('/cms/activity')) return 'activity';
     if (path.startsWith('/cms/deleted')) return 'deleted';

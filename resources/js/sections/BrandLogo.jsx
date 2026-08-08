@@ -13,11 +13,11 @@ const DRAWN_INLINE = '/Seniors_Property_Advisors_Logo.svg';
  * `max-width` in `.brand .mark` to stop it blowing out the header. The fallback stays for a
  * developer pointing `src` at a different file in seed data.
  */
-export default function BrandLogo({ logo = {}, className = 'mark' }) {
+export default function BrandLogo({ logo = {}, className = 'mark', glyph = false }) {
     const src = logo.src || DRAWN_INLINE;
 
     if (src === DRAWN_INLINE) {
-        return <BrandMark className={className} title={logo.alt || 'Seniors Property Advisors'} />;
+        return <BrandMark className={className} title={logo.alt || 'Seniors Property Advisors'} glyph={glyph} />;
     }
 
     return <img className={className} src={src} alt={logo.alt || ''} />;

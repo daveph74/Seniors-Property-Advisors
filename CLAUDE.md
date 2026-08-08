@@ -36,7 +36,14 @@ under the `globals` key; publish history in `page_revisions`, one row per publis
 
 `resources/content/*.json` is no longer a runtime read path. It is seeder input:
 `ContentSeeder` (run from `DatabaseSeeder`, and from every test via `Tests\TestCase`)
-loads it into the database, keyed on slug and idempotent.
+loads it into the database, keyed on slug.
+
+Pages are `updateOrCreate`, so re-seeding **overwrites an edited page** with the file's
+version — idempotent file-to-database, not idempotent from the editor's side. The two
+`settings` rows are `firstOrCreate` instead: they hold the menus, footer, SEO defaults
+and the GA4/GTM ids, have no revision history, and a wholesale replace is unrecoverable.
+The consequence is deliberate — a `globals.json` menu change never reaches a database
+that already has the row, and `/cms/navigation` is where a running site is edited.
 
 Adding a block type touches `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js`
 and the React registry — never the database. Adding a `data` key touches nothing.

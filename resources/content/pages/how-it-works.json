@@ -6,8 +6,8 @@
     "navLabel": "How it works",
     "status": "published",
     "seo": {
-        "title": "How it works — Seniors Property Advisors",
-        "description": "Four calm steps from first conversation to sold, with an independent advisor walking with you the whole way."
+        "title": "How It Works: First Call to Sold",
+        "description": "Four calm steps from your first conversation to sold, with an independent advisor beside you the whole way. See what happens at each stage before you commit to anything."
     },
     "draft": null,
     "published": [
@@ -46,6 +46,40 @@
             }
         },
         {
+            "id": "what-you-get",
+            "type": "trust-cards",
+            "label": "What you come away with",
+            "active": true,
+            "data": {
+                "eyebrow": "What you come away with",
+                "heading": "Something to hold on to",
+                "headingEm": "at every stage.",
+                "lead": "None of this is a sales meeting. Each step leaves you with something written down that you can take away, sleep on, and talk over with your family.",
+                "cta": {
+                    "label": "See what a comparison looks like",
+                    "href": "/compare-agents",
+                    "arrow": true
+                },
+                "items": [
+                    {
+                        "icon": "home",
+                        "title": "A read on your own home",
+                        "body": "What is selling near you, what buyers in your suburb are looking for, and where your home sits among them."
+                    },
+                    {
+                        "icon": "dollar",
+                        "title": "The costs, before you commit",
+                        "body": "Commission, marketing and the smaller charges that tend to appear later — set out in advance so nothing arrives as a surprise."
+                    },
+                    {
+                        "icon": "user",
+                        "title": "One person who knows your case",
+                        "body": "The same advisor from the first call to the signed agreement, so you are never explaining your situation from the beginning again."
+                    }
+                ]
+            }
+        },
+        {
             "id": "cta",
             "type": "cta",
             "label": "Call to action",
@@ -73,7 +107,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }

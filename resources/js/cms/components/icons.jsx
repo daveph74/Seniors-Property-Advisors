@@ -247,6 +247,15 @@ export function MobileIcon(props) {
     );
 }
 
+export function MailIcon(props) {
+    return (
+        <Svg {...props}>
+            <rect x="2.5" y="5" width="19" height="14" rx="2" />
+            <path d="m3 7 8.2 5.6a1.4 1.4 0 0 0 1.6 0L21 7" />
+        </Svg>
+    );
+}
+
 export function HistoryIcon(props) {
     return (
         <Svg {...props}>

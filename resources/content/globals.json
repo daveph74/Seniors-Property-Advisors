@@ -1,7 +1,7 @@
 {
     "notice": {
         "text": "Free guide — 8 questions to ask before choosing an agent",
-        "href": "#"
+        "href": "/free-guide"
     },
     "logo": {
         "src": "/Seniors_Property_Advisors_Logo.svg",
@@ -28,6 +28,10 @@
             {
                 "href": "/for-families",
                 "label": "For families"
+            },
+            {
+                "href": "/contact",
+                "label": "Contact"
             },
             {
                 "href": null,
@@ -72,10 +76,6 @@
                     {
                         "href": "/for-families",
                         "label": "For families"
-                    },
-                    {
-                        "href": "#",
-                        "label": "Pricing"
                     }
                 ]
             },
@@ -83,15 +83,15 @@
                 "heading": "Resources",
                 "links": [
                     {
-                        "href": "#",
+                        "href": "/free-guide",
                         "label": "Free guide"
                     },
                     {
-                        "href": "#",
+                        "href": "/selling-checklist",
                         "label": "Selling checklist"
                     },
                     {
-                        "href": "#",
+                        "href": "/glossary",
                         "label": "Glossary"
                     },
                     {
@@ -107,6 +107,10 @@
             {
                 "heading": "Contact",
                 "links": [
+                    {
+                        "href": "/contact",
+                        "label": "Send an enquiry"
+                    },
                     {
                         "href": "tel:1300277228",
                         "label": "1300 277 228"
@@ -124,15 +128,15 @@
         "legal": "© 2026 Seniors Property Advisors Pty Ltd · ABN 12 345 678 901",
         "links": [
             {
-                "href": "#",
+                "href": "/privacy-policy",
                 "label": "Privacy"
             },
             {
-                "href": "#",
+                "href": "/terms-and-conditions",
                 "label": "Terms"
             },
             {
-                "href": "#",
+                "href": "/complaints",
                 "label": "Complaints"
             }
         ]

@@ -1,0 +1,387 @@
+{
+    "slug": "glossary",
+    "url": "/glossary",
+    "cmsId": 24,
+    "title": "Glossary",
+    "navLabel": "Glossary",
+    "status": "published",
+    "seo": {
+        "title": "Selling Words, in Plain English",
+        "description": "The terms agents and conveyancers use when you sell a home, explained without the jargon — from appraisal and reserve to exchange, settlement and underquoting."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "glossary",
+            "type": "section",
+            "label": "Glossary",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "white",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "gl-title",
+                    "type": "heading",
+                    "label": "Selling words, in plain English",
+                    "active": true,
+                    "data": {
+                        "heading": "Selling words,",
+                        "headingEm": "in plain English",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-intro",
+                    "type": "rich-text",
+                    "label": "Introduction",
+                    "active": true,
+                    "data": {
+                        "body": "Nobody should have to nod along. If a word comes up in a meeting and you are not certain of it, it is on this page — and if it is not, ring us and we will explain it and then add it.\n\nProperty law differs between the states, so a few of these work slightly differently depending on where you live. Where that matters, it says so.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-appraisal-h",
+                    "type": "heading",
+                    "label": "Appraisal / valuation",
+                    "active": true,
+                    "data": {
+                        "heading": "Appraisal, and valuation",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-appraisal",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "An appraisal is an agent's opinion of what your home would sell for. It is free, and it is not a formal document. A valuation is carried out by a qualified valuer, costs money, and is the one a bank or a court will accept. The two can differ by a good deal, and neither is the price a buyer will actually pay.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-agreement-h",
+                    "type": "heading",
+                    "label": "Agency agreement",
+                    "active": true,
+                    "data": {
+                        "heading": "Agency agreement",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-agreement",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "The contract between you and the agency. It sets the commission, the marketing costs, how long the agency has, and what happens when that ends.\n\nThe kinds have different names — exclusive, sole, open — and they differ in whether commission is owed if the home sells through somebody else, or through you. The names are used loosely, so read what your own agreement actually says rather than relying on the label.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-private-h",
+                    "type": "heading",
+                    "label": "Private treaty",
+                    "active": true,
+                    "data": {
+                        "heading": "Private treaty",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-private",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "Selling with an asking price, and negotiating with buyers one at a time. The most common way to sell a home in Australia, and generally the calmer one — there is no deadline and no crowd on the front lawn.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-auction-h",
+                    "type": "heading",
+                    "label": "Auction, reserve, passed in",
+                    "active": true,
+                    "data": {
+                        "heading": "Auction, reserve, and passed in",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-auction",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "At auction, buyers bid publicly on a set day. The reserve is the lowest price you will accept, and you set it — often on the morning itself. If the bidding stops below the reserve the home is passed in, meaning it did not sell, and the agent usually then negotiates with the highest bidder.\n\nA home bought at auction generally has no cooling-off period, so an auction buyer is committed on the fall of the hammer.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-eoi-h",
+                    "type": "heading",
+                    "label": "Expressions of interest",
+                    "active": true,
+                    "data": {
+                        "heading": "Expressions of interest, or sale by set date",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-eoi",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "A deadline for written offers, with no public bidding. It borrows the urgency of an auction without the theatre of one, and you are not obliged to accept any of what comes in.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-commission-h",
+                    "type": "heading",
+                    "label": "Commission",
+                    "active": true,
+                    "data": {
+                        "heading": "Commission",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-commission",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "What the agency is paid for selling, usually a percentage of the sale price and normally taken out at settlement. It is negotiable, and so is the structure of it. Always ask whether the figure quoted includes GST.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-vpa-h",
+                    "type": "heading",
+                    "label": "Vendor paid advertising",
+                    "active": true,
+                    "data": {
+                        "heading": "Vendor paid advertising",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-vpa",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "The marketing campaign, paid for by you — photography, floor plans, portal listings, signboards, brochures. It is separate from commission and is generally owed whether or not the home sells. Ask for it itemised.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-underquote-h",
+                    "type": "heading",
+                    "label": "Underquoting",
+                    "active": true,
+                    "data": {
+                        "heading": "Underquoting",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-underquote",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "Advertising a home at a price below what the seller or the agent expects it to fetch, to draw a bigger crowd. It is against the law, and the rules on how a price guide must be set and recorded differ by state. It matters to a seller too: a guide that is too low brings through buyers who were never going to be able to buy.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-offmarket-h",
+                    "type": "heading",
+                    "label": "Off-market",
+                    "active": true,
+                    "data": {
+                        "heading": "Off-market",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-offmarket",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "Sold quietly, without public advertising, usually to a buyer the agent already knows. It saves marketing money and keeps things private, and the trade-off is that fewer buyers ever hear about it — which can cost more than the marketing would have.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-contract-h",
+                    "type": "heading",
+                    "label": "Contract of sale",
+                    "active": true,
+                    "data": {
+                        "heading": "Contract of sale, and the disclosure statement",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-contract",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "The contract sets out what is being sold and on what terms. Alongside it, a seller must disclose certain things about the property before it can be sold — what that document is called and what must be in it varies by state, so your conveyancer or solicitor will tell you which applies to you. Preparing it takes time, which is why it is worth starting before the home goes on the market.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-exchange-h",
+                    "type": "heading",
+                    "label": "Exchange, deposit, cooling-off",
+                    "active": true,
+                    "data": {
+                        "heading": "Exchange, deposit, and cooling-off",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-exchange",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "Exchange is the moment both sides sign and the sale becomes binding. The buyer pays a deposit then, commonly five or ten per cent, which is held by the agent or a solicitor rather than paid to you.\n\nA cooling-off period lets a buyer withdraw within a short window after exchange, usually losing part of the deposit. Its length, and whether there is one at all, depends on the state and on how the home was sold.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-settlement-h",
+                    "type": "heading",
+                    "label": "Settlement",
+                    "active": true,
+                    "data": {
+                        "heading": "Settlement",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-settlement",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "The day the money changes hands and the home stops being yours. The gap between exchange and settlement is negotiable and is often around six weeks — if you need longer to find somewhere, ask for it as part of the deal rather than afterwards.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-conveyancer-h",
+                    "type": "heading",
+                    "label": "Conveyancer",
+                    "active": true,
+                    "data": {
+                        "heading": "Conveyancer, or solicitor",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-conveyancer",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "The person who handles the legal side of transferring the property. A conveyancer does this work specifically; a solicitor can do it and can also advise on anything broader. Either way, engage them before the first offer arrives rather than after.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "gl-money-h",
+                    "type": "heading",
+                    "label": "Tax and the pension",
+                    "active": true,
+                    "data": {
+                        "heading": "Capital gains tax, and the pension",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-money",
+                    "type": "rich-text",
+                    "label": "Definition",
+                    "active": true,
+                    "data": {
+                        "body": "Two questions that come up constantly, and two we will not answer on a web page. Whether capital gains tax applies to a sale, and what the proceeds do to an Age Pension, both depend on circumstances we do not know.\n\nAsk Services Australia about the pension and an accountant about the tax — both before you sell, not after. We are happy to tell you which questions to put to them.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "gl-link",
+                    "type": "button",
+                    "label": "Ask a question",
+                    "active": true,
+                    "data": {
+                        "label": "Ask us about a word that is not here",
+                        "href": "/contact",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

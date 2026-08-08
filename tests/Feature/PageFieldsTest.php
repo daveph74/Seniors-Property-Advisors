@@ -285,10 +285,10 @@ class PageFieldsTest extends TestCase
     {
         $this->artisan('pages:scaffold')->assertSuccessful();
 
-        /* Only the pages with no content of their own. how-it-works, blog and faqs ship from
-           the seed already published, so scaffolding must leave them alone rather than replace
-           them with empty drafts. */
-        foreach (['about-us', 'our-services', 'resources', 'contact', 'privacy-policy', 'terms-and-conditions'] as $slug) {
+        /* Only the pages with no content of their own. Everything in the second list ships from
+           the seed with its copy already written, so scaffolding must leave those alone rather
+           than replace them with empty drafts. */
+        foreach (['about-us', 'our-services', 'resources'] as $slug) {
             $page = Page::where('slug', $slug)->first();
 
             $this->assertNotNull($page, "{$slug} was not created");
@@ -296,7 +296,7 @@ class PageFieldsTest extends TestCase
             $this->assertNotNull($page->nav_label);
         }
 
-        foreach (['how-it-works', 'blog', 'faqs'] as $slug) {
+        foreach (['how-it-works', 'blog', 'faqs', 'contact', 'privacy-policy', 'terms-and-conditions', 'complaints'] as $slug) {
             $seeded = Page::where('slug', $slug)->firstOrFail();
 
             $this->assertSame('published', $seeded->status, "{$slug} was overwritten by the scaffold");

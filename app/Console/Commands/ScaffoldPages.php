@@ -23,6 +23,7 @@ class ScaffoldPages extends Command
         ['Contact', 'contact', 'Contact', 'blank'],
         ['Privacy Policy', 'privacy-policy', 'Privacy', 'blank'],
         ['Terms and Conditions', 'terms-and-conditions', 'Terms', 'blank'],
+        ['Complaints', 'complaints', 'Complaints', 'blank'],
     ];
 
     public function handle(PageContentStore $store): int

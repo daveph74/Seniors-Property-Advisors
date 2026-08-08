@@ -6,8 +6,8 @@
     "navLabel": "For families",
     "status": "published",
     "seo": {
-        "title": "For families — Seniors Property Advisors",
-        "description": "Helping a parent sell their home? Agent Finder is built for family conversations — plain explanations, no pressure, and time to think."
+        "title": "Helping a Parent Sell Their Home",
+        "description": "Helping a parent sell their home? Agent Finder is built for family conversations — plain explanations, no pressure, and all the time you need to think it through together."
     },
     "draft": null,
     "published": [
@@ -36,21 +36,77 @@
                         "arrow": true
                     },
                     {
-                        "label": "Family guide (PDF)",
+                        "label": "Talk it through with us",
                         "variant": "ghost",
-                        "href": "#"
+                        "href": "/contact"
                     }
                 ],
                 "image": {
-                    "src": "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=80",
+                    "src": "/media/2026/08/family-paperwork.jpg",
                     "alt": "Adult daughter sitting with her mother going through paperwork"
                 },
                 "testimonial": {
                     "quote": "“Mum felt heard the whole way through. We finally had a plan we all agreed on.”",
                     "by": "— Rachel, helping her mother sell in Glenelg, SA",
-                    "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"
+                    "avatar": "/media/2026/08/rachel.jpg"
                 }
             }
+        },
+        {
+            "id": "not-ready-yet",
+            "type": "section",
+            "label": "When a parent is not ready",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "wash",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "ready-eyebrow",
+                    "type": "eyebrow",
+                    "label": "If the timing is not right",
+                    "active": true,
+                    "data": {
+                        "eyebrow": "If the timing is not right"
+                    }
+                },
+                {
+                    "id": "ready-heading",
+                    "type": "heading",
+                    "label": "It is often the family who is ready first.",
+                    "active": true,
+                    "data": {
+                        "heading": "It is often the family who is ready",
+                        "headingEm": "first.",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "ready-body",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "A parent who is unsure about moving is not being difficult. They are being asked to leave a house they have made every decision of their adult life in. We are used to that conversation, and we are content to be the ones who say there is no rush.\n\nIf the move is a year away, ring us anyway. Knowing what it would actually involve — the order things happen in, what it costs, how long each part takes — is usually what makes it thinkable at all.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "ready-link",
+                    "type": "button",
+                    "label": "Talk it through with an advisor",
+                    "active": true,
+                    "data": {
+                        "label": "Talk it through with an advisor",
+                        "href": "/contact",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
         },
         {
             "id": "cta",
@@ -80,7 +136,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }

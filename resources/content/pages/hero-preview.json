@@ -4,7 +4,7 @@
     "cmsId": 15,
     "title": "Hero preview",
     "navLabel": "Hero preview",
-    "status": "published",
+    "status": "archived",
     "seo": {
         "title": "Hero preview — Seniors Property Advisors",
         "description": "Review page comparing the full-bleed hero treatment against the boxed hero.",
@@ -23,8 +23,8 @@
                 "headingEm": "without the stress.",
                 "lead": "We help Australian homeowners compare trusted local agents, understand their options, and make confident selling decisions — guided by an independent property advisor, not a salesperson.",
                 "image": {
-                    "src": "/images/hero-advisor.jpg",
-                    "alt": "A property advisor with a tablet guiding a senior couple in their living room"
+                    "src": "/media/2026/08/hero-home.jpg",
+                    "alt": "A property advisor with a tablet talking with a senior couple in their living room"
                 },
                 "ctas": [
                     {
@@ -55,7 +55,7 @@
                 "lead": "Picking the wrong agent can cost homeowners tens of thousands — in commission, marketing, and a price that falls short. Agent Finder gives you a calm, guided way to compare your options before you commit.",
                 "cta": {
                     "label": "Read our approach",
-                    "href": "#",
+                    "href": "/why-agent-finder",
                     "arrow": true
                 },
                 "items": [
@@ -105,7 +105,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }

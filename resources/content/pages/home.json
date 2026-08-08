@@ -6,70 +6,36 @@
     "status": "published",
     "seo": {
         "title": "Agent Finder — Seniors Property Advisors",
-        "description": "Compare trusted local agents, understand your options and sell with confidence — with independent guidance at every step."
+        "description": "Compare trusted local real estate agents, understand what selling will cost, and choose with confidence — with independent Australian guidance at every step, and nothing to sell you."
     },
     "draft": null,
     "published": [
         {
             "id": "hero",
-            "type": "hero",
+            "type": "hero-full",
             "label": "Hero banner",
             "active": true,
             "data": {
-                "eyebrow": "Personal Guidance · Compare Trusted local agents",
-                "heading": "Independent advice.",
-                "headingEm": "Better selling decisions.",
-                "subhead": "Find the right local agent and sell with confidence.",
-                "lead": "Compare trusted local agents, understand your options and sell with confidence—with independent guidance at every step.",
+                "eyebrow": "Finding your agent",
+                "heading": "Find the right real estate agent,",
+                "headingEm": "without the stress.",
+                "lead": "We help Australian homeowners compare trusted local agents, understand their options, and make confident selling decisions — guided by an independent property advisor, not a salesperson.",
+                "image": {
+                    "src": "/media/2026/08/hero-home.jpg",
+                    "alt": "A property advisor with a tablet talking with a senior couple in their living room"
+                },
                 "ctas": [
                     {
                         "label": "Find My Agent",
-                        "variant": "primary",
+                        "variant": "secondary",
                         "action": "open-finder",
                         "arrow": true
                     },
                     {
                         "label": "Speak to an Advisor",
                         "variant": "ghost",
-                        "href": "#"
-                    }
-                ],
-                "avatars": [
-                    "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80",
-                    "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&q=80",
-                    "https://images.unsplash.com/photo-1545167622-3a6ac756afa4?auto=format&fit=crop&w=160&q=80",
-                    "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=160&q=80"
-                ],
-                "rating": {
-                    "stars": "★★★★★",
-                    "label": "Rated 4.9 / 5",
-                    "note": "by more than 1,800 Australian homeowners"
-                },
-                "image": {
-                    "src": "/images/hero-advisor.jpg",
-                    "alt": "Property advisor with a tablet guiding a senior couple"
-                },
-                "ratingCard": {
-                    "label": "Rated 4.9 / 5",
-                    "note": "Trusted by 1,800+ homeowners"
-                },
-                "savingCard": {
-                    "label": "Average client saving",
-                    "value": "$11.4k",
-                    "note": "Based on clients who compared multiple agents."
-                },
-                "steps": [
-                    {
-                        "n": "1",
-                        "label": "Tell us about your property"
-                    },
-                    {
-                        "n": "2",
-                        "label": "Compare suitable agents"
-                    },
-                    {
-                        "n": "3",
-                        "label": "Choose with confidence"
+                        "href": "/contact",
+                        "onNavy": true
                     }
                 ]
             }
@@ -87,7 +53,7 @@
                 "lead": "Picking the wrong agent can cost homeowners tens of thousands — in commission, marketing, and a price that falls short. Agent Finder gives you a calm, guided way to compare your options before you commit.",
                 "cta": {
                     "label": "Read our approach",
-                    "href": "#",
+                    "href": "/why-agent-finder",
                     "arrow": true
                 },
                 "items": [
@@ -110,272 +76,40 @@
             }
         },
         {
-            "id": "how",
-            "type": "process-steps",
-            "label": "How it works",
+            "id": "in-short",
+            "type": "text-image",
+            "label": "How it works, in short",
             "active": true,
             "data": {
                 "eyebrow": "How it works",
-                "heading": "A simple, supported process —",
-                "headingEm": "start to sold.",
-                "lead": "Four calm steps, with an advisor walking with you the whole way.",
-                "items": [
-                    {
-                        "num": "01",
-                        "title": "Tell us about your property",
-                        "body": "A short conversation about your home, your timeline and what matters most to you in this move."
-                    },
-                    {
-                        "num": "02",
-                        "title": "We research suitable agents",
-                        "body": "We review recent sales, listing prices and seller reviews to shortlist agents who genuinely fit your suburb."
-                    },
-                    {
-                        "num": "03",
-                        "title": "You compare your options",
-                        "body": "Receive a clear comparison — experience, recent sales, fees and marketing — with notes from your advisor."
-                    },
-                    {
-                        "num": "04",
-                        "title": "Choose the agent that fits",
-                        "body": "Meet your shortlist on your terms, with our advisor present if you’d like. Decide in your own time."
-                    }
-                ]
-            }
-        },
-        {
-            "id": "why",
-            "type": "why-list",
-            "label": "Why use Agent Finder",
-            "active": true,
-            "anchor": "why",
-            "data": {
-                "eyebrow": "Why use Agent Finder",
-                "heading": "Confidence before you ever",
-                "headingEm": "sign anything.",
-                "lead": "Selling the family home is one of life’s biggest financial decisions. Agent Finder gives you the time, the information and the independent support to make it feel calm — not pressured.",
-                "items": [
-                    {
-                        "title": "Save time researching agents",
-                        "body": "We do the long‑listing, vetting and reference checks for you."
-                    },
-                    {
-                        "title": "Avoid pressure from sales calls",
-                        "body": "You stay in control. Agents only contact you when you’re ready."
-                    },
-                    {
-                        "title": "Understand commission and marketing",
-                        "body": "Plain‑English breakdowns so you can compare like for like."
-                    },
-                    {
-                        "title": "Guidance from experienced advisors",
-                        "body": "30+ years of negotiating, listing and selling experience on your side."
-                    },
-                    {
-                        "title": "Feel confident before listing",
-                        "body": "Go to market with a clear plan, a fair price and an agent you trust."
-                    }
-                ],
+                "heading": "Four conversations, and",
+                "headingEm": "no obligation at any of them.",
+                "body": "It starts with a phone call about your home and when you might want to move. We do the research, bring you a shortlist you can actually compare, and stay in the room while you decide. Most people speak to us months before they list — that is the useful time to ask, not the week before.",
+                "imageSide": "right",
                 "image": {
-                    "src": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1100&q=80",
-                    "alt": "Charming Australian home exterior"
+                    "src": "/media/2026/08/advisor-meeting.jpg",
+                    "alt": "An advisor showing a tablet to an older couple across a table"
                 },
-                "stamp": {
-                    "value": "30+",
-                    "text": "years of property advisory experience guiding Australian families."
-                }
-            }
-        },
-        {
-            "id": "compare",
-            "type": "agent-compare",
-            "label": "Agent comparison",
-            "active": true,
-            "anchor": "compare",
-            "data": {
-                "eyebrow": "Compare your shortlist",
-                "heading": "A clear, honest view of",
-                "headingEm": "every option.",
-                "lead": "Below is the kind of comparison you’ll receive — three real local agents, side‑by‑side, with your advisor’s notes added in.",
                 "cta": {
-                    "label": "See a sample report",
-                    "href": "#",
+                    "label": "See the four steps in full",
+                    "href": "/how-it-works",
                     "arrow": true
-                },
-                "filters": [
-                    {
-                        "label": "Mosman, NSW 2088",
-                        "active": true,
-                        "removable": true
-                    },
-                    {
-                        "label": "4‑bed home"
-                    },
-                    {
-                        "label": "Sell in 3 – 6 months"
-                    },
-                    {
-                        "label": "3 agents shortlisted",
-                        "count": true
-                    }
-                ],
-                "sort": "Sort: Advisor pick ▾",
-                "labels": {
-                    "shortlist": "Your shortlist",
-                    "experience": "Local experience",
-                    "sales": "Recent sales (12 mo)",
-                    "commission": "Commission estimate",
-                    "marketing": "Marketing budget",
-                    "notes": "Advisor notes",
-                    "next": "Next step"
-                },
-                "agents": [
-                    {
-                        "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=160&q=80",
-                        "name": "Sarah Whitford",
-                        "firm": "Whitford & Co · Mosman",
-                        "experience": {
-                            "strong": "12 years",
-                            "rest": "in Mosman & Beauty Point",
-                            "meter": 70
-                        },
-                        "sales": {
-                            "strong": "24 sold",
-                            "sub": "Median $3.4M · 98% of guide"
-                        },
-                        "commission": {
-                            "price": "2.20%",
-                            "sub": "~ $77,000 on $3.5M sale"
-                        },
-                        "marketing": {
-                            "strong": "$8,400",
-                            "sub": "Print + digital, 4‑week campaign"
-                        },
-                        "note": "“Warm, careful communicator. Strong with downsizers but fewer recent prestige sales.”",
-                        "cta": {
-                            "label": "View profile",
-                            "variant": "ghost",
-                            "href": "#"
-                        }
-                    },
-                    {
-                        "best": true,
-                        "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=160&q=80",
-                        "name": "James Patel",
-                        "firm": "Harbour Realty · Cremorne",
-                        "experience": {
-                            "strong": "18 years",
-                            "rest": "across Lower North Shore",
-                            "meter": 92
-                        },
-                        "sales": {
-                            "strong": "41 sold",
-                            "sub": "Median $3.7M · 104% of guide"
-                        },
-                        "commission": {
-                            "price": "1.95%",
-                            "sub": "~ $68,250 on $3.5M sale"
-                        },
-                        "marketing": {
-                            "strong": "$6,900",
-                            "sub": "Digital‑led, includes premium listing"
-                        },
-                        "note": "“Best fit for your home and timeline. Consistent results, fair fee, calm style.”",
-                        "cta": {
-                            "label": "Book intro call",
-                            "variant": "primary",
-                            "action": "open-finder",
-                            "arrow": true
-                        }
-                    },
-                    {
-                        "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=160&q=80",
-                        "name": "Elaine Murray",
-                        "firm": "Coastline Group · Neutral Bay",
-                        "experience": {
-                            "strong": "9 years",
-                            "rest": "in Neutral Bay & Mosman",
-                            "meter": 55
-                        },
-                        "sales": {
-                            "strong": "17 sold",
-                            "sub": "Median $2.9M · 96% of guide"
-                        },
-                        "commission": {
-                            "price": "2.35%",
-                            "sub": "~ $82,250 on $3.5M sale"
-                        },
-                        "marketing": {
-                            "strong": "$11,200",
-                            "sub": "Includes magazine & video tour"
-                        },
-                        "note": "“Polished but marketing budget is on the higher side — push back if you shortlist.”",
-                        "cta": {
-                            "label": "View profile",
-                            "variant": "ghost",
-                            "href": "#"
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "id": "family",
-            "type": "family",
-            "label": "For families",
-            "active": true,
-            "anchor": "family",
-            "data": {
-                "eyebrow": "For families",
-                "heading": "Helping a parent sell",
-                "headingEm": "their home?",
-                "lead": "Many of the people we help aren’t selling themselves — they’re adult children supporting a parent through a downsize, a move closer to family, or the next chapter of care. Agent Finder is designed for these conversations.",
-                "checks": [
-                    "Loop the whole family in — your advisor speaks with everyone, at a pace that suits.",
-                    "Plain explanations of contracts, commission, marketing and timelines.",
-                    "Time to think — no agent contact until your parent feels ready.",
-                    "Support for the practical side too: stylists, conveyancers, moving services."
-                ],
-                "ctas": [
-                    {
-                        "label": "Start as a family",
-                        "variant": "primary",
-                        "action": "open-finder",
-                        "arrow": true
-                    },
-                    {
-                        "label": "Family guide (PDF)",
-                        "variant": "ghost",
-                        "href": "#"
-                    }
-                ],
-                "image": {
-                    "src": "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&w=1200&q=80",
-                    "alt": "Adult daughter sitting with her mother going through paperwork"
-                },
-                "testimonial": {
-                    "quote": "“Mum felt heard the whole way through. We finally had a plan we all agreed on.”",
-                    "by": "— Rachel, helping her mother sell in Glenelg, SA",
-                    "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80"
                 }
             }
         },
         {
-            "id": "testimonials-hm41xz",
-            "type": "testimonials",
-            "label": "Client testimonials",
+            "id": "reading",
+            "type": "blog-list",
+            "label": "Latest articles",
             "active": true,
-            "anchor": null,
             "data": {
-                "eyebrow": "In their words",
-                "heading": "What people say after",
-                "headingEm": "they have sold",
-                "lead": "Advice is easier to trust when it comes from someone who has already been through it.",
-                "source": "featured",
-                "chosen": "",
+                "eyebrow": "Worth reading first",
+                "heading": "Plain answers to the questions",
+                "headingEm": "that come up first.",
+                "lead": "Short pieces on downsizing, agent fees and the practical side of selling later in life.",
                 "limit": 3,
-                "layout": "grid",
-                "items": []
+                "showMore": true,
+                "articles": []
             }
         },
         {
@@ -406,7 +140,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }

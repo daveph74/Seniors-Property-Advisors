@@ -6,8 +6,8 @@
     "navLabel": "Blog",
     "status": "published",
     "seo": {
-        "title": "Blog — Seniors Property Advisors",
-        "description": "Plain-English articles on downsizing, selling and choosing an agent, written for Australians over 60 and the families helping them."
+        "title": "Downsizing & Selling Advice",
+        "description": "Plain-English articles on downsizing, selling and choosing a real estate agent, written for Australians over 60 and the families helping them make the decision."
     },
     "draft": null,
     "published": [
@@ -56,7 +56,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }

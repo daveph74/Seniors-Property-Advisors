@@ -14,8 +14,12 @@ class LoginController extends Controller
 {
     public function create(): Response
     {
+        /* Written out rather than run through Seo::head(): the sign-in form is not content and
+           has nothing worth crawling from it, so it takes nofollow as well — which is stronger
+           than the noindex, follow that a hidden page gets. */
         return Inertia::render('Auth/Login', [
             'status' => session('status'),
+            'head' => ['title' => 'Sign in', 'robots' => 'noindex, nofollow'],
         ]);
     }
 

@@ -11,7 +11,7 @@ class CmsBuilderTest extends TestCase
      * How many sections the seeded home page has. Named rather than written in at each assertion,
      * which is what made adding one to the design a three-test failure instead of a content change.
      */
-    private const HOME_SECTIONS = 8;
+    private const HOME_SECTIONS = 5;
 
     private function sections(string $heading = 'Edited heading'): array
     {
@@ -562,7 +562,7 @@ class CmsBuilderTest extends TestCase
 
             $this->assertSame('Cms/Pages/Builder', $page->toArray()['component']);
             $this->assertCount(self::HOME_SECTIONS, $props['sections']);
-            $this->assertSame('hero', $props['sections'][0]['type']);
+            $this->assertSame('hero-full', $props['sections'][0]['type']);
             $this->assertSame('', $props['page']['slug']);
             $this->assertSame('published', $props['page']['status']);
             $this->assertFalse($props['page']['hasDraft']);
@@ -592,7 +592,7 @@ class CmsBuilderTest extends TestCase
         $this->get('/')->assertInertia(function ($page) {
             $sections = $page->toArray()['props']['sections'];
             $this->assertCount(self::HOME_SECTIONS, $sections);
-            $this->assertSame('Independent advice.', $sections[0]['data']['heading']);
+            $this->assertSame('Find the right real estate agent,', $sections[0]['data']['heading']);
         });
     }
 

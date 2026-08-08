@@ -60,6 +60,11 @@
   --blue-pale: #8FC2F7;       /* style-guide pale blue */
 
   --green: #61CE70;
+  /* The red the contact form was already using, named so the finder's validation and it cannot
+     drift apart. Wash and line are the same hue for filled and outlined error states. */
+  --danger: #B42318;
+  --danger-wash: rgba(180,35,24,0.10);
+  --danger-line: rgba(180,35,24,0.38);
   --text: #2B3140;
   --text-mid: #5A6275;
   --text-soft: #7A7A7A;
@@ -94,7 +99,12 @@
 
 *,*::before,*::after{ box-sizing: border-box; }
 html,body{ margin:0; padding:0; }
-html{ scroll-behavior: smooth; }
+/* No `scroll-behavior: smooth` here on purpose. It applies to every scroll the browser makes,
+   including the ones that are not journeys: Inertia returns the reader to the top on a page
+   change and back to where they were on Back, and both of those animated the full height of the
+   page — leaving the foot of the home page for How it works scrolled up through the whole of it
+   before settling. The one scroll that should glide is the in-page anchor, and SiteLink asks for
+   that explicitly, so it is unaffected. */
 body{
   font-family: var(--font-sans);
   font-size: 17px;
@@ -121,16 +131,26 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   font-size: 13.5px;
   letter-spacing: 0.02em;
 }
+/* min-height, not height. The announcement is wording an editor writes, so its length is not ours
+   to assume — and on a phone the seeded one already runs to two lines. Against a fixed 42px the
+   second line had nowhere to go: the text overflowed the bar, a pixel off the top of the screen
+   and a pixel under the nav. */
 .topbar .container{
-  display:flex; align-items:center; justify-content:center;
-  height: 42px;
+  display: block;
+  text-align: center;
+  min-height: 42px;
+  padding-block: 10px;
 }
+/* Laid out as text rather than as a flex row, so the icon flows with the first line and wrapped
+   lines centre under it. As a flex item beside the words it was centred against the whole
+   two-line block, which left it hanging in the margin belonging to neither line. */
 .topbar a.notice{
-  display:inline-flex; align-items:center; gap: 10px;
   color: #EAF2FB;
   font-weight: 500;
+  line-height: 1.45;
+  text-wrap: balance;
 }
-.topbar a.notice svg{ color: var(--blue); flex-shrink: 0; }
+.topbar a.notice svg{ color: var(--blue); vertical-align: -3px; margin-right: 8px; }
 .topbar a.notice:hover{ color: #fff; }
 
 /* ===================== Nav ===================== */
@@ -152,9 +172,20 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 .brand{
   display:flex; align-items:center; gap: 12px; flex: none;
 }
+/* The ratio is stated rather than inferred. The lockup is an inline <svg> and a flex item, and
+   `width: auto` there asks the browser to work the width out from the viewBox — which Chrome does
+   and Safari does not, collapsing it to nothing. A logo that is present on the desktop and absent
+   on the phone is this, every time. aspect-ratio matches the viewBox: 512.37 × 109.93. */
 .brand .mark{
-  height: 46px; width: auto;
+  height: 46px;
+  width: auto;
+  aspect-ratio: 512.37 / 109.93;
+  flex: none;
 }
+.brand .mark--glyph{ display: none; aspect-ratio: 102.2 / 109.93; }
+/* Only ever shown beside the glyph, which is only ever shown on a phone. aria-hidden on the
+   markup, because the SVG already carries the name for a screen reader. */
+.brand-name{ display: none; }
 .brand .word{
   display:flex; flex-direction: column; line-height: 1.05;
 }
@@ -594,13 +625,24 @@ h2 em,
 
 /* ===================== How it works ===================== */
 .how{ background: var(--white); }
+/* --step-pad is the card's inset, and the connector has to start half a circle below it or the
+   dashes stop bisecting the numbers. Kept as one variable because they were separate numbers that
+   had already drifted: the step was padded 8px on three sides and 28px on the fourth, which is
+   invisible until the card appears under the cursor and then reads as a box pushed off its
+   contents — tight against the number, tight against the text, and hollow underneath. */
 .steps, .block-step-grid{
+  --step-pad: 20px;
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  /* Each step ends where its own words end. Stretching them to the tallest column left the
+     shorter ones with a hand's width of nothing under the last line — which costs nothing while
+     the cards are invisible, and is the whole of what looked wrong once one lit up under the
+     cursor. Only ever one is hovered, so matching heights bought no tidiness to lose. */
+  align-items: start;
   counter-reset: step;
   position: relative;
 }
 .steps::before, .block-step-grid::before{
-  content:""; position:absolute; top: 38px; left: 8%; right: 8%; height: 1.5px;
+  content:""; position:absolute; top: calc(var(--step-pad) + 38px); left: 8%; right: 8%; height: 1.5px;
   background: repeating-linear-gradient(90deg, var(--blue) 0 6px, transparent 6px 12px);
   opacity: 0.6;
   z-index: 0;
@@ -608,7 +650,7 @@ h2 em,
 .step{
   background: var(--white);
   border-radius: var(--radius-lg);
-  padding: 8px 8px 28px;
+  padding: var(--step-pad) var(--step-pad) calc(var(--step-pad) + 4px);
   text-align: left;
   position: relative; z-index: 1;
 }
@@ -896,8 +938,11 @@ footer{
 .foot-brand p{ margin: 14px 0 24px; font-size: 14.5px; line-height: 1.6; max-width: 320px; opacity: 0.8;}
 .foot-brand .brand b{ color: #fff; }
 .foot-brand .brand small{ color: rgba(255,255,255,0.7); }
+/* 30px tall with 8px of padding top and bottom left fourteen pixels of artwork — the whole
+   lockup, wordmark included, in less height than the body text. The height here is the white
+   plate; the artwork is what is left after the padding, so it has to be set with that in mind. */
 .foot-brand .brand .mark{
-  height: 30px; padding: 8px 10px;
+  height: 46px; padding: 9px 12px;
   background: #fff; border-radius: 8px;
 }
 .foot-brand .muted{ opacity: 0.7; }
@@ -1131,12 +1176,22 @@ footer{
 .block-eyebrow--center{ justify-content: center; }
 .block-eyebrow--right{ justify-content: flex-end; }
 
-.block-heading{ margin: 0; white-space: pre-line; }
+.block-heading{ margin: 0; white-space: pre-line; text-wrap: pretty; }
 .block-heading em{ font-style: normal; color: var(--blue-deep); }
 .block-heading--center{ text-align: center; }
 .block-heading--right{ text-align: right; }
-h3.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.2; color: var(--navy); }
-h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1.3; color: var(--navy); }
+/* When a page is written out of blocks the opening heading block is its h1, so it has to carry the
+   weight a hero would. Sized between the hero and a section head — a policy is not a landing page. */
+/* A scale of its own, at every level.
+   The bare `h2` rule above is sized for a section's one big statement — "A simple, supported
+   process" — and tops out at 48px. A heading block declares no size, so every sub-heading on a
+   page written out of blocks inherited that and came out *larger than the page's own title*: a
+   guide read as eight competing headlines with a caption above them. h1 matches the section-head
+   size the rest of the site titles pages at, and each step down is a clear one. */
+h1.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; letter-spacing: -0.015em; color: var(--navy); }
+h2.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 2.3vw, 30px); line-height: 1.22; letter-spacing: -0.01em; color: var(--navy); }
+h3.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.28; color: var(--navy); }
+h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.35; color: var(--navy); }
 
 .block-text p{ margin: 0 0 14px; color: var(--text-mid); font-size: 18px; line-height: 1.6; white-space: pre-line; }
 .block-text p:last-child{ margin-bottom: 0; }
@@ -1341,10 +1396,31 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
   .nav{ gap: 14px; }
   .brand{ flex: 1 1 auto; min-width: 0; }
   .brand .word{ display: none; }
-  .brand .mark{ height: auto; width: auto; max-width: 100%; max-height: 42px; }
+  /* The pentagon at a size that does not move, with the name set in type beside it. The drawn
+     lockup was left to shrink into whatever the call to action and the menu button did not want,
+     which on a 390px handset came to eighteen pixels of height and on a 320px one to three.
+     Sizes are stated, never both auto: `width: auto` on an inline SVG asks the browser to read
+     the size out of the viewBox, which Safari does not do — a logo that is fine on the desktop
+     and missing on the phone is that. */
+  .brand .mark--lockup{ display: none; }
+  .brand .mark--glyph{ display: block; height: 38px; width: 35.3px; }
   .nav .right{ flex: none; gap: 10px; }
   .nav .right .btn .arr{ display: none; }
   .btn.sm{ padding: 0 16px; }
+}
+
+/* The name in type beside the glyph, on the phones wide enough to hold it.
+   "Property Advisors" wants about 100px, and what the header has left after the call to action
+   and the menu button is 150px at 390 and 120px at 360 — so below 400 it is the glyph alone
+   rather than a name sliced off mid-word. */
+@media (max-width: 640px) and (min-width: 400px){
+  .brand-name{
+    display: flex; flex-direction: column; justify-content: center;
+    line-height: 1.12; letter-spacing: 0.01em;
+  }
+  /* The two colours the drawn wordmark uses, so the typed one is not a near miss of it. */
+  .brand-name b{ font-size: 14px; font-weight: 600; color: var(--blue); }
+  .brand-name i{ font-size: 14px; font-style: normal; font-weight: 700; color: var(--navy); white-space: nowrap; }
 }
 
 /* The 30+ stamp deliberately hangs 34px outside the photo, which only has room
@@ -1435,9 +1511,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 }
 
 @media (prefers-reduced-motion: reduce){
-  /* Smooth scrolling is a common trigger for vestibular disorders, and the site forces it on
-     every in-page jump. Honour the system setting. */
-  html{ scroll-behavior: auto; }
+  /* Smooth scrolling is a common trigger for vestibular disorders. The only one left is the
+     in-page anchor glide, and SiteLink checks this same setting before asking for it. */
   .nav-toggle span{ transition: none; }
   .nav .nav-menu{ animation: none; }
   .nav-menu__caret{ transition: none; }
@@ -1579,10 +1654,10 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 .contact-form__consent{ display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-mid); }
 .contact-form__consent input{ margin-top: 3px; accent-color: var(--blue-deep); flex: none; }
 .contact-form__error{
-  display: block; margin-top: 6px; font-style: normal; font-size: 13.5px; color: #B42318;
+  display: block; margin-top: 6px; font-style: normal; font-size: 13.5px; color: var(--danger);
 }
 .contact-form__field input[aria-invalid="true"], .contact-form__field textarea[aria-invalid="true"]{
-  border-color: #B42318;
+  border-color: var(--danger);
 }
 /* Replaces the form once an enquiry lands, so there is nothing left to press twice. */
 .contact-form__sent{
@@ -1837,4 +1912,85 @@ a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
   .article-card__title{ transition: none; }
   .card:hover, .step:hover, .cmp-card:hover, .block-quote-card:hover, .block-info-card:hover,
   .faq:hover, .article-card:hover{ transform: none; }
+}
+
+/* ===================== Find My Agent — suburb lookup and validation =====================
+   Ported with the modal from the prototype branch. The tokens are this branch's; the rules
+   are the prototype's, which is where the reasoning in the comments comes from. */
+
+/* Required / optional marking. The literal word, not an asterisk: symbols are routinely missed
+   or misread by older readers, and a legend forces them to hold a key in working memory. */
+.req{
+  font-size: 13px; font-weight: 700; letter-spacing: 0.01em;
+  color: var(--blue-deep); background: var(--blue-tint);
+  padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+}
+.field.has-error .req{ color: var(--danger); background: var(--danger-wash); }
+/* Stated once per step as well — a per-field badge answers "is this one needed", the note
+   answers "how much of this form do I have to fill in". */
+.req-note{
+  font-size: 14.5px; color: var(--text-mid);
+  margin: -10px 0 20px; display: flex; align-items: center; gap: 8px;
+}
+
+.err-msg{
+  display: flex; align-items: flex-start; gap: 7px;
+  margin-top: 7px; font-size: 14.5px; line-height: 1.45;
+  color: var(--danger); font-weight: 500;
+}
+.err-msg .err-icon{ flex: none; font-weight: 700; }
+.field.has-error input{ border-color: var(--danger); }
+.field.has-error input:focus{
+  border-color: var(--danger); box-shadow: 0 0 0 4px var(--danger-wash);
+}
+.opt-grid.has-error .opt{ border-color: var(--danger-line); }
+.opt-grid.has-error .opt.on{ border-color: var(--blue); }
+
+/* Suburb autocomplete, fed by the Google Places proxy at /api/suburbs. */
+.combo{ position: relative; }
+.combo-list{
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 5;
+  margin: 0; padding: 6px; list-style: none;
+  background: var(--white);
+  border: 1.5px solid var(--line); border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(2,14,60,0.14);
+  max-height: 260px; overflow-y: auto;
+  animation: combo-in .16s ease;
+}
+@keyframes combo-in{ from{ opacity: 0; transform: translateY(-4px); } }
+.combo-option{
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 11px 14px; min-height: 44px; justify-content: center;
+  border-radius: 10px; cursor: pointer;
+}
+.combo-option.active{ background: var(--blue-tint); }
+.combo-main{ font-size: 15px; color: var(--navy); font-weight: 500; }
+.combo-sub{ font-size: 12.5px; color: var(--text-mid); }
+.combo-empty{ padding: 12px 14px; font-size: 14px; color: var(--text-mid); }
+
+/* Nothing is pre-selected, so "chosen" has to be unmistakable: heavier border, filled
+   background, and a tick — shape and symbol, not colour alone. */
+.opt{ position: relative; }
+.opt.on{
+  border-color: var(--blue); border-width: 2.5px;
+  background: var(--blue-tint);
+  padding: 14.5px 12.5px; /* offsets the thicker border so the cards do not shift */
+}
+.opt .opt-tick{
+  position: absolute; top: 10px; right: 12px;
+  color: var(--blue-deep); font-weight: 700; font-size: 15px;
+}
+.opt:focus-visible{ outline: 3px solid var(--navy); outline-offset: 2px; }
+.modal .btn:focus-visible, .modal .close:focus-visible{
+  outline: 3px solid var(--navy); outline-offset: 3px;
+}
+
+.sr-only{
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .combo-list{ animation: none; }
 }

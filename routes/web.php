@@ -8,6 +8,7 @@ use App\Http\Controllers\Cms\BlogController as CmsBlogController;
 use App\Http\Controllers\Cms\CmsPageController;
 use App\Http\Controllers\Cms\DashboardController;
 use App\Http\Controllers\Cms\DeletedContentController;
+use App\Http\Controllers\Cms\EnquiryController as CmsEnquiryController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\GlobalContentController;
 use App\Http\Controllers\Cms\MediaController;
@@ -18,6 +19,8 @@ use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
 use App\Http\Controllers\EnquiryController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SuburbLookupController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('agent-finder');
@@ -108,6 +111,14 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::post('/testimonials/{testimonial}/consent', [TestimonialController::class, 'consent'])->name('testimonials.consent');
     Route::delete('/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])
         ->middleware('permit:content.delete')->name('testimonials.destroy');
+    /* Read and mark. There is no update route on purpose — the details belong to whoever sent
+       them, so the only thing this screen may change is whether it has been dealt with. */
+    Route::get('/enquiries', [CmsEnquiryController::class, 'index'])->name('enquiries.index');
+    Route::patch('/enquiries/{enquiry}/handled', [CmsEnquiryController::class, 'handled'])
+        ->whereNumber('enquiry')->name('enquiries.handled');
+    Route::delete('/enquiries/{enquiry}', [CmsEnquiryController::class, 'destroy'])
+        ->whereNumber('enquiry')->middleware('permit:content.delete')->name('enquiries.destroy');
+
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::get('/deleted', [DeletedContentController::class, 'index'])
         ->middleware('permit:content.restore')->name('deleted.index');
@@ -157,8 +168,18 @@ Route::get('/blog/articles', [BlogController::class, 'articles'])->name('blog.ar
 /* Throttled like the sign-in form: a public endpoint that writes a row invites a script. */
 Route::post('/enquiries', [EnquiryController::class, 'store'])
     ->middleware('throttle:6,1')->name('enquiries.store');
+
+/* Suburb autocomplete for the Find My Agent modal. Throttled because an unbounded autocomplete
+   endpoint is a billing amplifier — every keystroke is a paid call to Google. */
+Route::get('/api/suburbs', SuburbLookupController::class)
+    ->middleware('throttle:60,1')->name('suburbs.lookup');
 Route::get('/blog/{article}', [BlogController::class, 'show'])
     ->where('article', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('blog.show');
+
+/* Safe above the catch-all either way: its slug pattern has no dot in it, so neither address
+   could ever have reached a page. */
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
 Route::redirect('/home', '/', 301);
 

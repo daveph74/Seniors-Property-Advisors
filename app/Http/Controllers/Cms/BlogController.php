@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Cms;
 
 use App\Content\PageContentStore;
+use App\Content\Seo;
+use App\Content\Site;
 use App\Http\Controllers\BlogController as PublicBlogController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveBlogCategoryRequest;
@@ -140,10 +142,14 @@ class BlogController extends Controller
     public function preview(BlogPost $post): Response
     {
         $store = app(PageContentStore::class);
+        $seo = PublicBlogController::sharing($post);
 
         return Inertia::render('Article', [
             'article' => $post->load('categories')->toArticle(),
-            'seo' => PublicBlogController::sharing($post),
+            'seo' => $seo,
+            /* Forced noindex, for the reason given on the page preview — and so no schema,
+               which is the rule the public article render already follows. */
+            'head' => Seo::head(array_merge($seo, ['noindex' => true]), $post->title, 'article', Site::seoDefaults()),
             'related' => [],
             'globals' => $store->globals(),
             'preview' => [

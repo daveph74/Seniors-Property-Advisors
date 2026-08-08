@@ -1,0 +1,159 @@
+{
+    "slug": "complaints",
+    "url": "/complaints",
+    "cmsId": 21,
+    "title": "Complaints",
+    "navLabel": "Complaints",
+    "status": "published",
+    "seo": {
+        "title": "Making a Complaint",
+        "description": "If something has gone wrong, here is how to tell us, what happens next, and who else you can go to if our answer does not satisfy you."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "complaints",
+            "type": "section",
+            "label": "Complaints",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "white",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "complaints-title",
+                    "type": "heading",
+                    "label": "Making a complaint",
+                    "active": true,
+                    "data": {
+                        "heading": "Making a complaint",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "complaints-intro",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Last updated: [DATE TO BE CONFIRMED BEFORE PUBLISHING]\n\nIf we have got something wrong, please tell us. You will not be a nuisance and it will not affect how you are treated. Most of what we learn about doing this job better has come from somebody saying they were not happy.\n\nYou can complain about anything — the advice you were given, an agent we introduced you to, how long something took, or the way somebody spoke to you.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "complaints-how-h",
+                    "type": "heading",
+                    "label": "How to tell us",
+                    "active": true,
+                    "data": {
+                        "heading": "How to tell us",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "complaints-how",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Whichever is easiest for you. You do not need to put it in writing, and you do not need to use the word complaint.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "complaints-how-checks",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Ring 1300 277 228 and say you would like to raise a concern.",
+                            "Email hello@aspa.com.au.",
+                            "Write to Level 14, 50 Carrington St, Sydney NSW 2000.",
+                            "Ask a family member or friend to do any of the above on your behalf — just tell us you are happy for us to deal with them."
+                        ],
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "complaints-next-h",
+                    "type": "heading",
+                    "label": "What happens next",
+                    "active": true,
+                    "data": {
+                        "heading": "What happens next",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "complaints-next",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "[THE TIMEFRAMES BELOW ARE PLACEHOLDERS. Replace them with what the business will actually commit to, and do not publish this page until you can meet them — a stated timeframe that is missed makes a complaint worse.]\n\n[We acknowledge every complaint within X business days, so you know it has reached a person.]\n\n[Someone not involved in what you are complaining about looks into it, and we come back to you with an answer within X business days. If it is going to take longer than that, we tell you why and when to expect it.]\n\n[WHO HANDLES COMPLAINTS — a named role rather than a person, so the page does not go stale — TO BE CONFIRMED.]",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "complaints-else-h",
+                    "type": "heading",
+                    "label": "If our answer does not satisfy you",
+                    "active": true,
+                    "data": {
+                        "heading": "If our answer does not satisfy you",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "complaints-else",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "You are entitled to take it further, and we will tell you how rather than leaving you to find out.\n\nFor a complaint about how we handled your personal information, the Office of the Australian Information Commissioner takes complaints at oaic.gov.au or 1300 363 992.\n\nFor a complaint about a real estate agent, the consumer affairs or fair trading body in your state handles agent conduct. [CONFIRM THE RIGHT BODY OR BODIES TO NAME HERE, AND WHETHER THE BUSINESS BELONGS TO AN EXTERNAL DISPUTE RESOLUTION SCHEME — DO NOT CLAIM MEMBERSHIP OF ONE IT HAS NOT JOINED.]",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "complaints-cost-h",
+                    "type": "heading",
+                    "label": "It costs nothing to raise one",
+                    "active": true,
+                    "data": {
+                        "heading": "It costs nothing to raise one",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "complaints-cost",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "We do not charge to look into a complaint, and raising one does not commit you to anything or change any advice you have already been given.\n\nIf you would rather talk it through with somebody before deciding whether to make it formal, ring and say so. That is a perfectly reasonable way to start.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "complaints-link",
+                    "type": "button",
+                    "label": "Get in touch",
+                    "active": true,
+                    "data": {
+                        "label": "Get in touch",
+                        "href": "/contact",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        }
+    ]
+}

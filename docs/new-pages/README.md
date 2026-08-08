@@ -87,9 +87,13 @@ The only section with no CMS equivalent, so it becomes a new block type. Per `CL
 `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js` and the registry — never the
 database. `CmsBuilderTest::test_the_js_type_mirror_matches_php` will hold the JS and PHP in step.
 
-Its background is `public/images/full_bg.png` on the branch, **a 1.7MB PNG**. Deliberately not
-staged here. Optimise it or put it through the media library before it goes anywhere near the repo;
-`php artisan media:optimise` exists for exactly this.
+Its background was `public/images/full_bg.png` on the branch, **a 1.7MB PNG** — a photograph in a
+lossless format, which is where nearly all of that went. **Done:** it is now `hero-home.jpg` in the
+media library at 1600×900, about 125KB, seeded by `MediaSeeder`.
+
+Note that `php artisan media:optimise` would **not** have helped, whatever this file said before:
+`ImageOptimiser::optimise()` returns early for anything 2400px or smaller on its long edge, and it
+cannot change format. The work was a one-off resize and a PNG-to-JPEG conversion.
 
 ### 4. Mobile nav and modal CSS
 
@@ -99,6 +103,7 @@ Worth taking regardless of the rest — the public nav has no mobile drawer toda
 ## What was deliberately left out
 
 - **`public/images/full_bg.png`** — 1.7MB. Too big to stage, and too big to commit unoptimised.
+  Since resolved: it is `hero-home.jpg` in the media library, with `share-card.jpg` cropped from it.
 - **`.gitignore` changes** — unrelated agent-tooling entries.
 - **`nav.js`** (staged for reference only, **do not port**) — it hardcodes the menu, and the
   Navigation module already owns menus from the database. Two sources would disagree.

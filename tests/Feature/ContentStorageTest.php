@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Content\PageContentStore;
+use App\Content\Site;
 use App\Models\Page;
 use App\Models\PageRevision;
+use App\Models\Setting;
 use Database\Seeders\ContentSeeder;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -144,6 +146,29 @@ class ContentStorageTest extends TestCase
 
         $this->assertSame($before, Page::count());
         $this->assertSame(0, PageRevision::count());
+    }
+
+    /**
+     * The settings rows are seeded once and never again.
+     *
+     * They carry the menus, the footer, the SEO defaults and the analytics ids, they have no
+     * revision history and no draft, and the seeder used to replace them wholesale — so a
+     * `php artisan db:seed` on a live site quietly reverted every one of the client's edits, and
+     * losing the tracking ids that way fails silently until a monthly report comes back empty.
+     */
+    public function test_re_seeding_does_not_revert_settings_somebody_has_edited(): void
+    {
+        $site = Setting::find(Site::KEY);
+        $site->update(['value' => ['name' => 'Edited name', 'tracking' => ['ga4' => 'G-REALONE']] + $site->value]);
+
+        $globals = Setting::find('globals');
+        $globals->update(['value' => ['nav' => ['links' => [['href' => '/only-this', 'label' => 'Only this']]]] + $globals->value]);
+
+        $this->seed(ContentSeeder::class);
+
+        $this->assertSame('Edited name', Setting::find(Site::KEY)->value['name']);
+        $this->assertSame('G-REALONE', Setting::find(Site::KEY)->value['tracking']['ga4']);
+        $this->assertSame('Only this', Setting::find('globals')->value['nav']['links'][0]['label']);
     }
 
     public function test_globals_come_from_the_settings_table(): void

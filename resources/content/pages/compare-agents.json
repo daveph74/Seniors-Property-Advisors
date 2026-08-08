@@ -6,8 +6,8 @@
     "navLabel": "Compare agents",
     "status": "published",
     "seo": {
-        "title": "Compare agents — Seniors Property Advisors",
-        "description": "See local agents side by side — experience, recent sales, commission and marketing budget — with your advisor's notes added in."
+        "title": "Compare Agents Side by Side",
+        "description": "See local real estate agents side by side — experience, recent sales in your suburb, commission and marketing budget — with your independent advisor's notes added in."
     },
     "draft": null,
     "published": [
@@ -21,10 +21,10 @@
                 "eyebrow": "Compare your shortlist",
                 "heading": "A clear, honest view of",
                 "headingEm": "every option.",
-                "lead": "Below is the kind of comparison you’ll receive — three real local agents, side‑by‑side, with your advisor’s notes added in.",
+                "lead": "Below is a worked example of the comparison you’ll receive — the agents, suburbs and figures shown are made up to illustrate the format. Yours will name the real agents working in your area, with your advisor’s notes added in.",
                 "cta": {
-                    "label": "See a sample report",
-                    "href": "#",
+                    "label": "Common questions about fees",
+                    "href": "/faqs",
                     "arrow": true
                 },
                 "filters": [
@@ -56,7 +56,7 @@
                 },
                 "agents": [
                     {
-                        "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=160&q=80",
+                        "avatar": "/media/2026/08/agent-sw.jpg",
                         "name": "Sarah Whitford",
                         "firm": "Whitford & Co · Mosman",
                         "experience": {
@@ -78,14 +78,14 @@
                         },
                         "note": "“Warm, careful communicator. Strong with downsizers but fewer recent prestige sales.”",
                         "cta": {
-                            "label": "View profile",
+                            "label": "Start your shortlist",
                             "variant": "ghost",
-                            "href": "#"
+                            "action": "open-finder"
                         }
                     },
                     {
                         "best": true,
-                        "avatar": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=160&q=80",
+                        "avatar": "/media/2026/08/agent-jp.jpg",
                         "name": "James Patel",
                         "firm": "Harbour Realty · Cremorne",
                         "experience": {
@@ -114,7 +114,7 @@
                         }
                     },
                     {
-                        "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=160&q=80",
+                        "avatar": "/media/2026/08/agent-em.jpg",
                         "name": "Elaine Murray",
                         "firm": "Coastline Group · Neutral Bay",
                         "experience": {
@@ -136,10 +136,44 @@
                         },
                         "note": "“Polished but marketing budget is on the higher side — push back if you shortlist.”",
                         "cta": {
-                            "label": "View profile",
+                            "label": "Start your shortlist",
                             "variant": "ghost",
-                            "href": "#"
+                            "action": "open-finder"
                         }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "how-to-read-it",
+            "type": "trust-cards",
+            "label": "How to read the comparison",
+            "active": true,
+            "data": {
+                "eyebrow": "How to read it",
+                "heading": "The lowest fee is not",
+                "headingEm": "always the cheapest.",
+                "lead": "A comparison is only useful if you know what to weigh. These are the three things we talk through with every client before they choose.",
+                "cta": {
+                    "label": "More questions about fees",
+                    "href": "/faqs",
+                    "arrow": true
+                },
+                "items": [
+                    {
+                        "icon": "dollar",
+                        "title": "Commission is one number of several",
+                        "body": "A lower rate on a lower sale price can cost you far more than a higher rate on a better one. Read it alongside what each agent has actually achieved nearby."
+                    },
+                    {
+                        "icon": "home",
+                        "title": "Recent sales beat years in the job",
+                        "body": "Someone who sold three homes like yours in your suburb this year knows your buyers. Twenty years across town is a different market."
+                    },
+                    {
+                        "icon": "shield",
+                        "title": "Ask what the marketing buys",
+                        "body": "Marketing is paid by you either way. Ask which parts genuinely reach buyers for a home like yours and which are there because they always are."
                     }
                 ]
             }
@@ -172,7 +206,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }

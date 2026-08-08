@@ -33,7 +33,7 @@ function RailList({ title, articles }) {
     );
 }
 
-export default function Article({ article, seo = {}, related = [], globals = {}, site = {}, preview = null }) {
+export default function Article({ article, seo = {}, head = {}, related = [], globals = {}, site = {}, preview = null }) {
     const [modalOpen, setModalOpen] = useState(false);
     const actions = { 'open-finder': () => setModalOpen(true) };
 
@@ -49,7 +49,7 @@ export default function Article({ article, seo = {}, related = [], globals = {},
         remember(article);
     }, [article, preview]);
 
-    const title = seo.title || article.title;
+    const title = head.title || seo.title || article.title;
     const description = seo.description || article.summary;
     const hasRail = related.length > 0 || recent.length > 0;
 

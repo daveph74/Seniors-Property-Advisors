@@ -23,5 +23,27 @@ export function ownerOfTheH1(sections = []) {
         return null;
     }
 
-    return visible.find((s) => (s.data?.heading || s.data?.headingEm))?.id ?? null;
+    /*
+     * The first heading the page says, in reading order — each section, then inside it, then on to
+     * the next. A page assembled from the block system has nothing to nominate at the top level:
+     * the container carries the width and the background, and the words are the blocks within it.
+     *
+     * Depth-first rather than "top level, and only failing that, inside": a page whose words live
+     * in a container and which closes with a call to action would otherwise skip past the
+     * container to the first heading it found alongside it, and open on "Ready to find the right
+     * agent?" instead of its own title.
+     */
+    for (const section of visible) {
+        if (section.data?.heading || section.data?.headingEm) {
+            return section.id;
+        }
+
+        const nested = ownerOfTheH1(section.children ?? []);
+
+        if (nested) {
+            return nested;
+        }
+    }
+
+    return null;
 }

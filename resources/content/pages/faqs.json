@@ -6,8 +6,8 @@
     "navLabel": "FAQs",
     "status": "published",
     "seo": {
-        "title": "FAQs — Seniors Property Advisors",
-        "description": "Straight answers on costs, timing, the pension and how we choose the agents we recommend."
+        "title": "Selling Costs, Timing & Pension",
+        "description": "Straight answers to the questions Australians over 60 ask most: what selling really costs, how long it takes, what it means for the pension, and how we choose the agents we recommend."
     },
     "draft": null,
     "published": [
@@ -26,6 +26,52 @@
                 "showFilters": true,
                 "items": []
             }
+        },
+        {
+            "id": "still-unsure",
+            "type": "section",
+            "label": "Still unsure",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "wash",
+                "spacing": "small"
+            },
+            "children": [
+                {
+                    "id": "unsure-heading",
+                    "type": "heading",
+                    "label": "Your question is not here?",
+                    "active": true,
+                    "data": {
+                        "heading": "Your question is not here?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "unsure-body",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Ring us and ask it. Nobody will try to sign you up on the call, and there is no question here we mind being asked twice. If you would rather see how the process runs before you speak to anybody, that is set out step by step as well.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "unsure-link",
+                    "type": "button",
+                    "label": "See how it works",
+                    "active": true,
+                    "data": {
+                        "label": "See how it works",
+                        "href": "/how-it-works",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
         },
         {
             "id": "cta",
@@ -55,7 +101,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }

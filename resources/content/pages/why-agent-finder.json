@@ -6,8 +6,8 @@
     "navLabel": "Why Agent Finder",
     "status": "published",
     "seo": {
-        "title": "Why Agent Finder — Seniors Property Advisors",
-        "description": "Save time, avoid sales pressure and understand commission before you sign anything — backed by 30+ years of property advisory experience."
+        "title": "Why Use an Independent Advisor",
+        "description": "Save time, avoid sales pressure and understand commission before you sign anything — guided by 30+ years of property advisory experience, with nothing to sell you."
     },
     "draft": null,
     "published": [
@@ -45,7 +45,7 @@
                     }
                 ],
                 "image": {
-                    "src": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=1100&q=80",
+                    "src": "/media/2026/08/home-exterior.jpg",
                     "alt": "Charming Australian home exterior"
                 },
                 "stamp": {
@@ -53,6 +53,77 @@
                     "text": "years of property advisory experience guiding Australian families."
                 }
             }
+        },
+        {
+            "id": "how-we-are-paid",
+            "type": "section",
+            "label": "How we are paid",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "wash",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "paid-eyebrow",
+                    "type": "eyebrow",
+                    "label": "The obvious question",
+                    "active": true,
+                    "data": {
+                        "eyebrow": "The obvious question"
+                    }
+                },
+                {
+                    "id": "paid-heading",
+                    "type": "heading",
+                    "label": "If we take nothing from the agent, how does this work?",
+                    "active": true,
+                    "data": {
+                        "heading": "If we take nothing from the agent,",
+                        "headingEm": "how does this work?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "paid-body",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "It is the first thing people ask, and it should be. We are not paid by agents and we take no share of their commission, so no agent can buy their way onto your shortlist. That is the whole reason a shortlist from us is worth reading — there is nothing in it for us if you choose one over another.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "paid-checks",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "No agent pays us to appear on your shortlist, and none can.",
+                            "We take no share of the commission you end up paying.",
+                            "You are told what our own fee is before we start, not after.",
+                            "If you decide not to sell, that is a perfectly good outcome and it costs you nothing."
+                        ],
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "paid-link",
+                    "type": "button",
+                    "label": "How this works for families",
+                    "active": true,
+                    "data": {
+                        "label": "How this works for families",
+                        "href": "/for-families",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
         },
         {
             "id": "cta",
@@ -82,7 +153,7 @@
                     "Independent advice",
                     "No agent commissions",
                     "Australian owned",
-                    "Member, REIA"
+                    "No obligation"
                 ]
             }
         }
