@@ -1,0 +1,252 @@
+{
+    "slug": "selling-checklist",
+    "url": "/selling-checklist",
+    "cmsId": 23,
+    "title": "Selling checklist",
+    "navLabel": "Selling checklist",
+    "status": "published",
+    "seo": {
+        "title": "A Calm Checklist for Selling",
+        "description": "What to do before you list, while the home is on the market, and after it sells — set out in the order it actually happens, so nothing arrives as a surprise."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "checklist",
+            "type": "section",
+            "label": "Selling checklist",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "white",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "check-title",
+                    "type": "heading",
+                    "label": "A calm checklist for selling",
+                    "active": true,
+                    "data": {
+                        "heading": "A calm checklist",
+                        "headingEm": "for selling",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "check-intro",
+                    "type": "rich-text",
+                    "label": "Introduction",
+                    "active": true,
+                    "data": {
+                        "body": "In the order things actually happen, rather than all at once. Nobody does all of this in a week, and you do not have to start at the top — plenty of people begin somewhere in the middle, months before they are sure.\n\nTimings and paperwork differ between states, so treat this as the shape of it rather than the letter of it, and check the specifics for where you live.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "before-h",
+                    "type": "heading",
+                    "label": "Before you speak to anybody",
+                    "active": true,
+                    "data": {
+                        "heading": "Before you speak to anybody",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "before",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Decide roughly when you would like to have moved, and work backwards from there.",
+                            "Talk to the family — not to ask permission, but so nobody hears about it later.",
+                            "Work out where you are going, or at least the shape of it. Selling without that answer is the thing people most often regret rushing.",
+                            "Ask Services Australia what a sale would mean for your pension, if you receive one. Ask before, not after.",
+                            "Find your title details and any paperwork from when you bought."
+                        ],
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "agent-h",
+                    "type": "heading",
+                    "label": "Choosing an agent",
+                    "active": true,
+                    "data": {
+                        "heading": "Choosing an agent",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "agent",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Meet more than one. Two is enough to compare; three is plenty.",
+                            "Ask each the same questions, so the answers can be set side by side.",
+                            "Get the commission and the marketing costs in writing, as dollars and not only percentages.",
+                            "Read the agency agreement before you sign, and take it away overnight if you want to.",
+                            "Check how long the agreement runs and how it ends."
+                        ],
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "agent-link",
+                    "type": "button",
+                    "label": "The eight questions",
+                    "active": true,
+                    "data": {
+                        "label": "The eight questions to ask",
+                        "href": "/free-guide",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                },
+                {
+                    "id": "prep-h",
+                    "type": "heading",
+                    "label": "Getting the home ready",
+                    "active": true,
+                    "data": {
+                        "heading": "Getting the home ready",
+                        "level": "h2",
+                        "spaceAbove": "medium",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "prep",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Fix the small things that a buyer will notice — the dripping tap, the door that sticks, the blown globe.",
+                            "Clear surfaces and cupboards. Space photographs better than possessions do.",
+                            "Decide what is coming with you, what is going to family, and what is going. Start early; this takes longer than anybody expects.",
+                            "Ask the agent what is worth spending money on, then ask what it will add. If they cannot say, it probably is not worth it.",
+                            "Arrange somewhere for pets to be during inspections."
+                        ],
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "market-h",
+                    "type": "heading",
+                    "label": "While it is on the market",
+                    "active": true,
+                    "data": {
+                        "heading": "While it is on the market",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "market",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Ask for feedback after every inspection, including the parts you would rather not hear.",
+                            "Agree in advance how a price conversation will happen, so it is not sprung on you in week three.",
+                            "Have your conveyancer or solicitor lined up before the first offer, not after it.",
+                            "Keep a note of what each offer actually included — price is only one of its terms.",
+                            "Plan somewhere to be on inspection days. Sitting through them is nobody's idea of a Saturday."
+                        ],
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "after-h",
+                    "type": "heading",
+                    "label": "Once it sells",
+                    "active": true,
+                    "data": {
+                        "heading": "Once it sells",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "after",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Confirm the settlement date in writing and put it somewhere you will see it.",
+                            "Book the removalist early — the good ones go first at the end of the month.",
+                            "Redirect the post, and tell the bank, the insurer, Medicare and Services Australia.",
+                            "Arrange final readings for electricity, gas and water.",
+                            "Keep the paperwork together. Your accountant may want it, and you will want it long after you think you will."
+                        ],
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "check-close",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "If any of this is more than you want to take on alone, that is what an advisor is for. We work through the same list with people, at whatever pace suits them.",
+                        "spaceAbove": "medium",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "check-link",
+                    "type": "button",
+                    "label": "Talk to an advisor",
+                    "active": true,
+                    "data": {
+                        "label": "Talk it through with an advisor",
+                        "href": "/contact",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+diff --git a/config/services.php b/config/services.php
+index 6a90eb8..889508b 100644
+--- a/config/services.php
++++ b/config/services.php
+@@ -14,6 +14,10 @@
+     |
+     */
+ 
++    'google' => [
++        'places_key' => env('GOOGLE_PLACES_API_KEY'),
++    ],
++
+     'postmark' => [
+         'key' => env('POSTMARK_API_KEY'),
+     ],

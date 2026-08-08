@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import ActionButton from './ActionButton';
 import NavDropdown from './NavDropdown';
 import BrandLogo from './BrandLogo';
@@ -35,6 +35,30 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
     const links = nav.links || [];
 
     /**
+     * Fetch the menu's pages while the reader is still reading the menu.
+     *
+     * Opening the drawer is as clear a signal as there is that somebody is about to go somewhere,
+     * and the second or two they spend choosing is dead time the network could be using. Without
+     * it, tapping an item closed the drawer and then left the page they were leaving on screen for
+     * the length of the round trip — on a phone, long enough to look like nothing had happened.
+     *
+     * Only on opening, so a reader who never touches the menu is never charged for it, and cached
+     * briefly so reopening the drawer does not ask again.
+     */
+    useEffect(() => {
+        if (! open) return;
+
+        const paths = (nav.links || [])
+            .flatMap((l) => [l, ...(l.children || [])])
+            .map((l) => l.href)
+            .filter((href) => typeof href === 'string' && href.startsWith('/'));
+
+        [...new Set(paths)].forEach((href) => {
+            router.prefetch(href, { method: 'get' }, { cacheFor: '1m' });
+        });
+    }, [open]);
+
+    /**
      * The anchor links all point at the home page, so the path alone cannot say which one a
      * reader is on — without this the underline sits on whichever item the content marked as
      * active and never moves. Only the home page has these sections to watch.
@@ -65,8 +89,18 @@ export default function SiteHeader({ globals = {}, actions = {} }) {
 
             <div className="nav-wrap" ref={header}>
                 <div className="container nav">
+                    {/* Both marks are drawn and the stylesheet shows whichever the width has room
+                        for — a media query cannot change an SVG's viewBox, and the glyph needs its
+                        own. The name is set as text beside the glyph rather than left inside the
+                        artwork: scaled down to fit a phone the drawn wordmark was under twenty
+                        pixels tall, where type at the same size is still legible. */}
                     <SiteLink href="/" className="brand">
-                        <BrandLogo logo={logo} />
+                        <BrandLogo logo={logo} className="mark mark--lockup" />
+                        <BrandLogo logo={logo} className="mark mark--glyph" glyph />
+                        <span className="brand-name" aria-hidden="true">
+                            <b>Seniors</b>
+                            <i>Property Advisors</i>
+                        </span>
                     </SiteLink>
                     <ul>
                         {links.map((l) => (

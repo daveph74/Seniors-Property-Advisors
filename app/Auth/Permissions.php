@@ -29,6 +29,7 @@ class Permissions
         'blog' => 'content.manage',
         'faqs' => 'content.manage',
         'testimonials' => 'content.manage',
+        'enquiries' => 'content.manage',
         'media' => 'content.manage',
         'activity' => 'content.manage',
         'deleted' => 'content.restore',

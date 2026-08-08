@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import SectionHead from './SectionHead';
 import PendingModule from './PendingModule';
+import { useHeadingLevel } from './headingLevel';
 
 export default function FaqListSection({ data, anchor, library = {}, editing = false }) {
+    /* Level 1 means ownerOfTheH1() nominated this section, so it is what the page is for. */
+    const leadsPage = useHeadingLevel() === 1;
     const limit = Number(data.limit) > 0 ? Number(data.limit) : null;
     const [chosen, setChosen] = useState(null);
 
@@ -36,7 +39,10 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
      */
     const railed = ! editing && groups.length > 1;
 
-    if (items.length === 0 && ! editing) return null;
+    /* Kept when the section is the page: disappearing takes the heading and intro with it and
+       leaves /faqs as a call to action under no title and with no h1. Nothing to show is a
+       normal state before anyone has written — it should read as empty, not broken. */
+    if (items.length === 0 && ! editing && ! leadsPage) return null;
 
     const count = (name) => items.filter((f) => f.category === name).length;
 
@@ -57,7 +63,7 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
             <div className="container">
                 <SectionHead {...data} />
 
-                {items.length === 0 ? (
+                {items.length === 0 && ! editing ? null : items.length === 0 ? (
                     <PendingModule
                         title="FAQs"
                         waitingFor="FAQ library"

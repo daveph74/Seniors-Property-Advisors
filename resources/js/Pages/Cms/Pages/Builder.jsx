@@ -1093,6 +1093,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                     status={page.status === 'published'
                         ? (saveState === 'saved' && ! page.hasDraft ? 'Live' : 'Live with unpublished changes')
                         : 'Not published yet'}
+                    live={page.status === 'published'}
                     diff={publishDiff}
                 />
                 <PreviewPromptModal

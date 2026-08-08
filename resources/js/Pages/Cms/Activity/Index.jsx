@@ -28,6 +28,7 @@ const THING = {
     BlogPost: 'article',
     Faq: 'question',
     Testimonial: 'testimonial',
+    Enquiry: 'enquiry',
     Media: 'image',
     /* Not content rows: these two name the screen, and the label says which part of it moved. */
     Navigation: 'navigation',

@@ -83,6 +83,77 @@ class SeoTest extends TestCase
         $this->assertArrayNotHasKey('imageWidth', $unsized);
     }
 
+    /**
+     * The site's pictures live in the media library now, but the settings screen still accepts any
+     * path beginning with a slash, so somebody can point the sharing image at a file shipped in
+     * public/. Without the width and height a crawler draws the small card, which is the one thing
+     * setting a default was meant to stop — so that path has to be measured off disk.
+     */
+    public function test_a_picture_shipped_with_the_application_is_measured_from_the_file(): void
+    {
+        $path = public_path('images/measured-in-a-test.png');
+
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0777, true);
+        }
+
+        imagepng(imagecreatetruecolor(64, 48), $path);
+
+        try {
+            $sharing = Seo::forSharing(['image' => '/images/measured-in-a-test.png'], null, url('/'));
+
+            $this->assertSame(64, $sharing['imageWidth']);
+            $this->assertSame(48, $sharing['imageHeight']);
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * The path arrives from the settings screen, so it is somebody's input. getimagesize() opens
+     * a file, and a path that walks out of public/ would turn the sharing-image field into a way
+     * to ask whether an arbitrary file exists.
+     */
+    public function test_a_path_outside_the_public_folder_is_not_opened(): void
+    {
+        foreach (['/../.env', '/images/../../.env', '//evil.example.com/a.png', 'index.php'] as $path) {
+            $this->assertArrayNotHasKey(
+                'imageWidth',
+                Seo::forSharing(['image' => $path], null, url('/')),
+                "{$path} should not have been read",
+            );
+        }
+    }
+
+    public function test_a_missing_file_carries_no_size(): void
+    {
+        $sharing = Seo::forSharing(['image' => '/images/not-here.png'], null, url('/'));
+
+        $this->assertArrayNotHasKey('imageWidth', $sharing);
+        $this->assertSame(url('/images/not-here.png'), $sharing['image']);
+    }
+
+    /**
+     * Every page shares something, so no link goes out with a blank preview. The default lives in
+     * the media library like everything else, so the row is what carries the size — MediaSeeder
+     * writes it for real; here the test writes its own rather than seeding the whole library into
+     * every case.
+     */
+    public function test_a_page_with_no_picture_of_its_own_falls_back_to_the_site_default(): void
+    {
+        $this->media(['key' => '2026/08/share-card.jpg', 'name' => 'share-card.jpg', 'width' => 1200, 'height' => 630]);
+
+        $this->get('/how-it-works')->assertOk()->assertInertia(function ($props) {
+            $seo = $props->toArray()['props']['seo'];
+
+            $this->assertSame(url('/media/2026/08/share-card.jpg'), $seo['image']);
+            $this->assertSame(1200, $seo['imageWidth']);
+            $this->assertSame(630, $seo['imageHeight']);
+        });
+
+        $this->get('/how-it-works')->assertSee('name="twitter:card" content="summary_large_image"', false);
+    }
+
     public function test_a_page_shares_an_absolute_image_with_its_size(): void
     {
         $this->media();

@@ -11,7 +11,7 @@ class CmsBuilderTest extends TestCase
      * How many sections the seeded home page has. Named rather than written in at each assertion,
      * which is what made adding one to the design a three-test failure instead of a content change.
      */
-    private const HOME_SECTIONS = 8;
+    private const HOME_SECTIONS = 5;
 
     private function sections(string $heading = 'Edited heading'): array
     {
@@ -360,7 +360,7 @@ class CmsBuilderTest extends TestCase
             $this->assertContains($type, PageContentStore::BLOCK_TYPES, "{$type} is missing");
         }
 
-        $this->assertCount(30, PageContentStore::BLOCK_TYPES);
+        $this->assertCount(31, PageContentStore::BLOCK_TYPES);
     }
 
     public function test_the_scoped_section_types_are_registered(): void
@@ -379,6 +379,31 @@ class CmsBuilderTest extends TestCase
             $this->assertContains($type, PageContentStore::CHILD_TYPES['column']);
             $this->assertNotContains($type, PageContentStore::CHILD_TYPES['row']);
         }
+    }
+
+    /**
+     * The canvas measures its own height from its content, so a section sized in viewport units
+     * grows without end inside it: taller frame, taller 100vh, taller content, taller frame.
+     * `.hero-full` is the one such section today, and the canvas pins it. Deleting that pin
+     * brings the runaway back, and nothing else would catch it — the loop only happens in a
+     * browser, and there is no JavaScript test runner here.
+     */
+    public function test_the_canvas_pins_sections_sized_in_viewport_units(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+        $canvas = file_get_contents(resource_path('js/cms/builder/CanvasFrame.jsx'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.hero-full\{[^}]*min-height:\s*calc\(100[sd]?vh/s',
+            $css,
+            'the public hero no longer uses viewport units — the canvas pin may be unnecessary',
+        );
+
+        $this->assertStringContainsString(
+            '.hero-full{min-height:',
+            $canvas,
+            'CanvasFrame must cap viewport-height sections or the builder scrolls forever',
+        );
     }
 
     public function test_the_js_type_mirror_matches_php(): void
@@ -537,7 +562,7 @@ class CmsBuilderTest extends TestCase
 
             $this->assertSame('Cms/Pages/Builder', $page->toArray()['component']);
             $this->assertCount(self::HOME_SECTIONS, $props['sections']);
-            $this->assertSame('hero', $props['sections'][0]['type']);
+            $this->assertSame('hero-full', $props['sections'][0]['type']);
             $this->assertSame('', $props['page']['slug']);
             $this->assertSame('published', $props['page']['status']);
             $this->assertFalse($props['page']['hasDraft']);
@@ -549,7 +574,7 @@ class CmsBuilderTest extends TestCase
        does not exist and then refused every save. */
     public function test_an_unknown_page_id_cannot_be_opened(): void
     {
-        foreach ([2, 5, 9] as $id) {
+        foreach ([404, 405, 999] as $id) {
             $this->get("/cms/pages/{$id}/edit")->assertNotFound();
         }
     }
@@ -567,7 +592,7 @@ class CmsBuilderTest extends TestCase
         $this->get('/')->assertInertia(function ($page) {
             $sections = $page->toArray()['props']['sections'];
             $this->assertCount(self::HOME_SECTIONS, $sections);
-            $this->assertSame('Independent advice.', $sections[0]['data']['heading']);
+            $this->assertSame('Find the right real estate agent,', $sections[0]['data']['heading']);
         });
     }
 

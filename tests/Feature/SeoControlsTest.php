@@ -154,6 +154,70 @@ class SeoControlsTest extends TestCase
         $this->assertStringNotContainsString('application/ld+json', $html);
     }
 
+    /**
+     * The three renders that used to emit no head at all. A preview address is behind
+     * permit:content.manage, but a leaked one is the classic way an unfinished page reaches
+     * search — and the sign-in form is not content, so it is told not to follow anything either.
+     */
+    public function test_nothing_internal_invites_a_crawler(): void
+    {
+        $page = $this->page('services');
+
+        /* The suite signs in for every test; /login is for whoever is not. */
+        $signedIn = auth()->user();
+        auth()->logout();
+
+        $this->assertStringContainsString(
+            'name="robots" content="noindex, nofollow"',
+            $this->get('/login')->assertOk()->getContent(),
+        );
+
+        $this->actingAs($signedIn);
+
+        (new PageContentStore)->saveDraft('services', [
+            ['id' => 'a', 'type' => 'hero', 'active' => true, 'data' => ['heading' => 'Draft']],
+        ], 'Tester');
+
+        $this->assertStringContainsString(
+            'name="robots" content="noindex, follow"',
+            $this->get("/cms/pages/{$page->cms_id}/preview")->assertOk()->getContent(),
+        );
+    }
+
+    /** Forced, so a page the editor has chosen to index still previews un-indexably. */
+    public function test_a_preview_is_hidden_even_when_the_page_itself_is_not(): void
+    {
+        $page = $this->page('services');
+
+        $this->details($page, ['title' => 'What we do', 'noindex' => false]);
+
+        $this->assertStringContainsString(
+            'name="robots" content="noindex, follow"',
+            $this->get("/cms/pages/{$page->cms_id}/preview")->assertOk()->getContent(),
+        );
+
+        $this->assertStringNotContainsString(
+            'name="robots"',
+            $this->get('/services')->assertOk()->getContent(),
+        );
+    }
+
+    public function test_an_article_preview_is_hidden_and_describes_nothing(): void
+    {
+        $this->post('/cms/blog', [
+            'title' => 'Planning a downsize',
+            'body' => '<p>Words.</p>',
+        ])->assertRedirect();
+
+        $post = BlogPost::sole();
+        $post->update(['status' => 'published', 'published_at' => now()]);
+
+        $html = $this->get("/cms/blog/{$post->id}/preview")->assertOk()->getContent();
+
+        $this->assertStringContainsString('name="robots" content="noindex, follow"', $html);
+        $this->assertStringNotContainsString('application/ld+json', $html);
+    }
+
     public function test_a_published_article_carries_the_dates_its_structured_data_needs(): void
     {
         $this->post('/cms/blog', [

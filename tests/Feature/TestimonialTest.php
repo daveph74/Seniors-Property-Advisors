@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Content\ContentLibrary;
+use App\Content\PageContentStore;
 use App\Models\Media;
 use App\Models\Testimonial;
 use Tests\TestCase;
@@ -163,10 +164,22 @@ class TestimonialTest extends TestCase
         $this->assertSame(['First', 'Second'], $names);
     }
 
-    public function test_the_home_page_receives_the_featured_ones(): void
+    /* The library reaches every page, so the section can be placed on any of them. The seeded
+       home page carries no testimonials section, so this puts one there rather than assuming. */
+    public function test_a_page_carrying_the_section_receives_the_featured_ones(): void
     {
         $this->consented(['name' => 'Featured one', 'featured' => true]);
         $this->consented(['name' => 'Not featured', 'sort_order' => 2]);
+
+        $store = new PageContentStore;
+        $store->saveDraft('home', [[
+            'id' => 'testimonials',
+            'type' => 'testimonials',
+            'label' => 'Client testimonials',
+            'active' => true,
+            'data' => ['source' => 'featured'],
+        ]], 'Tester');
+        $store->publish('home', 'Tester');
 
         $this->get('/')->assertOk()->assertInertia(function ($page) {
             $props = $page->toArray()['props'];

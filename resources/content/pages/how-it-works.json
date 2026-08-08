@@ -1,0 +1,115 @@
+{
+    "slug": "how-it-works",
+    "url": "/how-it-works",
+    "cmsId": 5,
+    "title": "How it works",
+    "navLabel": "How it works",
+    "status": "published",
+    "seo": {
+        "title": "How It Works: First Call to Sold",
+        "description": "Four calm steps from your first conversation to sold, with an independent advisor beside you the whole way. See what happens at each stage before you commit to anything."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "how",
+            "type": "process-steps",
+            "label": "How it works",
+            "active": true,
+            "data": {
+                "eyebrow": "How it works",
+                "heading": "A simple, supported process —",
+                "headingEm": "start to sold.",
+                "lead": "Four calm steps, with an advisor walking with you the whole way.",
+                "items": [
+                    {
+                        "num": "01",
+                        "title": "Tell us about your property",
+                        "body": "A short conversation about your home, your timeline and what matters most to you in this move."
+                    },
+                    {
+                        "num": "02",
+                        "title": "We research suitable agents",
+                        "body": "We review recent sales, listing prices and seller reviews to shortlist agents who genuinely fit your suburb."
+                    },
+                    {
+                        "num": "03",
+                        "title": "You compare your options",
+                        "body": "Receive a clear comparison — experience, recent sales, fees and marketing — with notes from your advisor."
+                    },
+                    {
+                        "num": "04",
+                        "title": "Choose the agent that fits",
+                        "body": "Meet your shortlist on your terms, with our advisor present if you’d like. Decide in your own time."
+                    }
+                ]
+            }
+        },
+        {
+            "id": "what-you-get",
+            "type": "trust-cards",
+            "label": "What you come away with",
+            "active": true,
+            "data": {
+                "eyebrow": "What you come away with",
+                "heading": "Something to hold on to",
+                "headingEm": "at every stage.",
+                "lead": "None of this is a sales meeting. Each step leaves you with something written down that you can take away, sleep on, and talk over with your family.",
+                "cta": {
+                    "label": "See what a comparison looks like",
+                    "href": "/compare-agents",
+                    "arrow": true
+                },
+                "items": [
+                    {
+                        "icon": "home",
+                        "title": "A read on your own home",
+                        "body": "What is selling near you, what buyers in your suburb are looking for, and where your home sits among them."
+                    },
+                    {
+                        "icon": "dollar",
+                        "title": "The costs, before you commit",
+                        "body": "Commission, marketing and the smaller charges that tend to appear later — set out in advance so nothing arrives as a surprise."
+                    },
+                    {
+                        "icon": "user",
+                        "title": "One person who knows your case",
+                        "body": "The same advisor from the first call to the signed agreement, so you are never explaining your situation from the beginning again."
+                    }
+                ]
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,282 @@
+{
+    "slug": "free-guide",
+    "url": "/free-guide",
+    "cmsId": 22,
+    "title": "Free guide",
+    "navLabel": "Free guide",
+    "status": "published",
+    "seo": {
+        "title": "8 Questions to Ask Any Agent",
+        "description": "The eight questions worth asking before you sign with a real estate agent — what each one tells you, and what a good answer sounds like. Free, and nothing to fill in."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "guide",
+            "type": "section",
+            "label": "Free guide",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "white",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "guide-title",
+                    "type": "heading",
+                    "label": "8 questions to ask before choosing an agent",
+                    "active": true,
+                    "data": {
+                        "heading": "8 questions to ask before",
+                        "headingEm": "choosing an agent",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "guide-intro",
+                    "type": "rich-text",
+                    "label": "Introduction",
+                    "active": true,
+                    "data": {
+                        "body": "Nothing to download and no form to fill in — it is all on this page. Print it, or take it with you on your phone.\n\nMost people meet two or three agents before choosing one. The difference between those conversations is rarely the agent's confidence; it is what you thought to ask. These are the eight that tell you the most, and what a straight answer to each one sounds like.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q1-h",
+                    "type": "heading",
+                    "label": "1. What have you sold near me recently?",
+                    "active": true,
+                    "data": {
+                        "heading": "1. What have you sold near me in the last six months?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q1",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "Ask for addresses, what each one was advertised at, and what it actually sold for. An agent who works your streets can answer without checking. Recent matters more than long experience somewhere else: the buyers looking at your home this year are the ones they need to know.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q2-h",
+                    "type": "heading",
+                    "label": "2. What do you think it is worth, and why?",
+                    "active": true,
+                    "data": {
+                        "heading": "2. What do you think my home is worth, and what are you basing that on?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q2",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "The number matters less than the working behind it. Ask which sales they compared yours to and how those homes differed from yours.\n\nBe wary of the highest figure in the room. An agent who wins the listing on a price nobody will pay has only postponed the conversation — it comes back weeks later as a price reduction, after you have paid for the marketing.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q3-h",
+                    "type": "heading",
+                    "label": "3. What is your commission?",
+                    "active": true,
+                    "data": {
+                        "heading": "3. What is your commission, and what does it cover?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q3",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "Ask for it as a percentage and as a dollar figure at the price they have just quoted you, so you are comparing like with like. Ask whether it changes if the home sells for more or less than expected, and whether GST is included in the number they have said.\n\nCommission is negotiable. So is the point at which it is earned.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q4-h",
+                    "type": "heading",
+                    "label": "4. What will the marketing cost?",
+                    "active": true,
+                    "data": {
+                        "heading": "4. What will the marketing cost, who pays it, and when?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q4",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "Marketing is usually paid by you, and usually whether or not the home sells. Ask for the full list with a price against each line, then ask which of them they would drop if it were their own home.\n\nAsk when it falls due — up front, or at settlement.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q5-h",
+                    "type": "heading",
+                    "label": "5. Which method of sale, and why?",
+                    "active": true,
+                    "data": {
+                        "heading": "5. Which method of sale do you recommend, and why?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q5",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "Auction, private treaty, or a deadline for offers — each suits a different home and a different seller. The reason should be about your property and your timeline, not about what the office usually does.\n\nIf auction is recommended, ask what happens if it does not sell on the day, and what that has cost you by then.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q6-h",
+                    "type": "heading",
+                    "label": "6. Who will actually handle my sale?",
+                    "active": true,
+                    "data": {
+                        "heading": "6. Who will actually handle my sale?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q6",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "The person who comes to win the listing is not always the person who runs the open homes or rings you on a Saturday afternoon. Ask who that will be, and ask to meet them.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q7-h",
+                    "type": "heading",
+                    "label": "7. How will you keep me informed?",
+                    "active": true,
+                    "data": {
+                        "heading": "7. How and how often will you keep me informed?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q7",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "Ask what you will get after each inspection, and in what form — a call, an email, a written report. Ask whether you will be told what buyers actually said, including the unflattering parts. That feedback is what a price conversation should be built on.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "q8-h",
+                    "type": "heading",
+                    "label": "8. How long am I tied in?",
+                    "active": true,
+                    "data": {
+                        "heading": "8. What happens if I am not happy — how long am I tied to the agreement?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "q8",
+                    "type": "rich-text",
+                    "label": "Answer",
+                    "active": true,
+                    "data": {
+                        "body": "Agency agreements run for a fixed term and often continue afterwards until somebody ends them in writing. Ask how long yours runs, how it ends, and whether commission could still be owed to this agent if a buyer they introduced comes back later through somebody else.\n\nRead it before you sign it, and take it away overnight if you would like to. An agent who objects to that has told you something useful.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "guide-close-h",
+                    "type": "heading",
+                    "label": "Rather not do this alone",
+                    "active": true,
+                    "data": {
+                        "heading": "Rather not do this on your own?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "guide-close",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "This is the part we do with people every week. An advisor can sit in on those meetings, ask the follow-up questions, and tell you afterwards what the answers were worth.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "guide-link",
+                    "type": "button",
+                    "label": "See how it works",
+                    "active": true,
+                    "data": {
+                        "label": "See how we compare agents",
+                        "href": "/compare-agents",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

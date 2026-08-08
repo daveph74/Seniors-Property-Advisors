@@ -41,6 +41,10 @@ const CONTENT_SCHEMAS = {
             TEXT('savingCard.note', 'Sub-note'),
         ]),
     ],
+    'hero-full': [
+        ...HEAD,
+        IMG('image.src', 'Background image', 'image.alt'),
+    ],
     'trust-cards': [
         ...HEAD,
         GROUP('Header button', LINK_FIELDS('cta')),
@@ -82,6 +86,8 @@ const CONTENT_SCHEMAS = {
         AREA('heading', 'Heading'),
         TEXT('headingEm', 'Highlighted heading'),
         AREA('body', 'Supporting text'),
+        PICK('background', 'Background', [['navy', 'Navy'], ['white', 'White'], ['image', 'Photograph']]),
+        IMG('image.src', 'Background photograph', 'image.alt'),
     ],
     'info-card': [
         PICK('cardStyle', 'Card style', ['rating', 'saving']),

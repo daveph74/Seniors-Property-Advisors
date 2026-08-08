@@ -11,11 +11,15 @@ that proves it, is in `docs/acceptance.md`.
 
 ```sh
 composer setup          # install, .env, key, migrate, npm install, build
-php artisan migrate:fresh --seed
 docker compose up -d    # object storage for the media library, on :4566
 php artisan media:init  # create the bucket
+php artisan migrate:fresh --seed
 composer dev            # server, queue, logs and Vite together
 ```
+
+Storage comes up **before** seeding: the pages point at pictures in the media library, and
+`MediaSeeder` has nowhere to put them otherwise. Seed without it and the rows still appear with the
+right dimensions, but every picture 404s until you start it and seed again. See `docs/images.md`.
 
 The site is then at http://localhost:8000 and the CMS at http://localhost:8000/cms.
 **Vite only builds assets — it never serves pages**, so open the `artisan serve` address, not
@@ -67,6 +71,13 @@ notes in `.env.example`:
 
 Also run `php artisan media:optimise` once, and point the `AWS_*` variables at real object storage
 rather than the local container.
+
+**Do not run `php artisan db:seed` on a live site.** It is for setting one up. Pages are seeded with
+`updateOrCreate`, so every page the client has edited is replaced by the version in
+`resources/content/pages/`, and a page has revision history to recover from but the seeder does not
+ask first. The two `settings` rows are protected — they are inserted once and never overwritten — so
+the menus, SEO defaults and analytics ids survive, but nothing else does. To bring one new page into
+a running site, use `--class=` with a seeder that only touches it, or add it through the CMS.
 
 ## Where things live
 

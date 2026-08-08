@@ -46,7 +46,9 @@ class ActivityTest extends TestCase
 
         Faq::create(['question' => 'What does it cost?', 'answer' => 'Nothing.', 'sort_order' => 1]);
 
-        $entry = Activity::sole();
+        /* Scoped to the FAQ rather than sole(): seeding the default pages writes its own
+           entries, attributed to System, and those are not what this asserts. */
+        $entry = Activity::where('subject_type', 'Faq')->sole();
 
         $this->assertSame('Helen Marsh', $entry->by_name);
         $this->assertNotNull($entry->by_id);

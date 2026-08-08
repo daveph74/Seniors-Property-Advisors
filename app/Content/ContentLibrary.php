@@ -79,9 +79,15 @@ class ContentLibrary
      * One page of published articles, newest first. Capped because this ships with every
      * page render; the load-more route asks for later pages.
      *
-     * Filtering happens here rather than in the browser so that a filtered listing is a real
-     * address a reader can share or bookmark, works with JavaScript off, and pages correctly —
-     * a client-side filter would only ever sift the batch already loaded.
+     * Filtering happens here rather than in the browser for two reasons: a filtered listing is a
+     * real address a reader can share or bookmark, and it pages correctly — a client-side filter
+     * would only ever sift the batch already loaded, so with more than PER_PAGE articles it would
+     * quietly hide the matching ones sitting on later pages and look like it had worked.
+     *
+     * It does not, as this comment used to claim, make the listing work with JavaScript off.
+     * There is no server-side rendering here, so a reader without JavaScript gets an empty page
+     * whatever this method does. Shipping every article instead would trade the paging problem
+     * for a worse one, since the library rides along with every page render, not just the blog.
      */
     public function posts(int $page = 1, ?string $category = null): array
     {

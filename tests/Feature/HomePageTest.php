@@ -20,13 +20,10 @@ class HomePageTest extends TestCase
             $types = collect($page->toArray()['props']['sections'])->pluck('type')->all();
 
             $this->assertSame([
-                'hero',
+                'hero-full',
                 'trust-cards',
-                'process-steps',
-                'why-list',
-                'agent-compare',
-                'family',
-                'testimonials',
+                'text-image',
+                'blog-list',
                 'cta',
             ], $types);
         });

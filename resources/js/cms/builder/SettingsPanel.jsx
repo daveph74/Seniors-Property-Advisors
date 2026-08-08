@@ -32,7 +32,11 @@ const PANELS = [
  * so opening the panel can never quietly rewrite what the section was set to.
  */
 function optionsFor(field, library, value) {
-    if (! field.source) return field.options.map((o) => [o, o === '' ? 'Nothing' : o]);
+    /* An option is either a bare value, or a [value, label] pair when the stored value is a
+       slug that should not be shown to an editor as-is. */
+    if (! field.source) {
+        return field.options.map((o) => (Array.isArray(o) ? o : [o, o === '' ? 'Nothing' : o]));
+    }
 
     const listed = (library[field.source] || []).map((o) => (
         typeof o === 'string' ? [o, o] : [o.slug, o.name]

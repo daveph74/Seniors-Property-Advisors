@@ -41,8 +41,14 @@
     @isset($head['twitterCard'])
         <meta inertia name="twitter:card" content="{{ $head['twitterCard'] }}" />
     @endisset
+    {{-- One block or several. Separate scripts rather than an @graph: Google reads them the same
+         way, each validates on its own in the Rich Results Test, and a page that needs only one
+         keeps passing a bare array. JSON_HEX_TAG is what stops a `</script>` inside an editor's
+         FAQ answer from closing this one. --}}
     @isset($head['schema'])
-        <script type="application/ld+json">{!! json_encode($head['schema'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+        @foreach (array_is_list($head['schema']) ? $head['schema'] : [$head['schema']] as $schema)
+            <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
+        @endforeach
     @endisset
     {{-- DM Sans is bundled with the stylesheet now (see resources/css/app.css), so the public
          site makes no font request off this origin at all. Only the CMS still reaches out, for

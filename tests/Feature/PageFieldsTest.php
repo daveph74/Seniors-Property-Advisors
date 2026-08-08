@@ -156,16 +156,11 @@ class PageFieldsTest extends TestCase
      */
     public function test_the_menu_label_follows_the_blog_page_even_when_nested(): void
     {
-        $blog = Page::create([
-            'cms_id' => Page::max('cms_id') + 1,
-            'slug' => 'blog',
-            'url' => '/blog',
-            'title' => 'Blog',
-            'nav_label' => 'Advice',
-            'status' => 'published',
-            'seo' => [],
-            'published' => [],
-        ]);
+        /* The blog page ships in the seed now, so this relabels it rather than creating a
+           second one — the slug is unique and a duplicate would fail on insert. */
+        $blog = Page::where('slug', 'blog')->firstOrFail();
+
+        $blog->forceFill(['nav_label' => 'Advice'])->save();
 
         $child = collect($this->resourcesMenu()['children'])->firstWhere('href', '/blog');
 
@@ -290,12 +285,22 @@ class PageFieldsTest extends TestCase
     {
         $this->artisan('pages:scaffold')->assertSuccessful();
 
-        foreach (['about-us', 'our-services', 'how-it-works', 'resources', 'faqs', 'contact', 'privacy-policy', 'terms-and-conditions'] as $slug) {
+        /* Only the pages with no content of their own. Everything in the second list ships from
+           the seed with its copy already written, so scaffolding must leave those alone rather
+           than replace them with empty drafts. */
+        foreach (['about-us', 'our-services', 'resources'] as $slug) {
             $page = Page::where('slug', $slug)->first();
 
             $this->assertNotNull($page, "{$slug} was not created");
             $this->assertSame('draft', $page->status);
             $this->assertNotNull($page->nav_label);
+        }
+
+        foreach (['how-it-works', 'blog', 'faqs', 'contact', 'privacy-policy', 'terms-and-conditions', 'complaints'] as $slug) {
+            $seeded = Page::where('slug', $slug)->firstOrFail();
+
+            $this->assertSame('published', $seeded->status, "{$slug} was overwritten by the scaffold");
+            $this->assertNotEmpty($seeded->published);
         }
     }
 

@@ -1,6 +1,8 @@
 import ActionButton from './ActionButton';
+import { useHeadingLevel } from './headingLevel';
 
 export default function FamilySection({ data, actions, anchor }) {
+    const Heading = `h${useHeadingLevel()}`;
     const { image = {}, testimonial = {} } = data;
 
     return (
@@ -33,9 +35,9 @@ export default function FamilySection({ data, actions, anchor }) {
 
                     <div>
                         <div className="eyebrow-line">{data.eyebrow}</div>
-                        <h2>
+                        <Heading className="section-head__title">
                             {data.heading} <em>{data.headingEm}</em>
-                        </h2>
+                        </Heading>
                         <p className="section-lead">{data.lead}</p>
 
                         <ul className="checks">

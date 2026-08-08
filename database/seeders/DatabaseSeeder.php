@@ -14,6 +14,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([UserSeeder::class, ContentSeeder::class]);
+        /* SampleContentSeeder is not in Tests\TestCase, which seeds ContentSeeder alone —
+           articles and questions in the seed every test runs would break the counts they assert. */
+        /* MediaSeeder before ContentSeeder: the pages name /media/ addresses, and a page that
+           renders before the rows exist shows broken images. It needs the storage service up. */
+        $this->call([UserSeeder::class, MediaSeeder::class, ContentSeeder::class, SampleContentSeeder::class]);
     }
 }

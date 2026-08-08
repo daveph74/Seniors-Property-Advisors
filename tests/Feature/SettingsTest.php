@@ -30,16 +30,24 @@ class SettingsTest extends TestCase
         ], $overrides));
     }
 
+    /**
+     * updateOrCreate rather than create: some of these slugs — privacy-policy among them — are
+     * seeded content now, and a test that insists on minting its own copy hits the unique index
+     * the moment the site grows the page it was pretending to have.
+     */
     private function page(string $slug, string $status = 'published'): Page
     {
-        return Page::create([
-            'cms_id' => (Page::max('cms_id') ?? 0) + 1,
-            'slug' => $slug,
+        $page = Page::firstOrNew(['slug' => $slug]);
+
+        $page->fill([
+            'cms_id' => $page->cms_id ?? (Page::max('cms_id') ?? 0) + 1,
             'url' => '/'.$slug,
             'title' => ucfirst(str_replace('-', ' ', $slug)),
             'status' => $status,
             'published' => [['id' => 'a', 'type' => 'hero', 'active' => true, 'data' => []]],
-        ]);
+        ])->save();
+
+        return $page;
     }
 
     public function test_the_screen_loads_the_stored_settings(): void

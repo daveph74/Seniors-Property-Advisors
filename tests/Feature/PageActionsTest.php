@@ -95,7 +95,7 @@ class PageActionsTest extends TestCase
         $this->assertNotNull($copy);
         $this->assertSame('draft', $copy->status);
         $this->assertSame('/home-copy', $copy->url);
-        $this->assertSame(2, $copy->cms_id);
+        $this->assertSame(Page::max('cms_id'), $copy->cms_id);
         $this->assertStringEndsWith('(copy)', $copy->title);
         $this->assertSame([], $copy->published);
         $this->assertNotEmpty($copy->draft);
@@ -104,12 +104,14 @@ class PageActionsTest extends TestCase
 
     public function test_duplicating_twice_does_not_collide(): void
     {
+        $before = Page::count();
+
         $this->post('/cms/pages/1/duplicate')->assertRedirect();
         $this->post('/cms/pages/1/duplicate')->assertRedirect();
 
         $this->assertTrue(Page::where('slug', 'home-copy')->exists());
         $this->assertTrue(Page::where('slug', 'home-copy-2')->exists());
-        $this->assertSame(3, Page::count());
+        $this->assertSame($before + 2, Page::count());
     }
 
     public function test_a_duplicate_is_editable_and_does_not_touch_the_original(): void
@@ -117,7 +119,7 @@ class PageActionsTest extends TestCase
         $original = (new PageContentStore)->document('home');
 
         $this->post('/cms/pages/1/duplicate')->assertRedirect();
-        $this->get('/cms/pages/2/edit')->assertOk();
+        $this->get('/cms/pages/'.Page::where('slug', 'home-copy')->value('cms_id').'/edit')->assertOk();
 
         (new PageContentStore)->saveDraft('home-copy', [[
             'id' => 'hero', 'type' => 'hero', 'label' => 'Hero',

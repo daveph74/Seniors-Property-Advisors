@@ -28,7 +28,7 @@ class PermissionsTest extends TestCase
     {
         $this->asClient();
 
-        foreach (['/cms', '/cms/pages', '/cms/blog', '/cms/faqs', '/cms/testimonials', '/cms/media', '/cms/navigation', '/cms/global-content'] as $url) {
+        foreach (['/cms', '/cms/pages', '/cms/blog', '/cms/faqs', '/cms/testimonials', '/cms/enquiries', '/cms/media', '/cms/navigation', '/cms/global-content'] as $url) {
             $this->get($url)->assertOk();
         }
     }

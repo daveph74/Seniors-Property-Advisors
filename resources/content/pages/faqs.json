@@ -1,0 +1,109 @@
+{
+    "slug": "faqs",
+    "url": "/faqs",
+    "cmsId": 17,
+    "title": "FAQs",
+    "navLabel": "FAQs",
+    "status": "published",
+    "seo": {
+        "title": "Selling Costs, Timing & Pension",
+        "description": "Straight answers to the questions Australians over 60 ask most: what selling really costs, how long it takes, what it means for the pension, and how we choose the agents we recommend."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "faq-list",
+            "type": "faq-list",
+            "label": "Questions",
+            "active": true,
+            "data": {
+                "eyebrow": "Questions we are asked",
+                "heading": "The things people ask",
+                "headingEm": "before they start.",
+                "lead": "If your question is not here, ring us — no one will try to sign you up.",
+                "category": "",
+                "openFirst": true,
+                "showFilters": true,
+                "items": []
+            }
+        },
+        {
+            "id": "still-unsure",
+            "type": "section",
+            "label": "Still unsure",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "wash",
+                "spacing": "small"
+            },
+            "children": [
+                {
+                    "id": "unsure-heading",
+                    "type": "heading",
+                    "label": "Your question is not here?",
+                    "active": true,
+                    "data": {
+                        "heading": "Your question is not here?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "unsure-body",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Ring us and ask it. Nobody will try to sign you up on the call, and there is no question here we mind being asked twice. If you would rather see how the process runs before you speak to anybody, that is set out step by step as well.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "unsure-link",
+                    "type": "button",
+                    "label": "See how it works",
+                    "active": true,
+                    "data": {
+                        "label": "See how it works",
+                        "href": "/how-it-works",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

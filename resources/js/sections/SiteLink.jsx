@@ -31,9 +31,9 @@ const SETTLE_FOR = 1200;
  * 120ms second pass. This corrects on every frame until the offset is stable, and gives up
  * immediately if the reader starts scrolling themselves, so it can never fight them.
  *
- * Corrections are instant rather than smooth: the page sets html{scroll-behavior:smooth}, and
- * 'auto' resolves to that, so every correction animated and the queued animations rode straight
- * over a reader who had started scrolling. `scroll-margin-top` supplies the header offset.
+ * Corrections are instant rather than smooth, and say so: animating them queued a stack of
+ * scrolls that rode straight over a reader who had started scrolling themselves.
+ * `scroll-margin-top` supplies the header offset.
  */
 function glideTo(hash) {
     const el = document.getElementById(hash);
@@ -42,8 +42,9 @@ function glideTo(hash) {
 
     /*
      * Within a page there is nothing to correct — the layout settled long ago — so this is a
-     * single scroll, and it can be the smooth one the site asks for in CSS. Someone who has
-     * asked their system for less motion gets the jump instead.
+     * single scroll, and the only one on the site that glides. Asked for here rather than in CSS,
+     * because a stylesheet rule would also animate the scrolls Inertia makes when it changes page.
+     * Someone who has asked their system for less motion gets the jump instead.
      */
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -88,7 +89,15 @@ function jumpTo(hash) {
     requestAnimationFrame(settle);
 }
 
-export default function SiteLink({ href, children, onClick, ...rest }) {
+/**
+ * `preserveScroll` and `only` are handled rather than spread. Inertia's Link understands both, but
+ * two of the branches below render a plain anchor, and an unknown attribute on one of those
+ * reaches the DOM. Each branch is given them in the form it takes.
+ *
+ * `only` names the props the server should send back. A link that changes one part of a page —
+ * the article list under a category chip — has no reason to be sent the whole page again.
+ */
+export default function SiteLink({ href, children, onClick, preserveScroll = false, only, ...rest }) {
     const here = usePage().url.split('?')[0].split('#')[0] || '/';
     const { path, hash } = split(href);
 
@@ -111,7 +120,11 @@ export default function SiteLink({ href, children, onClick, ...rest }) {
                         return;
                     }
 
-                    router.visit(href, { onSuccess: () => jumpTo(hash) });
+                    router.visit(href, {
+                        preserveScroll,
+                        ...(only ? { only } : {}),
+                        onSuccess: () => jumpTo(hash),
+                    });
                 }}
                 {...rest}
             >
@@ -124,5 +137,15 @@ export default function SiteLink({ href, children, onClick, ...rest }) {
         return <a href={href} onClick={onClick} {...rest}>{children}</a>;
     }
 
-    return <Link href={href} onClick={onClick} {...rest}>{children}</Link>;
+    return (
+        <Link
+            href={href}
+            onClick={onClick}
+            preserveScroll={preserveScroll}
+            {...(only ? { only, preserveState: true } : {})}
+            {...rest}
+        >
+            {children}
+        </Link>
+    );
 }

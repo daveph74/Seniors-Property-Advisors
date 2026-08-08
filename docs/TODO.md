@@ -66,6 +66,17 @@ the dot is hardcoded. They are the last of the prototype's furniture. The search
 1024px by the responsive layer, which shrinks the problem without fixing it: on a laptop it still
 invites a search that never runs. Either build them or take them out.
 
+**Four section types still cannot carry the h1.** `ownerOfTheH1()` in
+`resources/js/sections/headingLevel.js` nominates a section to own the page's h1 when no hero is
+present, and `SectionHead` honours it — but a section that hardcodes `<h2>` ignores the nomination,
+so the page renders with **no h1 at all** while the resolver believes it handed the job to someone.
+
+`ProcessStepsSection`, `WhyListSection`, `AgentCompareSection` and `FamilySection` were fixed when
+the four menu pages shipped, because each of those pages is a single section that has to carry its
+own h1. `CtaSection`, `TrustCardsSection`, `TextImageSection` and `FaqListSection` still hardcode
+it. None of them leads a page today, so nothing is broken — but the first page built on one will be,
+silently. `SiteFooter` also hardcodes `<h2>`, which is correct: it is chrome, never a page's subject.
+
 **The page builder cannot be reordered by touch.** It still uses the HTML5 drag API, where
 `dragstart` never fires on a tablet. `resources/js/cms/useSortableList.js` is the pointer-based
 replacement, already used by the FAQ, testimonial and blog lists. Migrating the builder to it would
@@ -137,9 +148,14 @@ remembering the next time something here says "unreachable".
 
 ## Content, not code
 
-- Five of the six testimonials are sample data, with permission recorded as "Sample data" and
-  generated placeholder portraits in `public/sample-portraits/` (gitignored). They need replacing.
-- Two blog articles are fixtures written during development, not client copy.
+- **The testimonials are gone.** The six that existed only in the local database were destroyed by
+  `migrate:fresh` during development and were never in a seeder, so nothing brings them back. The
+  home page's testimonial section has nothing to show until real ones are entered — which is the
+  right outcome for client copy, but it means that section is unexercised.
+- `SampleContentSeeder` writes three articles and ten questions so the blog and FAQ listings have
+  something to list. All of it is placeholder, marked `Sample data`, and all of it wants replacing
+  with client copy. It runs from `DatabaseSeeder` only — never in tests, and it should never run in
+  production, for the same reason `UserSeeder` should not.
 - The footer still has dead `#` links for Pricing, Free guide, Selling checklist, Glossary, Privacy,
   Terms and Complaints. Each needs a page or removing.
 - `php artisan media:optimise` must be run once on any environment that has existing images — the

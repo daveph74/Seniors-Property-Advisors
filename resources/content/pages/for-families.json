@@ -1,0 +1,144 @@
+{
+    "slug": "for-families",
+    "url": "/for-families",
+    "cmsId": 14,
+    "title": "For families",
+    "navLabel": "For families",
+    "status": "published",
+    "seo": {
+        "title": "Helping a Parent Sell Their Home",
+        "description": "Helping a parent sell their home? Agent Finder is built for family conversations — plain explanations, no pressure, and all the time you need to think it through together."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "family",
+            "type": "family",
+            "label": "For families",
+            "active": true,
+            "anchor": "family",
+            "data": {
+                "eyebrow": "For families",
+                "heading": "Helping a parent sell",
+                "headingEm": "their home?",
+                "lead": "Many of the people we help aren’t selling themselves — they’re adult children supporting a parent through a downsize, a move closer to family, or the next chapter of care. Agent Finder is designed for these conversations.",
+                "checks": [
+                    "Loop the whole family in — your advisor speaks with everyone, at a pace that suits.",
+                    "Plain explanations of contracts, commission, marketing and timelines.",
+                    "Time to think — no agent contact until your parent feels ready.",
+                    "Support for the practical side too: stylists, conveyancers, moving services."
+                ],
+                "ctas": [
+                    {
+                        "label": "Start as a family",
+                        "variant": "primary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Talk it through with us",
+                        "variant": "ghost",
+                        "href": "/contact"
+                    }
+                ],
+                "image": {
+                    "src": "/media/2026/08/family-paperwork.jpg",
+                    "alt": "Adult daughter sitting with her mother going through paperwork"
+                },
+                "testimonial": {
+                    "quote": "“Mum felt heard the whole way through. We finally had a plan we all agreed on.”",
+                    "by": "— Rachel, helping her mother sell in Glenelg, SA",
+                    "avatar": "/media/2026/08/rachel.jpg"
+                }
+            }
+        },
+        {
+            "id": "not-ready-yet",
+            "type": "section",
+            "label": "When a parent is not ready",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "wash",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "ready-eyebrow",
+                    "type": "eyebrow",
+                    "label": "If the timing is not right",
+                    "active": true,
+                    "data": {
+                        "eyebrow": "If the timing is not right"
+                    }
+                },
+                {
+                    "id": "ready-heading",
+                    "type": "heading",
+                    "label": "It is often the family who is ready first.",
+                    "active": true,
+                    "data": {
+                        "heading": "It is often the family who is ready",
+                        "headingEm": "first.",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "ready-body",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "A parent who is unsure about moving is not being difficult. They are being asked to leave a house they have made every decision of their adult life in. We are used to that conversation, and we are content to be the ones who say there is no rush.\n\nIf the move is a year away, ring us anyway. Knowing what it would actually involve — the order things happen in, what it costs, how long each part takes — is usually what makes it thinkable at all.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "ready-link",
+                    "type": "button",
+                    "label": "Talk it through with an advisor",
+                    "active": true,
+                    "data": {
+                        "label": "Talk it through with an advisor",
+                        "href": "/contact",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

@@ -7,6 +7,7 @@ use App\Content\PageContentStore;
 use App\Content\ReusableSectionStore;
 use App\Content\SectionDiff;
 use App\Content\Seo;
+use App\Content\Site;
 use App\Content\StarterLayouts;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreatePageRequest;
@@ -219,9 +220,15 @@ class CmsPageController extends Controller
     {
         abort_if($data === null, 404);
 
+        $seo = Seo::forSharing($data['seo'] ?? [], null, url()->current());
+
         return Inertia::render('AgentFinder', [
             'title' => $data['title'],
-            'seo' => Seo::forSharing($data['seo'] ?? [], null, url()->current()),
+            'seo' => $seo,
+            /* noindex regardless of what the page itself asks for. A preview is behind
+               permit:content.manage, but a leaked preview address is the classic way an
+               unfinished page ends up in search, and the tag costs nothing. */
+            'head' => Seo::head(array_merge($seo, ['noindex' => true]), $data['title'], 'website', Site::seoDefaults()),
             'sections' => $data['sections'],
             'globals' => $this->store->globals(),
             'library' => $this->library->for($this->resolveSlug($page)),

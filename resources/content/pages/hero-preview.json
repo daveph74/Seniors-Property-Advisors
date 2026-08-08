@@ -1,0 +1,113 @@
+{
+    "slug": "hero-preview",
+    "url": "/hero-preview",
+    "cmsId": 15,
+    "title": "Hero preview",
+    "navLabel": "Hero preview",
+    "status": "archived",
+    "seo": {
+        "title": "Hero preview — Seniors Property Advisors",
+        "description": "Review page comparing the full-bleed hero treatment against the boxed hero.",
+        "noindex": true
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "hero-full",
+            "type": "hero-full",
+            "label": "Hero banner",
+            "active": true,
+            "data": {
+                "eyebrow": "Finding your agent",
+                "heading": "Find the right real estate agent,",
+                "headingEm": "without the stress.",
+                "lead": "We help Australian homeowners compare trusted local agents, understand their options, and make confident selling decisions — guided by an independent property advisor, not a salesperson.",
+                "image": {
+                    "src": "/media/2026/08/hero-home.jpg",
+                    "alt": "A property advisor with a tablet talking with a senior couple in their living room"
+                },
+                "ctas": [
+                    {
+                        "label": "Find My Agent",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Speak to an Advisor",
+                        "variant": "ghost",
+                        "href": "/contact",
+                        "onNavy": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "trust",
+            "type": "trust-cards",
+            "label": "Why Agent Finder exists",
+            "active": true,
+            "anchor": "how",
+            "data": {
+                "eyebrow": "Why Agent Finder exists",
+                "heading": "Choosing an agent shouldn’t feel",
+                "headingEm": "overwhelming.",
+                "lead": "Picking the wrong agent can cost homeowners tens of thousands — in commission, marketing, and a price that falls short. Agent Finder gives you a calm, guided way to compare your options before you commit.",
+                "cta": {
+                    "label": "Read our approach",
+                    "href": "/why-agent-finder",
+                    "arrow": true
+                },
+                "items": [
+                    {
+                        "icon": "home",
+                        "title": "Compare trusted local agents",
+                        "body": "We shortlist agents who actually work — and recently sold — in your suburb, not just anyone willing to pay for leads."
+                    },
+                    {
+                        "icon": "dollar",
+                        "title": "Understand fees & marketing",
+                        "body": "See realistic commission and marketing costs side‑by‑side, with plain‑English notes on what’s reasonable for your area."
+                    },
+                    {
+                        "icon": "shield",
+                        "title": "Get independent support",
+                        "body": "A real property advisor stays beside you — from the first conversation to signing the agreement. No agent pressure."
+                    }
+                ]
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}
