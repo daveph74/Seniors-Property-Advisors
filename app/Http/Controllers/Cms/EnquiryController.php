@@ -37,15 +37,7 @@ class EnquiryController extends Controller
         $show = (string) $request->query('show', 'new');
         $term = trim((string) $request->query('q', ''));
 
-        /* Opening one is what marks it read, and the header's counter is a closure resolved after
-           this returns — so the badge falls in the same response that opens the enquiry, with no
-           second request and no reload. A write on a GET, which is what "read on view" means
-           everywhere; it is confined to an enquiry that exists and is about to be shown. */
         $open = $request->integer('open') ?: null;
-
-        if ($open !== null) {
-            Enquiry::whereKey($open)->unread()->update(['read_at' => now()]);
-        }
 
         $query = Enquiry::query()
             /* "Waiting for a reply" means anything not finished, so something picked up but not
@@ -110,6 +102,24 @@ class EnquiryController extends Controller
             'statusChangedAt' => $enquiry->status_changed_at?->toIso8601String(),
             'readAt' => $enquiry->read_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * Reading one is a change, so it is a POST.
+     *
+     * This used to happen inside `index()` whenever `?open=` was present, which made a GET write to
+     * the database — and a GET is the one method anything feels free to make on your behalf. A link
+     * prefetched by a browser or an extension would have marked an enquiry read that nobody opened.
+     * Only the badge was ever at stake, but a safe method should stay safe.
+     */
+    public function read(Enquiry $enquiry): RedirectResponse
+    {
+        /* Guarded so opening the same enquiry twice does not move when it was first read. */
+        if ($enquiry->read_at === null) {
+            $enquiry->update(['read_at' => now()]);
+        }
+
+        return back();
     }
 
     /**

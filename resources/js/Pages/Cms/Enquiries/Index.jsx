@@ -70,6 +70,18 @@ export default function EnquiriesIndex({
 
     const close = () => visit({ page: pagination?.page }, { replace: true });
 
+    /* Reading one is a change, so it is a POST rather than a side effect of the address carrying
+       `?open=`. It fires once, when an unread enquiry is actually put in front of somebody. */
+    useEffect(() => {
+        if (! opened || opened.readAt) return;
+
+        router.post(`/cms/enquiries/${opened.id}/read`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['enquiries', 'opened', 'notifications'],
+        });
+    }, [opened?.id, opened?.readAt]);
+
     const setStatus = (enquiry, status) => router.patch(`/cms/enquiries/${enquiry.id}/status`, { status }, {
         preserveScroll: true,
         preserveState: true,

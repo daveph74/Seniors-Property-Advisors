@@ -6,9 +6,15 @@ mass assignment, and what the media route serves.
 
 Reviewed at commit `01772f3`, on top of the search, notifications, enquiry and pagination work.
 
-**Status:** findings **#1, #2, #3, #5 and #6 are fixed**. **#4, #7 and #8 stand** — #4 and #7 by
-decision, #8 because it is a deployment checklist rather than code. Each fixed finding says what was
-done underneath it.
+**Status:** findings **#1–#6 and #8 are fixed**. **#7 stands by design** — the media library is
+public because it holds the site's images. Each finding says what was done underneath it.
+
+A ninth issue was found afterwards and is the largest of them: **nothing set a single security
+response header**. See *Response headers* below.
+
+An OWASP Top 10 pass followed, category by category, in
+`tests/Feature/Security/OwaspTest.php` — 31 tests. It is not a substitute for the per-feature
+suites; it exists so a category nobody has thought about since cannot quietly stop being true.
 
 ---
 
@@ -80,7 +86,12 @@ The exposure is that this safety lives **entirely in response headers**, so it d
 headers surviving whatever CDN or proxy ends up in front of the route. `docs/TODO.md` already states
 the choice: parse the XML and reject scripts, or drop SVG support.
 
-### 4. An enquiry is marked read by a GET — low
+### 4. An enquiry is marked read by a GET — low — **FIXED**
+
+> Reading one is now `POST /cms/enquiries/{enquiry}/read`, fired by the modal when an unread
+> enquiry is actually put in front of somebody. The address still carries `?open=` so the bell can
+> link to one and Back still closes it — the deep link stayed, the write moved off it.
+
 
 `EnquiryController::index()` writes `read_at` when `?open={id}` is present. `SESSION_SAME_SITE` is
 `lax`, so a cross-site sub-resource (an `<img>` tag) will not carry the session cookie — but a link
@@ -125,7 +136,17 @@ Worth stating plainly for whoever maintains it: **the media library is public**.
 confidential should ever be uploaded to it, and the upload allowlist being images-only is what keeps
 that true.
 
-### 8. Deployment gates are documented but unticked — informational
+### 8. Deployment gates are documented but unticked — informational — **CHECKABLE**
+
+> `php artisan security:check --production` now answers this list rather than leaving it in prose:
+> debug off, an app key, HTTPS-only and same-site session cookies, an HTTPS site address. It reports
+> rather than enforces — refusing to boot on a misconfiguration turns a warning into an outage — and
+> it exits non-zero under `--production`, so a deploy step can gate on it.
+>
+> **The settings themselves are still yours to set on the day.** The command tells you whether you
+> have. Right now, judged as production, this environment fails three of them, which is correct: it
+> is a development machine.
+
 
 - `SESSION_SECURE_COOKIE=true` once served over HTTPS (`config/session.php:172` defaults to unset).
 - `APP_DEBUG=false` in production — `.env.example` ships `true`, correctly, for local.
@@ -135,6 +156,38 @@ that true.
 None is a code defect. All four are things that have to be true on the day.
 
 ---
+
+### 9. Nothing set a single security response header — high — **FIXED**
+
+Found while working through OWASP A05. Every response left the application with no
+`Content-Security-Policy`, no `X-Frame-Options`, no `X-Content-Type-Options`, no `Referrer-Policy`
+and no `Permissions-Policy` — and announced its PHP version in `X-Powered-By`. The CMS could be
+framed by any site on the internet, which is all clickjacking needs.
+
+`app/Http/Middleware/SecurityHeaders.php` now sets them on every response, including the media route
+and the sitemap.
+
+The policy is **built per request**, for one reason worth understanding before changing it: the
+Google analytics ids are content. An editor can turn tracking on from Settings with no deploy, so a
+fixed policy would either permanently allow Google on a site that never calls it, or break tracking
+the moment somebody switched it on. It allows exactly what the request in hand will use — and a test
+pins both halves of that.
+
+Two deliberate choices:
+
+- **Inline scripts carry a nonce, not `'unsafe-inline'`.** `Vite::useCspNonce()` puts the same nonce
+  on Vite's tags and the two tracking snippets ask for it by name.
+- **`style-src` keeps `'unsafe-inline'`.** React sets element styles through the `style` prop, which
+  is a style attribute, and the builder canvas is built the same way. Removing it would mean
+  rewriting how every component is styled for no attacker benefit worth the change. Script execution
+  is what a policy is really for.
+
+`Strict-Transport-Security` is sent **only on secure requests** — over plain HTTP browsers ignore it
+and it would pin a developer's machine to a scheme it is not serving.
+
+Verified in a browser across the public site, an article, the CMS, the settings screen, the search
+palette and the builder canvas — the last being the sharpest test, since it portals React into an
+`about:blank` iframe. **No violations anywhere.**
 
 ## What holds up
 
@@ -208,6 +261,21 @@ Reachability, recorded so the severities are read in context rather than by thei
 
 - No live testing against a deployed environment; this is a code review.
 - Infrastructure: S3 bucket policy, CDN configuration and TLS are outside the repository.
+
+## On the securityheaders.com grade
+
+The six headers that grade counts are all set: `Content-Security-Policy`,
+`Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` and
+`Permissions-Policy`. `X-Powered-By` is removed, and `Cross-Origin-Opener-Policy` and
+`X-Permitted-Cross-Domain-Policies` are set beyond the six.
+
+**This has not been confirmed against the real scanner, and cannot be from here.** Two things are
+only true once the site is live behind HTTPS:
+
+1. **HSTS is sent only on secure requests.** Over `http://127.0.0.1` it is deliberately absent, so a
+   scan of a local address would score lower than the deployed site.
+2. The scanner needs a public URL. Run it after deploy, and re-run
+   `php artisan security:check --production` at the same time — the two answer different questions.
 
 ## Worth repeating
 

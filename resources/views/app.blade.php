@@ -68,12 +68,14 @@
          Blade's escaping would not help. --}}
     @if (! request()->is('cms', 'cms/*', 'login'))
         @php($tracking = App\Content\Site::tracking())
+        {{-- The nonce is what lets these two run under the policy while everything else inline
+             stays blocked. `SecurityHeaders` mints it and Vite prints the same one on its tags. --}}
         @isset($tracking['gtm'])
-            <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{{ $tracking['gtm'] }}');</script>
+            <script nonce="{{ Illuminate\Support\Facades\Vite::cspNonce() }}">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','{{ $tracking['gtm'] }}');</script>
         @endisset
         @isset($tracking['ga4'])
-            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $tracking['ga4'] }}"></script>
-            <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $tracking['ga4'] }}');</script>
+            <script async nonce="{{ Illuminate\Support\Facades\Vite::cspNonce() }}" src="https://www.googletagmanager.com/gtag/js?id={{ $tracking['ga4'] }}"></script>
+            <script nonce="{{ Illuminate\Support\Facades\Vite::cspNonce() }}">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $tracking['ga4'] }}');</script>
         @endisset
     @endif
 </head>

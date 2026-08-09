@@ -122,6 +122,8 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::get('/enquiries', [CmsEnquiryController::class, 'index'])->name('enquiries.index');
     Route::patch('/enquiries/{enquiry}/status', [CmsEnquiryController::class, 'status'])
         ->whereNumber('enquiry')->name('enquiries.status');
+    Route::post('/enquiries/{enquiry}/read', [CmsEnquiryController::class, 'read'])
+        ->whereNumber('enquiry')->name('enquiries.read');
     Route::delete('/enquiries/{enquiry}', [CmsEnquiryController::class, 'destroy'])
         ->whereNumber('enquiry')->middleware('permit:content.delete')->name('enquiries.destroy');
 

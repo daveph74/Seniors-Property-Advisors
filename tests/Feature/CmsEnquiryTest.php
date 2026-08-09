@@ -107,35 +107,41 @@ class CmsEnquiryTest extends TestCase
     }
 
     /**
-     * Opening one is what marks it read, and the header's counter has to fall in that same
-     * response — a badge that needs a reload to catch up is a badge nobody trusts.
+     * Marking one read is a change, so it is a POST. It used to happen inside the listing whenever
+     * `?open=` was present, which made a GET write to the database — and a GET is the one method
+     * anything feels free to make on somebody's behalf.
      */
-    public function test_opening_an_enquiry_marks_it_read_in_the_same_response(): void
+    public function test_opening_an_enquiry_does_not_by_itself_mark_it_read(): void
     {
         $enquiry = $this->enquiry();
 
-        $this->get('/cms/enquiries')->assertInertia(fn ($page) => $this->assertSame(
-            1, $page->toArray()['props']['notifications']['unread'],
-        ));
-        $this->assertNull($enquiry->refresh()->read_at);
+        $this->get("/cms/enquiries?show=all&open={$enquiry->id}")->assertOk();
 
-        $this->get("/cms/enquiries?show=all&open={$enquiry->id}")->assertOk()->assertInertia(function ($page) {
-            $this->assertSame(0, $page->toArray()['props']['notifications']['unread']);
-            $this->assertNotNull($page->toArray()['props']['enquiries'][0]['readAt']);
-        });
+        $this->assertNull($enquiry->refresh()->read_at);
+        $this->assertSame(1, Enquiry::unread()->count());
+    }
+
+    public function test_reading_one_records_when_and_clears_the_badge(): void
+    {
+        $enquiry = $this->enquiry();
+
+        $this->assertSame(1, $this->get('/cms')->viewData('page')['props']['notifications']['unread']);
+
+        $this->post("/cms/enquiries/{$enquiry->id}/read")->assertRedirect();
 
         $this->assertNotNull($enquiry->refresh()->read_at);
+        $this->assertSame(0, $this->get('/cms')->viewData('page')['props']['notifications']['unread']);
     }
 
     public function test_reading_one_twice_does_not_move_when_it_was_read(): void
     {
         $enquiry = $this->enquiry();
 
-        $this->get("/cms/enquiries?open={$enquiry->id}");
+        $this->post("/cms/enquiries/{$enquiry->id}/read");
         $first = $enquiry->refresh()->read_at;
 
         $this->travel(5)->minutes();
-        $this->get("/cms/enquiries?open={$enquiry->id}");
+        $this->post("/cms/enquiries/{$enquiry->id}/read");
 
         $this->assertEquals($first, $enquiry->refresh()->read_at);
     }

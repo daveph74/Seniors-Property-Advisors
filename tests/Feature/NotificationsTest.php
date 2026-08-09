@@ -56,7 +56,7 @@ class NotificationsTest extends TestCase
         $this->assertSame(1, $this->notifications()['unread']);
         $this->assertSame(1, $this->notifications()['counts']['enquiries']);
 
-        $this->get("/cms/enquiries?open={$enquiry->id}")->assertOk();
+        $this->post("/cms/enquiries/{$enquiry->id}/read")->assertRedirect();
 
         $this->assertSame(0, $this->notifications()['unread']);
         $this->assertSame(1, $this->notifications()['counts']['enquiries'], 'reading is not answering');
