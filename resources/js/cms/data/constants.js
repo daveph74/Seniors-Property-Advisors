@@ -23,6 +23,14 @@ export const NAV_ITEMS = [
     { id: 'settings', label: 'Settings' },
 ];
 
+/* What a number beside a module means, spelled out. These count work still outstanding, not
+   anything unread — the bell is what clears when you look at something — and a bare figure next to
+   a word reads as "unread" to anybody who has not been told otherwise. */
+export const COUNT_LABELS = {
+    enquiries: (n) => `${n} ${n === 1 ? 'enquiry' : 'enquiries'} waiting for a reply`,
+    pages: (n) => `${n} ${n === 1 ? 'page has' : 'pages have'} unpublished changes`,
+};
+
 export const SCREEN_TITLES = {
     dashboard: 'Dashboard',
     pages: 'Pages',

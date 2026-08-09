@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
-import { NAV_ITEMS } from '../data/constants';
+import { COUNT_LABELS, NAV_ITEMS } from '../data/constants';
 import { DropdownMenu, MenuItem, MenuSeparator } from '../components/ui';
 import {
     DashboardIcon, PagesIcon, BlogIcon, FaqsIcon, TestimonialsIcon, MediaIcon,
@@ -64,6 +64,7 @@ export default function Sidebar({ active }) {
                     const Icon = ICONS[item.id];
                     const isActive = active === item.id;
                     const count = counts[item.id];
+                    const meaning = count ? COUNT_LABELS[item.id]?.(count) : null;
                     return (
                         <Link
                             key={item.id}
@@ -72,7 +73,12 @@ export default function Sidebar({ active }) {
                         >
                             <Icon size={17} strokeWidth={1.7} />
                             <span>{item.label}</span>
-                            {count ? <span className="cms-nav-item__count">{count}</span> : null}
+                            {count ? (
+                                <span className="cms-nav-item__count" title={meaning ?? undefined}>
+                                    <span aria-hidden="true">{count}</span>
+                                    <span className="cms-sr-only">{meaning ?? count}</span>
+                                </span>
+                            ) : null}
                         </Link>
                     );
                 })}
