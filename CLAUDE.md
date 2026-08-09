@@ -18,6 +18,7 @@ Section storage is JSON-snapshot based, not normalised rows.
 - `php artisan serve` — app at http://localhost:8000 (Vite only builds assets; it never serves pages)
 - `npm run dev` / `npm run build` — assets. Exit `npm run dev` with Ctrl+C so it removes `public/hot`; a stale `hot` file points assets at a dead Vite server and renders a blank page
 - `composer test` — clears config, then `php artisan test`
+- `npm run e2e` — builds assets, then drives the CMS in a real browser (Playwright). `npm run e2e:report` opens the last report
 - `./vendor/bin/pint` — PHP formatting
 
 ## Layout
@@ -139,7 +140,27 @@ would otherwise compare against the hash that was just replaced.
 Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
 `SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
 
-## Current state
+## Browser tests
+
+`e2e/` drives the **CMS admin** through Chromium. It covers what PHPUnit cannot see: that a screen
+renders, that a form's save button is reachable and enabled, and that what was typed comes back
+after a reload.
+
+Its database is its own — `database/e2e.sqlite`, rebuilt from scratch by `e2e/global-setup.mjs`
+on every run. `APP_ENV=e2e` must go in the **server process's environment**, not on the command
+line: `php artisan serve` forwards a whitelist of variables to the server it starts and drops
+`--env`, so `serve --env=e2e` quietly runs the site against the developer's own database. That is
+how three test enquiries once landed in `database/database.sqlite`.
+
+Two constraints shape the suite, and both are load-bearing:
+
+- **One worker.** `artisan serve` is PHP's built-in server — one request at a time, and it cannot
+  fork on Windows. A second worker deadlocks the moment one page waits on an Inertia POST.
+- **One sign-in.** `/login` is throttled at ten attempts a minute, so `auth.setup.js` signs in once
+  and every test reuses the cookie. The tests that need a signed-out or client-administrator
+  browser opt out with `test.use({ storageState: … })` and sign in themselves.
+
+The public site is deliberately out of scope here; it is covered by the PHPUnit feature tests.
 
 The public site renders from the database, and the builder is functional: undo/redo,
 draft and per-version preview, restore-to-draft, reusable sections, and a real change
