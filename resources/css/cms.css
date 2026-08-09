@@ -183,8 +183,24 @@
 }
 .cms-input:focus, .cms-select:focus, .cms-textarea:focus{ border-color: var(--cms-accent-2); }
 .cms-textarea{ padding: 8px 10px; height: auto; line-height: 1.5; resize: vertical; }
-.cms-select{ color: var(--cms-text); }
+/* The browser's own control was left showing here, so a select sat among the inputs with a
+   different arrow, a different text colour and its own idea of spacing. The arrow is drawn as a
+   background so it matches the icons beside it, and the room for it is real padding rather than a
+   guess — a long option would otherwise run underneath it. */
+.cms-select{
+  color: var(--cms-text);
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C99AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 12px;
+}
+.cms-select:disabled{ color: var(--cms-text-quiet); cursor: not-allowed; background-color: var(--cms-tint); }
 .cms-input--sm, .cms-select--sm{ height: 34px; font-size: 12.5px; }
+.cms-select--sm{ padding-right: 26px; background-position: right 8px center; }
 .cms-hint{ font-size: 12px; color: var(--cms-text-mid); margin-top: 6px; }
 
 .cms-search{
@@ -430,7 +446,9 @@
 .cms-pager{ display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
 .cms-pager__count{ font-size: 12.5px; color: var(--cms-text-mid); }
 .cms-pager__size{ margin-left: auto; }
-.cms-pager__size .cms-select{ width: auto; height: 30px; font-size: 12.5px; padding: 0 6px; }
+/* Room for the arrow kept on the right — the old shorthand padding removed it and the option ran
+   underneath. */
+.cms-pager__size .cms-select{ width: auto; height: 30px; font-size: 12.5px; padding: 0 26px 0 8px; }
 .cms-pager__pages{ display: flex; align-items: center; gap: 4px; }
 .cms-pager__page{
   min-width: 30px; height: 30px; padding: 0 8px;
