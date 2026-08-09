@@ -35,7 +35,7 @@ export default function GlobalIndex({ globals }) {
     });
 
     return (
-        <div className="cms-page cms-page--medium">
+        <div className="cms-page">
             <div className="cms-impact-banner">
                 <WarningIcon size={17} stroke="#8A5300" />
                 <div className="cms-impact-banner__text">
