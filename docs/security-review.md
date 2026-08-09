@@ -166,43 +166,51 @@ Recorded so a later reviewer knows it was checked, not skipped.
 
 ## Dependency audit — 9 August 2026
 
-Run after the fixes above. **Nothing has been updated** — every one of these is a version bump, which
-is a release decision rather than part of a security fix.
+**All ten advisories are closed. Both audits now report clean.**
 
-### `composer audit` — 8 advisories, 2 packages, both transitive
+Only the two lockfiles changed — no constraint in `composer.json` or `package.json` moved, so
+nothing about what this project asks for has changed, only which patch of it is installed.
 
-| Package | Installed | Advisories | Fixed in | Reached from |
-|---|---|---|---|---|
-| `guzzlehttp/guzzle` | 7.15.1 | 1 high, 1 medium | 7.15.2 | `laravel/framework`, `aws/aws-sdk-php` |
-| `league/commonmark` | 2.8.3 | 4 high, 2 medium | 2.9.0 | `laravel/framework` |
+| Package | From | To | Advisories closed |
+|---|---|---|---|
+| `guzzlehttp/guzzle` | 7.15.1 | 7.15.3 | 1 high, 1 medium |
+| `guzzlehttp/promises` | 2.5.1 | 2.5.2 | — (carried by the above) |
+| `league/commonmark` | 2.8.3 | 2.9.0 | 4 high, 2 medium |
+| `nanoid` | 3.3.16 | 3.3.18 | 1 high |
+| `postcss` | 8.5.22 | 8.5.26 | 1 moderate |
 
-**Both are patch or minor bumps inside the existing constraints** (`^7.8.2`, `^2.8.1`), so
-`composer update guzzlehttp/guzzle league/commonmark` closes all eight without touching
-`composer.json`.
+Verified afterwards: 609 tests pass, Pint clean, `npm run build` succeeds, and the public site, the
+sign-in, the CMS and the suburb proxy were all exercised in a browser — the proxy specifically,
+because every `Http::` call in the application goes through Guzzle.
 
-Reachability, so the severities are read in context:
+### What the advisories were
+
+| Package | Reached from |
+|---|---|
+| `guzzlehttp/guzzle` | `laravel/framework`, `aws/aws-sdk-php` |
+| `league/commonmark` | `laravel/framework` |
+| `nanoid`, `postcss` | Vite, build-time only |
+
+Reachability, recorded so the severities are read in context rather than by their labels:
 
 - **Guzzle is genuinely in use** — every `Http::` call goes through it, including the public suburb
-  proxy. The high advisory (`CVE-2026-69246`, noncanonical host bypasses host-based checks) does not
-  bite here, because the only outbound host is a constant, but this is the one to update.
+  proxy. The high advisory (`CVE-2026-69246`, noncanonical host bypasses host-based checks) did not
+  bite here, because the only outbound host is a constant. It was still the one that mattered most.
 - **CommonMark is not called anywhere in this application.** Nothing in `app/` or the views uses
   `Str::markdown()` or Markdown mail; it arrives only as a Laravel dependency. Five of its six
   advisories are denial of service through crafted Markdown, which needs a path that parses
-  attacker-supplied Markdown — there is none. Update it, but it is not urgent.
-
-### `npm audit` — 2 advisories, both build-time only
-
-| Package | Severity | Advisory |
-|---|---|---|
-| `nanoid` <3.3.17 | high | custom generators can loop indefinitely when size is zero |
-| `postcss` ≤8.5.22 | moderate | `sourceMappingURL` reads arbitrary `.map` files when `from` is unset |
-
-Both are transitive under Vite. **Neither ships to production** — they run at build time only, and
-nothing in the built bundle contains them. `npm audit fix` reports it can resolve both without a
-major version change.
+  attacker-supplied Markdown — there is none. Updated on principle rather than exposure.
+- **`nanoid` and `postcss` never ship.** Both are transitive under Vite and run at build time only;
+  nothing in the built bundle contains them. A high severity on a build tool is not a high severity
+  on this website.
 
 ## Not covered
 
 - No live testing against a deployed environment; this is a code review.
 - Infrastructure: S3 bucket policy, CDN configuration and TLS are outside the repository.
-- The dependency updates above are reported, not applied.
+
+## Worth repeating
+
+A clean audit is a statement about today. Both files should be re-run before any release — and the
+GPL/MIT slip recorded under finding #3 is the reminder that a licence, like a version, is a fact to
+check rather than remember.
