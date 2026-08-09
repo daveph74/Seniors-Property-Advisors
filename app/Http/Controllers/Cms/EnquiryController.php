@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Cms;
 
+use App\Cms\Like;
+use App\Cms\Listing;
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\Enquiry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,57 +18,122 @@ use Inertia\Response;
  * What people send through the contact form.
  *
  * The form has worked since it was built, but nothing ever showed what it collected — enquiries
- * went into a table only a database client could read, and `handled_at` sat unused. A form nobody
- * reads is worse than no form: it invites somebody to ask for help and then loses the request.
+ * went into a table only a database client could read, and its one state column sat unused. A form
+ * nobody reads is worse than no form: it invites somebody to ask for help and then loses the
+ * request.
  *
  * Read and mark, never edit. The name, email, phone, suburb and message are the enquirer's own
- * words, and this screen has no business changing them — which is why marking one dealt with is
- * its own single-key route rather than a general `update()` that would be an editable-enquiry
- * endpoint by construction.
+ * words, and this screen has no business changing them — which is why setting the status is its own
+ * single-key route rather than a general `update()` that would be an editable-enquiry endpoint by
+ * construction.
  */
 class EnquiryController extends Controller
 {
-    public const PER_PAGE = 100;
+    /** How much of the message a list row carries. The rest is a click away in the modal. */
+    private const SNIPPET = 160;
 
     public function index(Request $request): Response
     {
         $show = (string) $request->query('show', 'new');
+        $term = trim((string) $request->query('q', ''));
 
-        $enquiries = Enquiry::query()
-            ->when($show === 'new', fn ($query) => $query->whereNull('handled_at'))
-            ->when($show === 'handled', fn ($query) => $query->whereNotNull('handled_at'))
+        $open = $request->integer('open') ?: null;
+
+        $query = Enquiry::query()
+            /* "Waiting for a reply" means anything not finished, so something picked up but not
+               closed stays in the default view rather than dropping out of sight. */
+            ->when($show === 'new', fn ($q) => $q->outstanding())
+            ->when($show === 'handled', fn ($q) => $q->where('status', Enquiry::DEALT_WITH))
+            /* Searched here, and across every enquiry rather than the page on screen — the box
+               used to filter the loaded rows, which with paging would quietly search a
+               twenty-fifth of the inbox. The message is included: the global palette leaves it out
+               so nobody browses an index of people's circumstances, but this is the screen whose
+               job is reading them. */
+            ->when($term !== '', fn ($q) => Like::any($q, $term, ['name', 'email', 'suburb', 'message']))
             /* The index is on created_at and several can share a second, so id is the tiebreak
                that makes "newest first" mean the same thing twice running. */
             ->latest('created_at')
-            ->latest('id')
-            ->limit(self::PER_PAGE)
-            ->get();
+            ->latest('id');
+
+        ['rows' => $enquiries, 'meta' => $meta] = Listing::slice($query, $request);
 
         return Inertia::render('Cms/Enquiries/Index', [
             'enquiries' => $enquiries->map(fn (Enquiry $enquiry) => [
                 'id' => $enquiry->id,
                 'name' => $enquiry->name,
-                'email' => $enquiry->email,
-                'phone' => $enquiry->phone,
-                'suburb' => $enquiry->suburb,
-                'message' => $enquiry->message,
-                'consented' => $enquiry->consented,
-                'page' => $enquiry->page_slug,
                 'at' => $enquiry->created_at?->toIso8601String(),
-                'handledAt' => $enquiry->handled_at?->toIso8601String(),
+                'status' => $enquiry->status,
+                'statusLabel' => $enquiry->statusLabel(),
+                'readAt' => $enquiry->read_at?->toIso8601String(),
+                /* A taste of it only. At a hundred a page the message bodies were most of what
+                   went down the wire, to be shown as one clipped line. */
+                'snippet' => Str::limit((string) $enquiry->message, self::SNIPPET),
             ])->all(),
-            'filters' => ['show' => $show],
+            /* Loaded by id, not found among the rows above. The bell links straight to an enquiry
+               and cannot know which filter or page it would land on — searching the loaded list
+               meant a link to a dealt-with one, or to anything past page one, opened nothing. */
+            'opened' => $this->detail($open),
+            'filters' => ['show' => $show, 'q' => $term],
+            'statuses' => Enquiry::STATUSES,
+            'pagination' => $meta,
             'counts' => [
-                'new' => Enquiry::whereNull('handled_at')->count(),
+                'new' => Enquiry::outstanding()->count(),
                 'all' => Enquiry::count(),
             ],
-            'perPage' => self::PER_PAGE,
         ]);
     }
 
-    public function handled(Request $request, Enquiry $enquiry): RedirectResponse
+    private function detail(?int $id): ?array
     {
-        $enquiry->update(['handled_at' => $request->boolean('handled') ? now() : null]);
+        $enquiry = $id === null ? null : Enquiry::find($id);
+
+        return $enquiry === null ? null : [
+            'id' => $enquiry->id,
+            'name' => $enquiry->name,
+            'email' => $enquiry->email,
+            'phone' => $enquiry->phone,
+            'suburb' => $enquiry->suburb,
+            'message' => $enquiry->message,
+            'consented' => $enquiry->consented,
+            'page' => $enquiry->page_slug,
+            'at' => $enquiry->created_at?->toIso8601String(),
+            'status' => $enquiry->status,
+            'statusLabel' => $enquiry->statusLabel(),
+            'statusChangedAt' => $enquiry->status_changed_at?->toIso8601String(),
+            'readAt' => $enquiry->read_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Reading one is a change, so it is a POST.
+     *
+     * This used to happen inside `index()` whenever `?open=` was present, which made a GET write to
+     * the database — and a GET is the one method anything feels free to make on your behalf. A link
+     * prefetched by a browser or an extension would have marked an enquiry read that nobody opened.
+     * Only the badge was ever at stake, but a safe method should stay safe.
+     */
+    public function read(Enquiry $enquiry): RedirectResponse
+    {
+        /* Guarded so opening the same enquiry twice does not move when it was first read. */
+        if ($enquiry->read_at === null) {
+            $enquiry->update(['read_at' => now()]);
+        }
+
+        return back();
+    }
+
+    /**
+     * The one thing this screen may change. Still its own single-key route rather than an
+     * `update()`, for the reason above — a general endpoint here would be an editable-enquiry
+     * endpoint by construction, whatever the request happened to carry.
+     */
+    public function status(Request $request, Enquiry $enquiry): RedirectResponse
+    {
+        $status = $request->validate([
+            'status' => ['required', Rule::in(array_keys(Enquiry::STATUSES))],
+        ])['status'];
+
+        $enquiry->update(['status' => $status, 'status_changed_at' => now()]);
 
         return back();
     }

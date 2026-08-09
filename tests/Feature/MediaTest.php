@@ -337,14 +337,72 @@ class MediaTest extends TestCase
         $this->postJson('/cms/media/sign', ['name' => 'logo.svg', 'size' => 2048])->assertOk();
     }
 
-    public function test_an_svg_is_recorded_without_being_processed(): void
+    public function test_a_plain_svg_is_recorded_and_keeps_its_artwork(): void
     {
         Storage::fake('s3');
-        Storage::disk('s3')->put('2026/08/mark.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
+        Storage::disk('s3')->put(
+            '2026/08/mark.svg',
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>',
+        );
 
         $this->postJson('/cms/media', [
             'key' => '2026/08/mark.svg', 'name' => 'mark.svg', 'mime' => 'image/svg+xml',
         ])->assertCreated()->assertJsonPath('mime', 'image/svg+xml');
+
+        $this->assertStringContainsString('<circle', Storage::disk('s3')->get('2026/08/mark.svg'));
+    }
+
+    /**
+     * The one upload nothing used to look at. An SVG is a document that can carry script, and the
+     * only thing standing between one and a reader was a response header surviving whatever sits
+     * in front of the route.
+     */
+    public function test_an_svg_is_rewritten_without_its_script(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/08/nasty.svg', <<<'SVG'
+            <svg xmlns="http://www.w3.org/2000/svg">
+                <script>alert(1)</script>
+                <circle cx="5" cy="5" r="4" onload="alert(2)"/>
+                <a xlink:href="javascript:alert(3)"><text>x</text></a>
+            </svg>
+            SVG);
+
+        $this->postJson('/cms/media', [
+            'key' => '2026/08/nasty.svg', 'name' => 'nasty.svg', 'mime' => 'image/svg+xml',
+        ])->assertCreated();
+
+        $stored = Storage::disk('s3')->get('2026/08/nasty.svg');
+
+        $this->assertStringNotContainsString('<script', $stored);
+        $this->assertStringNotContainsString('onload', $stored);
+        $this->assertStringNotContainsString('javascript:', $stored);
+        $this->assertStringContainsString('<circle', $stored, 'the drawing itself survives');
+    }
+
+    /** Anything the sanitiser cannot vouch for is refused outright rather than stored. */
+    public function test_an_svg_that_cannot_be_made_safe_is_refused_and_deleted(): void
+    {
+        Storage::fake('s3');
+
+        $refused = [
+            'foreign object' => '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><body xmlns="http://www.w3.org/1999/xhtml"><img src=x onerror="alert(1)"></body></foreignObject></svg>',
+            'external entity' => '<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><svg xmlns="http://www.w3.org/2000/svg"><text>&xxe;</text></svg>',
+            'not an svg' => 'this is not markup at all',
+            'empty file' => '',
+        ];
+
+        foreach ($refused as $label => $body) {
+            $key = '2026/08/'.md5($label).'.svg';
+            Storage::disk('s3')->put($key, $body);
+
+            $this->postJson('/cms/media', ['key' => $key, 'name' => 'x.svg', 'mime' => 'image/svg+xml'])
+                ->assertStatus(422);
+
+            $this->assertFalse(Storage::disk('s3')->exists($key), "{$label} was left in storage");
+        }
+
+        $this->assertSame(0, Media::count());
     }
 
     public function test_a_description_and_caption_can_be_saved_against_an_image(): void
@@ -639,6 +697,80 @@ class MediaTest extends TestCase
             $this->assertFalse($items[0]['isImage']);
             $this->assertTrue($items[1]['isImage']);
             $this->assertSame('PNG · 800 × 600', $items[1]['meta']);
+        });
+    }
+
+    public function test_an_image_can_be_opened_straight_from_a_link(): void
+    {
+        Storage::fake('s3');
+
+        $medium = $this->record(['key' => '2026/07/one.png', 'name' => 'one.png']);
+
+        $this->get('/cms/media')->assertInertia(fn ($page) => $page->where('selected', null));
+
+        /* The whole image, not its id: the library is paged, and an id resolved against the rows on
+           screen would open nothing whenever the picture sits on another page. */
+        $this->get("/cms/media?selected={$medium->id}")->assertInertia(function ($page) use ($medium) {
+            $selected = $page->toArray()['props']['selected'];
+
+            $this->assertSame($medium->id, $selected['id']);
+            $this->assertSame('one.png', $selected['name']);
+            $this->assertSame('/media/2026/07/one.png', $selected['url']);
+        });
+    }
+
+    /* Deleted between somebody searching and clicking, so it selects nothing rather than erroring. */
+    public function test_a_link_to_an_image_that_is_gone_still_opens_the_screen(): void
+    {
+        Storage::fake('s3');
+
+        $this->get('/cms/media?selected=98765')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('selected', null));
+        $this->get('/cms/media?selected=nonsense')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('selected', null));
+    }
+
+    public function test_the_library_pages_and_searches_on_the_server(): void
+    {
+        Storage::fake('s3');
+
+        foreach (range(1, 30) as $i) {
+            $this->record(['key' => sprintf('2026/07/p%02d.png', $i), 'name' => sprintf('photo-%02d.png', $i)]);
+        }
+
+        $this->get('/cms/media')->assertOk()->assertInertia(function ($page) {
+            $props = $page->toArray()['props'];
+
+            $this->assertCount(25, $props['items']);
+            $this->assertSame(30, $props['pagination']['total']);
+            $this->assertSame(2, $props['pagination']['lastPage']);
+        });
+
+        $this->get('/cms/media?page=2')->assertOk()->assertInertia(fn ($page) => $this->assertCount(
+            5, $page->toArray()['props']['items'],
+        ));
+
+        /* The oldest image is on page two, so a search that only looked at page one would miss it. */
+        $this->get('/cms/media?q=photo-01')->assertOk()->assertInertia(fn ($page) => $this->assertSame(
+            ['photo-01.png'], array_column($page->toArray()['props']['items'], 'name'),
+        ));
+    }
+
+    public function test_an_image_on_another_page_still_opens(): void
+    {
+        Storage::fake('s3');
+
+        $first = $this->record(['key' => '2026/07/first.png', 'name' => 'first.png']);
+
+        foreach (range(1, 30) as $i) {
+            $this->record(['key' => sprintf('2026/07/n%02d.png', $i), 'name' => sprintf('newer-%02d.png', $i)]);
+        }
+
+        $this->get("/cms/media?selected={$first->id}")->assertOk()->assertInertia(function ($page) use ($first) {
+            $props = $page->toArray()['props'];
+
+            $this->assertNotContains('first.png', array_column($props['items'], 'name'));
+            $this->assertSame($first->id, $props['selected']['id']);
         });
     }
 }

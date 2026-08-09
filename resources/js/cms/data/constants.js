@@ -3,23 +3,33 @@
    replaced was called mockData.js and mixed both, which is how an invented page list survived
    long enough to be rendered in the builder. */
 
-/* Counts stay empty. A number beside a module reads as fact, and the sidebar has no cheap way to
-   know the true one; the dashboard is where real counts are reported. */
+/* Labels only. Counts used to be hardcoded empty strings here because a number beside a module reads
+   as fact and this file had no way to know a true one — it still does not, which is the point: the
+   sidebar now takes them from the `notifications.counts` shared prop, keyed by these ids, so the
+   figure comes from the database or is absent. Nothing in this file stands in for content. */
 export const NAV_ITEMS = [
-    { id: 'dashboard', label: 'Dashboard', count: '' },
-    { id: 'pages', label: 'Pages', count: '' },
-    { id: 'blog', label: 'Blog', count: '' },
-    { id: 'faqs', label: 'FAQs', count: '' },
-    { id: 'testimonials', label: 'Testimonials', count: '' },
-    { id: 'enquiries', label: 'Enquiries', count: '' },
-    { id: 'media', label: 'Media', count: '' },
-    { id: 'activity', label: 'Activity', count: '' },
-    { id: 'deleted', label: 'Recently deleted', count: '' },
-    { id: 'navigation', label: 'Navigation', count: '' },
-    { id: 'global', label: 'Global content', count: '' },
-    { id: 'users', label: 'Users and roles', count: '' },
-    { id: 'settings', label: 'Settings', count: '' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'pages', label: 'Pages' },
+    { id: 'blog', label: 'Blog' },
+    { id: 'faqs', label: 'FAQs' },
+    { id: 'testimonials', label: 'Testimonials' },
+    { id: 'enquiries', label: 'Enquiries' },
+    { id: 'media', label: 'Media' },
+    { id: 'activity', label: 'Activity' },
+    { id: 'deleted', label: 'Recently deleted' },
+    { id: 'navigation', label: 'Navigation' },
+    { id: 'global', label: 'Global content' },
+    { id: 'users', label: 'Users and roles' },
+    { id: 'settings', label: 'Settings' },
 ];
+
+/* What a number beside a module means, spelled out. These count work still outstanding, not
+   anything unread — the bell is what clears when you look at something — and a bare figure next to
+   a word reads as "unread" to anybody who has not been told otherwise. */
+export const COUNT_LABELS = {
+    enquiries: (n) => `${n} ${n === 1 ? 'enquiry' : 'enquiries'} waiting for a reply`,
+    pages: (n) => `${n} ${n === 1 ? 'page has' : 'pages have'} unpublished changes`,
+};
 
 export const SCREEN_TITLES = {
     dashboard: 'Dashboard',

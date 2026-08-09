@@ -82,6 +82,25 @@ class SuburbLookupTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    /**
+     * A place id arrives from a visitor. Interpolated raw, one containing `../` walked back up the
+     * path and reached a different endpoint on Google's host — with this site's billable key on
+     * the request. Encoded, the traversal is just characters in a path segment.
+     */
+    public function test_a_place_id_cannot_steer_the_request_to_another_endpoint(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response([])]);
+
+        $this->getJson('/api/suburbs?place_id='.urlencode('../places:autocomplete'))->assertOk();
+
+        Http::assertSent(function ($request) {
+            $this->assertStringNotContainsString('places:autocomplete', $request->url());
+            $this->assertStringStartsWith('https://places.googleapis.com/v1/places/', $request->url());
+
+            return true;
+        });
+    }
+
     public function test_it_resolves_place_details(): void
     {
         Http::fake([

@@ -43,7 +43,7 @@ export default function SettingsIndex({ settings, pages = [] }) {
     });
 
     return (
-        <div className="cms-page" style={{ maxWidth: 1120 }}>
+        <div className="cms-page">
             <div className="cms-impact-banner">
                 <WarningIcon size={17} stroke="#8A5300" />
                 <div className="cms-impact-banner__text">

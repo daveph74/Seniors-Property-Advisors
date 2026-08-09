@@ -169,7 +169,18 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    /*
+     * Secure by default in production, rather than by remembering.
+     *
+     * This used to be unset unless somebody wrote SESSION_SECURE_COOKIE=true into the production
+     * environment, which meant the safe setting depended on a line in a document being read on the
+     * one day it mattered. A production deployment is served over HTTPS; if one somehow is not,
+     * the variable is still there to say so explicitly.
+     *
+     * It stays off locally for the reason `.env.example` gives: a secure-only cookie is never sent
+     * over http://localhost, so sign-in would appear to fail for no visible reason.
+     */
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------

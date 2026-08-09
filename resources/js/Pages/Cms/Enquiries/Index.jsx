@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
-import { Badge, SearchInput, Toggle } from '../../../cms/components/ui';
+import { Badge, Modal, SearchInput } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
+import Pagination from '../../../cms/components/Pagination';
+import { useDebounced } from '../../../cms/useDebounced';
 import { relative } from '../../../cms/relativeTime';
 import { useCmsToast } from '../../../cms/ToastContext';
 
@@ -12,31 +14,78 @@ const EMPTY = {
     all: 'No enquiries yet. They arrive here when somebody sends the contact form.',
 };
 
-export default function EnquiriesIndex({ enquiries = [], filters = {}, counts = {}, perPage = 100, auth }) {
+const TONE = { new: 'info', in_progress: 'warning', dealt_with: 'neutral' };
+
+/* Mirrors Listing::DEFAULT_SIZE — kept out of the address so a plain link stays a plain link. */
+const DEFAULT_SIZE = 25;
+
+export default function EnquiriesIndex({
+    enquiries = [], filters = {}, counts = {}, statuses = {}, opened = null, pagination = null, auth,
+}) {
     const flash = useCmsToast();
     const canDelete = auth?.can?.['content.delete'] === true;
 
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(filters.q || '');
     const [pendingDelete, setPendingDelete] = useState(null);
+    const settled = useDebounced(search);
+    const first = useRef(true);
 
-    const show = (value) => router.get('/cms/enquiries', { show: value }, {
+    /* What the address should say, with anything absent or default left out of it — an empty `q=`
+       or a `per_page` that is already the default is noise in a link somebody might paste. */
+    const params = (extra = {}) => {
+        const merged = {
+            show: filters.show,
+            q: settled || undefined,
+            per_page: pagination?.perPage === DEFAULT_SIZE ? undefined : pagination?.perPage,
+            ...extra,
+        };
+
+        return Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== undefined && v !== ''));
+    };
+
+    const visit = (extra, options = {}) => router.get('/cms/enquiries', params(extra), {
         preserveState: true,
         preserveScroll: true,
-        replace: true,
+        ...options,
     });
 
-    /* Only what is on screen — the server has already applied the filter, and searching a hundred
-       rows in the browser is instant where a round trip per keystroke would not be. */
-    const shown = enquiries.filter((e) => {
-        const q = search.trim().toLowerCase();
+    /* Anything that changes what matches leaves `page` behind with it — otherwise narrowing a
+       ten-page list while standing on page seven lands you on a page that no longer exists. */
+    useEffect(() => {
+        if (first.current) { first.current = false; return; }
+        if (settled === (filters.q || '')) return;
 
-        return ! q || [e.name, e.email, e.suburb, e.message]
-            .some((field) => (field || '').toLowerCase().includes(q));
-    });
+        visit({}, { replace: true });
+    }, [settled]);
 
-    const mark = (enquiry, handled) => router.patch(`/cms/enquiries/${enquiry.id}/handled`, { handled }, {
+    const show = (value) => visit({ show: value }, { replace: true });
+
+    const page = (n) => visit({ page: n });
+
+    const perPage = (n) => visit({ per_page: n === DEFAULT_SIZE ? undefined : n }, { replace: true });
+
+    /* The address carries which one is open, so the bell can link straight to an enquiry and the
+       browser's Back button closes it. */
+    const openEnquiry = (enquiry) => visit({ page: pagination?.page, open: enquiry.id });
+
+    const close = () => visit({ page: pagination?.page }, { replace: true });
+
+    /* Reading one is a change, so it is a POST rather than a side effect of the address carrying
+       `?open=`. It fires once, when an unread enquiry is actually put in front of somebody. */
+    useEffect(() => {
+        if (! opened || opened.readAt) return;
+
+        router.post(`/cms/enquiries/${opened.id}/read`, {}, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['enquiries', 'opened', 'notifications'],
+        });
+    }, [opened?.id, opened?.readAt]);
+
+    const setStatus = (enquiry, status) => router.patch(`/cms/enquiries/${enquiry.id}/status`, { status }, {
         preserveScroll: true,
-        onSuccess: () => flash(handled ? 'Marked as dealt with' : 'Put back on the list'),
+        preserveState: true,
+        onSuccess: () => flash(`Marked as ${(statuses[status] || status).toLowerCase()}`),
     });
 
     return (
@@ -55,38 +104,30 @@ export default function EnquiriesIndex({ enquiries = [], filters = {}, counts = 
 
                 <SearchInput
                     value={search}
-                    onChange={setSearch}
+                    onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search name, email, suburb or message"
                     width={280}
                 />
             </div>
 
-            {shown.length === 0 ? (
+            {enquiries.length === 0 ? (
                 <div className="cms-media-empty">
-                    {search.trim() ? 'Nothing matches that search.' : (EMPTY[filters.show] || EMPTY.all)}
+                    {settled.trim() ? 'Nothing matches that search.' : (EMPTY[filters.show] || EMPTY.all)}
                 </div>
             ) : (
                 <div className="cms-faq-list">
-                    {shown.map((e) => (
-                        <div key={e.id} className="cms-faq-row">
-                            <Badge tone={e.handledAt ? 'neutral' : 'info'} small>
-                                {e.handledAt ? 'Dealt with' : 'New'}
-                            </Badge>
+                    {enquiries.map((e) => (
+                        <button
+                            type="button"
+                            key={e.id}
+                            className={`cms-faq-row cms-enquiry-row${e.readAt ? '' : ' cms-enquiry-row--unread'}`}
+                            onClick={() => openEnquiry(e)}
+                        >
+                            <Badge tone={TONE[e.status] || 'neutral'} small>{e.statusLabel}</Badge>
 
                             <span className="cms-faq-row__q">
                                 {e.name}
-                                {e.message ? (
-                                    <small style={{ display: 'block', color: 'var(--cms-text-mid)', fontSize: 12.5, marginTop: 4 }}>
-                                        {e.message}
-                                    </small>
-                                ) : null}
-                                {/* Written as links so answering one is a click, not a copy and paste. */}
-                                <small style={{ display: 'block', color: 'var(--cms-text-mid)', fontSize: 12, marginTop: 4 }}>
-                                    <a href={`mailto:${e.email}`}>{e.email}</a>
-                                    {e.phone ? <> · <a href={`tel:${e.phone.replace(/\s/g, '')}`}>{e.phone}</a></> : null}
-                                    {e.suburb ? ` · ${e.suburb}` : ''}
-                                    {e.page ? ` · from ${e.page}` : ''}
-                                </small>
+                                {e.snippet ? <small className="cms-enquiry-row__snippet">{e.snippet}</small> : null}
                             </span>
 
                             <time
@@ -96,27 +137,75 @@ export default function EnquiriesIndex({ enquiries = [], filters = {}, counts = 
                             >
                                 {e.at ? relative(e.at) : ''}
                             </time>
-
-                            <Toggle
-                                on={Boolean(e.handledAt)}
-                                onChange={(on) => mark(e, on)}
-                                label="Dealt with"
-                            />
-
-                            {canDelete ? (
-                                <button type="button" className="cms-btn cms-btn--danger" onClick={() => setPendingDelete(e)}>
-                                    Delete
-                                </button>
-                            ) : null}
-                        </div>
+                        </button>
                     ))}
                 </div>
             )}
 
+            <Pagination meta={pagination} onPage={page} onPerPage={perPage} noun="enquiries" />
+
             <p className="cms-hint" style={{ marginTop: 12 }}>
-                The {perPage} most recent. These are the sender’s own words and cannot be edited here —
-                the only thing you can change is whether it has been dealt with.
+                These are the sender’s own words and cannot be edited here — the only thing you can
+                change is where it has got to.
             </p>
+
+            <Modal open={opened !== null} onClose={close}>
+                {opened ? (
+                    <>
+                        <div className="cms-enquiry-detail__head">
+                            <div style={{ minWidth: 0 }}>
+                                <h3 className="cms-modal__title">{opened.name}</h3>
+                                <div className="cms-enquiry-detail__sent">
+                                    Sent {opened.at ? relative(opened.at) : ''}
+                                    {opened.page ? ` from ${opened.page}` : ''}
+                                </div>
+                            </div>
+                            <button type="button" className="cms-icon-btn-sm" aria-label="Close" onClick={close}>×</button>
+                        </div>
+
+                        {/* Written as links so answering one is a click, not a copy and paste. */}
+                        <div className="cms-enquiry-detail__contact">
+                            <a href={`mailto:${opened.email}`}>{opened.email}</a>
+                            {opened.phone ? <> · <a href={`tel:${opened.phone.replace(/\s/g, '')}`}>{opened.phone}</a></> : null}
+                            {opened.suburb ? ` · ${opened.suburb}` : ''}
+                        </div>
+
+                        <p className="cms-enquiry-detail__message">
+                            {opened.message || 'They did not leave a message.'}
+                        </p>
+
+                        <div className="cms-field">
+                            <label className="cms-field-label" htmlFor="enquiry-status">Where has this got to?</label>
+                            <select
+                                id="enquiry-status"
+                                className="cms-select"
+                                value={opened.status}
+                                onChange={(e) => setStatus(opened, e.target.value)}
+                            >
+                                {Object.entries(statuses).map(([value, label]) => (
+                                    <option key={value} value={value}>{label}</option>
+                                ))}
+                            </select>
+                            <div className="cms-hint">
+                                Only you can see this. Nothing here is sent to the person who wrote in.
+                            </div>
+                        </div>
+
+                        <div className="cms-modal__actions">
+                            {canDelete ? (
+                                <button
+                                    type="button"
+                                    className="cms-btn cms-btn--danger-outline"
+                                    onClick={() => setPendingDelete(opened)}
+                                >
+                                    Delete
+                                </button>
+                            ) : null}
+                            <a className="cms-btn cms-btn--primary" href={`mailto:${opened.email}`}>Reply by email</a>
+                        </div>
+                    </>
+                ) : null}
+            </Modal>
 
             <ConfirmModal
                 open={pendingDelete !== null}

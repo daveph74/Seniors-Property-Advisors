@@ -61,6 +61,9 @@ class Html
         $config->set('AutoFormat.AutoParagraph', false);
         $config->set('HTML.Nofollow', false);
         $config->set('Attr.AllowedFrameTargets', ['_blank']);
+        /* A new tab gets `rel="noopener"` whether the editor knew to ask for it or not. Current
+           browsers imply it, but that is their choice to make and not one worth inheriting. */
+        $config->set('HTML.TargetNoopener', true);
 
         /*
          * Images and links must point at this site's media route or an ordinary web address.

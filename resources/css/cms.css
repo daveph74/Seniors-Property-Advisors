@@ -157,6 +157,15 @@
 .cms-icon-btn__dot{
   position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: #C2410C;
 }
+/* Sits proud of the button so a two-digit count does not squash the icon it belongs to. */
+.cms-icon-btn__badge{
+  position: absolute; top: -6px; right: -6px;
+  min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+  background: var(--cms-danger-text); color: #fff;
+  font-size: 10.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--cms-surface);
+}
 .cms-icon-btn-sm{
   width: 28px; height: 28px; border: 1px solid transparent; border-radius: 7px;
   background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -174,8 +183,24 @@
 }
 .cms-input:focus, .cms-select:focus, .cms-textarea:focus{ border-color: var(--cms-accent-2); }
 .cms-textarea{ padding: 8px 10px; height: auto; line-height: 1.5; resize: vertical; }
-.cms-select{ color: var(--cms-text); }
+/* The browser's own control was left showing here, so a select sat among the inputs with a
+   different arrow, a different text colour and its own idea of spacing. The arrow is drawn as a
+   background so it matches the icons beside it, and the room for it is real padding rather than a
+   guess — a long option would otherwise run underneath it. */
+.cms-select{
+  color: var(--cms-text);
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C99AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 12px;
+}
+.cms-select:disabled{ color: var(--cms-text-quiet); cursor: not-allowed; background-color: var(--cms-tint); }
 .cms-input--sm, .cms-select--sm{ height: 34px; font-size: 12.5px; }
+.cms-select--sm{ padding-right: 26px; background-position: right 8px center; }
 .cms-hint{ font-size: 12px; color: var(--cms-text-mid); margin-top: 6px; }
 
 .cms-search{
@@ -362,8 +387,115 @@
 .cms-header__crumb{ font-size: 11.5px; color: var(--cms-text-mid); line-height: 1.2; }
 .cms-header__title{ font-size: 15.5px; font-weight: 600; line-height: 1.3; }
 .cms-header__actions{ margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.cms-header__search{ width: 260px; background: var(--cms-tint); }
+.cms-header__search{ width: 260px; background: var(--cms-tint); cursor: text; text-align: left; }
+.cms-header__search-label{
+  flex: 1; min-width: 0; font-size: 13px; color: var(--cms-text-mid);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .cms-header__kbd{ font-size: 11px; color: var(--cms-text-mid); border: 1px solid var(--cms-border-input-2); border-radius: 4px; padding: 1px 5px; background: #fff; }
+
+/* ---------- Search palette ---------- */
+.cms-palette{
+  position: fixed; top: 84px; left: 50%; transform: translateX(-50%); z-index: 81;
+  width: 560px; max-width: calc(100vw - 32px);
+  background: var(--cms-surface); border-radius: var(--cms-radius-xl); box-shadow: var(--cms-shadow-modal);
+  overflow: hidden;
+}
+.cms-palette__field{
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px; height: 52px; border-bottom: 1px solid var(--cms-border-softer);
+}
+.cms-palette__input{ flex: 1; border: none; outline: none; background: transparent; font-size: 15px; color: var(--cms-ink); }
+/* The shell rings every focusable thing, and rightly so — but this field is focused the instant
+   the dialog opens and is the only thing in it, so the ring marks what was never in doubt.
+   Specificity has to match `.cms-shell :focus-visible` to win, hence the pseudo-class here. */
+.cms-palette__input:focus-visible{ outline: none; }
+.cms-palette__results{ max-height: 60vh; overflow-y: auto; padding: 6px; }
+.cms-palette__hint{ margin: 0; padding: 18px 12px; font-size: 13px; color: var(--cms-text-mid); text-align: center; }
+.cms-palette__group + .cms-palette__group{ margin-top: 6px; }
+.cms-palette__group-label{
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--cms-text-mid); padding: 8px 10px 4px;
+}
+.cms-palette__result{
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border: none; border-radius: 7px; background: transparent;
+  cursor: pointer; text-align: left; font-size: 13.5px; color: var(--cms-ink);
+}
+.cms-palette__result--active{ background: #F1F4F8; }
+.cms-palette__result-title{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cms-palette__result-meta{ flex: none; font-size: 12px; color: var(--cms-text-mid); }
+.cms-palette__thumb{ width: 28px; height: 28px; border-radius: 5px; background: var(--cms-placeholder-img); flex: none; }
+.cms-palette__thumb--img{ object-fit: cover; }
+
+/* ---------- Notification bell ---------- */
+.cms-bell{ position: relative; }
+.cms-bell__menu{
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; width: 280px;
+  background: var(--cms-surface); border: 1px solid var(--cms-border-softer);
+  border-radius: var(--cms-radius); box-shadow: var(--cms-shadow-modal); padding: 6px;
+}
+.cms-bell__empty{ margin: 0; padding: 14px 10px; font-size: 13px; color: var(--cms-text-mid); text-align: center; }
+.cms-bell__item{
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 7px; font-size: 13px; color: var(--cms-ink); text-decoration: none;
+}
+.cms-bell__item:hover{ background: #F1F4F8; }
+/* ---------- Pagination ---------- */
+/* A sibling of the list, never inside it: the list clips its overflow to keep its rounded corners. */
+.cms-pager{ display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.cms-pager__count{ font-size: 12.5px; color: var(--cms-text-mid); }
+.cms-pager__size{ margin-left: auto; }
+/* Room for the arrow kept on the right — the old shorthand padding removed it and the option ran
+   underneath. */
+.cms-pager__size .cms-select{ width: auto; height: 30px; font-size: 12.5px; padding: 0 26px 0 8px; }
+.cms-pager__pages{ display: flex; align-items: center; gap: 4px; }
+.cms-pager__page{
+  min-width: 30px; height: 30px; padding: 0 8px;
+  border: 1px solid transparent; border-radius: var(--cms-radius-sm);
+  background: transparent; cursor: pointer;
+  font-size: 12.5px; color: var(--cms-text); font-variant-numeric: tabular-nums;
+}
+.cms-pager__page:hover{ background: #F1F4F8; }
+.cms-pager__page--current{ background: var(--cms-navy); border-color: var(--cms-navy); color: #fff; font-weight: 600; }
+.cms-pager__page--current:hover{ background: var(--cms-navy); }
+.cms-pager__gap{ padding: 0 2px; font-size: 12.5px; color: var(--cms-text-quiet); }
+.cms-pager .cms-btn:disabled{ opacity: 0.4; cursor: not-allowed; }
+@media (max-width: 720px){
+  .cms-pager__size{ margin-left: 0; }
+  .cms-pager__pages{ width: 100%; justify-content: center; }
+}
+
+/* ---------- Enquiries ---------- */
+.cms-enquiry-row{ width: 100%; text-align: left; background: var(--cms-surface); cursor: pointer; font: inherit; color: inherit; }
+.cms-enquiry-row:hover{ background: #F1F4F8; }
+/* Unread carries a rule down its left edge rather than a badge of its own — the status badge is
+   already there, and two markers on one row start competing to be read first. */
+.cms-enquiry-row--unread{ box-shadow: inset 3px 0 0 var(--cms-accent-2); }
+.cms-enquiry-row--unread .cms-faq-row__q{ font-weight: 600; }
+.cms-enquiry-row__snippet{
+  display: block; margin-top: 4px; font-size: 12.5px; font-weight: 400; color: var(--cms-text-mid);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cms-enquiry-detail__head{ display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.cms-enquiry-detail__head .cms-modal__title{ margin-bottom: 2px; }
+.cms-enquiry-detail__head .cms-icon-btn-sm{ margin-left: auto; font-size: 18px; line-height: 1; color: var(--cms-text-mid); }
+.cms-enquiry-detail__sent{ font-size: 12.5px; color: var(--cms-text-mid); }
+.cms-enquiry-detail__contact{ font-size: 13px; color: var(--cms-text-mid); margin-bottom: 14px; }
+.cms-enquiry-detail__message{
+  margin: 0 0 18px; padding: 14px 16px; border-radius: var(--cms-radius);
+  background: var(--cms-bg); font-size: 13.5px; line-height: 1.6; color: var(--cms-text);
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto;
+}
+
+.cms-bell__item-name{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cms-bell__item-at{ flex: none; font-size: 12px; color: var(--cms-text-mid); }
+.cms-bell__all{
+  display: block; margin-top: 4px; padding: 9px 10px;
+  border-top: 1px solid var(--cms-border-softer);
+  font-size: 12.5px; color: var(--cms-accent); text-decoration: none; text-align: center;
+}
+.cms-bell__all:hover{ text-decoration: underline; }
 
 /* ---------- Main content ---------- */
 .cms-main{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -373,13 +505,13 @@
    — a page scrolled 1400px deep put a 1px element at document y=1400, so the body itself grew a
    scrollbar and left half a screen of white below the shell. */
 .cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; position: relative; }
+/* No cap on any of them. The dashboard lost its 1240px one for leaving 236px of nothing on a wide
+   window, and the width modifiers that survived did the same to Users, Global content and Settings
+   — 1020px of form against a 1717px window reads as a screen that failed to load. Fields that
+   should not stretch say so individually, which is where a width belongs: on the input that holds
+   a phone number, not on the page that happens to contain one. */
 .cms-page{ padding: 22px 32px 48px; }
-/* No cap. The two columns are already proportional, so the dashboard fills the content area the way
-   the media and testimonial screens do — a 1240px cap left 236px of nothing on a wide window. */
 .cms-page--dash{ padding: 28px 32px 48px; min-width: 760px; }
-.cms-page--narrow{ max-width: 1000px; }
-.cms-page--medium{ max-width: 1020px; }
-.cms-page--builder-modal{ max-width: 1080px; }
 
 /* ---------- Dashboard ---------- */
 .cms-welcome-title{ margin: 0 0 6px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 34px; line-height: 1.15; letter-spacing: -0.01em; }
