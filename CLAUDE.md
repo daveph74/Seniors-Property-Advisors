@@ -18,7 +18,9 @@ Section storage is JSON-snapshot based, not normalised rows.
 - `php artisan serve` — app at http://localhost:8000 (Vite only builds assets; it never serves pages)
 - `npm run dev` / `npm run build` — assets. Exit `npm run dev` with Ctrl+C so it removes `public/hot`; a stale `hot` file points assets at a dead Vite server and renders a blank page
 - `composer test` — clears config, then `php artisan test`
-- `npm run e2e` — builds assets, then drives the CMS in a real browser (Playwright). `npm run e2e:report` opens the last report
+- `npm run e2e` — builds assets, then drives the CMS in a real browser (Playwright). `e2e:headed`
+  shows the browser doing it, `e2e:ui` is the interactive runner, `e2e:report` opens the last report.
+  Run from the project root: from inside `e2e/` Playwright finds no config and fails everything
 - `./vendor/bin/pint` — PHP formatting
 
 ## Layout
