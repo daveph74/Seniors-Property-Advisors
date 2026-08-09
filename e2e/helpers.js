@@ -6,6 +6,21 @@ export const CLIENT_ADMIN = { email: 'helen@seniorspropertyadvisors.com.au', pas
 export const SUPER_ADMIN_STATE = 'test-results/.auth/super-admin.json';
 
 /**
+ * Navigate, then wait for React.
+ *
+ * `domcontentloaded` is deliberate — waiting for `load` means waiting for every image, and the
+ * media library serialises those behind a one-request-at-a-time server. But it returns before
+ * anything is rendered, so a count taken straight afterwards is a count of nothing. Waiting for
+ * the shell is what makes the difference between measuring the screen and measuring the gap
+ * before it.
+ */
+export async function gotoCms(page, path) {
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
+
+    await expect(page.locator('.cms-shell')).toBeVisible();
+}
+
+/**
  * The shell only exists once React has hydrated, and the palette's keyboard listener with it — so
  * pressing the shortcut against a page that has merely arrived does nothing at all.
  */

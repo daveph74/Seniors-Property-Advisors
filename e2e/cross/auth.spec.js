@@ -1,5 +1,5 @@
-import { expect, test } from './fixtures.js';
-import { CLIENT_ADMIN, signIn } from './helpers.js';
+import { expect, test } from '../fixtures.js';
+import { CLIENT_ADMIN, signIn } from '../helpers.js';
 
 const MODULES = [
     '/cms', '/cms/pages', '/cms/blog', '/cms/faqs', '/cms/testimonials', '/cms/media',

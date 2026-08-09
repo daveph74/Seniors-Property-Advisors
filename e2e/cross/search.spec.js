@@ -1,5 +1,5 @@
-import { expect, test, withImages } from './fixtures.js';
-import { openPalette } from './helpers.js';
+import { expect, test, withImages } from '../fixtures.js';
+import { openPalette } from '../helpers.js';
 
 /** The header palette. It answers over fetch, so nothing here is an Inertia visit until you pick one. */
 test('the palette opens on the keyboard and finds across content types', async ({ page }) => {

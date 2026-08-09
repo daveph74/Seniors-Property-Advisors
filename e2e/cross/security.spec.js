@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures.js';
+import { expect, test } from '../fixtures.js';
 
 /**
  * The content policy is the one thing here that fails silently. A blocked script does not error the
