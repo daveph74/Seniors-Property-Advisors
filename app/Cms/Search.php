@@ -162,20 +162,8 @@ class Search
             ->all();
     }
 
-    /**
-     * `%` and `_` are wildcards to LIKE, so a term containing either has to be escaped or a
-     * search for "50%" quietly matches every row.
-     *
-     * The `ESCAPE` clause is not optional: SQLite has no default escape character, so escaping
-     * without declaring one leaves the wildcards live and passes the backslash through as a
-     * literal to match on. The column names are this class's own constants, never user input.
-     */
     private function match(Builder $query, string $term, array $columns): void
     {
-        $escaped = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term);
-
-        foreach ($columns as $column) {
-            $query->orWhereRaw("{$column} like ? escape '!'", ["%{$escaped}%"]);
-        }
+        Like::any($query, $term, $columns);
     }
 }

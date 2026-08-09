@@ -124,8 +124,9 @@ class SearchTest extends TestCase
         $result = collect($this->search('Zebra'))->firstWhere('label', 'Media')['results'][0];
 
         $this->assertSame("/cms/media?selected={$medium->id}", $result['href']);
-        $this->get($result['href'])->assertOk()
-            ->assertInertia(fn ($page) => $page->where('selected', $medium->id));
+        $this->get($result['href'])->assertOk()->assertInertia(fn ($page) => $this->assertSame(
+            $medium->id, $page->toArray()['props']['selected']['id'],
+        ));
     }
 
     public function test_an_article_body_is_searched_but_never_returned(): void

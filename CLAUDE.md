@@ -176,6 +176,29 @@ each.
 Sidebar counts key off `notifications.counts` by nav id. `constants.js` used to hardcode them empty
 because it had no way to know a true figure; it still does not, which is why they come from the prop.
 
+## Paging the admin lists
+
+`app/Cms/Listing.php` is the seam: count, clamp, slice. Rows stay a **flat array** and the paging
+facts ride alongside in a `pagination` prop — handing the front end a paginator object would rename
+every list prop to `.data` for nothing. `perPage()` reads an **allowlist** (25/50/100), never the
+number that arrived, or the size selector becomes a way to ask for the whole table. The page is
+clamped to `1..lastPage`, so deleting the last row on the last page cannot strand anybody.
+
+`resources/js/cms/components/Pagination.jsx` renders nothing while everything fits on the smallest
+page, and must be a **sibling after** a list, never inside one — both list containers clip their
+overflow to keep their rounded corners.
+
+Two consequences that are easy to get wrong:
+
+- **Search had to move to the server.** Both screens filtered the loaded array, which with paging
+  searches one page and reports the rest as absent. `app/Cms/Like.php` holds the escaping, including
+  the `ESCAPE` clause SQLite needs — and it is a scan, not an indexed lookup.
+- **Deep links must not be resolved against the rows on screen.** `?open={id}` and `?selected={id}`
+  send the whole record from the server, because the thing linked to is routinely on another page or
+  outside the current filter.
+
+Only Enquiries and Media page so far. Pages, Blog, FAQs, Testimonials and Users still load every row.
+
 ## Enquiries
 
 `status` (`new` / `in_progress` / `dealt_with`) replaced `handled_at`, which was one boolean wearing a

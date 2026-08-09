@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, Modal, SearchInput } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
+import Pagination from '../../../cms/components/Pagination';
+import { useDebounced } from '../../../cms/useDebounced';
 import { relative } from '../../../cms/relativeTime';
 import { useCmsToast } from '../../../cms/ToastContext';
 
@@ -14,49 +16,64 @@ const EMPTY = {
 
 const TONE = { new: 'info', in_progress: 'warning', dealt_with: 'neutral' };
 
+/* Mirrors Listing::DEFAULT_SIZE — kept out of the address so a plain link stays a plain link. */
+const DEFAULT_SIZE = 25;
+
 export default function EnquiriesIndex({
-    enquiries = [], filters = {}, counts = {}, statuses = {}, open = null, perPage = 100, auth,
+    enquiries = [], filters = {}, counts = {}, statuses = {}, opened = null, pagination = null, auth,
 }) {
     const flash = useCmsToast();
     const canDelete = auth?.can?.['content.delete'] === true;
 
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(filters.q || '');
     const [pendingDelete, setPendingDelete] = useState(null);
+    const settled = useDebounced(search);
+    const first = useRef(true);
 
-    const opened = enquiries.find((e) => e.id === open) || null;
+    /* What the address should say, with anything absent or default left out of it — an empty `q=`
+       or a `per_page` that is already the default is noise in a link somebody might paste. */
+    const params = (extra = {}) => {
+        const merged = {
+            show: filters.show,
+            q: settled || undefined,
+            per_page: pagination?.perPage === DEFAULT_SIZE ? undefined : pagination?.perPage,
+            ...extra,
+        };
 
-    const show = (value) => router.get('/cms/enquiries', { show: value }, {
+        return Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== undefined && v !== ''));
+    };
+
+    const visit = (extra, options = {}) => router.get('/cms/enquiries', params(extra), {
         preserveState: true,
         preserveScroll: true,
-        replace: true,
+        ...options,
     });
+
+    /* Anything that changes what matches leaves `page` behind with it — otherwise narrowing a
+       ten-page list while standing on page seven lands you on a page that no longer exists. */
+    useEffect(() => {
+        if (first.current) { first.current = false; return; }
+        if (settled === (filters.q || '')) return;
+
+        visit({}, { replace: true });
+    }, [settled]);
+
+    const show = (value) => visit({ show: value }, { replace: true });
+
+    const page = (n) => visit({ page: n });
+
+    const perPage = (n) => visit({ per_page: n === DEFAULT_SIZE ? undefined : n }, { replace: true });
 
     /* The address carries which one is open, so the bell can link straight to an enquiry and the
-       browser's Back button closes it. `replace: false` on the way in is what makes Back work. */
-    const openEnquiry = (enquiry) => router.get('/cms/enquiries', { ...filters, open: enquiry.id }, {
-        preserveState: true,
-        preserveScroll: true,
-    });
+       browser's Back button closes it. */
+    const openEnquiry = (enquiry) => visit({ page: pagination?.page, open: enquiry.id });
 
-    const close = () => router.get('/cms/enquiries', filters, {
-        preserveState: true,
-        preserveScroll: true,
-        replace: true,
-    });
+    const close = () => visit({ page: pagination?.page }, { replace: true });
 
     const setStatus = (enquiry, status) => router.patch(`/cms/enquiries/${enquiry.id}/status`, { status }, {
         preserveScroll: true,
         preserveState: true,
         onSuccess: () => flash(`Marked as ${(statuses[status] || status).toLowerCase()}`),
-    });
-
-    /* Only what is on screen — the server has already applied the filter, and searching a hundred
-       rows in the browser is instant where a round trip per keystroke would not be. */
-    const shown = enquiries.filter((e) => {
-        const q = search.trim().toLowerCase();
-
-        return ! q || [e.name, e.email, e.suburb, e.message]
-            .some((field) => (field || '').toLowerCase().includes(q));
     });
 
     return (
@@ -75,19 +92,19 @@ export default function EnquiriesIndex({
 
                 <SearchInput
                     value={search}
-                    onChange={setSearch}
+                    onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search name, email, suburb or message"
                     width={280}
                 />
             </div>
 
-            {shown.length === 0 ? (
+            {enquiries.length === 0 ? (
                 <div className="cms-media-empty">
-                    {search.trim() ? 'Nothing matches that search.' : (EMPTY[filters.show] || EMPTY.all)}
+                    {settled.trim() ? 'Nothing matches that search.' : (EMPTY[filters.show] || EMPTY.all)}
                 </div>
             ) : (
                 <div className="cms-faq-list">
-                    {shown.map((e) => (
+                    {enquiries.map((e) => (
                         <button
                             type="button"
                             key={e.id}
@@ -98,11 +115,7 @@ export default function EnquiriesIndex({
 
                             <span className="cms-faq-row__q">
                                 {e.name}
-                                {/* A one-line taste of it. The whole thing is a click away now, and a
-                                    long message used to push every other row off the screen. */}
-                                {e.message ? (
-                                    <small className="cms-enquiry-row__snippet">{e.message}</small>
-                                ) : null}
+                                {e.snippet ? <small className="cms-enquiry-row__snippet">{e.snippet}</small> : null}
                             </span>
 
                             <time
@@ -117,9 +130,11 @@ export default function EnquiriesIndex({
                 </div>
             )}
 
+            <Pagination meta={pagination} onPage={page} onPerPage={perPage} noun="enquiries" />
+
             <p className="cms-hint" style={{ marginTop: 12 }}>
-                The {perPage} most recent. These are the sender’s own words and cannot be edited here —
-                the only thing you can change is where it has got to.
+                These are the sender’s own words and cannot be edited here — the only thing you can
+                change is where it has got to.
             </p>
 
             <Modal open={opened !== null} onClose={close}>

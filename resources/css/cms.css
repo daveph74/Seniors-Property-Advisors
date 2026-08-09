@@ -425,6 +425,29 @@
   padding: 9px 10px; border-radius: 7px; font-size: 13px; color: var(--cms-ink); text-decoration: none;
 }
 .cms-bell__item:hover{ background: #F1F4F8; }
+/* ---------- Pagination ---------- */
+/* A sibling of the list, never inside it: the list clips its overflow to keep its rounded corners. */
+.cms-pager{ display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.cms-pager__count{ font-size: 12.5px; color: var(--cms-text-mid); }
+.cms-pager__size{ margin-left: auto; }
+.cms-pager__size .cms-select{ width: auto; height: 30px; font-size: 12.5px; padding: 0 6px; }
+.cms-pager__pages{ display: flex; align-items: center; gap: 4px; }
+.cms-pager__page{
+  min-width: 30px; height: 30px; padding: 0 8px;
+  border: 1px solid transparent; border-radius: var(--cms-radius-sm);
+  background: transparent; cursor: pointer;
+  font-size: 12.5px; color: var(--cms-text); font-variant-numeric: tabular-nums;
+}
+.cms-pager__page:hover{ background: #F1F4F8; }
+.cms-pager__page--current{ background: var(--cms-navy); border-color: var(--cms-navy); color: #fff; font-weight: 600; }
+.cms-pager__page--current:hover{ background: var(--cms-navy); }
+.cms-pager__gap{ padding: 0 2px; font-size: 12.5px; color: var(--cms-text-quiet); }
+.cms-pager .cms-btn:disabled{ opacity: 0.4; cursor: not-allowed; }
+@media (max-width: 720px){
+  .cms-pager__size{ margin-left: 0; }
+  .cms-pager__pages{ width: 100%; justify-content: center; }
+}
+
 /* ---------- Enquiries ---------- */
 .cms-enquiry-row{ width: 100%; text-align: left; background: var(--cms-surface); cursor: pointer; font: inherit; color: inherit; }
 .cms-enquiry-row:hover{ background: #F1F4F8; }
