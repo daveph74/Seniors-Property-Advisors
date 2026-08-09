@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Cms;
 
 use App\Auth\Permissions;
+use App\Cms\Like;
+use App\Cms\Listing;
 use App\Content\ImageOptimiser;
 use App\Content\Site;
 use App\Http\Controllers\Controller;
@@ -38,11 +40,34 @@ class MediaController extends Controller
         'image/webp' => 'webp',
     ];
 
-    public function index()
+    /**
+     * `selected` opens one image's panel on arrival, so a search result lands on the picture
+     * somebody asked for rather than on the grid they would have to search again. It is sent whole
+     * rather than as an id: the library is paged now, and an id resolved against the rows on screen
+     * would open nothing whenever the picture sits on another page.
+     *
+     * The search is here rather than in the browser for the same reason — filtering the loaded rows
+     * would have searched one page of the library and reported the rest as absent.
+     */
+    public function index(Request $request)
     {
+        $term = trim((string) $request->query('q', ''));
+
+        $query = Media::query()
+            ->when($term !== '', fn ($q) => Like::any($q, $term, ['name', 'alt', 'caption']))
+            ->latest('id');
+
+        ['rows' => $rows, 'meta' => $meta] = Listing::slice($query, $request);
+
+        $selected = $request->integer('selected') ?: null;
+        $medium = $selected === null ? null : Media::find($selected);
+
         return Inertia::render('Cms/Media/Index', [
-            'items' => Media::latest('id')->get()->map(fn (Media $m) => $this->item($m))->all(),
+            'items' => $rows->map(fn (Media $m) => $this->item($m))->all(),
             'maxBytes' => self::MAX_BYTES,
+            'selected' => $medium === null ? null : $this->item($medium),
+            'filters' => ['q' => $term],
+            'pagination' => $meta,
         ]);
     }
 

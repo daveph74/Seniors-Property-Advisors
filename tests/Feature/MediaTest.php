@@ -641,4 +641,78 @@ class MediaTest extends TestCase
             $this->assertSame('PNG · 800 × 600', $items[1]['meta']);
         });
     }
+
+    public function test_an_image_can_be_opened_straight_from_a_link(): void
+    {
+        Storage::fake('s3');
+
+        $medium = $this->record(['key' => '2026/07/one.png', 'name' => 'one.png']);
+
+        $this->get('/cms/media')->assertInertia(fn ($page) => $page->where('selected', null));
+
+        /* The whole image, not its id: the library is paged, and an id resolved against the rows on
+           screen would open nothing whenever the picture sits on another page. */
+        $this->get("/cms/media?selected={$medium->id}")->assertInertia(function ($page) use ($medium) {
+            $selected = $page->toArray()['props']['selected'];
+
+            $this->assertSame($medium->id, $selected['id']);
+            $this->assertSame('one.png', $selected['name']);
+            $this->assertSame('/media/2026/07/one.png', $selected['url']);
+        });
+    }
+
+    /* Deleted between somebody searching and clicking, so it selects nothing rather than erroring. */
+    public function test_a_link_to_an_image_that_is_gone_still_opens_the_screen(): void
+    {
+        Storage::fake('s3');
+
+        $this->get('/cms/media?selected=98765')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('selected', null));
+        $this->get('/cms/media?selected=nonsense')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('selected', null));
+    }
+
+    public function test_the_library_pages_and_searches_on_the_server(): void
+    {
+        Storage::fake('s3');
+
+        foreach (range(1, 30) as $i) {
+            $this->record(['key' => sprintf('2026/07/p%02d.png', $i), 'name' => sprintf('photo-%02d.png', $i)]);
+        }
+
+        $this->get('/cms/media')->assertOk()->assertInertia(function ($page) {
+            $props = $page->toArray()['props'];
+
+            $this->assertCount(25, $props['items']);
+            $this->assertSame(30, $props['pagination']['total']);
+            $this->assertSame(2, $props['pagination']['lastPage']);
+        });
+
+        $this->get('/cms/media?page=2')->assertOk()->assertInertia(fn ($page) => $this->assertCount(
+            5, $page->toArray()['props']['items'],
+        ));
+
+        /* The oldest image is on page two, so a search that only looked at page one would miss it. */
+        $this->get('/cms/media?q=photo-01')->assertOk()->assertInertia(fn ($page) => $this->assertSame(
+            ['photo-01.png'], array_column($page->toArray()['props']['items'], 'name'),
+        ));
+    }
+
+    public function test_an_image_on_another_page_still_opens(): void
+    {
+        Storage::fake('s3');
+
+        $first = $this->record(['key' => '2026/07/first.png', 'name' => 'first.png']);
+
+        foreach (range(1, 30) as $i) {
+            $this->record(['key' => sprintf('2026/07/n%02d.png', $i), 'name' => sprintf('newer-%02d.png', $i)]);
+        }
+
+        $this->get("/cms/media?selected={$first->id}")->assertOk()->assertInertia(function ($page) use ($first) {
+            $props = $page->toArray()['props'];
+
+            $this->assertNotContains('first.png', array_column($props['items'], 'name'));
+            $this->assertSame($first->id, $props['selected']['id']);
+        });
+    }
 }

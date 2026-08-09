@@ -110,14 +110,20 @@ class DashboardTest extends TestCase
         );
     }
 
+    /* Anything picked up but not finished is still waiting — only "dealt with" leaves the count. */
     public function test_it_counts_only_enquiries_nobody_has_dealt_with(): void
     {
         Enquiry::create(['name' => 'Waiting', 'email' => 'a@example.com', 'consented' => true]);
         Enquiry::create([
-            'name' => 'Dealt with', 'email' => 'b@example.com', 'consented' => true,
-        ])->update(['handled_at' => now()]);
+            'name' => 'Picked up', 'email' => 'b@example.com', 'consented' => true,
+            'status' => Enquiry::IN_PROGRESS,
+        ]);
+        Enquiry::create([
+            'name' => 'Dealt with', 'email' => 'c@example.com', 'consented' => true,
+            'status' => Enquiry::DEALT_WITH,
+        ]);
 
-        $this->assertSame(1, $this->counts()['New enquiries']);
+        $this->assertSame(2, $this->counts()['Enquiries waiting']);
     }
 
     public function test_the_activity_feed_reads_the_log_rather_than_inventing_one(): void

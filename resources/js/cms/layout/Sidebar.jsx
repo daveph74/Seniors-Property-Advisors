@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
-import { NAV_ITEMS } from '../data/constants';
+import { COUNT_LABELS, NAV_ITEMS } from '../data/constants';
 import { DropdownMenu, MenuItem, MenuSeparator } from '../components/ui';
 import {
     DashboardIcon, PagesIcon, BlogIcon, FaqsIcon, TestimonialsIcon, MediaIcon,
@@ -41,9 +41,12 @@ const HREFS = {
 };
 
 export default function Sidebar({ active }) {
-    const { auth } = usePage().props;
+    const { auth, notifications } = usePage().props;
     const user = auth?.user;
     const modules = auth?.modules ?? {};
+    /* Work still outstanding, not anything unread — these fall when the job is done, which is what
+       makes them safe to put beside a module name. */
+    const counts = notifications?.counts ?? {};
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
@@ -60,6 +63,8 @@ export default function Sidebar({ active }) {
                 {NAV_ITEMS.filter((item) => modules[item.id] !== false).map((item) => {
                     const Icon = ICONS[item.id];
                     const isActive = active === item.id;
+                    const count = counts[item.id];
+                    const meaning = count ? COUNT_LABELS[item.id]?.(count) : null;
                     return (
                         <Link
                             key={item.id}
@@ -68,7 +73,12 @@ export default function Sidebar({ active }) {
                         >
                             <Icon size={17} strokeWidth={1.7} />
                             <span>{item.label}</span>
-                            {item.count ? <span className="cms-nav-item__count">{item.count}</span> : null}
+                            {count ? (
+                                <span className="cms-nav-item__count" title={meaning ?? undefined}>
+                                    <span aria-hidden="true">{count}</span>
+                                    <span className="cms-sr-only">{meaning ?? count}</span>
+                                </span>
+                            ) : null}
                         </Link>
                     );
                 })}

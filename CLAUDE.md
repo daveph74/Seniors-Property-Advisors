@@ -139,6 +139,84 @@ would otherwise compare against the hash that was just replaced.
 Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
 `SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
 
+## Header search and the bell
+
+Both were painted-on: an input that swallowed keystrokes and a notification dot wired to nothing.
+
+`app/Cms/Search.php` answers `GET /cms/search` as JSON — Inertia would put every half-typed word in
+the browser's history. Six sources, each capped at five, each result a link. Bodies are searched but
+never returned, and an **enquiry's message is not searched at all**: somebody's account of their own
+circumstances is not an index for a colleague to browse, so only the sender's name, email and suburb
+match. Terms shorter than two characters search nothing.
+
+Two traps live in that file. `LIKE` needs an explicit `ESCAPE` clause — SQLite has no default escape
+character, so escaping `%` without declaring one leaves the wildcard live and searching for "50%"
+matches every row. And a page's builder link must be built from **`cms_id`, not `id`**:
+`CmsPageController::edit` resolves through `findByCmsId`, so a link of the right shape built from the
+primary key 404s. `SearchTest` follows every link rather than pattern-matching the href, which is the
+only reason that second one is caught — a regex on the URL passes happily while the link is broken.
+
+`app/Cms/Notifications.php` feeds both the bell and the sidebar as one shared Inertia prop, and only
+on `cms.*` routes — the public site shares that middleware and should not pay for the counts a page
+view. It answers **two different questions, and they must not be merged**:
+
+- **The bell** counts enquiries nobody has opened (`Enquiry::unread()`). Opening one clears it, so it
+  can honestly reach zero.
+- **The sidebar** counts work still outstanding — `Enquiry::outstanding()` and published pages holding
+  a draft, the latter by the same rule `PageContentStore` uses for the "Unpublished changes" filter,
+  so the sidebar and that screen cannot disagree. Nothing marks these read.
+
+That split is the whole design. A badge you can clear by glancing at something must never be the one
+reporting how much work is left, which is why reading an enquiry moves the bell and never the
+sidebar — `NotificationsTest::test_reading_one_clears_the_badge_but_not_the_work` pins it. Both are
+still derived: there is no notifications table, and `read_at` lives on the enquiry, so an enquiry read
+by one person is read for the whole inbox. That is deliberate — it is a shared inbox, not a mailbox
+each.
+
+Sidebar counts key off `notifications.counts` by nav id. `constants.js` used to hardcode them empty
+because it had no way to know a true figure; it still does not, which is why they come from the prop.
+
+## Paging the admin lists
+
+`app/Cms/Listing.php` is the seam: count, clamp, slice. Rows stay a **flat array** and the paging
+facts ride alongside in a `pagination` prop — handing the front end a paginator object would rename
+every list prop to `.data` for nothing. `perPage()` reads an **allowlist** (25/50/100), never the
+number that arrived, or the size selector becomes a way to ask for the whole table. The page is
+clamped to `1..lastPage`, so deleting the last row on the last page cannot strand anybody.
+
+`resources/js/cms/components/Pagination.jsx` renders nothing while everything fits on the smallest
+page, and must be a **sibling after** a list, never inside one — both list containers clip their
+overflow to keep their rounded corners.
+
+Two consequences that are easy to get wrong:
+
+- **Search had to move to the server.** Both screens filtered the loaded array, which with paging
+  searches one page and reports the rest as absent. `app/Cms/Like.php` holds the escaping, including
+  the `ESCAPE` clause SQLite needs — and it is a scan, not an indexed lookup.
+- **Deep links must not be resolved against the rows on screen.** `?open={id}` and `?selected={id}`
+  send the whole record from the server, because the thing linked to is routinely on another page or
+  outside the current filter.
+
+Only Enquiries and Media page so far. Pages, Blog, FAQs, Testimonials and Users still load every row.
+
+## Enquiries
+
+`status` (`new` / `in_progress` / `dealt_with`) replaced `handled_at`, which was one boolean wearing a
+timestamp — there was no way to show something had been picked up without claiming it was finished.
+The old column was dropped rather than kept beside the new one: two columns that can disagree, with no
+rule saying which wins, is how a screen reports one thing and a count another. `read_at` is a separate
+question and deliberately not the same column, because read is not answered.
+
+An enquiry opens in a modal deep-linked at `/cms/enquiries?open={id}`, the same pattern as the media
+library's `?selected={id}`. **Opening it is what marks it read**, done in `index()` — a write on a GET,
+which is what "read on view" means everywhere. The header's counter is a closure resolved after the
+controller returns, so the badge falls in that same response; `CmsEnquiryTest` asserts that ordering
+rather than trusting it.
+
+Setting the status is still its own single-key route, not an `update()`. The reason has not changed:
+the name, email and message are the sender's words, and a general endpoint here would be an
+editable-enquiry endpoint by construction, whatever the request happened to carry.
+
 ## Current state
 
 The public site renders from the database, and the builder is functional: undo/redo,

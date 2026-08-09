@@ -3,22 +3,31 @@ import { router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { SearchInput } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
+import Pagination from '../../../cms/components/Pagination';
+import { useDebounced } from '../../../cms/useDebounced';
 import { useCmsToast } from '../../../cms/ToastContext';
 import MediaUploadModal from '../../../cms/components/MediaUploadModal';
 import { onUploaded, watchUploads } from '../../../cms/uploadQueue';
 
 const token = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-export default function MediaIndex({ items = [], maxBytes = 0 }) {
+/* Mirrors Listing::DEFAULT_SIZE — kept out of the address so a plain link stays a plain link. */
+const DEFAULT_SIZE = 25;
+
+export default function MediaIndex({
+    items = [], maxBytes = 0, selected: arrivedOn = null, filters = {}, pagination = null,
+}) {
     const flash = useCmsToast();
-    const [search, setSearch] = useState('');
-    const [selectedId, setSelectedId] = useState(null);
+    const [search, setSearch] = useState(filters.q || '');
+    const [selectedId, setSelectedId] = useState(arrivedOn?.id ?? null);
     const [picked, setPicked] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [dropped, setDropped] = useState(null);
     const [rows, setRows] = useState([]);
     const [pending, setPending] = useState(null);
     const refresh = useRef(null);
+    const firstRender = useRef(true);
+    const settled = useDebounced(search);
 
     useEffect(() => watchUploads(setRows), []);
 
@@ -26,17 +35,48 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
         flash(`${media.name} added`);
 
         clearTimeout(refresh.current);
-        refresh.current = setTimeout(() => router.reload({ only: ['items'] }), 500);
+        /* `pagination` too: an upload changes the total, and refreshing the rows alone would leave
+           the pager counting a library that no longer exists. */
+        refresh.current = setTimeout(() => router.reload({ only: ['items', 'pagination'] }), 500);
     }), []);
 
-    const filtered = items.filter((m) => {
-        const q = search.trim().toLowerCase();
+    /* Searched and paged on the server, so the grid holds one page and the box searches the whole
+       library. The rows on screen are simply what came back. */
+    const filtered = items;
 
-        return ! q || [m.name, m.alt, m.caption]
-            .some((field) => (field || '').toLowerCase().includes(q));
+    /* Prefer the row on this page so an edit shows immediately, but fall back to the one the server
+       sent — a link to an image on another page has to open it. */
+    const selected = items.find((m) => m.id === selectedId)
+        || (arrivedOn?.id === selectedId ? arrivedOn : null);
+
+    /* Anything absent or already the default stays out of the address. */
+    const params = (extra = {}) => {
+        const merged = {
+            q: settled || undefined,
+            per_page: pagination?.perPage === DEFAULT_SIZE ? undefined : pagination?.perPage,
+            ...extra,
+        };
+
+        return Object.fromEntries(Object.entries(merged).filter(([, v]) => v !== undefined && v !== ''));
+    };
+
+    const visit = (extra, options = {}) => router.get('/cms/media', params(extra), {
+        preserveState: true,
+        preserveScroll: true,
+        ...options,
     });
 
-    const selected = items.find((m) => m.id === selectedId) || null;
+    /* A selection is a set of ids on the page you made it on. Carrying it across a page change
+       would leave rows ticked that are no longer in front of you. */
+    const goToPage = (n) => { setPicked([]); visit({ page: n }); };
+
+    useEffect(() => {
+        if (firstRender.current) { firstRender.current = false; return; }
+        if (settled === (filters.q || '')) return;
+
+        setPicked([]);
+        visit({}, { replace: true });
+    }, [settled]);
     const inFlight = rows.filter((r) => ! r.done && ! r.error).length;
 
     const openUpload = (files = null) => {
@@ -98,7 +138,7 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
         setPicked((prev) => prev.filter((id) => ! ids.includes(id)));
         if (ids.includes(selectedId)) setSelectedId(null);
         flash(deleted.length === 1 ? `${deleted[0]} deleted` : `${deleted.length} images deleted`);
-        router.reload({ only: ['items'] });
+        router.reload({ only: ['items', 'pagination'] });
     };
 
     return (
@@ -162,9 +202,9 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => { e.preventDefault(); openUpload(e.dataTransfer.files); }}
                     >
-                        {items.length === 0
-                            ? 'Nothing uploaded yet. Drop images here, or use Upload.'
-                            : 'No media matches that search.'}
+                        {settled.trim()
+                            ? 'No media matches that search.'
+                            : 'Nothing uploaded yet. Drop images here, or use Upload.'}
                     </div>
                 ) : (
                     <div
@@ -201,6 +241,13 @@ export default function MediaIndex({ items = [], maxBytes = 0 }) {
                         ))}
                     </div>
                 )}
+
+                <Pagination
+                    meta={pagination}
+                    onPage={goToPage}
+                    onPerPage={(n) => visit({ per_page: n === DEFAULT_SIZE ? undefined : n }, { replace: true })}
+                    noun="images"
+                />
             </div>
 
             {selected ? (
