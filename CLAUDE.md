@@ -18,13 +18,16 @@ Section storage is JSON-snapshot based, not normalised rows.
 - `php artisan serve` — app at http://localhost:8000 (Vite only builds assets; it never serves pages)
 - `npm run dev` / `npm run build` — assets. Exit `npm run dev` with Ctrl+C so it removes `public/hot`; a stale `hot` file points assets at a dead Vite server and renders a blank page
 - `composer test` — clears config, then `php artisan test`
+- `npm run e2e` — builds assets, then drives the CMS in a real browser (Playwright). `e2e:headed`
+  shows the browser doing it, `e2e:ui` is the interactive runner, `e2e:report` opens the last report.
+  Run from the project root: from inside `e2e/` Playwright finds no config and fails everything
 - `./vendor/bin/pint` — PHP formatting
 
 ## Layout
 
-- `routes/web.php` — `/` renders the `AgentFinder` Inertia page; `/cms/*` is the admin prototype
+- `routes/web.php` — `/` renders the `AgentFinder` Inertia page; `/cms/*` is the admin
 - `resources/js/Pages/` — Inertia page components, mirroring the route names
-- `resources/js/cms/` — admin shell: `layout/`, `builder/`, `components/`, `data/mockData.js`
+- `resources/js/cms/` — admin shell: `layout/`, `builder/`, `components/`, `data/constants.js`
 - `app/Content/PageContentStore.php` — the only storage seam; both CMS controllers go through it
 - SQLite (`database/database.sqlite`)
 
@@ -217,14 +220,108 @@ Setting the status is still its own single-key route, not an `update()`. The rea
 the name, email and message are the sender's words, and a general endpoint here would be an
 editable-enquiry endpoint by construction, whatever the request happened to carry.
 
+## Browser tests
+
+`e2e/` drives the **CMS admin** through Chromium. It covers what PHPUnit cannot see: that a screen
+renders, that a form's save button is reachable and enabled, and that what was typed comes back
+after a reload.
+
+Its database is its own — `database/e2e.sqlite`, rebuilt from scratch by `e2e/global-setup.mjs`
+on every run. `APP_ENV=e2e` must go in the **server process's environment**, not on the command
+line: `php artisan serve` forwards a whitelist of variables to the server it starts and drops
+`--env`, so `serve --env=e2e` quietly runs the site against the developer's own database. That is
+how three test enquiries once landed in `database/database.sqlite`.
+
+Three constraints shape the suite, and all of them are load-bearing:
+
+- **One worker.** `artisan serve` is PHP's built-in server — one request at a time, and it cannot
+  fork on Windows. A second worker deadlocks the moment one page waits on an Inertia POST.
+- **One sign-in.** `/login` is throttled at ten attempts a minute, so `auth.setup.js` signs in once
+  and every test reuses the cookie. The tests that need a signed-out or client-administrator
+  browser opt out with `test.use({ storageState: … })` and sign in themselves.
+- **No media bytes unless a test is about them.** Every image is streamed out of storage by PHP,
+  and against a one-request-at-a-time server a visit to the media library leaves a request per image
+  in flight with everything else queued behind: measured at **46 seconds for three navigations with
+  images against 2.6 without**. `e2e/fixtures.js` aborts `**/media/**` for every test; the one test
+  that checks a thumbnail calls `withImages(page)` and pays for it. Nothing about production —
+  a real server answers them concurrently and they carry a year-long immutable cache.
+
+Navigation waits on `domcontentloaded`, not `load`, for the same reason. What is being asserted is
+that a screen arrives and renders, and the shell being visible says that better than a load event.
+
+Fixture data that a route would refuse is made in `global-setup.mjs` rather than through the
+application — the public enquiry form is CSRF-protected and an API request context carries no token,
+so posting to it would fail for a reason having nothing to do with the test.
+
+### How it is arranged
+
+`e2e/sidebar/` holds one numbered file per sidebar module, in sidebar order, each opening a
+`describe` named after the module so the report reads the way the menu does. `e2e/cross/` holds what
+spans all of them — sign-in, the search palette, the content policy. `e2e/support/` holds the parts
+that are awkward enough to be worth writing once.
+
+**The block tests are generated from the application's own schema.** `contentFields.js`,
+`repeaters.js` and `COMPONENT_LIBRARY` are pure data, so `04-pages-blocks.spec.js` imports them and
+writes a test per field. Add a field to a block and it is covered that day. The objection — that a
+test derived from the schema agrees with the schema — is answered by what it asserts: the typed
+value has to survive a save **and a reload**, which is true or false whatever the schema says.
+
+Three things about the builder are worth knowing before touching those tests:
+
+- **Settings fields have no `id`, `name` or associated label**, only visible text — and "Heading",
+  "Highlighted heading" and "Heading level" all contain one another. `support/builder.js` matches on
+  exact text for that reason; substring matching silently picks the wrong field.
+- **Only the Content accordion is open on arrival.** The Layout, Style, Responsive and Advanced
+  inputs do not exist in the DOM until their heading is clicked.
+- **Toolbar buttons are dispatched, not clicked.** The canvas fades in, re-measures its height and
+  is drawn under a CSS `scale()`, so a real click is delivered to whatever occupies the coordinates
+  and Playwright's stability check never settles.
+
+**Dropping a block inside another goes through `support/dragShim.js`.** The canvas uses the native
+HTML5 drag API, which Playwright cannot drive; the shim dispatches the events itself. It works
+because the builder keeps its drag state in React refs and uses `dataTransfer` only for
+`effectAllowed` — the events must arrive, not carry anything. A passing drag test is weaker evidence
+than a passing click test, and it is the first thing to suspect if the drag code is rewritten.
+
+`npm run e2e:fast` skips the generated per-field tests (`@deep`); the full sweep is for before a
+merge.
+
+The public site is deliberately out of scope here; it is covered by the PHPUnit feature tests. What
+the suite does cover beyond the screens loading: the enquiry inbox including the bell and sidebar
+counts disagreeing on purpose, the search palette including that a page's link resolves through
+`cms_id`, and that **no screen violates the content security policy** — a blocked script does not
+error a response, so without this nobody would notice until something silently stopped working.
+
+### Two traps that cost hours, written down so they do not again
+
+**`cmsField`'s inner locator is built from the page, not from the scope.** Playwright bakes a
+locator's own selector into anything used as `has:`, so building it from `scope` produced
+`.cms-field >> .cms-modal .cms-field-label` — matching nothing. It worked wherever the scope
+happened to be the page and failed only inside modals, which made it look like those *screens* were
+broken. Five tests, one helper.
+
+**The media fixture blocks `/media/` paths, not `**​/media/**`.** The glob also swallowed
+`/cms/media/usage` — the request the library makes before it will let anything be deleted — so the
+delete dialog never appeared and the test read as a broken screen.
+
+The lesson both share: when a probe passes and the test fails, the difference is in the test.
+
 ## Current state
 
 The public site renders from the database, and the builder is functional: undo/redo,
 draft and per-version preview, restore-to-draft, reusable sections, and a real change
 summary on publish and in the history drawer.
 
-Pages, FAQs, media and users are real. The remaining CMS routes are still a prototype:
-the dashboard, blog, testimonials, navigation, global content and settings render static
-props from `mockData.js`, and Puck is not installed. See `docs/specs/`.
+**Every CMS screen is real.** The line that used to sit here said the dashboard, blog, testimonials,
+navigation, global content and settings were prototypes rendering static props from `mockData.js` —
+that file was deleted several features ago, and each of those screens reads and writes the database.
+Puck was never installed and is not going to be; the builder is the application's own.
 
-Known remaining stub: `onOpenMediaPicker` in the builder still only raises a toast.
+A note in a file nobody re-reads outlives what it describes. That is the second time this section
+has been wrong in the same way, so: if something here reads like a limitation, check it against the
+code before repeating it.
+
+The builder's image fields open a real media library — `ImageField.jsx` renders `MediaLibraryModal`
+and picks against `/cms/media/library`. The note that used to sit here said `onOpenMediaPicker` was a
+stub that only raised a toast; that function no longer exists anywhere in the repository, and the
+note outlived it by several features. Worth remembering the next time something here says "stub".
