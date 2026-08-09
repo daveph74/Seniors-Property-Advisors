@@ -12,6 +12,7 @@ export default function SearchPalette({ open, onClose }) {
     const input = useRef(null);
 
     const flat = groups.flatMap((g) => g.results);
+    const short = term.trim().length < 2;
 
     useEffect(() => {
         if (open) input.current?.focus();
@@ -21,7 +22,7 @@ export default function SearchPalette({ open, onClose }) {
     useEffect(() => {
         if (! open) return undefined;
 
-        if (term.trim().length < 2) { setGroups([]); setSearching(false); return undefined; }
+        if (short) { setGroups([]); setSearching(false); return undefined; }
 
         setSearching(true);
 
@@ -83,38 +84,40 @@ export default function SearchPalette({ open, onClose }) {
                     <span className="cms-header__kbd">Esc</span>
                 </div>
 
-                <div className="cms-palette__results" id="cms-palette-results" role="listbox">
-                    {term.trim().length < 2 ? (
-                        <p className="cms-palette__hint">Type at least two letters.</p>
-                    ) : searching && groups.length === 0 ? (
-                        <p className="cms-palette__hint">Searching…</p>
-                    ) : groups.length === 0 ? (
-                        <p className="cms-palette__hint">Nothing matches “{term}”.</p>
-                    ) : groups.map((group) => (
-                        <div className="cms-palette__group" key={group.label}>
-                            <div className="cms-palette__group-label">{group.label}</div>
-                            {group.results.map((result) => {
-                                index += 1;
-                                const mine = index;
+                {/* Nothing at all until there is something to say. An empty panel explaining that
+                    it is empty reads as an error, and the field already invites the typing. */}
+                {short ? null : (
+                    <div className="cms-palette__results" id="cms-palette-results" role="listbox">
+                        {searching && groups.length === 0 ? (
+                            <p className="cms-palette__hint">Searching…</p>
+                        ) : groups.length === 0 ? (
+                            <p className="cms-palette__hint">Nothing matches “{term}”.</p>
+                        ) : groups.map((group) => (
+                            <div className="cms-palette__group" key={group.label}>
+                                <div className="cms-palette__group-label">{group.label}</div>
+                                {group.results.map((result) => {
+                                    index += 1;
+                                    const mine = index;
 
-                                return (
-                                    <button
-                                        type="button"
-                                        key={`${group.label}-${result.id}`}
-                                        role="option"
-                                        aria-selected={active === mine}
-                                        className={`cms-palette__result${active === mine ? ' cms-palette__result--active' : ''}`}
-                                        onMouseEnter={() => setActive(mine)}
-                                        onClick={() => go(result)}
-                                    >
-                                        <span className="cms-palette__result-title">{result.title}</span>
-                                        {result.meta ? <span className="cms-palette__result-meta">{result.meta}</span> : null}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ))}
-                </div>
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={`${group.label}-${result.id}`}
+                                            role="option"
+                                            aria-selected={active === mine}
+                                            className={`cms-palette__result${active === mine ? ' cms-palette__result--active' : ''}`}
+                                            onMouseEnter={() => setActive(mine)}
+                                            onClick={() => go(result)}
+                                        >
+                                            <span className="cms-palette__result-title">{result.title}</span>
+                                            {result.meta ? <span className="cms-palette__result-meta">{result.meta}</span> : null}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </>
     );
