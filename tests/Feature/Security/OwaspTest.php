@@ -240,6 +240,21 @@ class OwaspTest extends TestCase
         }
     }
 
+    /**
+     * HSTS is the one header that is conditional. Over plain HTTP a browser ignores it anyway, and
+     * sending it would pin a developer's machine to a scheme it is not serving — so it appears only
+     * once the request is secure, which is exactly when it means something.
+     */
+    public function test_a05_hsts_is_sent_over_https_and_withheld_over_http(): void
+    {
+        $this->get('http://localhost/')->assertHeaderMissing('Strict-Transport-Security');
+
+        $secure = $this->get('https://localhost/');
+
+        $secure->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+        $this->assertStringContainsString('upgrade-insecure-requests', $secure->headers->get('Content-Security-Policy'));
+    }
+
     public function test_a05_the_policy_blocks_the_things_a_policy_is_for(): void
     {
         $policy = $this->get('/')->headers->get('Content-Security-Policy');
