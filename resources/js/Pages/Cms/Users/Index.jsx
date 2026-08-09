@@ -54,7 +54,7 @@ export default function UsersIndex({ users = [], roles = {} }) {
     });
 
     return (
-        <div className="cms-page cms-page--medium">
+        <div className="cms-page">
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
                 <p style={{ margin: 0, fontSize: 13.5, color: 'var(--cms-text-mid)' }}>
                     Two roles keep permissions simple: Super Administrators manage everything, Client

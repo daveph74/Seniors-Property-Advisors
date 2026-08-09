@@ -487,13 +487,13 @@
    — a page scrolled 1400px deep put a 1px element at document y=1400, so the body itself grew a
    scrollbar and left half a screen of white below the shell. */
 .cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; position: relative; }
+/* No cap on any of them. The dashboard lost its 1240px one for leaving 236px of nothing on a wide
+   window, and the width modifiers that survived did the same to Users, Global content and Settings
+   — 1020px of form against a 1717px window reads as a screen that failed to load. Fields that
+   should not stretch say so individually, which is where a width belongs: on the input that holds
+   a phone number, not on the page that happens to contain one. */
 .cms-page{ padding: 22px 32px 48px; }
-/* No cap. The two columns are already proportional, so the dashboard fills the content area the way
-   the media and testimonial screens do — a 1240px cap left 236px of nothing on a wide window. */
 .cms-page--dash{ padding: 28px 32px 48px; min-width: 760px; }
-.cms-page--narrow{ max-width: 1000px; }
-.cms-page--medium{ max-width: 1020px; }
-.cms-page--builder-modal{ max-width: 1080px; }
 
 /* ---------- Dashboard ---------- */
 .cms-welcome-title{ margin: 0 0 6px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 34px; line-height: 1.15; letter-spacing: -0.01em; }
