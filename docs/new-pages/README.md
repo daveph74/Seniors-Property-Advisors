@@ -35,11 +35,17 @@ that already exist, plus copy currently sitting in `content/content.jsx`.
 Three things are genuinely new: the **suburb autocomplete**, the **full-bleed hero**, and the
 **mobile nav / modal-form CSS**.
 
+> The proxy controller and its test are no longer kept here. They were ported, the live pair moved
+> on — timeouts, different caching, and an escaping fix a security review found — and the snapshot
+> stayed where it was. A copy of security-relevant code that quietly drifts is worse than no copy,
+> because somebody eventually pastes from it. `app/Http/Controllers/SuburbLookupController.php` and
+> `tests/Feature/SuburbLookupTest.php` are the record.
+
 ## What is in here
 
 | Folder | What it is | Status |
 |---|---|---|
-| `suburb-lookup/` | Google Places proxy, its React field, the modal it feeds, config diffs, 177-line test | **port close to as-is** |
+| `suburb-lookup/` | The React field, the modal it feeds, and config diffs | **ported** — see below |
 | `sections/` | The eight prototype sections | reference for seven, source for `HeroFullBleed` |
 | `content/content.jsx` | The page copy — headings, body, steps, cards | **the payload**: becomes seed content |
 | `pages/` | The six Inertia page wrappers | reference only — see below |

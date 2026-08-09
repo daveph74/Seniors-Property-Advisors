@@ -58,8 +58,10 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::get('/pages/{page}/preview', [CmsPageController::class, 'preview'])->name('pages.preview');
     Route::get('/pages/{page}/preview/{n}', [CmsPageController::class, 'previewRevision'])
         ->whereNumber('n')->name('pages.preview.revision');
+    /* Rolling a page back to an earlier version replaces the current draft, which is the same
+       order of consequence as unarchiving one — so it sits behind the same ability, per §2. */
     Route::post('/pages/{page}/restore/{n}', [CmsPageController::class, 'restore'])
-        ->whereNumber('n')->name('pages.restore');
+        ->whereNumber('n')->middleware('permit:content.restore')->name('pages.restore');
     Route::get('/pages/{page}/compare/{n}', [CmsPageController::class, 'compare'])
         ->whereNumber('n')->name('pages.compare');
     Route::post('/pages/{page}/changes', [CmsPageController::class, 'changes'])->name('pages.changes');
@@ -120,6 +122,8 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::get('/enquiries', [CmsEnquiryController::class, 'index'])->name('enquiries.index');
     Route::patch('/enquiries/{enquiry}/status', [CmsEnquiryController::class, 'status'])
         ->whereNumber('enquiry')->name('enquiries.status');
+    Route::post('/enquiries/{enquiry}/read', [CmsEnquiryController::class, 'read'])
+        ->whereNumber('enquiry')->name('enquiries.read');
     Route::delete('/enquiries/{enquiry}', [CmsEnquiryController::class, 'destroy'])
         ->whereNumber('enquiry')->middleware('permit:content.delete')->name('enquiries.destroy');
 
