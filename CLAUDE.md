@@ -139,6 +139,30 @@ would otherwise compare against the hash that was just replaced.
 Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
 `SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
 
+## Header search and the bell
+
+Both were painted-on: an input that swallowed keystrokes and a notification dot wired to nothing.
+
+`app/Cms/Search.php` answers `GET /cms/search` as JSON — Inertia would put every half-typed word in
+the browser's history. Six sources, each capped at five, each result a link. Bodies are searched but
+never returned, and an **enquiry's message is not searched at all**: somebody's account of their own
+circumstances is not an index for a colleague to browse, so only the sender's name, email and suburb
+match. Terms shorter than two characters search nothing.
+
+Two traps live in that file. `LIKE` needs an explicit `ESCAPE` clause — SQLite has no default escape
+character, so escaping `%` without declaring one leaves the wildcard live and searching for "50%"
+matches every row. And a page's builder link must be built from **`cms_id`, not `id`**:
+`CmsPageController::edit` resolves through `findByCmsId`, so a link of the right shape built from the
+primary key 404s. `SearchTest` follows every link rather than pattern-matching the href, which is the
+only reason that second one is caught — a regex on the URL passes happily while the link is broken.
+
+`app/Cms/Notifications.php` feeds the bell as a shared Inertia prop, and only on `cms.*` routes — the
+public site shares that middleware and should not pay for two counts a page view. It counts unhandled
+enquiries and published pages holding an unpublished draft, the latter by the same rule
+`PageContentStore` uses for the "Unpublished changes" filter, so the bell and that screen cannot
+disagree. Both are derived, so there is no notifications table and deliberately no read or dismissed
+state: a count that can be cleared without doing the work invites clearing it.
+
 ## Current state
 
 The public site renders from the database, and the builder is functional: undo/redo,

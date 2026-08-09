@@ -14,6 +14,7 @@ use App\Http\Controllers\Cms\GlobalContentController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\NavigationController;
 use App\Http\Controllers\Cms\ReusableSectionController;
+use App\Http\Controllers\Cms\SearchController;
 use App\Http\Controllers\Cms\SettingsController;
 use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
@@ -44,6 +45,9 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::patch('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    /* Throttled like any other endpoint that runs a query per keystroke. */
+    Route::get('/search', SearchController::class)->middleware('throttle:120,1')->name('search');
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
     Route::post('/pages', [CmsPageController::class, 'store'])->name('pages.store');
