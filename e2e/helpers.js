@@ -3,7 +3,42 @@ import { expect } from '@playwright/test';
 export const SUPER_ADMIN = { email: 'superadmin@seniorspropertyadvisors.com.au', password: 'password' };
 export const CLIENT_ADMIN = { email: 'helen@seniorspropertyadvisors.com.au', password: 'password' };
 
-export const SUPER_ADMIN_STATE = 'test-results/.auth/super-admin.json';
+/**
+ * Outside `test-results/`, deliberately.
+ *
+ * That directory is Playwright's own output — it is disposable and gets cleared, so a signed-in
+ * session kept there can vanish part way through a run. Every spec that had not run yet then fails
+ * with `ENOENT` on the storage state, which reads as a dozen unrelated broken screens rather than
+ * one missing file. `playwright/.auth/` is the documented home for this.
+ */
+export const SUPER_ADMIN_STATE = 'playwright/.auth/super-admin.json';
+
+/**
+ * Clicks something that should navigate, and clicks again if it did not.
+ *
+ * List screens re-render when the shared notification counts arrive, which can replace a row's
+ * button between Playwright locating it and pressing it — the press lands on a node no longer in
+ * the document and nothing happens at all. It appears perhaps once in a hundred and only under the
+ * load of a full run, which is precisely the failure that gets written off as flaky and left in.
+ *
+ * Not superstition, and not a blanket retry: it retries one specific thing, and says what did not
+ * happen when it gives up.
+ */
+export async function clickThrough(page, locator, urlPattern, what) {
+    await expect(locator).toBeVisible();
+
+    for (let attempt = 1; ; attempt++) {
+        await locator.click();
+
+        try {
+            await page.waitForURL(urlPattern, { timeout: 5000 });
+
+            return;
+        } catch (error) {
+            if (attempt === 3) throw new Error(`${what} never opened`);
+        }
+    }
+}
 
 /**
  * Waits for an element's CSS animations to finish.

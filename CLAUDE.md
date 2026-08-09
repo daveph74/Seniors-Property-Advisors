@@ -25,9 +25,9 @@ Section storage is JSON-snapshot based, not normalised rows.
 
 ## Layout
 
-- `routes/web.php` — `/` renders the `AgentFinder` Inertia page; `/cms/*` is the admin prototype
+- `routes/web.php` — `/` renders the `AgentFinder` Inertia page; `/cms/*` is the admin
 - `resources/js/Pages/` — Inertia page components, mirroring the route names
-- `resources/js/cms/` — admin shell: `layout/`, `builder/`, `components/`, `data/mockData.js`
+- `resources/js/cms/` — admin shell: `layout/`, `builder/`, `components/`, `data/constants.js`
 - `app/Content/PageContentStore.php` — the only storage seam; both CMS controllers go through it
 - SQLite (`database/database.sqlite`)
 
@@ -312,9 +312,14 @@ The public site renders from the database, and the builder is functional: undo/r
 draft and per-version preview, restore-to-draft, reusable sections, and a real change
 summary on publish and in the history drawer.
 
-Pages, FAQs, media and users are real. The remaining CMS routes are still a prototype:
-the dashboard, blog, testimonials, navigation, global content and settings render static
-props from `mockData.js`, and Puck is not installed. See `docs/specs/`.
+**Every CMS screen is real.** The line that used to sit here said the dashboard, blog, testimonials,
+navigation, global content and settings were prototypes rendering static props from `mockData.js` —
+that file was deleted several features ago, and each of those screens reads and writes the database.
+Puck was never installed and is not going to be; the builder is the application's own.
+
+A note in a file nobody re-reads outlives what it describes. That is the second time this section
+has been wrong in the same way, so: if something here reads like a limitation, check it against the
+code before repeating it.
 
 The builder's image fields open a real media library — `ImageField.jsx` renders `MediaLibraryModal`
 and picks against `/cms/media/library`. The note that used to sit here said `onOpenMediaPicker` was a

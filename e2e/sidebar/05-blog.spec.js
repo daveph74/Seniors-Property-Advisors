@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures.js';
-import { cmsInput, gotoCms, toast } from '../helpers.js';
+import { clickThrough, cmsInput, gotoCms, toast } from '../helpers.js';
 import { unique } from '../support/unique.js';
 
 test.describe('Blog', () => {
@@ -22,7 +22,12 @@ test.describe('Blog', () => {
 
         if (await row(page, title).count() === 0) return;
 
-        await row(page, title).getByRole('link', { name: 'Edit' }).click();
+        await clickThrough(
+            page,
+            row(page, title).getByRole('link', { name: 'Edit' }),
+            /\/cms\/blog\/\d+\/edit$/,
+            'the article editor',
+        );
         await page.locator('.cms-btn--danger-outline', { hasText: 'Delete' }).first().click();
         await page.locator('.cms-modal').getByRole('button', { name: 'Delete', exact: true }).click();
         await expect(toast(page)).toContainText('Article deleted');
@@ -40,7 +45,12 @@ test.describe('Blog', () => {
         await gotoCms(page, '/cms/blog');
         await expect(row(page, title)).toContainText('Published');
 
-        await row(page, title).getByRole('link', { name: 'Edit' }).click();
+        await clickThrough(
+            page,
+            row(page, title).getByRole('link', { name: 'Edit' }),
+            /\/cms\/blog\/\d+\/edit$/,
+            'the article editor',
+        );
         await page.getByRole('button', { name: 'Unpublish' }).click();
         await expect(page.locator('.cms-modal')).toContainText('Take this article off the website?');
         await page.locator('.cms-modal').getByRole('button', { name: 'Unpublish' }).click();

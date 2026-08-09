@@ -107,14 +107,16 @@ fails `BlogTest`, which is what stops an exclusion eroding quietly.
 
 Two items previously carried as possible gaps turned out not to bear on §16 at all:
 
-- **Enquiries cannot be read in the CMS.** §12 puts contact and lead enquiry forms in "the broader
-  website and CRM scope, **not** the content-management modules", and no §16 criterion mentions
-  them. Still worth building for the reason in `docs/TODO.md` — an enquiry nobody can see is close
-  to an enquiry lost — but it does not block acceptance.
+- **Reading enquiries in the CMS.** §12 puts contact and lead enquiry forms in "the broader website
+  and CRM scope, **not** the content-management modules", and no §16 criterion mentions them. It was
+  built anyway, for the reason in `docs/TODO.md` — an enquiry nobody can see is close to an enquiry
+  lost — but it neither blocked acceptance before nor counts towards it now.
 - **The responsive admin interface.** §15 requires it and it is built, but it is not one of the
-  fifteen acceptance criteria. Its remaining weaknesses — no automated test, and no touch drag in
-  the page builder — are quality gaps against §15, not acceptance failures. §15 also explicitly
-  allows that "complex page-section management may be optimised primarily for desktop and tablet".
+  fifteen acceptance criteria. Touch drag in the page builder is still missing, which is a quality
+  gap against §15 rather than an acceptance failure — §15 explicitly allows that "complex
+  page-section management may be optimised primarily for desktop and tablet". The other weakness
+  carried here, that none of it was covered by an automated test, no longer holds: `e2e/` drives
+  every admin screen through a real browser.
 
 ## §18 development notes
 

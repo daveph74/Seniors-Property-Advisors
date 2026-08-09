@@ -47,24 +47,18 @@ it is a permissions decision.
 
 ## Gaps in what is built
 
-**Enquiries cannot be read.** `/contact` stores enquiries and shows the editor's confirmation, but
-there is no screen listing them, so seeing one means opening the database. The `handled_at` column
-exists for a mark-as-handled control that was never built. §12 puts enquiry handling in CRM scope,
-so this is defensible — but until SyncID exists, an enquiry that nobody can see is close to an
-enquiry lost. Nothing emails anyone either: an enquiry arrives silently.
+**Nothing still emails anyone when an enquiry arrives.** The inbox is built — `/cms/enquiries`
+lists them, one opens in a modal, and `status` carries new / in progress / dealt with — so an
+enquiry is no longer invisible. But it still arrives silently, and §12 leaves notification routing
+with the development team, so somebody has to be watching the screen. That is the remaining half.
 
-**Look for a third write-only field.** Two editable fields turned out to save and never render: the
-media caption and the contact form's confirmation message. A third of the same shape has since
-turned up in a different place — `enquiries.handled_at` existed but was not fillable, so marking an
-enquiry dealt with would have quietly done nothing. All three were found by accident. Worth walking
-the field schemas against what each section renders, and the model `$fillable` lists against their
-columns, once, deliberately.
-
-**The admin header's search box and notification bell do nothing.** `Header.jsx` renders a search
-input with a `⌘K` hint and a bell with an unread dot, and neither has ever had a handler behind it —
-the dot is hardcoded. They are the last of the prototype's furniture. The search is hidden below
-1024px by the responsive layer, which shrinks the problem without fixing it: on a laptop it still
-invites a search that never runs. Either build them or take them out.
+**Look for a fourth write-only control.** Three editable fields turned out to save and never
+render: the media caption, the contact form's confirmation message, and `enquiries.handled_at`,
+which existed but was not fillable. A fourth of the same family has since turned up — the enquiries
+search box passed `onChange={setSearch}` to a component that hands over the DOM event, so typing in
+it threw and the search had never once worked. All four were found by accident. Walking the field
+schemas against what each section renders, and every `onChange` against what it is handed, is still
+worth doing deliberately rather than by luck.
 
 **Four section types still cannot carry the h1.** `ownerOfTheH1()` in
 `resources/js/sections/headingLevel.js` nominates a section to own the page's h1 when no hero is
@@ -145,6 +139,23 @@ the save route always did, and that test is `test_an_unknown_page_id_cannot_be_o
 
 The claim was written from reading the JSX without following the prop back to the controller. Worth
 remembering the next time something here says "unreachable".
+
+## What the tests do and do not reach
+
+`e2e/` drives every admin screen through Chromium — 154 tests, arranged by sidebar module, including
+one generated per field of every block type in the builder. Three things it deliberately does not
+cover, so nobody reads the number as more than it is:
+
+- **The public site.** Out of scope by design; the PHPUnit feature tests cover it.
+- **Dragging, honestly.** The canvas uses the native HTML5 drag API, which Playwright cannot drive.
+  `e2e/support/dragShim.js` dispatches the events itself, so the nesting tests are real evidence but
+  weaker than the click-path ones — and the first thing to suspect if the drag code is rewritten.
+- **Touch.** No touch-drag anywhere, which is the §15 gap recorded in `docs/acceptance.md`.
+
+Three bugs found while building it were in the tests rather than the application, and two of them
+looked exactly like broken screens. They are written up in `CLAUDE.md` under *Browser tests*,
+because the lesson generalises: when a probe passes and the test fails, the difference is in the
+test.
 
 ## Content, not code
 

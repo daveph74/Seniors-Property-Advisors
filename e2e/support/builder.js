@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { clickThrough } from '../helpers.js';
 
 /**
  * The page builder, wrapped.
@@ -23,9 +24,15 @@ export function canvas(page) {
 /** Opens a page in the builder by its title on the pages list. */
 export async function openBuilder(page, title) {
     await page.goto('/cms/pages', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('button', { name: title, exact: true }).first().click();
+    await expect(page.locator('.cms-shell')).toBeVisible();
 
-    await expect(page).toHaveURL(/\/cms\/pages\/\d+\/edit$/);
+    await clickThrough(
+        page,
+        page.getByRole('button', { name: title, exact: true }).first(),
+        /\/cms\/pages\/\d+\/edit$/,
+        `the builder for "${title}"`,
+    );
+
     await expect(page.getByRole('button', { name: 'Save draft' })).toBeVisible();
     await expect(canvas(page).locator('body')).not.toBeEmpty();
 }
