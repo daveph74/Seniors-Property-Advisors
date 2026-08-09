@@ -5,6 +5,17 @@ export const CLIENT_ADMIN = { email: 'helen@seniorspropertyadvisors.com.au', pas
 
 export const SUPER_ADMIN_STATE = 'test-results/.auth/super-admin.json';
 
+/**
+ * The shell only exists once React has hydrated, and the palette's keyboard listener with it — so
+ * pressing the shortcut against a page that has merely arrived does nothing at all.
+ */
+export async function openPalette(page) {
+    await expect(page.locator('.cms-shell')).toBeVisible();
+
+    await page.keyboard.press('Control+k');
+    await expect(page.locator('.cms-palette')).toBeVisible();
+}
+
 export async function signIn(page, account = SUPER_ADMIN) {
     await page.goto('/login');
     await page.locator('input[type="email"]').fill(account.email);

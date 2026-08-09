@@ -230,15 +230,32 @@ line: `php artisan serve` forwards a whitelist of variables to the server it sta
 `--env`, so `serve --env=e2e` quietly runs the site against the developer's own database. That is
 how three test enquiries once landed in `database/database.sqlite`.
 
-Two constraints shape the suite, and both are load-bearing:
+Three constraints shape the suite, and all of them are load-bearing:
 
 - **One worker.** `artisan serve` is PHP's built-in server — one request at a time, and it cannot
   fork on Windows. A second worker deadlocks the moment one page waits on an Inertia POST.
 - **One sign-in.** `/login` is throttled at ten attempts a minute, so `auth.setup.js` signs in once
   and every test reuses the cookie. The tests that need a signed-out or client-administrator
   browser opt out with `test.use({ storageState: … })` and sign in themselves.
+- **No media bytes unless a test is about them.** Every image is streamed out of storage by PHP,
+  and against a one-request-at-a-time server a visit to the media library leaves a request per image
+  in flight with everything else queued behind: measured at **46 seconds for three navigations with
+  images against 2.6 without**. `e2e/fixtures.js` aborts `**/media/**` for every test; the one test
+  that checks a thumbnail calls `withImages(page)` and pays for it. Nothing about production —
+  a real server answers them concurrently and they carry a year-long immutable cache.
 
-The public site is deliberately out of scope here; it is covered by the PHPUnit feature tests.
+Navigation waits on `domcontentloaded`, not `load`, for the same reason. What is being asserted is
+that a screen arrives and renders, and the shell being visible says that better than a load event.
+
+Fixture data that a route would refuse is made in `global-setup.mjs` rather than through the
+application — the public enquiry form is CSRF-protected and an API request context carries no token,
+so posting to it would fail for a reason having nothing to do with the test.
+
+The public site is deliberately out of scope here; it is covered by the PHPUnit feature tests. What
+the suite does cover beyond the screens loading: the enquiry inbox including the bell and sidebar
+counts disagreeing on purpose, the search palette including that a page's link resolves through
+`cms_id`, and that **no screen violates the content security policy** — a blocked script does not
+error a response, so without this nobody would notice until something silently stopped working.
 
 ## Current state
 

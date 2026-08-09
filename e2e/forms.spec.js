@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.js';
 import { CLIENT_ADMIN, SUPER_ADMIN } from './helpers.js';
 
 test('the global content form saves', async ({ page }) => {

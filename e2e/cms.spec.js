@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.js';
 import { CLIENT_ADMIN, signIn } from './helpers.js';
 
 const MODULES = [
@@ -10,10 +10,19 @@ const MODULES = [
 test('every admin module loads for a super administrator', async ({ page }) => {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    /* `ERR_FAILED` is the suite's own doing — media bytes are aborted by the fixture, and the
+       browser reports each one. Anything else is the application's. */
+    page.on('console', (m) => {
+        if (m.type() === 'error' && ! m.text().includes('net::ERR_FAILED')) errors.push(m.text());
+    });
 
+    /* `domcontentloaded`, not the default `load`. The media library leaves a thumbnail request per
+       image in flight, each streamed out of storage by PHP, and `artisan serve` answers one request
+       at a time — so waiting for every subresource means waiting for the whole library behind the
+       page you asked for. What is being asserted is that the screen arrives and renders, and the
+       shell being visible says that better than a load event does. */
     for (const path of MODULES) {
-        const response = await page.goto(path);
+        const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
         expect(response.status(), path).toBe(200);
         await expect(page.locator('.cms-shell'), path).toBeVisible();
     }
