@@ -253,11 +253,58 @@ Fixture data that a route would refuse is made in `global-setup.mjs` rather than
 application — the public enquiry form is CSRF-protected and an API request context carries no token,
 so posting to it would fail for a reason having nothing to do with the test.
 
+### How it is arranged
+
+`e2e/sidebar/` holds one numbered file per sidebar module, in sidebar order, each opening a
+`describe` named after the module so the report reads the way the menu does. `e2e/cross/` holds what
+spans all of them — sign-in, the search palette, the content policy. `e2e/support/` holds the parts
+that are awkward enough to be worth writing once.
+
+**The block tests are generated from the application's own schema.** `contentFields.js`,
+`repeaters.js` and `COMPONENT_LIBRARY` are pure data, so `04-pages-blocks.spec.js` imports them and
+writes a test per field. Add a field to a block and it is covered that day. The objection — that a
+test derived from the schema agrees with the schema — is answered by what it asserts: the typed
+value has to survive a save **and a reload**, which is true or false whatever the schema says.
+
+Three things about the builder are worth knowing before touching those tests:
+
+- **Settings fields have no `id`, `name` or associated label**, only visible text — and "Heading",
+  "Highlighted heading" and "Heading level" all contain one another. `support/builder.js` matches on
+  exact text for that reason; substring matching silently picks the wrong field.
+- **Only the Content accordion is open on arrival.** The Layout, Style, Responsive and Advanced
+  inputs do not exist in the DOM until their heading is clicked.
+- **Toolbar buttons are dispatched, not clicked.** The canvas fades in, re-measures its height and
+  is drawn under a CSS `scale()`, so a real click is delivered to whatever occupies the coordinates
+  and Playwright's stability check never settles.
+
+**Dropping a block inside another goes through `support/dragShim.js`.** The canvas uses the native
+HTML5 drag API, which Playwright cannot drive; the shim dispatches the events itself. It works
+because the builder keeps its drag state in React refs and uses `dataTransfer` only for
+`effectAllowed` — the events must arrive, not carry anything. A passing drag test is weaker evidence
+than a passing click test, and it is the first thing to suspect if the drag code is rewritten.
+
+`npm run e2e:fast` skips the generated per-field tests (`@deep`); the full sweep is for before a
+merge.
+
 The public site is deliberately out of scope here; it is covered by the PHPUnit feature tests. What
 the suite does cover beyond the screens loading: the enquiry inbox including the bell and sidebar
 counts disagreeing on purpose, the search palette including that a page's link resolves through
 `cms_id`, and that **no screen violates the content security policy** — a blocked script does not
 error a response, so without this nobody would notice until something silently stopped working.
+
+### Two traps that cost hours, written down so they do not again
+
+**`cmsField`'s inner locator is built from the page, not from the scope.** Playwright bakes a
+locator's own selector into anything used as `has:`, so building it from `scope` produced
+`.cms-field >> .cms-modal .cms-field-label` — matching nothing. It worked wherever the scope
+happened to be the page and failed only inside modals, which made it look like those *screens* were
+broken. Five tests, one helper.
+
+**The media fixture blocks `/media/` paths, not `**​/media/**`.** The glob also swallowed
+`/cms/media/usage` — the request the library makes before it will let anything be deleted — so the
+delete dialog never appeared and the test read as a broken screen.
+
+The lesson both share: when a probe passes and the test fails, the difference is in the test.
 
 ## Current state
 
@@ -269,4 +316,7 @@ Pages, FAQs, media and users are real. The remaining CMS routes are still a prot
 the dashboard, blog, testimonials, navigation, global content and settings render static
 props from `mockData.js`, and Puck is not installed. See `docs/specs/`.
 
-Known remaining stub: `onOpenMediaPicker` in the builder still only raises a toast.
+The builder's image fields open a real media library — `ImageField.jsx` renders `MediaLibraryModal`
+and picks against `/cms/media/library`. The note that used to sit here said `onOpenMediaPicker` was a
+stub that only raised a toast; that function no longer exists anywhere in the repository, and the
+note outlived it by several features. Worth remembering the next time something here says "stub".

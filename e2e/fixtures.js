@@ -12,16 +12,23 @@ import { test as base, expect } from '@playwright/test';
  *
  * A test that genuinely needs the bytes calls `withImages(page)` and pays for them.
  */
+/**
+ * Only the files themselves. A glob of `**​/media/**` also catches `/cms/media/usage`, the request
+ * the library makes before it will let anything be deleted — so the delete dialog simply never
+ * arrived, and the test looked like a broken screen rather than a broken fixture.
+ */
+const isMediaFile = (url) => new URL(url).pathname.startsWith('/media/');
+
 export const test = base.extend({
     page: async ({ page }, use) => {
-        await page.route('**/media/**', (route) => route.abort());
+        await page.route(isMediaFile, (route) => route.abort());
 
         await use(page);
     },
 });
 
 export async function withImages(page) {
-    await page.unroute('**/media/**');
+    await page.unroute(isMediaFile);
 }
 
 export { expect };

@@ -110,9 +110,29 @@ export async function publish(page) {
 export async function deleteSelected(page) {
     const before = await canvas(page).locator('.cms-block').count();
 
-    await selectedBlock(page).locator('[title="Delete"]').first().click();
+    await toolbar(page, 'Delete');
 
     await expect(canvas(page).locator('.cms-block')).toHaveCount(before - 1);
+}
+
+/**
+ * Presses a button on the selected block's toolbar.
+ *
+ * `force` is not laziness here. The canvas fades in, re-measures its own height and is drawn under
+ * a CSS `scale()`, so a toolbar button is almost never "stable" by Playwright's definition — it
+ * waits for two animation frames at the same position and the canvas keeps moving underneath it.
+ * The button is resolved, visible and enabled before this runs; what is skipped is only the
+ * did-it-stop-moving check.
+ */
+export async function toolbar(page, title) {
+    const button = selectedBlock(page).locator(`[title="${title}"]`).first();
+
+    await expect(button).toBeVisible();
+
+    /* Dispatched rather than clicked. A real click is delivered to whatever occupies the point,
+       and the toolbar floats over a canvas that is scaled, fading and re-measuring its own height
+       — so the coordinates are a moving target even once the button itself is visible. */
+    await button.dispatchEvent('click');
 }
 
 /**
@@ -128,7 +148,21 @@ export async function saveAndReload(page) {
 
 /** Selects a block in the canvas by the label its tag shows, so a reload can find it again. */
 export async function selectBlock(page, label) {
-    await canvas(page).locator('.cms-block').filter({ hasText: label }).first().click();
+    const block = canvas(page).locator('.cms-block').filter({ hasText: label }).first();
+
+    await expect(block).toBeVisible();
+    /* Dispatched, for the reason given on `toolbar`: a real click waits for a stability that a
+       scaled, animating canvas never quite reaches. */
+    await block.dispatchEvent('click');
     /* The tag is drawn on the block, so it lives in the canvas rather than on the page. */
+    await expect(canvas(page).locator('.cms-block__label-tag').first()).toBeVisible();
+}
+
+/** For blocks that render nothing findable as text — an image on its own, say. */
+export async function selectLastBlock(page) {
+    const block = canvas(page).locator('.cms-block').last();
+
+    await expect(block).toBeVisible();
+    await block.dispatchEvent('click');
     await expect(canvas(page).locator('.cms-block__label-tag').first()).toBeVisible();
 }
