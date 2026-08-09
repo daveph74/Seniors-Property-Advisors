@@ -150,11 +150,15 @@ class SuburbLookupController extends Controller
             return $cached;
         }
 
+        /* `rawurlencode`, not interpolation. A place id arrives from a visitor, and one containing
+           `../` walked back up the path to reach a different endpoint on Google's host with this
+           site's billable key on the request. The cache key above stays on the raw value, so
+           nothing already cached is orphaned by the change. */
         $response = $this->call(
             fn () => Http::withHeaders([
                 'X-Goog-Api-Key' => $key,
                 'X-Goog-FieldMask' => 'addressComponents,location,formattedAddress',
-            ])->timeout(4)->connectTimeout(2)->get(self::DETAILS_URL.$placeId),
+            ])->timeout(4)->connectTimeout(2)->get(self::DETAILS_URL.rawurlencode($placeId)),
             'details',
         );
 

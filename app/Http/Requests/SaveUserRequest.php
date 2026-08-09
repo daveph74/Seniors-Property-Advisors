@@ -23,7 +23,7 @@ class SaveUserRequest extends FormRequest
             'active' => ['sometimes', 'boolean'],
             'password' => [
                 $user === null ? 'required' : 'nullable',
-                'string', Password::min(10),
+                'string', Password::min(10)->uncompromised(),
             ],
         ];
     }

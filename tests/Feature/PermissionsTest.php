@@ -58,6 +58,24 @@ class PermissionsTest extends TestCase
         $this->post("/cms/pages/{$page->cms_id}/archive")->assertRedirect();
     }
 
+    /**
+     * Rolling a page back replaces the current draft, which is the same order of consequence as
+     * unarchiving one — so §2 puts both with super administrators. They used to sit either side of
+     * that line: a client administrator could restore a revision but not unarchive.
+     */
+    public function test_only_a_super_administrator_restores_an_earlier_version(): void
+    {
+        $page = $this->home();
+
+        $this->post("/cms/pages/{$page->cms_id}/publish", ['sections' => []])->assertRedirect();
+
+        $this->asClient();
+        $this->post("/cms/pages/{$page->cms_id}/restore/1")->assertForbidden();
+
+        $this->actingAs($this->superAdmin());
+        $this->post("/cms/pages/{$page->cms_id}/restore/1")->assertRedirect();
+    }
+
     public function test_only_a_super_administrator_restores_archived_content(): void
     {
         $page = $this->home();

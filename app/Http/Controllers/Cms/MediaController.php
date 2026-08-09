@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Rhukster\DomSanitizer\DOMSanitizer;
 use Throwable;
 
 class MediaController extends Controller
@@ -69,6 +70,20 @@ class MediaController extends Controller
             'filters' => ['q' => $term],
             'pagination' => $meta,
         ]);
+    }
+
+    /**
+     * Empty input makes the sanitiser throw rather than return, and a document it cannot parse is
+     * an error we would rather turn into a refusal than a 500 — so both come back as an empty
+     * string and the caller treats that as "not safe".
+     */
+    private function sanitiseSvg(string $svg): string
+    {
+        try {
+            return (string) (new DOMSanitizer(DOMSanitizer::SVG))->sanitize($svg);
+        } catch (Throwable $e) {
+            return '';
+        }
     }
 
     public function library(Request $request)
@@ -168,6 +183,29 @@ class MediaController extends Controller
         $mime = $this->safeMime((string) $request->input('mime'));
         $width = $this->dimension($request->input('width'));
         $height = $this->dimension($request->input('height'));
+
+        /* An SVG is a document, not a bitmap, so none of the sniffing below applies to it — which
+           used to mean it was the one upload nothing looked at. It is read and rewritten clean
+           instead: script elements, event-handler attributes and javascript: links come out, and
+           anything the sanitiser cannot vouch for at all — a foreign object, an external entity,
+           bytes that are not SVG — comes back empty and is refused.
+           This does not replace the super-administrator gate on `sign()`. It is the second lock. */
+        if ($extension === 'svg') {
+            $raw = (string) $disk->get($key);
+
+            $clean = trim($raw) === '' ? '' : $this->sanitiseSvg($raw);
+
+            if (trim($clean) === '') {
+                $disk->delete($key);
+
+                return response()->json([
+                    'message' => 'That SVG could not be made safe to publish. Save it as a plain SVG, or use a PNG.',
+                ], 422);
+            }
+
+            /* Written back before the row exists, so the address never serves the original. */
+            $disk->put($key, $clean);
+        }
 
         if ($bytes !== null) {
             [$real, $tall, $sniffed] = $optimiser->measure($bytes);

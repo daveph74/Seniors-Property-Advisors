@@ -337,14 +337,72 @@ class MediaTest extends TestCase
         $this->postJson('/cms/media/sign', ['name' => 'logo.svg', 'size' => 2048])->assertOk();
     }
 
-    public function test_an_svg_is_recorded_without_being_processed(): void
+    public function test_a_plain_svg_is_recorded_and_keeps_its_artwork(): void
     {
         Storage::fake('s3');
-        Storage::disk('s3')->put('2026/08/mark.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
+        Storage::disk('s3')->put(
+            '2026/08/mark.svg',
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>',
+        );
 
         $this->postJson('/cms/media', [
             'key' => '2026/08/mark.svg', 'name' => 'mark.svg', 'mime' => 'image/svg+xml',
         ])->assertCreated()->assertJsonPath('mime', 'image/svg+xml');
+
+        $this->assertStringContainsString('<circle', Storage::disk('s3')->get('2026/08/mark.svg'));
+    }
+
+    /**
+     * The one upload nothing used to look at. An SVG is a document that can carry script, and the
+     * only thing standing between one and a reader was a response header surviving whatever sits
+     * in front of the route.
+     */
+    public function test_an_svg_is_rewritten_without_its_script(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/08/nasty.svg', <<<'SVG'
+            <svg xmlns="http://www.w3.org/2000/svg">
+                <script>alert(1)</script>
+                <circle cx="5" cy="5" r="4" onload="alert(2)"/>
+                <a xlink:href="javascript:alert(3)"><text>x</text></a>
+            </svg>
+            SVG);
+
+        $this->postJson('/cms/media', [
+            'key' => '2026/08/nasty.svg', 'name' => 'nasty.svg', 'mime' => 'image/svg+xml',
+        ])->assertCreated();
+
+        $stored = Storage::disk('s3')->get('2026/08/nasty.svg');
+
+        $this->assertStringNotContainsString('<script', $stored);
+        $this->assertStringNotContainsString('onload', $stored);
+        $this->assertStringNotContainsString('javascript:', $stored);
+        $this->assertStringContainsString('<circle', $stored, 'the drawing itself survives');
+    }
+
+    /** Anything the sanitiser cannot vouch for is refused outright rather than stored. */
+    public function test_an_svg_that_cannot_be_made_safe_is_refused_and_deleted(): void
+    {
+        Storage::fake('s3');
+
+        $refused = [
+            'foreign object' => '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><body xmlns="http://www.w3.org/1999/xhtml"><img src=x onerror="alert(1)"></body></foreignObject></svg>',
+            'external entity' => '<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><svg xmlns="http://www.w3.org/2000/svg"><text>&xxe;</text></svg>',
+            'not an svg' => 'this is not markup at all',
+            'empty file' => '',
+        ];
+
+        foreach ($refused as $label => $body) {
+            $key = '2026/08/'.md5($label).'.svg';
+            Storage::disk('s3')->put($key, $body);
+
+            $this->postJson('/cms/media', ['key' => $key, 'name' => 'x.svg', 'mime' => 'image/svg+xml'])
+                ->assertStatus(422);
+
+            $this->assertFalse(Storage::disk('s3')->exists($key), "{$label} was left in storage");
+        }
+
+        $this->assertSame(0, Media::count());
     }
 
     public function test_a_description_and_caption_can_be_saved_against_an_image(): void

@@ -4,17 +4,24 @@ Whole-application pass over the public site and the CMS: the public form and sub
 upload and SVG handling, the HTML purifier, authentication and sessions, the permission matrix,
 mass assignment, and what the media route serves.
 
-**Findings only. Nothing here has been fixed** — several are deliberate trade-offs already recorded
-in the scope or in `docs/TODO.md`, and which of the rest are worth acting on is a decision, not a
-defect list.
-
 Reviewed at commit `01772f3`, on top of the search, notifications, enquiry and pagination work.
+
+**Status:** findings **#1, #2, #3, #5 and #6 are fixed**. **#4, #7 and #8 stand** — #4 and #7 by
+decision, #8 because it is a deployment checklist rather than code. Each fixed finding says what was
+done underneath it.
 
 ---
 
 ## Findings
 
-### 1. A visitor-supplied value is interpolated into an outbound Google URL — medium
+### 1. A visitor-supplied value is interpolated into an outbound Google URL — medium — **FIXED**
+
+> `rawurlencode()` on the path segment. No validation regex: the repo holds no realistic Google
+> place id to check a character class against, so a class asserted from memory could reject
+> legitimate ids where encoding cannot. The cache key stays on the raw value, so nothing already
+> cached was orphaned. Covered by
+> `SuburbLookupTest::test_a_place_id_cannot_steer_the_request_to_another_endpoint`.
+
 
 `app/Http/Controllers/SuburbLookupController.php:150` builds the request as
 `self::DETAILS_URL.$placeId`, and `place_id` is validated only as `string|max:255`
@@ -27,7 +34,13 @@ billable.
 
 `rawurlencode($placeId)`, or a `regex:/^[A-Za-z0-9_-]+$/` rule, closes it.
 
-### 2. Page revision restore is not behind `content.restore` — medium
+### 2. Page revision restore is not behind `content.restore` — medium — **FIXED**
+
+> `permit:content.restore` added to the route. This **removes a capability client administrators
+> had**: they can no longer roll a page back to an earlier version. That is the §2 reading and it
+> was chosen deliberately. Covered by
+> `PermissionsTest::test_only_a_super_administrator_restores_an_earlier_version`.
+
 
 `routes/web.php:61`. A client administrator can roll any page back to an earlier published version,
 but the same account cannot unarchive a page (`routes/web.php:70`) and cannot delete anything. §2
@@ -37,7 +50,23 @@ that was meant to be one line.
 Restoring a revision is arguably as consequential as unarchiving — it replaces the current draft.
 Already carried in `docs/TODO.md` as an open permissions decision; this review agrees it is real.
 
-### 3. SVG bytes are never inspected — medium, currently accepted
+### 3. SVG bytes are never inspected — medium — **FIXED**
+
+> SVG uploads now go through `rhukster/dom-sanitizer` and the cleaned bytes are written back over
+> the same key before the row exists, so the address never serves the original. Script elements,
+> event-handler attributes and `javascript:` links are stripped; a foreign object, an external
+> entity or anything that is not SVG comes back empty and is refused with a 422 and the object
+> deleted. The super-administrator gate stays — this is a second lock, not a reason to widen who may
+> upload one. The hardened response headers stay too.
+>
+> **On the library choice.** This review originally proposed `enshrined/svg-sanitize`, calling it
+> MIT. It is **GPL-2.0-or-later**, which contradicts the decision recorded in `CLAUDE.md` that
+> rejected CKEditor and TinyMCE for exactly that reason. `rhukster/dom-sanitizer` is MIT and needs
+> only `ext-dom` and `ext-libxml`. The trade-off accepted knowingly: it has far less public scrutiny
+> than the GPL package, so its behaviour was probed directly against hostile input before use rather
+> than taken from its README — which does not document what it returns on failure. It returns an
+> empty string, and throws outright on empty input.
+
 
 `MediaController::store()` sets `$bytes = $extension === 'svg' ? null : …`, which skips the byte
 sniff, the megapixel guard and the optimiser for SVGs entirely. Every other format is read and
@@ -61,14 +90,25 @@ Impact is confined to the unread badge; no content changes and nothing is disclo
 it is a state change on a safe method, which is worth knowing before anything else copies the
 pattern.
 
-### 5. `target="_blank"` is allowed without a forced `rel` — low
+### 5. `target="_blank"` is allowed without a forced `rel` — low — **FIXED**
+
+> `HTML.TargetNoopener` enabled in the purifier config.
+
 
 `app/Content/Html.php` sets `Attr.AllowedFrameTargets => ['_blank']` with `HTML.Nofollow => false`,
 so an editor's link can open a new tab without `rel="noopener"`. Every current browser implies
 `noopener` for `target="_blank"`, so this is close to historical. `HTML.TargetNoopener` would settle
 it permanently.
 
-### 6. Password policy is length only — low
+### 6. Password policy is length only — low — **FIXED**
+
+> `->uncompromised()` on both `Password::min(10)` rules. It fails open, so an unreachable breach
+> service can never lock anybody out. **It makes a real HTTP call**, so `Tests\TestCase::setUp()`
+> now fakes `api.pwnedpasswords.com/*` with an empty 200 — without it the suite would reach the
+> internet to set a password and fail on any offline machine. The fake is scoped to that one host so
+> a test's own `Http::fake()` still governs its own calls; `SuburbLookupTest` was checked
+> specifically for that interaction.
+
 
 `Password::min(10)` in `SaveUserRequest` and `UpdatePasswordRequest`. No breach check
 (`->uncompromised()`), no complexity rule. With two administrator accounts and a 5-attempt
@@ -124,8 +164,45 @@ Recorded so a later reviewer knows it was checked, not skipped.
 
 ---
 
+## Dependency audit — 9 August 2026
+
+Run after the fixes above. **Nothing has been updated** — every one of these is a version bump, which
+is a release decision rather than part of a security fix.
+
+### `composer audit` — 8 advisories, 2 packages, both transitive
+
+| Package | Installed | Advisories | Fixed in | Reached from |
+|---|---|---|---|---|
+| `guzzlehttp/guzzle` | 7.15.1 | 1 high, 1 medium | 7.15.2 | `laravel/framework`, `aws/aws-sdk-php` |
+| `league/commonmark` | 2.8.3 | 4 high, 2 medium | 2.9.0 | `laravel/framework` |
+
+**Both are patch or minor bumps inside the existing constraints** (`^7.8.2`, `^2.8.1`), so
+`composer update guzzlehttp/guzzle league/commonmark` closes all eight without touching
+`composer.json`.
+
+Reachability, so the severities are read in context:
+
+- **Guzzle is genuinely in use** — every `Http::` call goes through it, including the public suburb
+  proxy. The high advisory (`CVE-2026-69246`, noncanonical host bypasses host-based checks) does not
+  bite here, because the only outbound host is a constant, but this is the one to update.
+- **CommonMark is not called anywhere in this application.** Nothing in `app/` or the views uses
+  `Str::markdown()` or Markdown mail; it arrives only as a Laravel dependency. Five of its six
+  advisories are denial of service through crafted Markdown, which needs a path that parses
+  attacker-supplied Markdown — there is none. Update it, but it is not urgent.
+
+### `npm audit` — 2 advisories, both build-time only
+
+| Package | Severity | Advisory |
+|---|---|---|
+| `nanoid` <3.3.17 | high | custom generators can loop indefinitely when size is zero |
+| `postcss` ≤8.5.22 | moderate | `sourceMappingURL` reads arbitrary `.map` files when `from` is unset |
+
+Both are transitive under Vite. **Neither ships to production** — they run at build time only, and
+nothing in the built bundle contains them. `npm audit fix` reports it can resolve both without a
+major version change.
+
 ## Not covered
 
-- No dependency vulnerability scan (`composer audit`, `npm audit`) — worth running separately.
 - No live testing against a deployed environment; this is a code review.
 - Infrastructure: S3 bucket policy, CDN configuration and TLS are outside the repository.
+- The dependency updates above are reported, not applied.
