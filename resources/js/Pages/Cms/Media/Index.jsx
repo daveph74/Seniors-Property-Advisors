@@ -9,10 +9,10 @@ import { onUploaded, watchUploads } from '../../../cms/uploadQueue';
 
 const token = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-export default function MediaIndex({ items = [], maxBytes = 0 }) {
+export default function MediaIndex({ items = [], maxBytes = 0, selected: arrivedOn = null }) {
     const flash = useCmsToast();
     const [search, setSearch] = useState('');
-    const [selectedId, setSelectedId] = useState(null);
+    const [selectedId, setSelectedId] = useState(arrivedOn);
     const [picked, setPicked] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [dropped, setDropped] = useState(null);

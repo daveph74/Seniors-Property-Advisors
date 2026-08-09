@@ -641,4 +641,27 @@ class MediaTest extends TestCase
             $this->assertSame('PNG · 800 × 600', $items[1]['meta']);
         });
     }
+
+    public function test_an_image_can_be_opened_straight_from_a_link(): void
+    {
+        Storage::fake('s3');
+
+        $medium = $this->record(['key' => '2026/07/one.png', 'name' => 'one.png']);
+
+        $this->get('/cms/media')->assertInertia(fn ($page) => $page->where('selected', null));
+        $this->get("/cms/media?selected={$medium->id}")
+            ->assertInertia(fn ($page) => $page->where('selected', $medium->id));
+    }
+
+    /* Deleted between somebody searching and clicking. The screen resolves the id against the list
+       it holds, so an unknown one selects nothing rather than erroring. */
+    public function test_a_link_to_an_image_that_is_gone_still_opens_the_screen(): void
+    {
+        Storage::fake('s3');
+
+        $this->get('/cms/media?selected=98765')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('selected', 98765));
+        $this->get('/cms/media?selected=nonsense')->assertOk()
+            ->assertInertia(fn ($page) => $page->where('selected', null));
+    }
 }

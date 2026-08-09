@@ -109,6 +109,17 @@ export default function SearchPalette({ open, onClose }) {
                                             onMouseEnter={() => setActive(mine)}
                                             onClick={() => go(result)}
                                         >
+                                            {result.thumb ? (
+                                                result.isImage ? (
+                                                    <img
+                                                        className="cms-palette__thumb cms-palette__thumb--img"
+                                                        src={result.thumb}
+                                                        alt=""
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                    />
+                                                ) : <span className="cms-palette__thumb" />
+                                            ) : null}
                                             <span className="cms-palette__result-title">{result.title}</span>
                                             {result.meta ? <span className="cms-palette__result-meta">{result.meta}</span> : null}
                                         </button>

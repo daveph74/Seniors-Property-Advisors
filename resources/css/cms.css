@@ -393,13 +393,15 @@
   color: var(--cms-text-mid); padding: 8px 10px 4px;
 }
 .cms-palette__result{
-  display: flex; align-items: baseline; gap: 10px; width: 100%;
+  display: flex; align-items: center; gap: 10px; width: 100%;
   padding: 8px 10px; border: none; border-radius: 7px; background: transparent;
   cursor: pointer; text-align: left; font-size: 13.5px; color: var(--cms-ink);
 }
 .cms-palette__result--active{ background: #F1F4F8; }
 .cms-palette__result-title{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cms-palette__result-meta{ flex: none; font-size: 12px; color: var(--cms-text-mid); }
+.cms-palette__thumb{ width: 28px; height: 28px; border-radius: 5px; background: var(--cms-placeholder-img); flex: none; }
+.cms-palette__thumb--img{ object-fit: cover; }
 
 /* ---------- Notification bell ---------- */
 .cms-bell{ position: relative; }

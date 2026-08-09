@@ -38,11 +38,18 @@ class MediaController extends Controller
         'image/webp' => 'webp',
     ];
 
-    public function index()
+    /**
+     * `selected` opens one image's panel on arrival, so a search result lands on the picture
+     * somebody asked for rather than on the grid they would have to search again. Unvalidated on
+     * purpose: the screen resolves the id against the list it already holds, so one that has since
+     * been deleted selects nothing instead of erroring.
+     */
+    public function index(Request $request)
     {
         return Inertia::render('Cms/Media/Index', [
             'items' => Media::latest('id')->get()->map(fn (Media $m) => $this->item($m))->all(),
             'maxBytes' => self::MAX_BYTES,
+            'selected' => $request->integer('selected') ?: null,
         ]);
     }
 

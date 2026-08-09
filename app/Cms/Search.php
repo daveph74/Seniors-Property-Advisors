@@ -126,11 +126,17 @@ class Search
             ->orderByDesc('id')
             ->limit(self::PER_GROUP)
             ->get()
+            /* The alt text is searched but not shown. It is a description written for somebody who
+               cannot see the picture, so as a row it read as a sentence with no sign it described
+               an image at all — "Client portrait — Rachel" tells you nothing about which file that
+               is. The thumbnail answers that, and `meta()` says what kind of file it is. */
             ->map(fn (Media $medium) => [
                 'id' => $medium->id,
                 'title' => $medium->name,
-                'meta' => $medium->alt,
-                'href' => '/cms/media',
+                'meta' => $medium->meta(),
+                'thumb' => $medium->thumbUrl(),
+                'isImage' => str_starts_with($medium->mime, 'image/'),
+                'href' => "/cms/media?selected={$medium->id}",
             ])
             ->all();
     }

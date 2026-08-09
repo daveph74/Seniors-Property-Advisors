@@ -77,6 +77,57 @@ class SearchTest extends TestCase
         $this->assertSame("/cms/blog/{$post->id}/edit", collect($groups)->firstWhere('label', 'Articles')['results'][0]['href']);
     }
 
+    /**
+     * The alt text stays searchable but stops being what the row says — an image described as
+     * "Client portrait — Rachel" gave no clue which file it was. A picture and its dimensions do.
+     */
+    public function test_an_image_carries_a_thumbnail_and_its_dimensions_rather_than_its_alt_text(): void
+    {
+        $medium = Media::create([
+            'key' => '2026/08/rachel.jpg', 'thumb_key' => 'thumbs/2026/08/rachel.jpg',
+            'name' => 'rachel.jpg', 'alt' => 'Client portrait — Rachel', 'mime' => 'image/jpeg',
+            'size' => 240000, 'width' => 1600, 'height' => 1067, 'disk' => 's3',
+        ]);
+
+        $result = collect($this->search('Rachel'))->firstWhere('label', 'Media')['results'][0];
+
+        $this->assertSame('rachel.jpg', $result['title']);
+        $this->assertSame('JPG · 1600 × 1067', $result['meta']);
+        $this->assertSame('/media/thumbs/2026/08/rachel.jpg', $result['thumb']);
+        $this->assertTrue($result['isImage']);
+        $this->assertStringNotContainsString('Client portrait', json_encode($result));
+
+        $this->get($result['href'])->assertOk();
+    }
+
+    /* SVGs get no small copy, so the row would show a broken image if it did not fall back. */
+    public function test_an_image_with_no_thumbnail_falls_back_to_the_original(): void
+    {
+        Media::create([
+            'key' => '2026/08/logo.svg', 'thumb_key' => null, 'name' => 'logo.svg',
+            'mime' => 'image/svg+xml', 'size' => 2048, 'disk' => 's3',
+        ]);
+
+        $result = collect($this->search('logo'))->firstWhere('label', 'Media')['results'][0];
+
+        $this->assertSame('/media/2026/08/logo.svg', $result['thumb']);
+        $this->assertTrue($result['isImage']);
+    }
+
+    public function test_a_media_link_opens_that_image_on_the_media_screen(): void
+    {
+        $medium = Media::create([
+            'key' => '2026/08/zebra.jpg', 'name' => 'Zebra photo', 'mime' => 'image/jpeg',
+            'size' => 1024, 'disk' => 's3',
+        ]);
+
+        $result = collect($this->search('Zebra'))->firstWhere('label', 'Media')['results'][0];
+
+        $this->assertSame("/cms/media?selected={$medium->id}", $result['href']);
+        $this->get($result['href'])->assertOk()
+            ->assertInertia(fn ($page) => $page->where('selected', $medium->id));
+    }
+
     public function test_an_article_body_is_searched_but_never_returned(): void
     {
         BlogPost::create([
