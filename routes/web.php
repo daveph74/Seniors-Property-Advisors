@@ -118,8 +118,8 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     /* Read and mark. There is no update route on purpose — the details belong to whoever sent
        them, so the only thing this screen may change is whether it has been dealt with. */
     Route::get('/enquiries', [CmsEnquiryController::class, 'index'])->name('enquiries.index');
-    Route::patch('/enquiries/{enquiry}/handled', [CmsEnquiryController::class, 'handled'])
-        ->whereNumber('enquiry')->name('enquiries.handled');
+    Route::patch('/enquiries/{enquiry}/status', [CmsEnquiryController::class, 'status'])
+        ->whereNumber('enquiry')->name('enquiries.status');
     Route::delete('/enquiries/{enquiry}', [CmsEnquiryController::class, 'destroy'])
         ->whereNumber('enquiry')->middleware('permit:content.delete')->name('enquiries.destroy');
 

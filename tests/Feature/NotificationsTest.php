@@ -6,68 +6,109 @@ use App\Models\Enquiry;
 use App\Models\Page;
 use Tests\TestCase;
 
+/**
+ * The bell and the sidebar answer two different questions, and the point of these tests is that
+ * they keep answering different ones: the bell falls when somebody looks, the sidebar only when
+ * the work is done.
+ */
 class NotificationsTest extends TestCase
 {
+    private function enquiry(array $overrides = []): Enquiry
+    {
+        return Enquiry::create(array_merge([
+            'name' => 'Janet Reid', 'email' => 'janet@example.com', 'consented' => true,
+        ], $overrides));
+    }
+
     private function notifications(string $url = '/cms'): array
     {
         return $this->get($url)->assertOk()->viewData('page')['props']['notifications'];
     }
 
-    public function test_it_counts_enquiries_nobody_has_handled(): void
+    public function test_the_badge_counts_enquiries_nobody_has_opened(): void
     {
-        Enquiry::create(['name' => 'Janet Reid', 'email' => 'janet@example.com', 'consented' => true]);
-        Enquiry::create([
-            'name' => 'Peter Vaughn', 'email' => 'peter@example.com', 'consented' => true,
-            'handled_at' => now(),
-        ]);
+        $this->enquiry();
+        $this->enquiry(['name' => 'Peter Vaughn']);
+        $this->enquiry(['name' => 'Already seen', 'read_at' => now()]);
 
         $notifications = $this->notifications();
-        $enquiries = collect($notifications['items'])->firstWhere('key', 'enquiries');
 
-        $this->assertSame(1, $enquiries['count']);
-        $this->assertSame('1 enquiry to answer', $enquiries['label']);
-        $this->assertSame('/cms/enquiries', $enquiries['href']);
+        $this->assertSame(2, $notifications['unread']);
+        $this->assertSame(['Peter Vaughn', 'Janet Reid'], array_column($notifications['items'], 'name'));
     }
 
-    public function test_it_counts_published_pages_carrying_an_unpublished_draft(): void
+    public function test_each_listed_enquiry_links_to_itself(): void
     {
-        $page = Page::where('status', 'published')->firstOrFail();
-        $page->update(['draft' => [['type' => 'hero', 'id' => 'a', 'data' => []]]]);
+        $enquiry = $this->enquiry();
 
-        $pages = collect($this->notifications()['items'])->firstWhere('key', 'pages');
-
-        $this->assertSame(1, $pages['count']);
-        $this->assertSame('1 page has unpublished changes', $pages['label']);
+        $this->assertSame("/cms/enquiries?open={$enquiry->id}", $this->notifications()['items'][0]['href']);
+        $this->get($this->notifications()['items'][0]['href'])->assertOk();
     }
 
-    /* A page that has never been published is not a change waiting to go out. */
-    public function test_a_page_that_was_never_published_is_not_counted(): void
+    /**
+     * The one that pins the whole design. Reading an enquiry silences the bell but must not touch
+     * the sidebar — otherwise glancing at something would report the work as done.
+     */
+    public function test_reading_one_clears_the_badge_but_not_the_work(): void
     {
-        Page::create([
-            'cms_id' => 900, 'slug' => 'brand-new', 'url' => '/brand-new', 'title' => 'Brand new',
-            'status' => 'draft', 'draft' => [['type' => 'hero', 'id' => 'a', 'data' => []]],
-        ]);
+        $enquiry = $this->enquiry();
 
-        $this->assertSame(0, collect($this->notifications()['items'])->firstWhere('key', 'pages')['count']);
+        $this->assertSame(1, $this->notifications()['unread']);
+        $this->assertSame(1, $this->notifications()['counts']['enquiries']);
+
+        $this->get("/cms/enquiries?open={$enquiry->id}")->assertOk();
+
+        $this->assertSame(0, $this->notifications()['unread']);
+        $this->assertSame(1, $this->notifications()['counts']['enquiries'], 'reading is not answering');
+
+        $this->patch("/cms/enquiries/{$enquiry->id}/status", ['status' => Enquiry::DEALT_WITH]);
+
+        $this->assertSame(0, $this->notifications()['counts']['enquiries']);
     }
 
-    public function test_the_total_adds_both_up(): void
+    public function test_an_enquiry_in_progress_still_counts_as_outstanding(): void
     {
-        Enquiry::create(['name' => 'Janet Reid', 'email' => 'janet@example.com', 'consented' => true]);
-        Page::where('status', 'published')->firstOrFail()->update(['draft' => [['type' => 'hero', 'id' => 'a', 'data' => []]]]);
+        $enquiry = $this->enquiry(['read_at' => now()]);
 
-        $this->assertSame(2, $this->notifications()['total']);
+        $this->patch("/cms/enquiries/{$enquiry->id}/status", ['status' => Enquiry::IN_PROGRESS]);
+
+        $this->assertSame(1, $this->notifications()['counts']['enquiries']);
+        $this->assertSame(0, $this->notifications()['unread']);
     }
 
-    public function test_nothing_waiting_is_a_total_of_zero(): void
+    public function test_the_panel_lists_at_most_eight(): void
+    {
+        foreach (range(1, 11) as $n) {
+            $this->enquiry(['name' => "Sender {$n}"]);
+        }
+
+        $notifications = $this->notifications();
+
+        $this->assertSame(11, $notifications['unread'], 'the badge counts them all');
+        $this->assertCount(8, $notifications['items'], 'the list is bounded');
+    }
+
+    public function test_the_sidebar_counts_pages_holding_an_unpublished_draft(): void
+    {
+        Page::where('status', 'published')->firstOrFail()
+            ->update(['draft' => [['type' => 'hero', 'id' => 'a', 'data' => []]]]);
+
+        $this->assertSame(1, $this->notifications()['counts']['pages']);
+    }
+
+    public function test_nothing_waiting_is_all_zeroes(): void
     {
         Enquiry::query()->delete();
         Page::query()->update(['draft' => null]);
 
-        $this->assertSame(0, $this->notifications()['total']);
+        $notifications = $this->notifications();
+
+        $this->assertSame(0, $notifications['unread']);
+        $this->assertSame([], $notifications['items']);
+        $this->assertSame(['enquiries' => 0, 'pages' => 0], $notifications['counts']);
     }
 
-    /* The public site shares this middleware, and two counts per page view is a bill nobody asked for. */
+    /* The public site shares this middleware, and these counts per page view is a bill nobody asked for. */
     public function test_a_public_page_carries_no_counts(): void
     {
         $this->assertNull($this->get('/')->assertOk()->viewData('page')['props']['notifications']);

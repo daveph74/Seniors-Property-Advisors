@@ -156,7 +156,7 @@ class Search
             ->map(fn (Enquiry $enquiry) => [
                 'id' => $enquiry->id,
                 'title' => $enquiry->name,
-                'meta' => $enquiry->handled_at === null ? 'Not yet handled' : null,
+                'meta' => $enquiry->status === Enquiry::DEALT_WITH ? null : $enquiry->statusLabel(),
                 'href' => '/cms/enquiries',
             ])
             ->all();

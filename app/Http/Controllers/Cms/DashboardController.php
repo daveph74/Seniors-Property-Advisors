@@ -49,7 +49,7 @@ class DashboardController extends Controller
             ['label' => 'Active FAQs', 'n' => Faq::where('active', true)->count()],
             ['label' => 'Active testimonials', 'n' => Testimonial::active()->count()],
             ['label' => 'Images', 'n' => Media::count()],
-            ['label' => 'New enquiries', 'n' => Enquiry::whereNull('handled_at')->count()],
+            ['label' => 'Enquiries waiting', 'n' => Enquiry::outstanding()->count()],
         ];
     }
 
@@ -146,12 +146,12 @@ class DashboardController extends Controller
     {
         $waiting = Page::whereNotNull('draft')->where('status', 'published')->count();
         $drafts = Page::where('status', 'draft')->count() + BlogPost::where('status', 'draft')->count();
-        $enquiries = Enquiry::whereNull('handled_at')->count();
+        $enquiries = Enquiry::outstanding()->count();
 
         $parts = array_filter([
             $waiting > 0 ? $this->plural($waiting, 'page', 'pages').' with unpublished changes' : null,
             $drafts > 0 ? $this->plural($drafts, 'draft', 'drafts').' not yet live' : null,
-            $enquiries > 0 ? $this->plural($enquiries, 'new enquiry', 'new enquiries') : null,
+            $enquiries > 0 ? $this->plural($enquiries, 'enquiry waiting', 'enquiries waiting') : null,
         ]);
 
         return $parts === []

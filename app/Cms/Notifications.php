@@ -6,42 +6,53 @@ use App\Models\Enquiry;
 use App\Models\Page;
 
 /**
- * What the bell in the header counts.
+ * What the header's bell and the sidebar's counts report — two different questions, kept apart
+ * on purpose.
  *
- * Two things, both derived rather than stored: enquiries nobody has marked handled, and pages
- * carrying an edit that readers cannot see yet. Neither needs a notifications table, and neither
- * can drift out of step with the screen it links to — the unpublished-changes rule is the same
- * one `PageContentStore` uses for the "Unpublished changes" filter on /cms/pages.
+ * The **bell** counts enquiries nobody has opened yet. It is a "new since anyone last looked", so
+ * opening one clears it, and it can honestly reach zero.
  *
- * There is deliberately no read or dismissed state. A count that can be cleared without doing
- * the work invites clearing it, and both of these stop counting the moment the work is done.
+ * The **sidebar** counts work still outstanding: enquiries not yet dealt with, and published pages
+ * holding an edit readers cannot see. Nothing marks those read — they fall when the work is done,
+ * which is why they are not in the bell. A badge that can be cleared by glancing at something must
+ * never be the one saying how much is left to do; that was the objection to giving the bell a read
+ * state at all, and splitting the two is the answer to it.
+ *
+ * Both are derived. There is still no notifications table: `read_at` lives on the enquiry, so an
+ * enquiry read by one person is read for the inbox.
  */
 class Notifications
 {
+    /** How many unread the panel lists. The badge counts them all; this only bounds the list. */
+    private const PANEL = 8;
+
     public static function for(): array
     {
-        $enquiries = Enquiry::query()->whereNull('handled_at')->count();
-        $pages = self::pagesWithUnpublishedChanges();
-
         return [
-            'items' => [
-                [
-                    'key' => 'enquiries',
-                    'count' => $enquiries,
-                    'label' => $enquiries === 1 ? '1 enquiry to answer' : "{$enquiries} enquiries to answer",
-                    'href' => '/cms/enquiries',
-                ],
-                [
-                    'key' => 'pages',
-                    'count' => $pages,
-                    'label' => $pages === 1 ? '1 page has unpublished changes' : "{$pages} pages have unpublished changes",
-                    'href' => '/cms/pages',
-                ],
+            'unread' => Enquiry::unread()->count(),
+            'items' => Enquiry::unread()
+                ->latest('created_at')
+                ->latest('id')
+                ->limit(self::PANEL)
+                ->get()
+                ->map(fn (Enquiry $enquiry) => [
+                    'id' => $enquiry->id,
+                    'name' => $enquiry->name,
+                    'at' => $enquiry->created_at?->toIso8601String(),
+                    'href' => "/cms/enquiries?open={$enquiry->id}",
+                ])
+                ->all(),
+            'counts' => [
+                'enquiries' => Enquiry::outstanding()->count(),
+                'pages' => self::pagesWithUnpublishedChanges(),
             ],
-            'total' => $enquiries + $pages,
         ];
     }
 
+    /**
+     * The same rule `PageContentStore` uses for the "Unpublished changes" filter on /cms/pages, so
+     * the sidebar and that screen cannot disagree.
+     */
     private static function pagesWithUnpublishedChanges(): int
     {
         return Page::query()

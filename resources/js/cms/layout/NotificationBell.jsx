@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { BellIcon } from '../components/icons';
+import { relative } from '../relativeTime';
 
 export default function NotificationBell() {
     const { notifications } = usePage().props;
@@ -24,7 +25,7 @@ export default function NotificationBell() {
 
     if (! notifications) return null;
 
-    const { items, total } = notifications;
+    const { unread = 0, items = [] } = notifications;
 
     return (
         <div className="cms-bell" ref={wrap}>
@@ -34,33 +35,50 @@ export default function NotificationBell() {
                 aria-expanded={open}
                 aria-haspopup="true"
                 aria-label={
-                    total === 0 ? 'Nothing needs attention'
-                        : total === 1 ? '1 thing needs attention'
-                            : `${total} things need attention`
+                    unread === 0 ? 'No unread enquiries'
+                        : unread === 1 ? '1 unread enquiry'
+                            : `${unread} unread enquiries`
                 }
                 onClick={() => setOpen((was) => ! was)}
             >
                 <BellIcon size={16} stroke="#415064" />
-                {/* Lit only when something is actually waiting. It used to be painted on. */}
-                {total > 0 ? <span className="cms-icon-btn__dot" /> : null}
+                {/* The number, not a dot. A dot said only that something existed, which is the one
+                    thing you could already guess. Past 99 the exact figure stops being the point. */}
+                {unread > 0 ? (
+                    <span className="cms-icon-btn__badge">{unread > 99 ? '99+' : unread}</span>
+                ) : null}
             </button>
 
             {open ? (
                 <div className="cms-bell__menu" role="menu">
-                    {total === 0 ? (
-                        <p className="cms-bell__empty">Nothing needs your attention.</p>
-                    ) : items.filter((item) => item.count > 0).map((item) => (
-                        <Link
-                            key={item.key}
-                            href={item.href}
-                            className="cms-bell__item"
-                            role="menuitem"
-                            onClick={() => setOpen(false)}
-                        >
-                            <span className="cms-bell__count">{item.count}</span>
-                            {item.label}
-                        </Link>
-                    ))}
+                    {items.length === 0 ? (
+                        <p className="cms-bell__empty">Nothing new. Every enquiry has been opened.</p>
+                    ) : (
+                        items.map((item) => (
+                            <Link
+                                key={item.id}
+                                href={item.href}
+                                className="cms-bell__item"
+                                role="menuitem"
+                                preserveScroll
+                                onClick={() => setOpen(false)}
+                            >
+                                <span className="cms-bell__item-name">{item.name}</span>
+                                <time className="cms-bell__item-at" dateTime={item.at}>
+                                    {item.at ? relative(item.at) : ''}
+                                </time>
+                            </Link>
+                        ))
+                    )}
+
+                    <Link
+                        href="/cms/enquiries"
+                        className="cms-bell__all"
+                        role="menuitem"
+                        onClick={() => setOpen(false)}
+                    >
+                        See all enquiries
+                    </Link>
                 </div>
             ) : null}
         </div>

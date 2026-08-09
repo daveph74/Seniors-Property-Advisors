@@ -41,9 +41,12 @@ const HREFS = {
 };
 
 export default function Sidebar({ active }) {
-    const { auth } = usePage().props;
+    const { auth, notifications } = usePage().props;
     const user = auth?.user;
     const modules = auth?.modules ?? {};
+    /* Work still outstanding, not anything unread — these fall when the job is done, which is what
+       makes them safe to put beside a module name. */
+    const counts = notifications?.counts ?? {};
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
@@ -60,6 +63,7 @@ export default function Sidebar({ active }) {
                 {NAV_ITEMS.filter((item) => modules[item.id] !== false).map((item) => {
                     const Icon = ICONS[item.id];
                     const isActive = active === item.id;
+                    const count = counts[item.id];
                     return (
                         <Link
                             key={item.id}
@@ -68,7 +72,7 @@ export default function Sidebar({ active }) {
                         >
                             <Icon size={17} strokeWidth={1.7} />
                             <span>{item.label}</span>
-                            {item.count ? <span className="cms-nav-item__count">{item.count}</span> : null}
+                            {count ? <span className="cms-nav-item__count">{count}</span> : null}
                         </Link>
                     );
                 })}
