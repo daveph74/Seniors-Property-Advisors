@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Auth\PasswordPolicy;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
 class UpdatePasswordRequest extends FormRequest
 {
@@ -11,10 +11,7 @@ class UpdatePasswordRequest extends FormRequest
     {
         return [
             'current_password' => ['required', 'string', 'current_password'],
-            /* `uncompromised()` checks the new password against the public breach corpus. It fails
-               open — if that service cannot be reached the password is accepted — so it can rule
-               out the passwords that actually get guessed without ever locking anybody out. */
-            'password' => ['required', 'string', 'confirmed', Password::min(10)->uncompromised()],
+            'password' => ['required', 'string', 'confirmed', PasswordPolicy::rule()],
         ];
     }
 

@@ -11,7 +11,7 @@ test.describe('Settings', () => {
     const tab = (page, name) => page.locator('.cms-settings-tab', { hasText: name });
 
     test('warns that a change here is live immediately', async ({ page }) => {
-        await expect(page.locator('.cms-impact-banner')).toContainText('affect every page');
+        await expect(page.locator('.cms-page .cms-impact-banner')).toContainText('affect every page');
     });
 
     test('each tab reveals its own fields', async ({ page }) => {

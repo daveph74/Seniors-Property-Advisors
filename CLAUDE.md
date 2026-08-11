@@ -129,7 +129,7 @@ delete, only disable and archive.
 auth setup; `PermissionsTest` and `AuthTest` sign in as somebody else, or nobody.
 
 Accounts are made with `php artisan cms:user email --name= --role= [--password=]`, which
-generates and prints a password when none is given. `UserSeeder` creates local development
+generates and prints a password when none is given (a supplied one is held to `PasswordPolicy`). `UserSeeder` creates local development
 accounts with a shared password and must never run in production.
 
 Everyone changes their own password at `/cms/account`; only super administrators set anyone
@@ -141,6 +141,34 @@ would otherwise compare against the hash that was just replaced.
 
 Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
 `SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
+
+### What a password has to be
+
+`app/Auth/PasswordPolicy.php` states it once — ten characters, mixed case, a number, a symbol,
+and not in the public breach corpus — and the two form requests plus `cms:user` all read it from
+there. The command used to accept any `--password` unchecked, which made it the one way round
+the rule. `resources/js/cms/passwordPolicy.js` mirrors the rules to draw the live checklist under
+every field where a *new* password is typed; that copy is guidance, the PHP decides, and
+`PasswordPolicyTest` runs the same five refusals through all three paths so they cannot part
+company. Sign-in is deliberately not held to the policy — it verifies a password that already
+exists, and refusing an old one there would lock people out of the screen that fixes it.
+
+`users.password_changed_at` answers a different question: **was this password chosen, or issued?**
+Only changing your own at `/cms/account` stamps it. A password set for somebody else at
+`/cms/users`, by `cms:user`, or by `UserSeeder` leaves it null, and null is what raises the
+warning strip on every CMS screen (`auth.mustChangePassword`, shared like `auth.can`). So the
+seeded `password` account is told to replace it, on arrival, until it does. The strip is not
+dismissible: the way to clear it is to change the password.
+
+Two things that follow from it. The **factory stamps `now()`** — otherwise every feature and
+browser test would carry the warning, and the assertions about screens would be asserting about
+this. And a super admin who changes their *own* password at `/cms/users` is choosing, not being
+issued, so that path stamps it when the target is the acting user — the same `is()` check the
+session guard there already needs.
+
+The layout strip is `.cms-impact-banner--global`, outside `.cms-page`, so a screen with its own
+`.cms-impact-banner` now has two: the e2e tests for Settings and Global content scope theirs to
+`.cms-page .cms-impact-banner` for that reason.
 
 ## Header search and the bell
 

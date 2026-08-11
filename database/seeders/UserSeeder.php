@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Hash;
 /**
  * Local development accounts only — they share one well-known password. Real accounts
  * are made with `php artisan cms:user`, which generates a password per account.
+ *
+ * The shared password would not pass PasswordPolicy, and is left unstamped on purpose:
+ * `password_changed_at` null is what raises the change-your-password warning on every
+ * CMS screen until somebody replaces it.
  */
 class UserSeeder extends Seeder
 {
@@ -23,7 +27,7 @@ class UserSeeder extends Seeder
             User::updateOrCreate(
                 ['email' => $email],
                 ['name' => $name, 'role' => $role, 'is_active' => true, 'password' => Hash::make('password')],
-            );
+            )->forceFill(['password_changed_at' => null])->save();
         }
     }
 }

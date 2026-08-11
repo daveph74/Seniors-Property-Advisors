@@ -203,7 +203,7 @@ class PermissionsTest extends TestCase
             'name' => 'Anna Kelly',
             'email' => 'anna@example.com',
             'role' => User::CLIENT_ADMIN,
-            'password' => 'a-long-enough-password',
+            'password' => 'A-Long-Enough-Password-7',
         ])->assertRedirect();
 
         $anna = User::where('email', 'anna@example.com')->firstOrFail();
@@ -237,7 +237,7 @@ class PermissionsTest extends TestCase
             'email' => 'support@example.com',
             '--name' => 'RedHQ Support',
             '--role' => User::SUPER_ADMIN,
-            '--password' => 'a-long-enough-password',
+            '--password' => 'A-Long-Enough-Password-7',
         ])->assertSuccessful();
 
         $user = User::where('email', 'support@example.com')->firstOrFail();

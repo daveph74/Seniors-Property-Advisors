@@ -29,6 +29,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'password_changed_at' => now(),
             'remember_token' => Str::random(10),
             'role' => User::CLIENT_ADMIN,
             'is_active' => true,
@@ -48,6 +49,11 @@ class UserFactory extends Factory
     public function deactivated(): static
     {
         return $this->state(fn () => ['is_active' => false]);
+    }
+
+    public function issuedPassword(): static
+    {
+        return $this->state(fn () => ['password_changed_at' => null]);
     }
 
     /**

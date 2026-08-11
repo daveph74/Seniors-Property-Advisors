@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import '../../../css/cms.css';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { SCREEN_TITLES } from '../data/constants';
 import { ToastProvider } from '../ToastContext';
+import { WarningIcon } from '../components/icons';
 
 function navIdFromUrl(url) {
     const path = url.split('?')[0];
@@ -26,8 +27,9 @@ function navIdFromUrl(url) {
 }
 
 export default function CmsLayout({ children }) {
-    const { url } = usePage();
+    const { url, props } = usePage();
     const navId = navIdFromUrl(url);
+    const warnAboutPassword = props.auth?.mustChangePassword && navId !== 'account';
     const title = SCREEN_TITLES[navId] || '';
     const crumb = navId === 'dashboard' ? 'Seniors Property Advisors' : `Seniors Property Advisors / ${title}`;
     const [navOpen, setNavOpen] = useState(false);
@@ -64,7 +66,22 @@ export default function CmsLayout({ children }) {
                         navOpen={navOpen}
                         onToggleNav={() => setNavOpen((open) => ! open)}
                     />
-                    <main className="cms-view">{children}</main>
+                    <main className="cms-view">
+                        {warnAboutPassword ? (
+                            <div className="cms-impact-banner cms-impact-banner--global">
+                                <WarningIcon size={17} stroke="#8A5300" />
+                                <div className="cms-impact-banner__text">
+                                    <strong style={{ color: 'var(--cms-warning-text)' }}>
+                                        Change your password.
+                                    </strong>
+                                    {' '}This account is still using the password it was given, which
+                                    somebody else chose and may still know.{' '}
+                                    <Link href="/cms/account">Set your own password</Link>.
+                                </div>
+                            </div>
+                        ) : null}
+                        {children}
+                    </main>
                 </div>
             </div>
         </ToastProvider>

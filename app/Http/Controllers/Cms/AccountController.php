@@ -29,7 +29,10 @@ class AccountController extends Controller
     {
         $password = $request->password();
 
-        $request->user()->forceFill(['password' => $password])->save();
+        $request->user()->forceFill([
+            'password' => $password,
+            'password_changed_at' => now(),
+        ])->save();
 
         /**
          * Must run after the save: it verifies the plaintext against the stored hash before

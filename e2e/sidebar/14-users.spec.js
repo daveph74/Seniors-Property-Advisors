@@ -13,7 +13,7 @@ test.describe('Users and roles', () => {
         await page.getByRole('button', { name: 'Add a user' }).click();
         await page.locator('.cms-modal input[type="text"], .cms-modal input:not([type])').first().fill(name);
         await page.locator('.cms-modal input[type="email"]').fill(email);
-        await page.locator('.cms-modal input[type="password"]').fill('a-long-enough-password');
+        await page.locator('.cms-modal input[type="password"]').fill('Windmill-Harbour-4');
 
         if (role) await page.locator('.cms-modal select').selectOption(role);
 
@@ -57,14 +57,23 @@ test.describe('Users and roles', () => {
         await page.locator('.cms-modal').getByRole('button', { name: 'Cancel' }).click();
     });
 
-    test('a password under ten characters is refused', async ({ page }) => {
+    /* A weak password never reaches the server: Save stays disabled until the list is all ticks. */
+    test('a password that misses the policy cannot be saved', async ({ page }) => {
         await page.getByRole('button', { name: 'Add a user' }).click();
-        await page.locator('.cms-modal input[type="text"], .cms-modal input:not([type])').first().fill('Too Short');
-        await page.locator('.cms-modal input[type="email"]').fill('too-short@example.invalid');
-        await page.locator('.cms-modal input[type="password"]').fill('short');
-        await page.getByRole('button', { name: 'Save', exact: true }).click();
+        await page.locator('.cms-modal input[type="text"], .cms-modal input:not([type])').first().fill('Too Weak');
+        await page.locator('.cms-modal input[type="email"]').fill('too-weak@example.invalid');
 
-        await expect(page.locator('.cms-modal .cms-field-error').first()).toBeVisible();
+        const save = page.getByRole('button', { name: 'Save', exact: true });
+        const password = page.locator('.cms-modal input[type="password"]');
+
+        await password.fill('windmillharbour');
+        await expect(page.locator('.cms-password-rules__item--met')).toHaveCount(2);
+        await expect(save).toBeDisabled();
+
+        await password.fill('Windmill-Harbour-4');
+        await expect(page.locator('.cms-password-rules__item--met')).toHaveCount(5);
+        await expect(save).toBeEnabled();
+
         await page.locator('.cms-modal').getByRole('button', { name: 'Cancel' }).click();
     });
 

@@ -8,6 +8,10 @@ test.describe('Account', () => {
 
     const fields = (page) => page.locator('input[type="password"]');
 
+    /* Nothing here ever completes a change: the whole suite shares one sign-in, and moving the
+       seeded password would strand the tests that sign in themselves. */
+    const ACCEPTABLE = 'Windmill-Harbour-4';
+
     test('shows who you are signed in as', async ({ page }) => {
         const facts = page.locator('.cms-account-facts');
 
@@ -20,7 +24,12 @@ test.describe('Account', () => {
         await expect(page.getByText(/signs you out everywhere else/i)).toBeVisible();
     });
 
-    test('the submit stays disabled until both passwords are filled', async ({ page }) => {
+    /* The seeded account is still on the password it was given, which is what raises this. */
+    test('says so while the password has never been changed', async ({ page }) => {
+        await expect(page.locator('.cms-impact-banner')).toContainText(/password this account was given/i);
+    });
+
+    test('the submit stays disabled until the new password meets the policy', async ({ page }) => {
         const submit = page.getByRole('button', { name: 'Update password' });
 
         await expect(submit).toBeDisabled();
@@ -28,14 +37,43 @@ test.describe('Account', () => {
         await fields(page).nth(0).fill(SUPER_ADMIN.password);
         await expect(submit).toBeDisabled();
 
-        await fields(page).nth(1).fill('a-long-enough-new-password');
+        await fields(page).nth(1).fill('windmillharbour');
+        await expect(submit).toBeDisabled();
+
+        await fields(page).nth(1).fill(ACCEPTABLE);
         await expect(submit).toBeEnabled();
+    });
+
+    /* The list is the guidance the field used to give in one line, and it has to track the typing. */
+    test('the requirement list marks off what has been met', async ({ page }) => {
+        const rules = page.locator('.cms-password-rules__item');
+
+        await expect(rules).toHaveCount(0);
+
+        await fields(page).nth(1).fill('windmill');
+        await expect(rules).toHaveCount(5);
+        await expect(page.locator('.cms-password-rules__item--met')).toHaveCount(1);
+        await expect(rules.filter({ hasText: 'At least one uppercase letter' }))
+            .not.toHaveClass(/--met/);
+
+        await fields(page).nth(1).fill(ACCEPTABLE);
+        await expect(page.locator('.cms-password-rules__item--met')).toHaveCount(5);
+    });
+
+    test('the new password can be shown and hidden', async ({ page }) => {
+        await fields(page).nth(1).fill(ACCEPTABLE);
+
+        await page.getByRole('button', { name: 'Show password' }).click();
+        await expect(page.locator('.cms-reveal input[type="text"]')).toHaveValue(ACCEPTABLE);
+
+        await page.getByRole('button', { name: 'Hide password' }).click();
+        await expect(page.locator('.cms-reveal input[type="password"]')).toHaveCount(1);
     });
 
     test('a wrong current password is refused', async ({ page }) => {
         await fields(page).nth(0).fill('not-the-password');
-        await fields(page).nth(1).fill('a-long-enough-new-password');
-        await fields(page).nth(2).fill('a-long-enough-new-password');
+        await fields(page).nth(1).fill(ACCEPTABLE);
+        await fields(page).nth(2).fill(ACCEPTABLE);
         await page.getByRole('button', { name: 'Update password' }).click();
 
         await expect(page.locator('.cms-field-error').first()).toContainText(/not correct/i);
@@ -43,20 +81,10 @@ test.describe('Account', () => {
 
     test('a mismatched confirmation is refused', async ({ page }) => {
         await fields(page).nth(0).fill(SUPER_ADMIN.password);
-        await fields(page).nth(1).fill('a-long-enough-new-password');
-        await fields(page).nth(2).fill('a-different-password');
+        await fields(page).nth(1).fill(ACCEPTABLE);
+        await fields(page).nth(2).fill('Different-Harbour-8');
         await page.getByRole('button', { name: 'Update password' }).click();
 
         await expect(page.locator('.cms-field-error').first()).toContainText(/do not match/i);
-    });
-
-    /* Ten characters is the floor, and the hint on the field says so. */
-    test('a short password is refused', async ({ page }) => {
-        await fields(page).nth(0).fill(SUPER_ADMIN.password);
-        await fields(page).nth(1).fill('short');
-        await fields(page).nth(2).fill('short');
-        await page.getByRole('button', { name: 'Update password' }).click();
-
-        await expect(page.locator('.cms-field-error').first()).toBeVisible();
     });
 });
