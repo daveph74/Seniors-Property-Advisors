@@ -104,6 +104,14 @@ is scope §5's editor list and nothing more; §17 excludes editing raw HTML, so 
 it should be added. `BlogTest` is what keeps that true — do not widen the allowlist without
 adding a case there.
 
+**A link may leave this site; an image may not.** `img-src` is `'self' data:` and nothing more, so a
+hotlinked picture would be stored, published and drawn for no reader — so it is refused when saved,
+naming the address, rather than left to be found later. `Html::remoteImageSources()` does the finding
+and `SaveBlogPostRequest` does the refusing; `URI.DisableExternalResources` is the backstop for a body
+arriving another way. Two traps in there: it must not become `DisableExternal`, which takes links with
+it, and `URI.Host` has to be set from `app.url` or HTMLPurifier calls this site's own absolute address
+external and strips an image the form request just allowed.
+
 The editor is TipTap (MIT). CKEditor and TinyMCE were rejected: both are GPL-or-paid, and GPL
 copyleft would reach this application. It lazy-loads as its own Vite chunk (~140KB gzipped),
 so only the article editor pays for it.

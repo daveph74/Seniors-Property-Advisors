@@ -73,7 +73,14 @@ class SecurityHeaders
         $style = ["'self'", "'unsafe-inline'"];
         $font = ["'self'"];
         $connect = ["'self'"];
-        $img = ["'self'", 'data:', 'https:'];
+
+        /* Not `https:`. A blanket scheme here is an open exfiltration channel — `new Image().src` at
+           any host on the internet needs no response to have already sent the query string — and it
+           was by far the widest thing this policy allowed. Every image this site draws is served from
+           its own media route, so naming the origin costs nothing. `data:` stays for inline SVG icons.
+           Anything an editor pastes from elsewhere is refused at the point of saving instead, by
+           `Html`, rather than being stored and then silently not drawn. */
+        $img = ["'self'", 'data:'];
 
         /* The admin is the only thing that asks Google for a typeface. The public site bundles
            its own, and says so in the layout. */
@@ -93,6 +100,10 @@ class SecurityHeaders
             foreach ($this->tracking() as $host) {
                 $script[] = $host;
                 $connect[] = $host;
+                /* Analytics still measures some things with a pixel rather than a beacon, and these
+                   hosts used to be covered by the blanket `https:` that has just gone. Named, so the
+                   permission is as narrow as the thing it is for. */
+                $img[] = $host;
             }
         }
 

@@ -344,6 +344,39 @@ class OwaspTest extends TestCase
         $this->assertStringNotContainsString('localhost:4566', $policy);
     }
 
+    /**
+     * `img-src` used to end in `https:`, which permits a request to any host on the internet. An image
+     * needs no response to have already sent its query string, so that was an open exfiltration
+     * channel and the widest thing this policy allowed — wider than anything `connect-src` was
+     * carefully restricting. `Html` refuses a remote image on the way in so the two agree.
+     */
+    public function test_a05_an_image_may_not_be_fetched_from_anywhere_at_all(): void
+    {
+        foreach (['/', '/cms/media'] as $path) {
+            preg_match('/img-src ([^;]*)/', (string) $this->get($path)->headers->get('Content-Security-Policy'), $found);
+
+            $sources = preg_split('/\s+/', trim($found[1] ?? ''));
+
+            $this->assertContains("'self'", $sources, $path);
+            $this->assertNotContains('https:', $sources, "{$path} still permits any HTTPS host");
+            $this->assertNotContains('http:', $sources, $path);
+            $this->assertNotContains('*', $sources, $path);
+        }
+    }
+
+    /** Analytics measures some things with a pixel, and the blanket `https:` used to cover it. */
+    public function test_a05_analytics_pixels_are_named_now_that_the_scheme_is_gone(): void
+    {
+        $this->put('/cms/settings', [
+            'name' => 'Seniors Property Advisors',
+            'tracking' => ['ga4' => 'G-ABCDE12345', 'gtm' => null],
+        ])->assertRedirect();
+
+        preg_match('/img-src ([^;]*)/', (string) $this->get('/')->headers->get('Content-Security-Policy'), $found);
+
+        $this->assertStringContainsString('google-analytics.com', $found[1] ?? '');
+    }
+
     /** A policy that permits an analytics vendor on a site with no analytics is one nobody has read. */
     public function test_a05_third_parties_are_only_allowed_when_they_are_actually_used(): void
     {

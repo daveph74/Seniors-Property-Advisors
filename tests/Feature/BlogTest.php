@@ -127,6 +127,56 @@ class BlogTest extends TestCase
     }
 
     /**
+     * `img-src` permits this origin and `data:`, and nothing else — an image beacon to any host was
+     * the widest thing the content policy allowed. So a hotlinked picture would be stored, published,
+     * and drawn for no reader at all. It is refused at the point of saving instead.
+     *
+     * A link to another site is a different matter and still allowed; the case above proves it.
+     */
+    public function test_an_image_from_another_site_is_refused_rather_than_silently_not_drawn(): void
+    {
+        $bodies = [
+            'https://example.com/photo.jpg' => '<p>Hello</p><img src="https://example.com/photo.jpg" alt="Theirs">',
+            'http://example.com/photo.jpg' => '<img src="http://example.com/photo.jpg">',
+            /* Protocol-relative inherits the page's scheme and is every bit as remote. */
+            '//example.com/photo.jpg' => '<img src="//example.com/photo.jpg">',
+        ];
+
+        foreach ($bodies as $address => $body) {
+            $response = $this->write(['body' => $body]);
+
+            $response->assertSessionHasErrors('body');
+
+            /* The address is named, so the editor knows which picture to go and fix. */
+            $this->assertStringContainsString(
+                $address,
+                (string) session('errors')->first('body'),
+            );
+        }
+
+        $this->assertSame(0, BlogPost::count(), 'A refused body must not have been saved.');
+    }
+
+    /** This site's own absolute address is not somebody else's server. */
+    public function test_an_absolute_address_on_this_site_is_still_an_image_it_can_draw(): void
+    {
+        $own = rtrim((string) config('app.url'), '/');
+
+        $this->write(['body' => '<img src="'.$own.'/media/2026/07/photo.png" alt="Ours">'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertStringContainsString('/media/2026/07/photo.png', (string) BlogPost::sole()->renderedBody());
+    }
+
+    public function test_a_featured_image_must_come_from_the_library(): void
+    {
+        $this->write(['featured_image' => 'https://example.com/hero.jpg'])
+            ->assertSessionHasErrors(['featured_image']);
+
+        $this->write(['featured_image' => '/media/2026/07/photo.png'])->assertSessionHasNoErrors();
+    }
+
+    /**
      * The editor posts HTML now, so the allowlist is the only thing between a paste and a
      * reader. The words survive; the markup does not.
      */
