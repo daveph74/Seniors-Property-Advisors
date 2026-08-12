@@ -133,6 +133,40 @@ test.describe('Blog', () => {
         await binArticle(page, title);
     });
 
+    /**
+     * The editor carried `maxWidth: 1120`, so on a wide window it stopped two thirds of the way across
+     * and the rest was empty. Three other screens lost the same cap in f553d25 and this one was missed,
+     * which is the argument for asserting it rather than fixing it quietly: nothing here notices a width
+     * that is merely wrong, and the default 1280 viewport is too narrow for the cap to even bite.
+     *
+     * So this asks at the size the problem appears at, and compares against the space available rather
+     * than a number — a hardcoded expected width would have to be rewritten every time the sidebar or
+     * the padding moved.
+     */
+    test.describe('on a wide window', () => {
+        test.use({ viewport: { width: 1720, height: 900 } });
+
+        test('the article editor uses the width it is given', async ({ page }) => {
+            const title = unique('Wide');
+
+            await writeArticle(page, title);
+
+            const view = await page.locator('.cms-view').boundingBox();
+            const editor = await page.locator('.cms-page').boundingBox();
+
+            /* Equal but for a scrollbar. Anything else means a cap is back. */
+            expect(view.width - editor.width, `editor ${editor.width} in ${view.width}`)
+                .toBeLessThan(20);
+
+            /* And the space goes to the writing, not to the fixed sidebar. */
+            const body = await page.getByLabel('Article content').boundingBox();
+
+            expect(body.width).toBeGreaterThan(1000);
+
+            await binArticle(page, title);
+        });
+    });
+
     test('the slug warns once an article has been published', async ({ page }) => {
         const title = unique('Renamed');
 
