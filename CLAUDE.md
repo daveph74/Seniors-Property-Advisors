@@ -105,12 +105,20 @@ it should be added. `BlogTest` is what keeps that true — do not widen the allo
 adding a case there.
 
 **A link may leave this site; an image may not.** `img-src` is `'self' data:` and nothing more, so a
-hotlinked picture would be stored, published and drawn for no reader — so it is refused when saved,
-naming the address, rather than left to be found later. `Html::remoteImageSources()` does the finding
-and `SaveBlogPostRequest` does the refusing; `URI.DisableExternalResources` is the backstop for a body
-arriving another way. Two traps in there: it must not become `DisableExternal`, which takes links with
-it, and `URI.Host` has to be set from `app.url` or HTMLPurifier calls this site's own absolute address
-external and strips an image the form request just allowed.
+hotlinked picture would be stored, published and drawn for no reader. Handled in three places, and the
+order is the design: `RichTextEditor`'s `transformPastedHTML` drops remote sources **at the paste** and
+toasts how many, `SaveBlogPostRequest` refuses a body that still carries one, and
+`URI.DisableExternalResources` strips it if both are bypassed.
+
+The paste is where it belongs, because pasting is the only way one arrives — the toolbar's image button
+opens the media library and there is no field for an address. Refusing the save was tried first and was
+wrong: a writer pasting an article could not store their own words until they had chased addresses they
+never typed, which contradicts the principle stated in `SaveBlogPostRequest` itself — a paste "keeps
+their words and loses the markup… no error to decipher".
+
+Two traps: `DisableExternalResources` must not become `DisableExternal`, which takes links with it, and
+`URI.Host` has to be set from `app.url` or HTMLPurifier calls this site's own absolute address external
+and strips an image the form request just allowed.
 
 The editor is TipTap (MIT). CKEditor and TinyMCE were rejected: both are GPL-or-paid, and GPL
 copyleft would reach this application. It lazy-loads as its own Vite chunk (~140KB gzipped),

@@ -86,6 +86,53 @@ test.describe('Blog', () => {
         await binArticle(page, title);
     });
 
+    /**
+     * Pasting an article in from a web page is a normal way to write one, and it brings that page's
+     * pictures with it. `img-src` permits this origin only, so those could never be drawn — and the
+     * server refuses a body carrying one, which would mean refusing to save words the writer did type
+     * over addresses they did not. They are dropped as the paste lands instead, and said out loud.
+     *
+     * Driven by dispatching the paste: Playwright cannot put `text/html` on the real clipboard, and
+     * ProseMirror reads `clipboardData` rather than the keystroke.
+     */
+    test('a picture pasted from another site is left out, and the words are kept', async ({ page }) => {
+        const title = unique('Pasted');
+
+        await writeArticle(page, title);
+
+        const surface = page.getByLabel('Article content');
+        await surface.focus();
+
+        await surface.evaluate((node) => {
+            const data = new DataTransfer();
+
+            data.setData('text/html', '<p>Words worth keeping.</p>'
+                + '<img src="https://example.com/one.jpg" alt="theirs">'
+                + '<img src="//example.com/two.jpg">'
+                + '<img src="/media/2026/08/rachel.jpg" alt="ours">');
+
+            node.dispatchEvent(new ClipboardEvent('paste', {
+                clipboardData: data, bubbles: true, cancelable: true,
+            }));
+        });
+
+        await expect(toast(page)).toContainText('2 images were linked from another site');
+
+        await expect(surface).toContainText('Words worth keeping.');
+        await expect(surface.locator('img[src*="example.com"]')).toHaveCount(0);
+        /* The one that could be drawn is still there — this drops remote pictures, not pictures. */
+        await expect(surface.locator('img[src="/media/2026/08/rachel.jpg"]')).toHaveCount(1);
+
+        /* The save is the point: with the remote images gone the server has nothing to refuse. */
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(toast(page)).toContainText('Article saved');
+
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect(page.getByLabel('Article content')).toContainText('Words worth keeping.');
+
+        await binArticle(page, title);
+    });
+
     test('the slug warns once an article has been published', async ({ page }) => {
         const title = unique('Renamed');
 

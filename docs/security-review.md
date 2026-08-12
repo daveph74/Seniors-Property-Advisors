@@ -229,26 +229,33 @@ It is now `'self' data:`, plus the analytics hosts by name when an editor has en
 since analytics still measures some things with a pixel and the blanket scheme used to cover that.
 
 The decision it needed was about content, not headers: article bodies may hold `<img>`, and
-`URI.AllowedSchemes` permits `http`/`https`, so an editor could hotlink a picture. Narrowing the policy
+`URI.AllowedSchemes` permits `http`/`https`, so a picture could be hotlinked. Narrowing the policy
 alone would have published such an image and drawn it for nobody — a failure with no error and no
-witness, which is the same shape as the two defects above. So both halves moved together:
+witness, which is the same shape as the two defects above. So it is handled in three places, and
+**which place matters more than the fact of it**:
 
-- `Html::remoteImageSources()` finds them, and `SaveBlogPostRequest` **refuses the save** and names the
-  address, so an editor is told to upload it rather than left to discover it. A remote `featured_image`
-  is refused the same way.
-- `URI.DisableExternalResources` is the backstop for a body arriving by any other path. Deliberately
-  not `DisableExternal`, which would take links with it — a link may leave this site, an image may not.
-- `URI.Host` is set from `app.url`, because HTMLPurifier treats every absolute address as external
-  until told which host is not. Without it the request allowed this site's own full URL and the
-  purifier stripped it, and the body came back empty. A test covers that exact disagreement.
+- **At the paste.** `RichTextEditor`'s `transformPastedHTML` drops remote image sources as they arrive
+  and says how many were left out. This is the one that does the work: the editor has no field for an
+  image address — the toolbar opens the media library — so the only way one ever arrives is pasting an
+  article in from a web page, which is a normal way to write one.
+- **At the save.** `Html::remoteImageSources()` finds them and `SaveBlogPostRequest` refuses, naming
+  the address. A backstop for a body arriving by some other path, not the path an editor takes.
+- **In the purifier.** `URI.DisableExternalResources`, if both are bypassed. Deliberately not
+  `DisableExternal`, which would take links with it — a link may leave this site, an image may not.
+
+Two traps, both with tests. `URI.Host` must be set from `app.url` or HTMLPurifier calls every absolute
+address external and strips an image the form request has just allowed — the body then comes back
+empty. And the refusal must not be the *first* line of defence: for one revision it was, which meant a
+writer pasting an article could not save their own words until they had hunted down addresses they
+never typed. `SaveBlogPostRequest` states the principle that forbids it — a paste "keeps their words
+and loses the markup… no error to decipher" — in the same file the refusal was added to.
 
 `og:image` is deliberately exempt: a social network's crawler fetches it server-side, and no browser
 content policy applies.
 
-What is *not* closed: an editor can no longer hotlink an image, and that is a capability removed rather
-than a bug fixed. No content used one when this was written — verified against every article body and
-page tree — but if hotlinking is ever wanted back, the honest way is an allowlist of hosts in both
-places at once, never in the policy alone.
+So hotlinking is redirected rather than removed — paste whatever you like, pictures need uploading. If
+it is ever genuinely wanted, the honest way is an allowlist of hosts in all three places at once, never
+in the policy alone.
 
 ## What holds up
 
