@@ -343,7 +343,7 @@ structurally cannot see. It was worth writing: it found `connect-src` blocking e
 environment, and a second violation behind that one, within a minute of first running. Asserting the
 final button alone would have proved neither — that can pass on a path that never leaves the origin.
 
-### Two traps that cost hours, written down so they do not again
+### Three traps that cost hours, written down so they do not again
 
 **`cmsField`'s inner locator is built from the page, not from the scope.** Playwright bakes a
 locator's own selector into anything used as `has:`, so building it from `scope` produced
@@ -355,7 +355,17 @@ broken. Five tests, one helper.
 `/cms/media/usage` — the request the library makes before it will let anything be deleted — so the
 delete dialog never appeared and the test read as a broken screen.
 
-The lesson both share: when a probe passes and the test fails, the difference is in the test.
+**A switch is not inside a `.cms-field`.** `SettingsPanel` renders it as its own `.cms-toggle-row`
+with its own label class, so `field()` — which searched `.cms-field` alone — resolved to nothing for
+every toggle. The generated switch tests read the empty result as the block having no switch and
+skipped themselves, reporting "no switch rendered" about five blocks that render one perfectly well.
+They had never asserted anything, and the suite said `5 skipped` on every run for as long as they
+existed.
+
+The lesson the first two share: when a probe passes and the test fails, the difference is in the test.
+The third adds the quieter half — **a skip is a test declining to answer, so a standing count of them
+is a standing question.** Anything conditionally skipped must say what it looked for, or it reports a
+broken harness as a property of the thing under test.
 
 ## Current state
 

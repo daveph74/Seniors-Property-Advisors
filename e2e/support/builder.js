@@ -70,6 +70,12 @@ export async function openTab(page, name) {
 /**
  * A settings field, by its visible label. `within` scopes to a `.cms-fieldgroup` first, which is
  * how the hero's three "Headline" fields are told apart.
+ *
+ * `.cms-toggle-row` belongs in that selector and was missing from it. A switch is not wrapped in a
+ * `.cms-field` — `SettingsPanel` renders it as its own row with its own label class — so every
+ * lookup of a toggle matched nothing, and the generated switch tests read the empty result as the
+ * block having no switch and skipped themselves. Five tests reported "no switch rendered" about
+ * five blocks that render one perfectly well.
  */
 export function field(page, label, { within = null } = {}) {
     const scope = within
@@ -77,7 +83,7 @@ export function field(page, label, { within = null } = {}) {
         : page.locator('.cms-settings-panel, .cms-panel, body');
 
     return scope
-        .locator('.cms-field')
+        .locator('.cms-field, .cms-toggle-row')
         .filter({ has: page.getByText(label, { exact: true }) })
         .first();
 }

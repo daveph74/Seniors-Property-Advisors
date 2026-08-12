@@ -142,7 +142,15 @@ test.describe('Pages · Blocks', () => {
                         flipped.push([f, was === 'true' ? 'false' : 'true']);
                     }
 
-                    test.skip(flipped.length === 0, 'no switch rendered');
+                    /* Some switches are rendered only once their block is configured — a link's
+                       "Show arrow" needs the link — so finding none is not automatically a fault.
+                       What is not acceptable is a skip that does not say what it looked for: this
+                       message read "no switch rendered" for five blocks that render one, and the
+                       reason was a locator in the helper rather than anything in the application. */
+                    test.skip(
+                        flipped.length === 0,
+                        `no switch rendered for ${item.label} — looked for ${toggles.map((f) => f.label).join(', ')}`,
+                    );
 
                     /* A switch alone gives nothing to find the block by after a reload. */
                     const marker = uniqueValue('Marker');
