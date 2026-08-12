@@ -141,6 +141,64 @@ test.describe('Pages · Builder', () => {
         await B.saveDraft(page);
     });
 
+    /**
+     * An image is chosen, never typed.
+     *
+     * The field used to carry a free text box inviting "a web address", and `img-src` is `'self' data:`
+     * — so that invitation produced a block which saved, published and drew nothing, the picture
+     * missing with no reason given. The box is gone rather than validated: no way to enter an address
+     * is a stronger guarantee than a message explaining why the one you entered will not work.
+     *
+     * Asserted because it is an absence, and an absence is what nobody notices being undone.
+     */
+    test('an image can only be chosen from the library, not typed', async ({ page }) => {
+        await B.addBlock(page, 'Text and image');
+
+        /* The open accordion, not a panel class: `.cms-settings-panel` does not exist, which is worth
+           knowing because `support/builder.js` names it in a scope selector and falls through to
+           `body` every time. */
+        const settings = page.locator('.cms-accordion__body');
+
+        await expect(page.getByRole('button', { name: /^(Choose|Replace)$/ }).first()).toBeVisible();
+
+        /* Every text box in the settings, and none of them for an address. */
+        for (const box of await settings.locator('input[type="text"], input:not([type])').all()) {
+            const placeholder = (await box.getAttribute('placeholder')) || '';
+
+            expect(placeholder, 'an image address can be typed again').not.toContain('/media/');
+            expect(placeholder.toLowerCase()).not.toContain('web address');
+        }
+    });
+
+    /**
+     * The picker, once, against a real library item — and the reason it is here rather than in the
+     * generated per-field tests: those can no longer type an address, and adapting them would have had
+     * `B.input` return the "Describe the image" box in the same `.cms-field`, where a typed path
+     * round-trips perfectly and proves nothing.
+     */
+    test('an image chosen from the library survives a save and a reload', async ({ page }) => {
+        await B.addBlock(page, 'Text and image');
+
+        await page.getByRole('button', { name: /^(Choose|Replace)$/ }).first().click();
+
+        const modal = page.locator('.cms-modal');
+        await expect(modal.locator('.cms-modal__title')).toContainText('Choose an image');
+
+        await modal.locator('.cms-library__tile').first().click();
+        await expect(modal).toHaveCount(0);
+
+        const chosen = await page.locator('.cms-media-pick-row__name').first().innerText();
+        expect(chosen).not.toBe('No image yet');
+
+        await B.saveAndReload(page);
+        await B.selectLastBlock(page);
+
+        await expect(page.locator('.cms-media-pick-row__name').first()).toHaveText(chosen);
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
     test('a block can be renamed in the panel', async ({ page }) => {
         await B.addBlock(page, 'Heading');
         await B.openTab(page, 'Advanced');

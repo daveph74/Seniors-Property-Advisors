@@ -48,13 +48,18 @@ test.describe('Media', () => {
         await expect(panel.getByPlaceholder('Advisor guiding a senior couple')).toHaveValue(alt);
     });
 
-    test('the detail panel offers the address to paste into an image field', async ({ page }) => {
+    /**
+     * The address is shown for reference, and it used to say to paste it into an image field. That
+     * instruction outlived the box: a block's image is chosen from the library now, and there is
+     * nowhere to type an address at all — which is what stops one pointing at another site.
+     */
+    test('the detail panel shows where the image lives', async ({ page }) => {
         await page.locator('.cms-media-item').first().click();
 
         const address = page.locator('.cms-media-side input[readonly]');
 
         await expect(address).toHaveValue(/^\/media\//);
-        await expect(page.locator('.cms-media-side')).toContainText('Paste this into an image field');
+        await expect(page.locator('.cms-media-side')).toContainText('Where this image lives');
     });
 
     test('the panel closes again', async ({ page }) => {

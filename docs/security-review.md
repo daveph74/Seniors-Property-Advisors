@@ -235,9 +235,15 @@ witness, which is the same shape as the two defects above. So it is handled in t
 **which place matters more than the fact of it**:
 
 - **At the paste.** `RichTextEditor`'s `transformPastedHTML` drops remote image sources as they arrive
-  and says how many were left out. This is the one that does the work: the editor has no field for an
-  image address — the toolbar opens the media library — so the only way one ever arrives is pasting an
-  article in from a web page, which is a normal way to write one.
+  and says how many were left out, reading `isRemote()` from `resources/js/cms/remoteImages.js` the way
+  `passwordPolicy.js` mirrors its rule. Pasting is the only way one reaches an article body: the
+  toolbar's image button opens the media library and there is no box to type an address into.
+- **By removal, in the builder.** `ImageField` had such a box, and its placeholder read "or a web
+  address" — inviting precisely what the policy had stopped permitting, and producing a block that
+  saved, published and drew nothing. A warning under the field was tried and then thrown away in favour
+  of deleting the box: an image is chosen from the library, and nothing to type is a better guarantee
+  than a message explaining why what you typed will not work. The media library's own hint had to move
+  with it — it said "Paste this into an image field", an instruction that had outlived its target.
 - **At the save.** `Html::remoteImageSources()` finds them and `SaveBlogPostRequest` refuses, naming
   the address. A backstop for a body arriving by some other path, not the path an editor takes.
 - **In the purifier.** `URI.DisableExternalResources`, if both are bypassed. Deliberately not
@@ -256,6 +262,15 @@ content policy applies.
 So hotlinking is redirected rather than removed — paste whatever you like, pictures need uploading. If
 it is ever genuinely wanted, the honest way is an allowlist of hosts in all three places at once, never
 in the policy alone.
+
+**One gap left on purpose.** A section tree has no server-side equivalent of the body refusal, so a
+direct `PUT /cms/pages/{id}/sections` could still store a remote address — the builder simply offers no
+way to enter one, and that is all. It is left because the alternatives are both worse than the gap: the
+field schema that says which keys hold an image lives in `contentFields.js` and nowhere in PHP, so a
+backstop means either duplicating that schema in two languages or guessing an image by its file
+extension, and a guess inside validation is not something to rely on later. Worth revisiting only if the
+schema ever moves server-side. A remote address arriving that way is at least visible in the builder,
+which reports "That address did not load" when the picture fails — and a blocked image does fail.
 
 ## What holds up
 

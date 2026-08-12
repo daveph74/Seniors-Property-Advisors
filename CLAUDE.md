@@ -110,11 +110,24 @@ order is the design: `RichTextEditor`'s `transformPastedHTML` drops remote sourc
 toasts how many, `SaveBlogPostRequest` refuses a body that still carries one, and
 `URI.DisableExternalResources` strips it if both are bypassed.
 
-The paste is where it belongs, because pasting is the only way one arrives — the toolbar's image button
-opens the media library and there is no field for an address. Refusing the save was tried first and was
-wrong: a writer pasting an article could not store their own words until they had chased addresses they
-never typed, which contradicts the principle stated in `SaveBlogPostRequest` itself — a paste "keeps
-their words and loses the markup… no error to decipher".
+The paste is where it belongs for an article body, because pasting is the only way one arrives — the
+toolbar's image button opens the media library and there is no field for an address. Refusing the save
+was tried first and was wrong: a writer pasting an article could not store their own words until they
+had chased addresses they never typed, which contradicts the principle stated in `SaveBlogPostRequest`
+itself — a paste "keeps their words and loses the markup… no error to decipher".
+
+**The builder was the other path, and its box is gone.** `ImageField` carried a free text address whose
+placeholder invited "a web address" — which narrowing `img-src` turned into a block that saves,
+publishes and draws nothing. An image is chosen from the library now, full stop: nothing to type is a
+better guarantee than a warning about what you typed. Two things moved with it, and both are the sort of
+thing that gets missed — the media library's hint said "Paste this into an image field", which had
+outlived its target, and `04-pages-blocks` filled image fields by typing a path, which would now land in
+the "Describe the image" box in the same `.cms-field` and round-trip perfectly while asserting nothing.
+Image fields are skipped there and the picker has one real test in `03-pages-builder` instead.
+
+Section trees have no server-side backstop for this, deliberately: the schema saying which keys hold an
+image is in `contentFields.js` and nowhere in PHP, so one would mean the schema in two languages or
+guessing by file extension.
 
 Two traps: `DisableExternalResources` must not become `DisableExternal`, which takes links with it, and
 `URI.Host` has to be set from `app.url` or HTMLPurifier calls this site's own absolute address external

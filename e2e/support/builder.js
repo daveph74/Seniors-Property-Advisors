@@ -88,6 +88,27 @@ export function field(page, label, { within = null } = {}) {
         .first();
 }
 
+/**
+ * Sets an image field, the only way there is one: from the library.
+ *
+ * The field used to carry a text box for an address and no longer does — an image that could point at
+ * another site would be published and drawn for nobody, since `img-src` permits this origin only. So a
+ * test cannot type one either, which is the point.
+ */
+export async function chooseImage(page, label, options) {
+    const scope = field(page, label, options);
+
+    await scope.getByRole('button', { name: /^(Choose|Replace)$/ }).first().click();
+
+    const modal = page.locator('.cms-modal');
+
+    await expect(modal.locator('.cms-modal__title')).toContainText('Choose an image');
+    await modal.locator('.cms-library__tile').first().click();
+    await expect(modal).toHaveCount(0);
+
+    await expect(scope.locator('.cms-media-pick-row__name')).not.toHaveText('No image yet');
+}
+
 /** The input inside a field, whatever kind it is. */
 export function input(page, label, options) {
     return field(page, label, options).locator('input, textarea, select').first();

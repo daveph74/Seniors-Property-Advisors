@@ -298,7 +298,7 @@ export default function MediaIndex({
                     <div className="cms-field">
                         <label className="cms-field-label">Address</label>
                         <input className="cms-input" readOnly value={selected.url} onFocus={(e) => e.target.select()} />
-                        <div className="cms-hint">Paste this into an image field to use it.</div>
+                        <div className="cms-hint">Where this image lives. To put it on a page, use Choose on the block itself.</div>
                     </div>
 
                     <button

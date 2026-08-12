@@ -3,6 +3,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
+import { withoutRemoteImages } from '../remoteImages';
 
 /**
  * A what-you-see editor, because the people writing these articles are not typing markup.
@@ -12,43 +13,6 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
  * Whatever this produces is purified server-side by App\Content\Html before it is stored,
  * so the allowlist there, not this configuration, is what keeps a reader safe.
  */
-/**
- * Whether an address leaves this site. Mirrors `Html::isRemote()`, and is guidance rather than the
- * rule — the server decides, as it does for the password policy.
- */
-const isRemote = (src) => {
-    const value = (src || '').trim();
-
-    if (value === '') return false;
-    if (value.startsWith('//')) return true;
-
-    try {
-        return new URL(value, window.location.origin).origin !== window.location.origin;
-    } catch {
-        return false;
-    }
-};
-
-/**
- * Pictures pasted from a web page, dropped as the paste lands.
- *
- * `img-src` permits this origin only, so one of these could never be drawn for a reader — and the
- * server refuses a body carrying one. Refusing the *save* for it would be the wrong place: a writer
- * pasting an article from a web page did not type those addresses and cannot be expected to hunt them
- * down before their own words can be stored. Their text survives, the pictures that were never going
- * to appear do not, and `onDropped` says how many so it is not silent.
- */
-function withoutRemoteImages(html, onDropped) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const remote = [...doc.querySelectorAll('img')].filter((img) => isRemote(img.getAttribute('src')));
-
-    remote.forEach((img) => img.remove());
-
-    if (remote.length > 0) onDropped(remote.length);
-
-    return doc.body.innerHTML;
-}
-
 export default function RichTextEditor({ value, onChange, onPickImage, onImagesDropped }) {
     const editor = useEditor({
         extensions: [
