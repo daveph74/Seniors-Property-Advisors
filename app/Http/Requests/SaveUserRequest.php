@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Auth\PasswordPolicy;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class SaveUserRequest extends FormRequest
 {
@@ -21,10 +21,7 @@ class SaveUserRequest extends FormRequest
             ],
             'role' => ['required', Rule::in(array_keys(User::ROLES))],
             'active' => ['sometimes', 'boolean'],
-            'password' => [
-                $user === null ? 'required' : 'nullable',
-                'string', Password::min(10)->uncompromised(),
-            ],
+            'password' => PasswordPolicy::rules($user === null),
         ];
     }
 

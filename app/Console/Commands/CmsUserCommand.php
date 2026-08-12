@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Auth\PasswordPolicy;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class CmsUserCommand extends Command
@@ -31,10 +33,23 @@ class CmsUserCommand extends Command
         $user = User::where('email', $email)->first();
         $password = (string) ($this->option('password') ?: Str::password(16));
 
+        if ($this->option('password')) {
+            $validator = Validator::make(['password' => $password], ['password' => PasswordPolicy::rules()]);
+
+            if ($validator->fails()) {
+                foreach ($validator->errors()->get('password') as $message) {
+                    $this->error($message);
+                }
+
+                return self::FAILURE;
+            }
+        }
+
         $attributes = [
             'role' => $role,
             'is_active' => ! $this->option('deactivate'),
             'password' => $password,
+            'password_changed_at' => null,
         ];
 
         if ($user === null) {
@@ -50,7 +65,7 @@ class CmsUserCommand extends Command
             }
 
             if (! $this->option('password')) {
-                unset($attributes['password']);
+                unset($attributes['password'], $attributes['password_changed_at']);
                 $password = null;
             }
 

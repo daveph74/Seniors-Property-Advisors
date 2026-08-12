@@ -1,10 +1,16 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { exact } from '../../../cms/relativeTime';
+import PasswordChecklist from '../../../cms/components/PasswordChecklist';
+import { passwordMeetsPolicy } from '../../../cms/passwordPolicy';
+import { EyeIcon, HideIcon, WarningIcon } from '../../../cms/components/icons';
 
 export default function AccountIndex({ account }) {
     const flash = useCmsToast();
+    const { auth } = usePage().props;
+    const [reveal, setReveal] = useState(false);
     const { data, setData, patch, processing, errors, reset } = useForm({
         current_password: '',
         password: '',
@@ -26,6 +32,19 @@ export default function AccountIndex({ account }) {
     return (
         <div className="cms-page" style={{ maxWidth: 640 }}>
             <div className="cms-settings-content">
+                {auth.mustChangePassword ? (
+                    <div className="cms-impact-banner">
+                        <WarningIcon size={17} stroke="#8A5300" />
+                        <div className="cms-impact-banner__text">
+                            <strong style={{ color: 'var(--cms-warning-text)' }}>
+                                You are still using the password this account was given.
+                            </strong>
+                            {' '}Choose one of your own below. Until you do, anybody who was told the
+                            original can sign in as you.
+                        </div>
+                    </div>
+                ) : null}
+
                 <section className="cms-settings-section">
                     <h2 className="cms-settings-section__title">Who you are signed in as</h2>
                     <p className="cms-settings-section__lead">
@@ -62,14 +81,24 @@ export default function AccountIndex({ account }) {
 
                     <div className="cms-field">
                         <label className="cms-field-label">New password</label>
-                        <input
-                            type="password"
-                            className="cms-input"
-                            autoComplete="new-password"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                        />
-                        <div className="cms-hint">At least 10 characters.</div>
+                        <div className="cms-reveal">
+                            <input
+                                type={reveal ? 'text' : 'password'}
+                                className="cms-input"
+                                autoComplete="new-password"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                className="cms-reveal__btn"
+                                onClick={() => setReveal(! reveal)}
+                                aria-label={reveal ? 'Hide password' : 'Show password'}
+                            >
+                                {reveal ? <HideIcon size={15} /> : <EyeIcon size={15} />}
+                            </button>
+                        </div>
+                        <PasswordChecklist value={data.password} />
                         {errors.password ? <div className="cms-field-error">{errors.password}</div> : null}
                     </div>
 
@@ -89,7 +118,7 @@ export default function AccountIndex({ account }) {
                             type="submit"
                             className="cms-btn cms-btn--primary"
                             style={{ height: 36, padding: '0 18px' }}
-                            disabled={processing || ! data.current_password || ! data.password}
+                            disabled={processing || ! data.current_password || ! passwordMeetsPolicy(data.password)}
                         >
                             {processing ? 'Saving…' : 'Update password'}
                         </button>

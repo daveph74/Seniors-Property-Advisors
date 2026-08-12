@@ -9,8 +9,8 @@ test.describe('Global content', () => {
 
     /* It says so itself, and it is the reason this screen has no draft. */
     test('warns that a change here is live immediately', async ({ page }) => {
-        await expect(page.locator('.cms-impact-banner')).toContainText('appears on every page');
-        await expect(page.locator('.cms-impact-banner')).toContainText('no draft to publish');
+        await expect(page.locator('.cms-page .cms-impact-banner')).toContainText('appears on every page');
+        await expect(page.locator('.cms-page .cms-impact-banner')).toContainText('no draft to publish');
     });
 
     test('the save button is inert until something changes', async ({ page }) => {

@@ -36,6 +36,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'password_changed_at' => 'datetime',
             'is_active' => 'boolean',
             'password' => 'hashed',
         ];
@@ -44,6 +45,11 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->role === self::SUPER_ADMIN;
+    }
+
+    public function mustChangePassword(): bool
+    {
+        return $this->password_changed_at === null;
     }
 
     public function roleLabel(): string

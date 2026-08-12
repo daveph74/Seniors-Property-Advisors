@@ -5,6 +5,9 @@ import { Badge } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { relative } from '../../../cms/relativeTime';
+import PasswordChecklist from '../../../cms/components/PasswordChecklist';
+import { passwordMeetsPolicy } from '../../../cms/passwordPolicy';
+import { EyeIcon, HideIcon } from '../../../cms/components/icons';
 
 const BLANK = { name: '', email: '', role: 'client_admin', active: true, password: '' };
 
@@ -15,9 +18,15 @@ export default function UsersIndex({ users = [], roles = {} }) {
     const [form, setForm] = useState(BLANK);
     const [errors, setErrors] = useState({});
     const [pendingDelete, setPendingDelete] = useState(null);
+    const [reveal, setReveal] = useState(false);
+
+    const passwordUsable = editing === 'new'
+        ? passwordMeetsPolicy(form.password)
+        : form.password === '' || passwordMeetsPolicy(form.password);
 
     const open = (user) => {
         setErrors({});
+        setReveal(false);
         setEditing(user ? user.id : 'new');
         setForm(user
             ? { name: user.name, email: user.email, role: user.role, active: user.active, password: '' }
@@ -178,15 +187,28 @@ export default function UsersIndex({ users = [], roles = {} }) {
                             <label className="cms-field-label">
                                 {editing === 'new' ? 'Password' : 'New password'}
                             </label>
-                            <input
-                                className="cms-input"
-                                type="password"
-                                autoComplete="new-password"
-                                value={form.password}
-                                placeholder={editing === 'new' ? '' : 'Leave empty to keep the current one'}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                            />
-                            <div className="cms-hint">At least 10 characters.</div>
+                            <div className="cms-reveal">
+                                <input
+                                    className="cms-input"
+                                    type={reveal ? 'text' : 'password'}
+                                    autoComplete="new-password"
+                                    value={form.password}
+                                    placeholder={editing === 'new' ? '' : 'Leave empty to keep the current one'}
+                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                />
+                                <button
+                                    type="button"
+                                    className="cms-reveal__btn"
+                                    onClick={() => setReveal(! reveal)}
+                                    aria-label={reveal ? 'Hide password' : 'Show password'}
+                                >
+                                    {reveal ? <HideIcon size={15} /> : <EyeIcon size={15} />}
+                                </button>
+                            </div>
+                            <PasswordChecklist value={form.password} />
+                            <div className="cms-hint">
+                                They are asked to replace it with one of their own when they first sign in.
+                            </div>
                             {errors.password ? <div className="cms-field-error">{errors.password}</div> : null}
                         </div>
 
@@ -196,7 +218,7 @@ export default function UsersIndex({ users = [], roles = {} }) {
                                 type="button"
                                 className="cms-btn cms-btn--primary"
                                 style={{ height: 36, padding: '0 18px' }}
-                                disabled={! form.name.trim() || ! form.email.trim()}
+                                disabled={! form.name.trim() || ! form.email.trim() || ! passwordUsable}
                                 onClick={save}
                             >
                                 Save

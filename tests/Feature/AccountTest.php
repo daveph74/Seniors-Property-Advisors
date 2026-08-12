@@ -12,7 +12,7 @@ class AccountTest extends TestCase
 {
     private const CURRENT = 'the-current-password';
 
-    private const REPLACEMENT = 'the-replacement-password';
+    private const REPLACEMENT = 'The-Replacement-Password-7';
 
     private function helen(): User
     {

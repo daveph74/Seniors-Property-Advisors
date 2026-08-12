@@ -1,7 +1,10 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import { EyeIcon, HideIcon } from '../../cms/components/icons';
 import '../../../css/cms.css';
 
 export default function Login({ status }) {
+    const [reveal, setReveal] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -41,17 +44,28 @@ export default function Login({ status }) {
                         />
                     </label>
 
-                    <label className="cms-field">
-                        <span className="cms-field-label">Password</span>
-                        <input
-                            type="password"
-                            className="cms-input"
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            autoComplete="current-password"
-                            required
-                        />
-                    </label>
+                    <div className="cms-field">
+                        <label className="cms-field-label" htmlFor="signin-password">Password</label>
+                        <div className="cms-reveal">
+                            <input
+                                id="signin-password"
+                                type={reveal ? 'text' : 'password'}
+                                className="cms-input"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                autoComplete="current-password"
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="cms-reveal__btn"
+                                onClick={() => setReveal(! reveal)}
+                                aria-label={reveal ? 'Hide password' : 'Show password'}
+                            >
+                                {reveal ? <HideIcon size={15} /> : <EyeIcon size={15} />}
+                            </button>
+                        </div>
+                    </div>
 
                     {errors.email || errors.password ? (
                         <div className="cms-signin__error">{errors.email || errors.password}</div>

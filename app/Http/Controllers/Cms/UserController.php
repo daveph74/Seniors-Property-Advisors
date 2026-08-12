@@ -42,8 +42,13 @@ class UserController extends Controller
         $changes = $request->details();
         $password = $request->filled('password') ? $request->password() : null;
 
+        /**
+         * A password set for somebody else is issued, not chosen, so it is left unstamped and
+         * that account is asked to replace it on arrival. Setting your own here is a choice.
+         */
         if ($password !== null) {
             $changes['password'] = $password;
+            $changes['password_changed_at'] = $user->is($request->user()) ? now() : null;
         }
 
         $this->guardLastSuperAdmin($user, $changes);
