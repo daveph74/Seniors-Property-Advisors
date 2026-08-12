@@ -260,6 +260,21 @@ line: `php artisan serve` forwards a whitelist of variables to the server it sta
 `--env`, so `serve --env=e2e` quietly runs the site against the developer's own database. That is
 how three test enquiries once landed in `database/database.sqlite`.
 
+Its **bucket** is its own too — `spa-media-e2e`, because the upload test generates objects nothing
+prunes and they should not accumulate in the bucket used for development. `global-setup.mjs` runs
+`media:init` **before** the seed, which creates it and applies the CORS rules a presigned PUT needs.
+That ordering is the point: `MediaSeeder` swallows a storage failure with a warning, so without the
+preflight a missing container let the run continue and failed several tests as though their screens
+were broken. The suite has always needed `docker compose up -d`; now it says so and stops.
+
+**Two concurrent runs corrupt each other, and not via the port.** The port clash is the visible half
+— `webServer` is `reuseExistingServer: false` deliberately, so the second run refuses to start. The
+damaging half is that `npm run e2e` builds first, and Vite empties `public/build` before rewriting it:
+any page the *other* run renders in that window dies with `ViteManifestNotFoundException`, which
+Playwright reports as a blank screen and a missing button. If a handful of unrelated builder tests
+fail with nothing in common, check whether a second build ran — `public/build/manifest.json`'s
+timestamp against the run's start answers it.
+
 Three constraints shape the suite, and all of them are load-bearing:
 
 - **One worker.** `artisan serve` is PHP's built-in server — one request at a time, and it cannot
@@ -319,6 +334,14 @@ the suite does cover beyond the screens loading: the enquiry inbox including the
 counts disagreeing on purpose, the search palette including that a page's link resolves through
 `cms_id`, and that **no screen violates the content security policy** — a blocked script does not
 error a response, so without this nobody would notice until something silently stopped working.
+
+That last one covers screens, and screens alone, which is why `09-media.spec.js` performs a **real
+upload** and asserts each step of it: sign, a cross-origin PUT with a 2xx, the record call, and the
+file still being findable after a reload. An upload is the one thing the CMS does that leaves the
+origin — the browser PUTs the bytes at storage itself — so it is the one thing the screen sweep
+structurally cannot see. It was worth writing: it found `connect-src` blocking every upload in every
+environment, and a second violation behind that one, within a minute of first running. Asserting the
+final button alone would have proved neither — that can pass on a path that never leaves the origin.
 
 ### Two traps that cost hours, written down so they do not again
 

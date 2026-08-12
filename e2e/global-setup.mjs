@@ -17,6 +17,14 @@ export default function globalSetup() {
     closeSync(openSync(database, 'w'));
 
     artisan('config:clear');
+
+    /* Before the seed, because `MediaSeeder` writes real bytes and swallows a storage failure with a
+       warning — the run would carry on and several tests would fail as though their screens were
+       broken. `media:init` creates the bucket and applies the CORS rules a presigned PUT needs, and
+       returns a failure exit code when storage is unreachable, which `execFileSync` turns into the
+       abort this wants. The suite has always needed the container; now it says so. */
+    artisan('media:init');
+
     artisan('migrate:fresh', '--seed', '--force');
 
     /* One enquiry to open, read and change the status of.
