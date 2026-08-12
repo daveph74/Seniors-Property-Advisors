@@ -91,13 +91,6 @@ export default function ImageField({
                 </button>
             </div>
 
-            <input
-                className="cms-input"
-                value={value || ''}
-                placeholder="/media/… or a web address"
-                onChange={(e) => { setFailed(false); setError(null); onChange(e.target.value); }}
-            />
-
             {onAltChange ? (
                 <div style={{ marginTop: 8 }}>
                     <label className="cms-field-label">Describe the image</label>

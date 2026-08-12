@@ -70,6 +70,12 @@ export async function openTab(page, name) {
 /**
  * A settings field, by its visible label. `within` scopes to a `.cms-fieldgroup` first, which is
  * how the hero's three "Headline" fields are told apart.
+ *
+ * `.cms-toggle-row` belongs in that selector and was missing from it. A switch is not wrapped in a
+ * `.cms-field` — `SettingsPanel` renders it as its own row with its own label class — so every
+ * lookup of a toggle matched nothing, and the generated switch tests read the empty result as the
+ * block having no switch and skipped themselves. Five tests reported "no switch rendered" about
+ * five blocks that render one perfectly well.
  */
 export function field(page, label, { within = null } = {}) {
     const scope = within
@@ -77,9 +83,30 @@ export function field(page, label, { within = null } = {}) {
         : page.locator('.cms-settings-panel, .cms-panel, body');
 
     return scope
-        .locator('.cms-field')
+        .locator('.cms-field, .cms-toggle-row')
         .filter({ has: page.getByText(label, { exact: true }) })
         .first();
+}
+
+/**
+ * Sets an image field, the only way there is one: from the library.
+ *
+ * The field used to carry a text box for an address and no longer does — an image that could point at
+ * another site would be published and drawn for nobody, since `img-src` permits this origin only. So a
+ * test cannot type one either, which is the point.
+ */
+export async function chooseImage(page, label, options) {
+    const scope = field(page, label, options);
+
+    await scope.getByRole('button', { name: /^(Choose|Replace)$/ }).first().click();
+
+    const modal = page.locator('.cms-modal');
+
+    await expect(modal.locator('.cms-modal__title')).toContainText('Choose an image');
+    await modal.locator('.cms-library__tile').first().click();
+    await expect(modal).toHaveCount(0);
+
+    await expect(scope.locator('.cms-media-pick-row__name')).not.toHaveText('No image yet');
 }
 
 /** The input inside a field, whatever kind it is. */

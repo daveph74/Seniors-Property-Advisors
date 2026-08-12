@@ -57,11 +57,13 @@ test.describe('Pages · Blocks', () => {
                the add/delete test above and by the builder spec's own field cases. */
             if (fields.length === 0) return;
 
+
             test(`@deep keeps every content field through a save`, async ({ page }) => {
                 await B.openBuilder(page, FIXTURE);
                 await B.addBlock(page, item.label);
 
                 const typed = new Map();
+                const picked = new Set();
                 /* Something the block actually renders as text, to find it again after a reload.
                    An image URL is not it — the block draws the picture, not the address. */
                 let marker = null;
@@ -95,13 +97,19 @@ test.describe('Pages · Blocks', () => {
                         }
                     }
 
+                    /* Chosen from the library, because the address box is gone. Filling it by label is
+                       not an option and skipping it is not either: `B.input` would now hand back the
+                       "Describe the image" box in the same `.cms-field`, where a typed path round-trips
+                       perfectly and proves nothing — and a block like `image` renders its caption only
+                       beside a picture, so leaving the picture out left nothing on the canvas to find
+                       the block by afterwards. */
                     if (f.type === 'image') {
-                        await B.fillField(page, f.label, '/media/2026/08/rachel.jpg', scope);
-                        typed.set(`${f.within || ''}|${f.label}`, '/media/2026/08/rachel.jpg');
+                        await B.chooseImage(page, f.label, scope);
+                        picked.add(`${f.within || ''}|${f.label}`);
                     }
                 }
 
-                expect(typed.size, `${item.label} had no fillable field`).toBeGreaterThan(0);
+                expect(typed.size + picked.size, `${item.label} had no fillable field`).toBeGreaterThan(0);
 
                 await B.saveAndReload(page);
 
@@ -114,6 +122,14 @@ test.describe('Pages · Blocks', () => {
 
                     await expect(B.input(page, label, scope), `${item.label} · ${label}`)
                         .toHaveValue(value);
+                }
+
+                for (const key of picked) {
+                    const [within, label] = key.split('|');
+                    const row = B.field(page, label, { within: within || null })
+                        .locator('.cms-media-pick-row__name');
+
+                    await expect(row, `${item.label} · ${label}`).not.toHaveText('No image yet');
                 }
 
                 await B.deleteSelected(page);
@@ -142,7 +158,15 @@ test.describe('Pages · Blocks', () => {
                         flipped.push([f, was === 'true' ? 'false' : 'true']);
                     }
 
-                    test.skip(flipped.length === 0, 'no switch rendered');
+                    /* Some switches are rendered only once their block is configured — a link's
+                       "Show arrow" needs the link — so finding none is not automatically a fault.
+                       What is not acceptable is a skip that does not say what it looked for: this
+                       message read "no switch rendered" for five blocks that render one, and the
+                       reason was a locator in the helper rather than anything in the application. */
+                    test.skip(
+                        flipped.length === 0,
+                        `no switch rendered for ${item.label} — looked for ${toggles.map((f) => f.label).join(', ')}`,
+                    );
 
                     /* A switch alone gives nothing to find the block by after a reload. */
                     const marker = uniqueValue('Marker');

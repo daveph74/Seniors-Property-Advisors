@@ -179,6 +179,26 @@ class MediaTest extends TestCase
         $this->assertDatabaseHas('media', ['key' => '2026/07/landed.png', 'size' => strlen($bytes)]);
     }
 
+    /**
+     * The browser no longer measures the picture before recording it, so nothing in the request says
+     * how big it is. It never needed to — the bytes are measured here and the request's answer was
+     * overwritten either way — but every other case in this file sends the numbers, so without this
+     * one the behaviour the front end now depends on is not covered anywhere.
+     */
+    public function test_it_measures_the_image_itself_when_the_request_does_not_say(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/07/unmeasured.png', $this->image(640, 480));
+
+        $this->postJson('/cms/media', [
+            'key' => '2026/07/unmeasured.png',
+            'name' => 'unmeasured.png',
+            'mime' => 'image/png',
+        ])->assertCreated()
+            ->assertJsonPath('width', 640)
+            ->assertJsonPath('height', 480);
+    }
+
     public function test_a_large_image_is_shrunk_in_place_and_keeps_its_address(): void
     {
         Storage::fake('s3');

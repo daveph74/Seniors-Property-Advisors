@@ -269,6 +269,114 @@ class OwaspTest extends TestCase
         $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
     }
 
+    /**
+     * A signed upload is sent by the browser, to storage, from a CMS screen. The policy has to permit
+     * that origin or the upload cannot happen at all — and it must permit the origin only, since a
+     * CSP source carrying `/bucket` matches by path prefix.
+     */
+    public function test_a05_the_policy_permits_the_upload_it_signs(): void
+    {
+        config(['filesystems.disks.s3.url' => null]);
+        config(['filesystems.disks.s3.endpoint' => 'http://localhost:4566']);
+
+        $admin = $this->get('/cms/media')->headers->get('Content-Security-Policy');
+
+        $this->assertMatchesRegularExpression(
+            '/connect-src [^;]*\bhttp:\/\/localhost:4566\b/',
+            $admin,
+        );
+        $this->assertStringNotContainsString('localhost:4566/', $admin);
+
+        /* Neither the public site nor sign-in uploads, so neither is given the origin. */
+        foreach (['/', '/login'] as $path) {
+            auth()->logout();
+
+            $this->assertStringNotContainsString(
+                'localhost:4566',
+                $this->get($path)->headers->get('Content-Security-Policy'),
+                $path,
+            );
+        }
+    }
+
+    /**
+     * The two cases either side of this one read the policy against a configured origin. This one asks
+     * the harder question: is the origin the policy permits the origin `sign()` actually hands the
+     * browser? They would both still pass if the signed host moved, which is the failure that shipped
+     * — a policy and an upload that were each correct about a different address.
+     */
+    public function test_a05_the_policy_permits_the_host_the_signed_url_points_at(): void
+    {
+        /* Not `Storage::fake('s3')`: a fake returns a fake URL, and the whole point here is the real
+           host the real signer produces. */
+        $signed = $this->postJson('/cms/media/sign', ['name' => 'upload.jpg', 'size' => 2048]);
+
+        $signed->assertOk();
+
+        $parts = parse_url($signed->json('url'));
+
+        $this->assertNotEmpty($parts['host'] ?? null, 'The signed URL carried no host.');
+
+        $origin = ($parts['scheme'] ?? 'https').'://'.$parts['host']
+            .(isset($parts['port']) ? ':'.$parts['port'] : '');
+
+        $policy = $this->get('/cms/media')->headers->get('Content-Security-Policy');
+
+        preg_match('/connect-src ([^;]*)/', $policy, $found);
+
+        $this->assertContains(
+            $origin,
+            preg_split('/\s+/', trim($found[1] ?? '')),
+            "The policy does not permit {$origin}, which is where the signed upload is sent.",
+        );
+    }
+
+    /** A bucket behind a CDN is signed against that host, so the raw endpoint would be the wrong grant. */
+    public function test_a05_a_cdn_host_wins_over_the_raw_endpoint(): void
+    {
+        config(['filesystems.disks.s3.endpoint' => 'http://localhost:4566']);
+        config(['filesystems.disks.s3.url' => 'https://media.example.com/spa-media']);
+
+        $policy = $this->get('/cms/media')->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString('https://media.example.com', $policy);
+        $this->assertStringNotContainsString('media.example.com/spa-media', $policy);
+        $this->assertStringNotContainsString('localhost:4566', $policy);
+    }
+
+    /**
+     * `img-src` used to end in `https:`, which permits a request to any host on the internet. An image
+     * needs no response to have already sent its query string, so that was an open exfiltration
+     * channel and the widest thing this policy allowed — wider than anything `connect-src` was
+     * carefully restricting. `Html` refuses a remote image on the way in so the two agree.
+     */
+    public function test_a05_an_image_may_not_be_fetched_from_anywhere_at_all(): void
+    {
+        foreach (['/', '/cms/media'] as $path) {
+            preg_match('/img-src ([^;]*)/', (string) $this->get($path)->headers->get('Content-Security-Policy'), $found);
+
+            $sources = preg_split('/\s+/', trim($found[1] ?? ''));
+
+            $this->assertContains("'self'", $sources, $path);
+            $this->assertNotContains('https:', $sources, "{$path} still permits any HTTPS host");
+            $this->assertNotContains('http:', $sources, $path);
+            $this->assertNotContains('*', $sources, $path);
+        }
+    }
+
+    /** Analytics measures some things with a pixel, and the blanket `https:` used to cover it. */
+    public function test_a05_analytics_pixels_are_named_now_that_the_scheme_is_gone(): void
+    {
+        $this->put('/cms/settings', [
+            'name' => 'Seniors Property Advisors',
+            'tracking' => ['ga4' => 'G-ABCDE12345', 'gtm' => null],
+        ])->assertRedirect();
+
+        preg_match('/img-src ([^;]*)/', (string) $this->get('/')->headers->get('Content-Security-Policy'), $found);
+
+        $this->assertStringContainsString('google-analytics.com', $found[1] ?? '');
+    }
+
     /** A policy that permits an analytics vendor on a site with no analytics is one nobody has read. */
     public function test_a05_third_parties_are_only_allowed_when_they_are_actually_used(): void
     {

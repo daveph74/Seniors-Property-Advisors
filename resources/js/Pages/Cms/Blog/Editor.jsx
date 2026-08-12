@@ -168,6 +168,9 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
                             value={data.body}
                             onChange={(body) => setData('body', body)}
                             onPickImage={(insert) => setPickImageInto(() => insert)}
+                            onImagesDropped={(count) => flash(count === 1
+                                ? 'One image was linked from another site and left out — upload it to the media library to include it.'
+                                : `${count} images were linked from another site and left out — upload them to the media library to include them.`)}
                         />
 
                         {errors.body ? <div className="cms-field-error">{errors.body}</div> : null}

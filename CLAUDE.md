@@ -104,6 +104,35 @@ is scope §5's editor list and nothing more; §17 excludes editing raw HTML, so 
 it should be added. `BlogTest` is what keeps that true — do not widen the allowlist without
 adding a case there.
 
+**A link may leave this site; an image may not.** `img-src` is `'self' data:` and nothing more, so a
+hotlinked picture would be stored, published and drawn for no reader. Handled in three places, and the
+order is the design: `RichTextEditor`'s `transformPastedHTML` drops remote sources **at the paste** and
+toasts how many, `SaveBlogPostRequest` refuses a body that still carries one, and
+`URI.DisableExternalResources` strips it if both are bypassed.
+
+The paste is where it belongs for an article body, because pasting is the only way one arrives — the
+toolbar's image button opens the media library and there is no field for an address. Refusing the save
+was tried first and was wrong: a writer pasting an article could not store their own words until they
+had chased addresses they never typed, which contradicts the principle stated in `SaveBlogPostRequest`
+itself — a paste "keeps their words and loses the markup… no error to decipher".
+
+**The builder was the other path, and its box is gone.** `ImageField` carried a free text address whose
+placeholder invited "a web address" — which narrowing `img-src` turned into a block that saves,
+publishes and draws nothing. An image is chosen from the library now, full stop: nothing to type is a
+better guarantee than a warning about what you typed. Two things moved with it, and both are the sort of
+thing that gets missed — the media library's hint said "Paste this into an image field", which had
+outlived its target, and `04-pages-blocks` filled image fields by typing a path, which would now land in
+the "Describe the image" box in the same `.cms-field` and round-trip perfectly while asserting nothing.
+Image fields are skipped there and the picker has one real test in `03-pages-builder` instead.
+
+Section trees have no server-side backstop for this, deliberately: the schema saying which keys hold an
+image is in `contentFields.js` and nowhere in PHP, so one would mean the schema in two languages or
+guessing by file extension.
+
+Two traps: `DisableExternalResources` must not become `DisableExternal`, which takes links with it, and
+`URI.Host` has to be set from `app.url` or HTMLPurifier calls this site's own absolute address external
+and strips an image the form request just allowed.
+
 The editor is TipTap (MIT). CKEditor and TinyMCE were rejected: both are GPL-or-paid, and GPL
 copyleft would reach this application. It lazy-loads as its own Vite chunk (~140KB gzipped),
 so only the article editor pays for it.
@@ -260,6 +289,21 @@ line: `php artisan serve` forwards a whitelist of variables to the server it sta
 `--env`, so `serve --env=e2e` quietly runs the site against the developer's own database. That is
 how three test enquiries once landed in `database/database.sqlite`.
 
+Its **bucket** is its own too — `spa-media-e2e`, because the upload test generates objects nothing
+prunes and they should not accumulate in the bucket used for development. `global-setup.mjs` runs
+`media:init` **before** the seed, which creates it and applies the CORS rules a presigned PUT needs.
+That ordering is the point: `MediaSeeder` swallows a storage failure with a warning, so without the
+preflight a missing container let the run continue and failed several tests as though their screens
+were broken. The suite has always needed `docker compose up -d`; now it says so and stops.
+
+**Two concurrent runs corrupt each other, and not via the port.** The port clash is the visible half
+— `webServer` is `reuseExistingServer: false` deliberately, so the second run refuses to start. The
+damaging half is that `npm run e2e` builds first, and Vite empties `public/build` before rewriting it:
+any page the *other* run renders in that window dies with `ViteManifestNotFoundException`, which
+Playwright reports as a blank screen and a missing button. If a handful of unrelated builder tests
+fail with nothing in common, check whether a second build ran — `public/build/manifest.json`'s
+timestamp against the run's start answers it.
+
 Three constraints shape the suite, and all of them are load-bearing:
 
 - **One worker.** `artisan serve` is PHP's built-in server — one request at a time, and it cannot
@@ -320,7 +364,15 @@ counts disagreeing on purpose, the search palette including that a page's link r
 `cms_id`, and that **no screen violates the content security policy** — a blocked script does not
 error a response, so without this nobody would notice until something silently stopped working.
 
-### Two traps that cost hours, written down so they do not again
+That last one covers screens, and screens alone, which is why `09-media.spec.js` performs a **real
+upload** and asserts each step of it: sign, a cross-origin PUT with a 2xx, the record call, and the
+file still being findable after a reload. An upload is the one thing the CMS does that leaves the
+origin — the browser PUTs the bytes at storage itself — so it is the one thing the screen sweep
+structurally cannot see. It was worth writing: it found `connect-src` blocking every upload in every
+environment, and a second violation behind that one, within a minute of first running. Asserting the
+final button alone would have proved neither — that can pass on a path that never leaves the origin.
+
+### Three traps that cost hours, written down so they do not again
 
 **`cmsField`'s inner locator is built from the page, not from the scope.** Playwright bakes a
 locator's own selector into anything used as `has:`, so building it from `scope` produced
@@ -332,7 +384,17 @@ broken. Five tests, one helper.
 `/cms/media/usage` — the request the library makes before it will let anything be deleted — so the
 delete dialog never appeared and the test read as a broken screen.
 
-The lesson both share: when a probe passes and the test fails, the difference is in the test.
+**A switch is not inside a `.cms-field`.** `SettingsPanel` renders it as its own `.cms-toggle-row`
+with its own label class, so `field()` — which searched `.cms-field` alone — resolved to nothing for
+every toggle. The generated switch tests read the empty result as the block having no switch and
+skipped themselves, reporting "no switch rendered" about five blocks that render one perfectly well.
+They had never asserted anything, and the suite said `5 skipped` on every run for as long as they
+existed.
+
+The lesson the first two share: when a probe passes and the test fails, the difference is in the test.
+The third adds the quieter half — **a skip is a test declining to answer, so a standing count of them
+is a standing question.** Anything conditionally skipped must say what it looked for, or it reports a
+broken harness as a property of the thing under test.
 
 ## Current state
 

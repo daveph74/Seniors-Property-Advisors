@@ -42,8 +42,15 @@ class SaveBlogPostRequest extends FormRequest
     }
 
     /**
-     * The media library accepts SVG, but social networks refuse it — an SVG sharing image
-     * produces no preview at all, silently. Better to say so than to let it look saved.
+     * Two things that would look saved and then not work.
+     *
+     * The media library accepts SVG, but social networks refuse it — an SVG sharing image produces no
+     * preview at all, silently. And the content policy permits an image from this origin only, so a
+     * picture hotlinked from somewhere else would be published and drawn for nobody. Both are refused
+     * here rather than left to be discovered by whoever eventually looks at the page.
+     *
+     * `seo.image` is not checked for this: it becomes an `og:image`, which a social network's crawler
+     * fetches server-side, and no browser content policy applies to it.
      */
     public function withValidator(Validator $validator): void
     {
@@ -52,6 +59,21 @@ class SaveBlogPostRequest extends FormRequest
                 $validator->errors()->add(
                     'seo.image',
                     'A sharing image cannot be an SVG — social networks will not show it. Use a JPG or PNG.',
+                );
+            }
+
+            $remote = Html::remoteImageSources($this->input('body'));
+
+            if ($remote !== []) {
+                $validator->errors()->add('body', 'An image has to be uploaded to this site rather than '
+                    .'linked from somewhere else, or readers will not see it. Add it to the media '
+                    .'library and insert it from there — '.implode(', ', array_slice($remote, 0, 3)));
+            }
+
+            if (Html::isRemote($this->input('featured_image'))) {
+                $validator->errors()->add(
+                    'featured_image',
+                    'A featured image has to come from the media library, not another website.',
                 );
             }
         });

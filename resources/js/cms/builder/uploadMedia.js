@@ -46,27 +46,19 @@ function put(url, file, headers, onProgress) {
     });
 }
 
-function dimensions(file) {
-    if (! file.type.startsWith('image/') || file.type === 'image/svg+xml') {
-        return Promise.resolve({ width: null, height: null });
-    }
-
-    return new Promise((resolve) => {
-        const url = URL.createObjectURL(file);
-        const image = new Image();
-
-        image.onload = () => {
-            URL.revokeObjectURL(url);
-            resolve({ width: image.naturalWidth, height: image.naturalHeight });
-        };
-        image.onerror = () => {
-            URL.revokeObjectURL(url);
-            resolve({ width: null, height: null });
-        };
-        image.src = url;
-    });
-}
-
+/**
+ * The width and height are not measured here, and must not be.
+ *
+ * This used to decode the file into an `Image` from a `createObjectURL` blob and send the result. Two
+ * things were wrong with that. `store()` measures the bytes itself and overwrites whatever arrived,
+ * for every format it can read, so the answer was discarded on arrival — and an SVG was skipped and
+ * reported as nulls anyway. And `img-src` does not permit `blob:`, so the decode was blocked by the
+ * content policy on every upload: the probe silently resolved to nulls through its error path, which
+ * is why a redundant measurement could fail for a year without anybody noticing.
+ *
+ * The server is the only place that can answer this honestly — it is looking at the stored bytes
+ * rather than at what a browser was handed.
+ */
 export async function uploadMedia(file, onProgress = () => {}) {
     onProgress(0);
 
@@ -74,14 +66,10 @@ export async function uploadMedia(file, onProgress = () => {}) {
 
     await put(signed.url, file, signed.headers, onProgress);
 
-    const { width, height } = await dimensions(file);
-
     const media = await json('/cms/media', {
         key: signed.key,
         name: signed.name,
         mime: file.type || 'application/octet-stream',
-        width,
-        height,
     });
 
     onProgress(100);

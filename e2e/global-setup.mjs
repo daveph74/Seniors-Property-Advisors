@@ -17,6 +17,32 @@ export default function globalSetup() {
     closeSync(openSync(database, 'w'));
 
     artisan('config:clear');
+
+    /* Before the seed, because `MediaSeeder` writes real bytes and swallows a storage failure with a
+       warning — the run would carry on and several tests would fail as though their screens were
+       broken. `media:init` creates the bucket and applies the CORS rules a presigned PUT needs, and
+       returns a failure exit code when storage is unreachable, which `execFileSync` turns into the
+       abort this wants. The suite has always needed the container; now it says so. */
+    artisan('media:init');
+
+    /* The database is rebuilt every run; without this the bucket was not, so every upload the suite
+       performed stayed there forever as an object no row referred to.
+
+       The guard is the point. This deletes every object it can see, so it refuses to run unless the
+       configured bucket is named like the throwaway one — a bucket set wrongly in `.env.e2e`, or an
+       `APP_ENV` that failed to reach this process, would otherwise empty the bucket the site is
+       actually using. Prefer the ugly abort to the quiet catastrophe. */
+    artisan('tinker', '--execute', [
+        '$bucket = (string) config("filesystems.disks.s3.bucket");',
+        'if (! str_ends_with($bucket, "-e2e")) {',
+        'throw new RuntimeException("Refusing to empty \\"{$bucket}\\": the end-to-end bucket must be named -e2e.");',
+        '}',
+        '$disk = Storage::disk("s3");',
+        '$files = $disk->allFiles();',
+        'if ($files !== []) { $disk->delete($files); }',
+        'echo "Emptied {$bucket} (".count($files)." objects).".PHP_EOL;',
+    ].join(' '));
+
     artisan('migrate:fresh', '--seed', '--force');
 
     /* One enquiry to open, read and change the status of.

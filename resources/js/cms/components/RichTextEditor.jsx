@@ -3,6 +3,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
+import { withoutRemoteImages } from '../remoteImages';
 
 /**
  * A what-you-see editor, because the people writing these articles are not typing markup.
@@ -12,7 +13,7 @@ import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table
  * Whatever this produces is purified server-side by App\Content\Html before it is stored,
  * so the allowlist there, not this configuration, is what keeps a reader safe.
  */
-export default function RichTextEditor({ value, onChange, onPickImage }) {
+export default function RichTextEditor({ value, onChange, onPickImage, onImagesDropped }) {
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -36,6 +37,7 @@ export default function RichTextEditor({ value, onChange, onPickImage }) {
                 class: 'cms-rt__surface',
                 'aria-label': 'Article content',
             },
+            transformPastedHTML: (html) => withoutRemoteImages(html, (count) => onImagesDropped?.(count)),
         },
         onUpdate: ({ editor }) => onChange(editor.getHTML()),
     });

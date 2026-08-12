@@ -73,17 +73,37 @@ class SecurityHeaders
         $style = ["'self'", "'unsafe-inline'"];
         $font = ["'self'"];
         $connect = ["'self'"];
-        $img = ["'self'", 'data:', 'https:'];
+
+        /* Not `https:`. A blanket scheme here is an open exfiltration channel — `new Image().src` at
+           any host on the internet needs no response to have already sent the query string — and it
+           was by far the widest thing this policy allowed. Every image this site draws is served from
+           its own media route, so naming the origin costs nothing. `data:` stays for inline SVG icons.
+           Anything an editor pastes from elsewhere is refused at the point of saving instead, by
+           `Html`, rather than being stored and then silently not drawn. */
+        $img = ["'self'", 'data:'];
 
         /* The admin is the only thing that asks Google for a typeface. The public site bundles
            its own, and says so in the layout. */
         if ($request->is('cms', 'cms/*', 'login')) {
             $style[] = 'https://fonts.googleapis.com';
             $font[] = 'https://fonts.gstatic.com';
+
+            /* An upload does not travel through PHP: the browser is handed a signed URL and PUTs
+               the bytes at storage itself, which is never this origin. Without it the policy stops
+               the request before it is sent, and the only symptom is the front end's "could not
+               reach storage" — a message about a service that is running perfectly well. The admin
+               is the only thing that uploads, so the public site is not given the origin. */
+            if ($request->is('cms', 'cms/*') && $origin = $this->storageOrigin()) {
+                $connect[] = $origin;
+            }
         } else {
             foreach ($this->tracking() as $host) {
                 $script[] = $host;
                 $connect[] = $host;
+                /* Analytics still measures some things with a pixel rather than a beacon, and these
+                   hosts used to be covered by the blanket `https:` that has just gone. Named, so the
+                   permission is as narrow as the thing it is for. */
+                $img[] = $host;
             }
         }
 
@@ -110,6 +130,34 @@ class SecurityHeaders
             "frame-ancestors 'none'",
             $request->secure() ? 'upgrade-insecure-requests' : null,
         ]));
+    }
+
+    /**
+     * Where signed uploads are sent, as a bare origin.
+     *
+     * `url` first: a bucket reached through a CDN is signed against that host, and the raw endpoint
+     * would then be the wrong permission. The path is dropped deliberately — a CSP source matches by
+     * path prefix, so leaving `/bucket` on would narrow the policy to a shape the signed URL may not
+     * take, and it grants nothing extra to allow the host.
+     */
+    private function storageOrigin(): ?string
+    {
+        $configured = config('filesystems.disks.s3.url') ?: config('filesystems.disks.s3.endpoint');
+
+        if (! is_string($configured) || $configured === '') {
+            return null;
+        }
+
+        $parts = parse_url($configured);
+
+        if (empty($parts['host'])) {
+            return null;
+        }
+
+        $scheme = $parts['scheme'] ?? 'https';
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+
+        return $scheme.'://'.$parts['host'].$port;
     }
 
     /**
