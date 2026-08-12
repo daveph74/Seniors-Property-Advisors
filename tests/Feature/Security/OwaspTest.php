@@ -269,6 +269,49 @@ class OwaspTest extends TestCase
         $this->assertStringNotContainsString("script-src 'self' 'unsafe-inline'", $policy);
     }
 
+    /**
+     * A signed upload is sent by the browser, to storage, from a CMS screen. The policy has to permit
+     * that origin or the upload cannot happen at all — and it must permit the origin only, since a
+     * CSP source carrying `/bucket` matches by path prefix.
+     */
+    public function test_a05_the_policy_permits_the_upload_it_signs(): void
+    {
+        config(['filesystems.disks.s3.url' => null]);
+        config(['filesystems.disks.s3.endpoint' => 'http://localhost:4566']);
+
+        $admin = $this->get('/cms/media')->headers->get('Content-Security-Policy');
+
+        $this->assertMatchesRegularExpression(
+            '/connect-src [^;]*\bhttp:\/\/localhost:4566\b/',
+            $admin,
+        );
+        $this->assertStringNotContainsString('localhost:4566/', $admin);
+
+        /* Neither the public site nor sign-in uploads, so neither is given the origin. */
+        foreach (['/', '/login'] as $path) {
+            auth()->logout();
+
+            $this->assertStringNotContainsString(
+                'localhost:4566',
+                $this->get($path)->headers->get('Content-Security-Policy'),
+                $path,
+            );
+        }
+    }
+
+    /** A bucket behind a CDN is signed against that host, so the raw endpoint would be the wrong grant. */
+    public function test_a05_a_cdn_host_wins_over_the_raw_endpoint(): void
+    {
+        config(['filesystems.disks.s3.endpoint' => 'http://localhost:4566']);
+        config(['filesystems.disks.s3.url' => 'https://media.example.com/spa-media']);
+
+        $policy = $this->get('/cms/media')->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString('https://media.example.com', $policy);
+        $this->assertStringNotContainsString('media.example.com/spa-media', $policy);
+        $this->assertStringNotContainsString('localhost:4566', $policy);
+    }
+
     /** A policy that permits an analytics vendor on a site with no analytics is one nobody has read. */
     public function test_a05_third_parties_are_only_allowed_when_they_are_actually_used(): void
     {
