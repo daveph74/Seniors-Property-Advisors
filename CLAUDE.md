@@ -36,7 +36,12 @@ it against the code before repeating it — that is the failure mode this reposi
 
 ## Commands
 
-- `composer dev` — server, queue, logs, and Vite together
+- `composer dev` — server, queue, Vite and Reverb together, so the CMS updates live without a second
+  terminal. `concurrently --kill-others` means one process failing stops the rest, which is why
+  **`pail` is not in there**: it needs `pcntl`, XAMPP on Windows has no such extension, so it exited
+  immediately and took the whole stack down with it — the symptom is `composer dev` returning code 1
+  seconds after starting, naming the concurrently line rather than the command that actually failed.
+  Logs are `composer logs` instead, on a machine whose PHP can run them
 - `php artisan serve` — app at http://localhost:8000 (Vite only builds assets; it never serves pages)
 - `npm run dev` / `npm run build` — assets. Exit `npm run dev` with Ctrl+C so it removes `public/hot`; a stale `hot` file points assets at a dead Vite server and renders a blank page
 - `composer test` — clears config, then `php artisan test`
