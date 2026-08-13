@@ -484,6 +484,45 @@ Setting the status is still its own single-key route, not an `update()`. The rea
 the name, email and message are the sender's words, and a general endpoint here would be an
 editable-enquiry endpoint by construction, whatever the request happened to carry.
 
+### Which form it came from
+
+Two forms write this table: the contact form section, and the Find My Agent wizard. `source` says which
+— **a column, not a reading of `page_slug`**, because the slug records the address the form sat on, it
+arrives from the browser, and both forms appear on `/contact`. Every row that predates the column did
+come through the contact form, since nothing else could write here, so the backfill is a statement of
+fact rather than a default nobody set.
+
+**One route, one throttle.** Both post to `/enquiries` (`throttle:6,1`), and `StoreEnquiryRequest` turns
+the wizard's extra rules on when the payload says so. A second endpoint would be a public write path
+`OwaspTest` does not know exists — so its rate-limit test now sends the seventh request as a wizard
+payload, which is the whole payoff of the decision.
+
+**`details` holds what they picked; `message` stays what they wrote.** The wizard asks four questions
+with fixed answers, and they live in a JSON column as **keys, never wording** — the labels are resolved
+for the screen by `app/Enquiries/FindMyAgentOptions.php`, so re-labelling an answer never rewrites a row.
+Composing them into `message` was rejected: the list snippet and the search palette both treat that
+column as the sender's own account, and every wizard enquiry would have opened with the same boilerplate.
+Discrete columns were rejected too — null for every contact-form row, and a migration per new question.
+
+The catalogue exists twice, in PHP and in `resources/js/components/findMyAgentOptions.js`, because the
+server validates it and the browser draws it. `FindMyAgentOptionsParityTest` reads the JavaScript and
+holds it to the PHP; without that the server would refuse an answer the form had just offered.
+
+**The wizard used to send the position of the chosen card.** An index makes the order of a JavaScript
+array the meaning of every answer already stored — reorder the cards and history is silently rewritten,
+with no test that could notice. `OptGrid` reports `o.value` now, and a test rejects an integer where a
+key belongs so the old wire format cannot come back.
+
+The reference the sender is told to quote is **derived, never stored**: `AF-{year}-{id}`. Nothing to keep
+in step, and it leads straight back to a row this CMS can open.
+
+**No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
+a reference that was the same five digits for everybody, while storing nothing at all. There is no
+`app/Mail` in this repository — nobody internal is notified of a new enquiry either, which is arguably the
+more urgent half. Wizard submissions are also deliberately **not** written to the activity log:
+`Activity::labelFor()` falls through to `name`, and that log has no delete path, which is exactly what
+`OwaspTest`'s a09 test protects against.
+
 ## The security suite
 
 `tests/Feature/Security/OwaspTest.php` is 37 tests named by OWASP category (`test_a01_…`), and it is

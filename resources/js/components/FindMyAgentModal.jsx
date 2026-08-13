@@ -1,14 +1,7 @@
+import { router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import SuburbAutocomplete from './SuburbAutocomplete';
-
-const PROPERTY_TYPES = [
-    { label: 'House', note: 'Free standing' },
-    { label: 'Townhouse', note: 'Attached / villa' },
-    { label: 'Apartment', note: 'Unit / strata' },
-    { label: 'Acreage', note: 'Rural / lifestyle' },
-];
-const TIMELINES = ['Within 3 months', 'In 3 – 6 months', 'In 6 – 12 months', 'Just exploring'];
-const TIMES = ['Morning', 'Afternoon', 'Evening'];
+import { BEST_TIMES, PROPERTY_TYPES, TIMELINES, labelFor } from './findMyAgentOptions';
 
 /** Marks a question as one that has to be answered. */
 function Required() {
@@ -42,13 +35,14 @@ function OptGrid({
     invalid,
     itemRef,
 }) {
-    // Arrow keys move through the group, matching how a radio group behaves.
+    // Arrow keys move through the group, matching how a radio group behaves. Position is used to
+    // work out the neighbour and then discarded — what gets reported is the option's own value.
     const handleKeyDown = (e, i) => {
         const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
         if (!(e.key in keys)) return;
         e.preventDefault();
         const next = (i + keys[e.key] + options.length) % options.length;
-        onChange(next);
+        onChange(options[next].value);
         e.currentTarget.parentElement?.children[next]?.focus();
     };
 
@@ -64,19 +58,19 @@ function OptGrid({
             {options.map((o, i) => (
                 <button
                     type="button"
-                    key={i}
+                    key={o.value}
                     ref={i === 0 ? itemRef : undefined}
                     role="radio"
-                    aria-checked={i === value}
+                    aria-checked={o.value === value}
                     // Only the active (or first) card is tabbable, so Tab moves
                     // past the whole group rather than through every card.
-                    tabIndex={value === null ? (i === 0 ? 0 : -1) : i === value ? 0 : -1}
-                    className={`opt${i === value ? ' on' : ''}`}
-                    onClick={() => onChange(i)}
+                    tabIndex={value === null ? (i === 0 ? 0 : -1) : o.value === value ? 0 : -1}
+                    className={`opt${o.value === value ? ' on' : ''}`}
+                    onClick={() => onChange(o.value)}
                     onKeyDown={(e) => handleKeyDown(e, i)}
                 >
-                    {render ? render(o) : o}
-                    {i === value && (
+                    {render ? render(o) : o.label}
+                    {o.value === value && (
                         <span className="opt-tick" aria-hidden="true">
                             ✓
                         </span>
@@ -96,6 +90,23 @@ const EMPTY = {
     phone: '',
     email: '',
     bestTime: null,
+    consent: false,
+};
+
+/**
+ * Server field name back to the question it belongs to, so a rule that fires on the way in lands on
+ * the card or box the person actually filled rather than nowhere.
+ */
+const SERVER_FIELDS = {
+    name: 'name',
+    email: 'email',
+    phone: 'phone',
+    consent: 'consent',
+    message: 'notes',
+    'details.property_type': 'propertyType',
+    'details.timeline': 'timeline',
+    'details.best_time': 'bestTime',
+    'details.location.suburb': 'location',
 };
 
 /**
@@ -129,13 +140,20 @@ const VALIDATORS = {
             return null;
         },
         bestTime: (v) => (v === null ? 'Choose the time of day that suits you best.' : null),
+        consent: (v) => (v ? null : 'Tick the box to say we may contact you about selling.'),
     },
 };
 
-export default function FindMyAgentModal({ open, onClose }) {
+export default function FindMyAgentModal({ open, onClose, site = {} }) {
     const [step, setStep] = useState(1);
     const [form, setForm] = useState(EMPTY);
     const [errors, setErrors] = useState({});
+    const [sending, setSending] = useState(false);
+    // Not a field error, so it cannot live in `errors` — see `submit`.
+    const [failed, setFailed] = useState(null);
+
+    const flash = usePage().props.enquiry;
+    const reference = flash?.source === 'find_my_agent' ? flash.reference : null;
 
     const dialogRef = useRef(null);
     const fieldRefs = useRef({});
@@ -164,6 +182,7 @@ export default function FindMyAgentModal({ open, onClose }) {
                 setStep(1);
                 setForm(EMPTY);
                 setErrors({});
+                setFailed(null);
             }, 250);
             return () => clearTimeout(t);
         }
@@ -188,7 +207,66 @@ export default function FindMyAgentModal({ open, onClose }) {
         el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }, [errors]);
 
-    const nextLabel = step === 4 ? 'Close' : step === 3 ? 'Submit' : 'Continue';
+    const nextLabel = step === 4 ? 'Close' : step === 3 ? (sending ? 'Sending…' : 'Submit') : 'Continue';
+
+    /**
+     * What the server is given. Answers travel as their own keys, never as the position of a card,
+     * and the notes stay in `message` on their own — they are the only words here that are the
+     * sender's, and the CMS shows them as such.
+     */
+    const payload = () => ({
+        source: 'find_my_agent',
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        message: form.notes,
+        consent: form.consent,
+        page: typeof window === 'undefined' ? null : window.location.pathname,
+        details: {
+            property_type: form.propertyType,
+            timeline: form.timeline,
+            best_time: form.bestTime,
+            location: {
+                place_id: form.location?.placeId ?? null,
+                suburb: form.location?.suburb ?? null,
+                state: form.location?.state ?? null,
+                postcode: form.location?.postcode ?? null,
+                description: form.location?.description ?? null,
+                lat: form.location?.lat ?? null,
+                lng: form.location?.lng ?? null,
+                free_text: form.location?.freeText ?? false,
+            },
+        },
+    });
+
+    const submit = () => {
+        setSending(true);
+        setFailed(null);
+
+        router.post('/enquiries', payload(), {
+            // The modal holds the answers in its own state and never unmounts, so the visit must not
+            // remount the page under it.
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => setStep(4),
+            onError: (serverErrors) => {
+                /* Rules that only the server can apply land back on their own question. Stay on step
+                   3 — moving on would hide the thing that needs fixing. */
+                const mapped = {};
+                for (const [field, message] of Object.entries(serverErrors)) {
+                    mapped[SERVER_FIELDS[field] ?? field] = message;
+                }
+
+                setErrors(mapped);
+                focusTarget.current = Object.keys(mapped)[0] ?? null;
+            },
+            /* Being turned away by the rate limiter is not a field being wrong, so it never reaches
+               onError and no question could carry it. Without this the button would simply stop
+               working with nothing said. */
+            onException: () => setFailed('We could not send that just now. Please try again in a minute.'),
+            onFinish: () => setSending(false),
+        });
+    };
 
     const handleNext = () => {
         if (step === 4) {
@@ -212,12 +290,20 @@ export default function FindMyAgentModal({ open, onClose }) {
         }
 
         setErrors({});
+
+        if (step === 3) {
+            // Answered in full, so this is the one press that leaves the browser.
+            submit();
+            return;
+        }
+
         setStep((s) => Math.min(4, s + 1));
     };
 
     const errFor = (field) => (errors[field] ? `fma-${field}-error` : undefined);
 
     const firstName = form.name.trim().split(/\s+/)[0];
+    const bestTimeLabel = labelFor(BEST_TIMES, form.bestTime);
 
     return (
         <div
@@ -441,6 +527,37 @@ export default function FindMyAgentModal({ open, onClose }) {
                                 </ErrorMessage>
                             )}
                         </div>
+
+                        {/* The contact form asks for this and so does the server. A form whose whole
+                            purpose is an unsolicited phone call is the last place to assume it. */}
+                        <div className={`field top-gap-sm${errors.consent ? ' has-error' : ''}`}>
+                            <label className="fma-consent" htmlFor="fma-consent">
+                                <input
+                                    id="fma-consent"
+                                    type="checkbox"
+                                    aria-required="true"
+                                    aria-invalid={errors.consent ? 'true' : undefined}
+                                    aria-describedby={errFor('consent')}
+                                    ref={(el) => (fieldRefs.current.consent = el)}
+                                    checked={form.consent}
+                                    onChange={(e) => set('consent')(e.target.checked)}
+                                />
+                                <span>
+                                    You may contact me about selling my property.
+                                    {/* Shown rather than described: agreeing to how your details are
+                                        handled without being able to read it is not agreeing. */}
+                                    {site.privacyUrl ? (
+                                        <>
+                                            {' '}
+                                            <a href={site.privacyUrl}>Read our privacy policy</a>.
+                                        </>
+                                    ) : null}
+                                </span>
+                            </label>
+                            {errors.consent && (
+                                <ErrorMessage id="fma-consent-error">{errors.consent}</ErrorMessage>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -448,15 +565,27 @@ export default function FindMyAgentModal({ open, onClose }) {
                     <div className="success">
                         <div className="ring">✓</div>
                         <h3 id="modal-title">Thank you{firstName ? `, ${firstName}` : ''}.</h3>
+                        {/* Only what is true. This used to promise a confirmation email, which nothing
+                            in the application has ever sent — and a reference number that was the same
+                            five digits for everybody who ever finished the form. */}
                         <p className="help">
-                            An advisor will be in touch within one business day. We’ll send a
-                            confirmation to your email shortly.
+                            An advisor will call you
+                            {bestTimeLabel ? ` in the ${bestTimeLabel.toLowerCase()}` : ''}, usually
+                            within one business day.
                         </p>
-                        <p className="ref">
-                            Reference: <strong>AF‑2026‑00482</strong>
-                        </p>
+                        {reference ? (
+                            <p className="ref">
+                                Reference: <strong>{reference}</strong> — quote it if you call us
+                                first.
+                            </p>
+                        ) : null}
                     </div>
                 )}
+
+                {/* Not attached to any question, because nothing the person typed is wrong. */}
+                {failed ? (
+                    <ErrorMessage id="fma-failed">{failed}</ErrorMessage>
+                ) : null}
 
                 <div className="modal-actions">
                     {step !== 1 && step !== 4 ? (
@@ -473,11 +602,12 @@ export default function FindMyAgentModal({ open, onClose }) {
                         <span />
                     )}
                     <span className="step-count">{step === 4 ? '' : `Step ${step} of 3`}</span>
-                    {/* Deliberately never disabled: a greyed-out button with no
-                        explanation is a dead end. Pressing it says what's missing. */}
-                    <button className="btn primary sm" onClick={handleNext}>
+                    {/* Never disabled for an unanswered question: a greyed-out button with no
+                        explanation is a dead end, and pressing it says what's missing. Disabled only
+                        while a request is actually in flight, so one enquiry cannot be sent twice. */}
+                    <button className="btn primary sm" onClick={handleNext} disabled={sending}>
                         {nextLabel}
-                        {step !== 4 && <span className="arr">→</span>}
+                        {step !== 4 && !sending && <span className="arr">→</span>}
                     </button>
                 </div>
             </div>

@@ -14,10 +14,15 @@ const FIELDS = [
  */
 export default function ContactFormSection({ data, anchor, editing = false, site = {} }) {
     const Heading = `h${useHeadingLevel()}`;
-    const sent = usePage().props.enquiry === 'sent';
+    /* Scoped to this form's own source. The flash is one shared prop and the Find My Agent wizard
+       posts to the same endpoint from pages this section also sits on, so without the source a
+       wizard submission would make this form claim it had been sent. */
+    const flash = usePage().props.enquiry;
+    const sent = flash?.status === 'sent' && flash?.source === 'contact_form';
 
     const { data: form, setData, post, processing, errors } = useForm({
         name: '', email: '', phone: '', suburb: '', message: '', consent: false,
+        source: 'contact_form',
         page: typeof window === 'undefined' ? null : window.location.pathname,
     });
 

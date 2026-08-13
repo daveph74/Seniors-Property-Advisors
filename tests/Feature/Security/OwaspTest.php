@@ -194,6 +194,18 @@ class OwaspTest extends TestCase
         }
 
         $send()->assertStatus(429);
+
+        /* Both public forms post here, which is the reason there is no second route: the seventh
+           attempt is turned away whichever of them makes it. A form with an endpoint of its own would
+           be a public write path this test does not know exists. */
+        $this->post('/enquiries', [
+            'source' => Enquiry::FIND_MY_AGENT,
+            'name' => 'Flood', 'email' => 'flood@example.com', 'phone' => '0400 000 000', 'consent' => true,
+            'details' => [
+                'property_type' => 'house', 'timeline' => 'within_3_months', 'best_time' => 'morning',
+                'location' => ['suburb' => 'Mosman'],
+            ],
+        ])->assertStatus(429);
     }
 
     public function test_a04_sign_in_locks_out_after_repeated_failures(): void

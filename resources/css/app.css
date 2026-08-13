@@ -1039,9 +1039,18 @@ footer{
 .opt small{ color: var(--text-mid); font-size: 12.5px; font-weight: 400; }
 .opt:hover{ border-color: var(--blue);}
 .opt.on{ border-color: var(--blue); background: var(--blue-tint); }
+/* Label wraps the box so the words are part of the target — a tick box on its own is a small thing
+   to hit, and this form is built for readers who may not want to hunt for it. */
+.fma-consent{
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 14.5px; font-weight: 400; line-height: 1.5; color: var(--text-mid); cursor: pointer;
+}
+.fma-consent input{ margin-top: 3px; width: 20px; height: 20px; accent-color: var(--blue-deep); flex: none; }
+.field.has-error .fma-consent input{ outline: 2px solid var(--danger); outline-offset: 2px; }
 .modal-actions{
   display:flex; justify-content: space-between; margin-top: 28px; align-items: center;
 }
+.modal-actions .btn:disabled{ opacity: .6; cursor: progress; }
 .modal-actions .step-count{ font-size: 13px; color: var(--text-mid);}
 .success{
   text-align: center; padding: 12px 0;
