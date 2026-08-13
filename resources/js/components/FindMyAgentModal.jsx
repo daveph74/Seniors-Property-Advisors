@@ -566,7 +566,16 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                                     {site.privacyUrl ? (
                                         <>
                                             {' '}
-                                            <a href={site.privacyUrl}>Read our privacy policy</a>.
+                                            {/* A new tab, because this one is holding three steps of
+                                                answers that leaving the page would throw away. */}
+                                            <a
+                                                href={site.privacyUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Read our privacy policy
+                                            </a>
+                                            .
                                         </>
                                     ) : null}
                                 </span>

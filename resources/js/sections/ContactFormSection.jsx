@@ -102,7 +102,16 @@ export default function ContactFormSection({ data, anchor, editing = false, site
                                 {site.privacyUrl ? (
                                     <>
                                         {' '}
-                                        <a href={site.privacyUrl}>Read our privacy policy</a>.
+                                        {/* A new tab for the same reason as the wizard's: whatever has
+                                            been typed here is still unsent. */}
+                                        <a
+                                            href={site.privacyUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Read our privacy policy
+                                        </a>
+                                        .
                                     </>
                                 ) : null}
                             </span>
