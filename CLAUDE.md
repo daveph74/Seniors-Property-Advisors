@@ -23,6 +23,12 @@ Section storage is JSON-snapshot based, not normalised rows.
   Run from the project root: from inside `e2e/` Playwright finds no config and fails everything
 - `./vendor/bin/pint` — PHP formatting
 
+Run by hand, never scheduled or called from a migration: `content:import [--force]`,
+`content:purge-deleted [--days=90] [--force]`, `media:init`, `media:optimise [--dry-run]`,
+`pages:scaffold`, `security:check [--production]`, `cms:user`. Each says why under its own heading
+below; the pattern they share is that all of them either destroy something or touch the environment,
+and both are somebody's decision rather than a side effect of deploying.
+
 ## Layout
 
 - `routes/web.php` — `/` renders the `AgentFinder` Inertia page; `/cms/*` is the admin
@@ -93,6 +99,26 @@ worst for the readers this site is for.
 `MediaController::usage()` scans testimonial and article images too. It only read section trees
 before, so an article's featured image could be deleted while in use with no warning.
 
+## FAQs
+
+Their own `faqs` and `faq_categories` tables, read into a section the same way testimonials are —
+`library.faqs` and `library.faqCategories`, picked in the browser.
+
+The load-bearing column is **`page_slug`**, and it is nullable on purpose. Null means the question
+belongs to the whole site and appears wherever a `faq-list` section is placed; a slug means it is
+that page's question and nowhere else. `ContentLibrary` resolves it as *null or this page*, so the
+general set and the page's own set arrive together and the section never has to ask twice. Categories
+are filtered through the same rule — a category whose only questions belong to another page is not
+offered, because an empty category reads as a broken filter.
+
+Reordering is its own route for both questions and categories, and the order is a stored
+`sort_order`, not the id: the whole point of the screen is that the most-asked question goes first.
+Showing and hiding is `active`, with no `status` column — there is nothing to publish here separately
+from the page the section sits on.
+
+Answers are plain text through `Text::clean()`, not HTML. A question is one paragraph; the editor
+that would justify HTML is the one the blog pays 140KB for.
+
 ## Blog articles
 
 Articles are their own tables (`blog_posts`, `blog_categories`, and a pivot), not page
@@ -141,6 +167,151 @@ The listing at `/blog` is an ordinary CMS page holding a `blog-list` section, so
 and intro stay editable. Only `/blog/{article}` is a route, which is why `articles` is a
 reserved article slug and `PageContentStore::slugIsReserved()` refuses a page under `blog/`.
 `published_at` is the date readers see, never a scheduler — §17 excludes scheduled publishing.
+
+## Media
+
+**The bytes never pass through PHP on the way in.** `POST /cms/media/sign` checks the size, the
+extension and the permission and returns a presigned URL; the browser PUTs the file to storage
+itself; `POST /cms/media` then records the row. Three calls where one upload would do, and the
+reason is the one thing the CMS does that leaves the origin — which is also why `09-media.spec.js`
+walks all three steps rather than asserting the final button, and why `connect-src` is part of the
+content policy at all.
+
+Coming **out**, they do pass through PHP: `/media/{key}` streams from the disk. That is deliberate —
+the key is the only identity an image has, so a public bucket URL would be a second one — and it is
+also what makes the e2e suite block `/media/` paths, since a one-request-at-a-time dev server serves
+them one at a time. The response carries a year-long `immutable` cache, which holds only because a
+key is a ULID and is never reused. `nosniff` and a `default-src 'none'` policy ride along with it,
+because an uploaded file is the one thing here a reader supplies.
+
+- **An SVG is a document, not a picture.** It can carry script, so uploading one needs
+  `media.upload_svg` — super administrator only. The headers neutralise it either way; the
+  permission is about who can put one there.
+- **One file per image, plus one small copy.** `ImageOptimiser` shrinks and re-encodes in place and
+  keeps the format, because the extension is part of the key. A responsive set of widths would serve
+  phones better and would mean several identities for one image, matched across page trees, drafts,
+  revisions, articles, testimonials and chrome. The small copy lives at its own `thumb_key` and is
+  served through the same route so it inherits the same headers. `media:optimise` brings images
+  uploaded before any of this existed up to the same standard; re-running is safe.
+- **`media:init` creates the bucket and applies CORS.** A presigned PUT is cross-origin and fails
+  without it. `global-setup.mjs` runs it before seeding for exactly that reason.
+- **Nothing is deleted while it is in use.** `usage()` scans section trees *and* testimonial and
+  article images, and the delete route refuses with the list of what still points at it. The library
+  asks before it offers the dialog, which is why blocking `**/media/**` in a test breaks the delete
+  screen rather than just its thumbnails.
+
+## Activity log
+
+`activity_log`, written by `app/Observers/RecordsActivity.php` — **on the model, not in the
+controllers**. Recording per controller stays complete only while everybody remembers, and a new
+route, a command or a tinker session slips past.
+
+Two decisions hold it together. **The verb is read back off the change, never passed in**: publish,
+unpublish and archive are not events to the database, they are `status` moving, so the observer
+derives which happened from `getOriginal('status')` — and for the models with no status (questions,
+testimonials) from `active`, since §13 asks for published and unpublished rather than "edited" three
+times running. And **deleted and destroyed are told apart**, because one is recoverable and the other
+is not, and that is the whole question somebody asks of this screen.
+
+`Activity::note()` exists for what is not a row: the menus and site wording live in one `settings`
+row keyed by a string, so there is no id to point at and "edited Setting #globals" would say nothing.
+`by_name` is stored as text beside `by_id` so an entry stays readable after the account is gone.
+
+One trap: **restoring saves the row**, so `updated` fires alongside `restored` and would log an edit
+nobody made. The observer returns early when `deleted_at` is the only change.
+
+## Deleted content
+
+Content deletes are soft. `/cms/deleted` is **one screen for all three kinds** — articles, questions,
+testimonials — because somebody hunting for what they deleted does not always remember what it was
+filed as, and three empty bins is three places to look. `DeletedContentController::KINDS` is the
+whole registry.
+
+The screen and its restore are behind `content.restore`; `destroy()` is the only path that means it
+and is behind `content.delete` — a super administrator either way, but not the same ability, so
+restoring is never granted by granting a delete. Everything else is recoverable, which is what lets the list screens delete without a
+scare dialog.
+
+"Recently deleted" has to end somewhere or the words stop meaning anything: `content:purge-deleted
+--days=90` reports by default and needs `--force` to act. Run by hand, never scheduled — a cron job
+that quietly destroys content should be somebody's decision.
+
+Pages are not here. They archive instead, and `/cms/pages` restores them.
+
+## Slug changes and redirects
+
+Renaming a **published** page or article leaves a `page_redirects` row behind, and the public
+controllers check it before they 404. Three details, all easy to lose:
+
+- **Chains are collapsed, not followed.** Renaming twice rewrites the existing rows' `to_url` to the
+  new address rather than adding a hop, so a link from years ago still costs one lookup.
+- **A redirect to the address being claimed is deleted**, or a page moved back to its old slug would
+  redirect to itself.
+- **Only published renames record anything.** A draft nobody could reach has no address worth
+  preserving. `home` is refused a rename outright.
+
+## SEO and crawlers
+
+`app/Content/Seo.php` works out the head once, on the server, and `resources/views/app.blade.php`
+prints it — including the JSON-LD (Article, Organization). Two things it exists to get right:
+**`og:image` has to be absolute**, and content stores media as `/media/…`, which is correct for an
+`<img>` and silently useless to a crawler; and **the width and height have to be sent**, or a crawler
+that has not fetched the image yet renders the small card, so the first person to share a link gets
+the worse preview. The media table already knows both.
+
+`/sitemap.xml` and `/robots.txt` are routes, not files. The sitemap filters on `status` and the
+page's own noindex flag and nothing else — advertising a noindexed page asks a crawler to fetch
+something it is then told to forget. It is **deliberately uncached**: two queries over a few dozen
+rows against five ways to serve a stale sitemap.
+
+## Site settings and global content
+
+Two `settings` rows, and the split is a permissions boundary rather than a filing choice. `globals`
+is wording a **client administrator** edits at `/cms/global-content` — footer blurb, announcement
+bar, phone. `app/Content/Site.php` is the row behind `/cms/settings`, **super administrator only**
+(`settings.manage`) — SEO defaults, the GA4/GTM ids, the switches set once. One row edited by two
+screens under two permissions is how a save from one silently reverts the other.
+
+Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
+there; a value stored twice is a value that disagrees with itself.
+
+`security:check [--production]` is the deployment list — `SESSION_SECURE_COOKIE`, `APP_DEBUG`,
+`SESSION_LIFETIME` — as a command rather than a paragraph, because nothing reads a security review
+at deploy time. It **reports and never enforces**: refusing to boot on a misconfiguration turns a
+warning into an outage, and not every environment that runs it is production.
+
+## The public site
+
+`/` is the `AgentFinder` Inertia page; every other address falls through `/{path}` to
+`PageController`, and `/blog/{article}` is the one other named content route.
+
+The enquiry form posts to `/enquiries` and is CSRF-protected — which is why e2e fixtures are made in
+`global-setup.mjs` instead of through it.
+
+`/api/suburbs` proxies Google Places (New) so **the API key never reaches the browser**. Two modes:
+`?q=` for predictions, `?place_id=` for the picked suburb. A Google failure degrades to an
+empty-but-successful payload, never an error — the field falls back to free text, so an outage
+upstream can slow the form down but can never block it.
+
+## Dashboard
+
+Everything on `/cms` is counted or read at the moment the page loads. It used to render invented
+figures, which is worse than an empty dashboard because it reads as fact.
+
+## Text, layouts and diffs
+
+- **`app/Content/Text.php` sanitises before validation, not after.** Every write path used to
+  validate and strip afterwards, so a value could pass `required` and then be emptied on the way to
+  the database: `<hr>` as a testimonial name passed, sanitised to nothing, and hit a NOT NULL
+  constraint as a 500. The rules have to see what will really be saved.
+- **`StarterLayouts`** backs the layout choice when a page is created — blank, standard, service,
+  landing, blog listing. It returns a section tree, so a starter is an ordinary draft from the moment
+  it exists, with nothing to migrate if the layouts change. `pages:scaffold` creates the agreed page
+  list from these, **as drafts** and only where the page does not exist, so it can be re-run against
+  a site people are already editing.
+- **`SectionDiff::between()`** flattens both trees to paths and compares, which is what the publish
+  summary and the history drawer both read. `POST /pages/{page}/changes` is the same diff answered
+  for an unsaved editor state.
 
 ## Accounts and permissions
 
