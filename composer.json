@@ -10,6 +10,7 @@
         "ezyang/htmlpurifier": "^4.19",
         "inertiajs/inertia-laravel": "^3.1",
         "laravel/framework": "^13.8",
+        "laravel/reverb": "^1.11",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.35",
         "rhukster/dom-sanitizer": "^1.0"

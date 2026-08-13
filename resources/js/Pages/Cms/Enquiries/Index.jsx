@@ -5,6 +5,7 @@ import { Badge, Modal, SearchInput } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import Pagination from '../../../cms/components/Pagination';
 import { useDebounced } from '../../../cms/useDebounced';
+import { onEnquiryReceived } from '../../../cms/realtime';
 import { relative } from '../../../cms/relativeTime';
 import { useCmsToast } from '../../../cms/ToastContext';
 
@@ -36,7 +37,7 @@ const DEFAULT_SIZE = 25;
 
 export default function EnquiriesIndex({
     enquiries = [], filters = {}, counts = {}, statuses = {}, sources = {}, opened = null,
-    pagination = null, auth,
+    pagination = null, auth, realtime = null,
 }) {
     const flash = useCmsToast();
     const canDelete = auth?.can?.['content.delete'] === true;
@@ -101,6 +102,24 @@ export default function EnquiriesIndex({
             only: ['enquiries', 'opened', 'notifications'],
         });
     }, [opened?.id, opened?.readAt]);
+
+    /*
+     * A new enquiry arrives while this screen is open, so the list catches up on its own.
+     *
+     * Held back while an enquiry is open: the rows behind the modal are what somebody is about to
+     * click, and re-ordering them under a dialog is how you end up opening the wrong person's
+     * message. The bell still moves — the layout listens for that separately — so nothing is
+     * concealed, it is only deferred until the modal is closed, which visits the list again anyway.
+     *
+     * `page` is held to whatever is on screen for the same reason: newest-first means a new arrival
+     * shifts everything down, and page three quietly becoming a different page three while somebody
+     * reads it is worse than being one enquiry out of date.
+     */
+    useEffect(() => onEnquiryReceived(realtime, () => {
+        if (opened) return;
+
+        visit({ page: pagination?.page }, { replace: true, only: ['enquiries', 'counts', 'pagination'] });
+    }), [realtime?.key, opened, pagination?.page, settled, filters.show, filters.source]);
 
     const setStatus = (enquiry, status) => router.patch(`/cms/enquiries/${enquiry.id}/status`, { status }, {
         preserveScroll: true,

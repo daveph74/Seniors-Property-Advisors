@@ -546,6 +546,50 @@ reads as one you could type into; the e2e suite asserts **zero** inputs in that 
 Notes are optional there, so `snippet()` falls back to the picked answers rather than leaving a row as a
 name and a time among rows that all carry a sentence.
 
+### An open inbox hears about an arrival
+
+The screens are server-rendered, so a tab somebody left open used to keep showing what it fetched when
+they opened it. Laravel Reverb closes that: `EnquiryReceived` is broadcast on a private `cms` channel
+and any open CMS screen refreshes itself.
+
+**The message carries nothing.** Not the name, not the suburb, not the first line — `broadcastWith()`
+returns an empty array, on purpose. A payload would put somebody's account of their own circumstances
+into a queue record and a socket frame, delivered to every signed-in browser whether or not anyone is
+looking at the inbox; the search palette already refuses to index that message for the same reason. So
+the event is a nudge, and the browser refetches through `/cms/enquiries` — authorised, filtered and
+paged exactly as when somebody presses reload. One path to the data, and nothing to keep in step with
+the shape of the props.
+
+Four things that follow, each of which was a way for this to fail quietly:
+
+- **`connect-src` has to name the socket**, as `ws://` or `wss://` — naming the `http://` origin it
+  upgrades from does not permit it. Blocked, the only symptom is an inbox that has gone back to
+  updating on reload. `OwaspTest` pins both the permission and its absence where no key is configured,
+  and `security:check` fails a production environment still on `ws://`, since a plain socket on an
+  HTTPS page is blocked as mixed content.
+- **Echo must build its own client.** Handing it a pre-made Pusher instance keeps Pusher's defaults,
+  which authorise a private channel at `/pusher/auth` — an address this application answers with a 405
+  from the catch-all page route. The socket connects, the subscription is never authorised, and nothing
+  is ever delivered, with no error worth reading anywhere in the sequence.
+- **The dispatch cannot be allowed to cost an enquiry.** It is queued, so an unreachable Reverb is a
+  failed job; and it is wrapped, because on a `sync` queue the broadcast happens inside the request
+  that just saved somebody's enquiry and would otherwise answer them with a 500 after keeping it.
+- **The rule about who may listen lives in `app/Broadcasting/CmsChannel.php`, not in a closure.**
+  Testing it through `/broadcasting/auth` proved nothing: under the `null` broadcaster this suite runs
+  with, the endpoint answers without consulting the callback, so every channel refused every caller and
+  the denial tests passed vacuously. The rule mirrors `Permit` — an active account with
+  `content.manage` — because a socket outliving a deactivation is a way back into the screens the
+  account was locked out of.
+
+The list holds still while an enquiry is open: rows behind a modal are what somebody is about to click,
+and re-ordering them under a dialog is how the wrong person's message gets opened. The bell still moves,
+so nothing is hidden — only deferred until the modal closes, which visits the list anyway.
+
+Running it needs `php artisan reverb:start` **and** a queue worker. Without either, the CMS behaves
+exactly as it did before any of this: the inbox updates when somebody looks at it. `.env.e2e` sets
+`BROADCAST_CONNECTION=null` deliberately — the browser suite runs a synchronous queue, so a broadcast
+would happen inside the request and the run would depend on a socket server being up to pass.
+
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. There is no
 `app/Mail` in this repository — nobody internal is notified of a new enquiry either, which is arguably the
