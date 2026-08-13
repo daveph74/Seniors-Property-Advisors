@@ -227,10 +227,15 @@
 .cms-segmented__btn--active{ background: var(--cms-navy); color: #ffffffbf; }
 .cms-segmented__btn:disabled{ opacity: .35; cursor: not-allowed; }
 /* A segment may also be a link, where each choice is an address worth pasting rather than a panel
-   swapped in place — the enquiry inbox filters by form that way. */
-a.cms-segmented__btn{ text-decoration: none; }
-a.cms-segmented__btn:hover{ background: var(--cms-tint-2); }
-a.cms-segmented__btn--active:hover{ background: var(--cms-navy); }
+   swapped in place — the enquiry inbox filters by form that way.
+   Scoped through `.cms-shell` on purpose: that selector sets a colour for every link in the admin and
+   is one step more specific than a lone class, so `--active` lost to it and painted navy text on the
+   navy fill — an active tab with nothing legible in it. Both rules need the same reach as the thing
+   they are correcting, and `--active` has to come second. */
+.cms-shell a.cms-segmented__btn{ color: var(--cms-text-mid); text-decoration: none; }
+.cms-shell a.cms-segmented__btn:hover{ background: var(--cms-tint-2); }
+.cms-shell a.cms-segmented__btn--active{ color: #ffffffbf; }
+.cms-shell a.cms-segmented__btn--active:hover{ background: var(--cms-navy); }
 .cms-version-more{ display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 10px 4px; }
 
 /* ---------- Badges ---------- */

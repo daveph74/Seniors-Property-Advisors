@@ -87,6 +87,43 @@ test('each form has its own tab, and the default shows both', async ({ page }) =
     await tabs.getByText('Find My Agent').click();
 
     await expect(page).toHaveURL(/source=find_my_agent/);
+
+    /*
+     * The chosen tab has to be legible, not merely marked. `aria-current` alone passed while the
+     * active segment was navy text on a navy fill — present in the accessibility tree and invisible
+     * on screen.
+     *
+     * Comparing the two colours for inequality was not enough either: they came out as
+     * rgb(27,58,105) on rgb(18,41,76), different by a few points and indistinguishable to a reader.
+     * So this measures the contrast the way an eye does, and asks for the ratio text is meant to
+     * have.
+     */
+    const contrast = await tabs.locator('.cms-segmented__btn--active').evaluate((el) => {
+        const style = getComputedStyle(el);
+
+        const luminance = (colour) => {
+            const [r, g, b] = colour.match(/[\d.]+/g).slice(0, 3).map((v) => {
+                const channel = Number(v) / 255;
+
+                return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+            });
+
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+
+        const text = luminance(style.color);
+        const fill = luminance(style.backgroundColor);
+        const [lighter, darker] = text > fill ? [text, fill] : [fill, text];
+
+        return {
+            label: el.textContent.trim(),
+            ratio: Number(((lighter + 0.05) / (darker + 0.05)).toFixed(2)),
+        };
+    });
+
+    expect(contrast.label, 'the active tab must say which one it is').not.toBe('');
+    expect(contrast.ratio, `the active tab is unreadable on its own fill (${contrast.ratio}:1)`)
+        .toBeGreaterThan(4.5);
     await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Wizard' })).toBeVisible();
     await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Enquirer' })).toHaveCount(0);
 
