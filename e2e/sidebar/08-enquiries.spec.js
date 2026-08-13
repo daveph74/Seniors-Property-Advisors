@@ -73,3 +73,46 @@ test('the sender’s own words cannot be edited here', async ({ page }) => {
     expect(editable, 'nothing in the modal should accept typing').toBe(0);
     await expect(page.locator('#enquiry-status')).toBeVisible();
 });
+
+test('each form has its own tab, and the default shows both', async ({ page }) => {
+    await page.goto('/cms/enquiries?show=all', { waitUntil: 'domcontentloaded' });
+
+    const tabs = page.locator('.cms-segmented[aria-label*="form"]');
+    await expect(tabs.locator('.cms-segmented__btn')).toHaveCount(3);
+    /* All is the default, so the fixture rows and anything the bell links to are on screen. */
+    await expect(tabs.getByText('All', { exact: true })).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Wizard' })).toBeVisible();
+    await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Enquirer' })).toBeVisible();
+
+    await tabs.getByText('Find My Agent').click();
+
+    await expect(page).toHaveURL(/source=find_my_agent/);
+    await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Wizard' })).toBeVisible();
+    await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Enquirer' })).toHaveCount(0);
+
+    /* The tab has to survive everything else the screen does, or one is dropped from the address and
+       the list silently widens back to every form. */
+    await page.locator('#enquiry-show, .cms-toolbar .cms-select').first().selectOption('all');
+    await expect(page).toHaveURL(/source=find_my_agent/);
+});
+
+test('a wizard enquiry shows what they picked, and none of it can be typed into', async ({ page }) => {
+    await page.goto('/cms/enquiries?show=all&source=find_my_agent', { waitUntil: 'domcontentloaded' });
+    await page.locator('.cms-enquiry-row', { hasText: 'Playwright Wizard' }).click();
+
+    const modal = page.locator('.cms-modal');
+    await expect(modal).toBeVisible();
+
+    await expect(modal.locator('.cms-enquiry-detail__sent')).toContainText('Find My Agent');
+    await expect(modal.locator('.cms-enquiry-detail__sent')).toContainText(/AF-\d{4}-\d{5}/);
+
+    const answers = modal.locator('.cms-enquiry-detail__answer');
+    await expect(answers).toHaveCount(4);
+    await expect(answers.filter({ hasText: 'Property type' })).toContainText('House');
+    await expect(answers.filter({ hasText: 'Suburb' })).toContainText('Mosman NSW 2088');
+
+    /* The same guard as above, with the answers present: they are printed, never offered. */
+    const editable = await modal.locator('input:not([type=hidden]), textarea').count();
+
+    expect(editable, 'the answers must be printed, not offered as fields').toBe(0);
+});

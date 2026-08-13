@@ -32,14 +32,28 @@ class EnquiryController extends Controller
     /** How much of the message a list row carries. The rest is a click away in the modal. */
     private const SNIPPET = 160;
 
+    /** @var array<int, string> the states of the work, as the filter offers them */
+    private const SHOW = ['new', 'handled', 'all'];
+
     public function index(Request $request): Response
     {
-        $show = (string) $request->query('show', 'new');
+        /*
+         * Both filters are normalised to something real and handed back as such. A value the screen
+         * does not offer used to fall through to "everything" while the control showed nothing
+         * selected — harmless-looking until a tab strip made it visible as a row of unlit buttons,
+         * which reads as a broken screen rather than a mistyped address.
+         */
+        $show = $this->oneOf($request->query('show'), self::SHOW, 'new');
+        $source = $this->oneOf($request->query('source'), array_keys(Enquiry::SOURCES), 'all');
         $term = trim((string) $request->query('q', ''));
 
         $open = $request->integer('open') ?: null;
 
-        $query = Enquiry::query()
+        /* One narrowed starting point for the list and both counts, so a number on this screen
+           cannot describe a different set of rows than the list under it. */
+        $scoped = Enquiry::query()->fromSource($source);
+
+        $query = (clone $scoped)
             /* "Waiting for a reply" means anything not finished, so something picked up but not
                closed stays in the default view rather than dropping out of sight. */
             ->when($show === 'new', fn ($q) => $q->outstanding())
@@ -67,20 +81,51 @@ class EnquiryController extends Controller
                 'readAt' => $enquiry->read_at?->toIso8601String(),
                 /* A taste of it only. At a hundred a page the message bodies were most of what
                    went down the wire, to be shown as one clipped line. */
-                'snippet' => Str::limit((string) $enquiry->message, self::SNIPPET),
+                'snippet' => $this->snippet($enquiry),
             ])->all(),
             /* Loaded by id, not found among the rows above. The bell links straight to an enquiry
                and cannot know which filter or page it would land on — searching the loaded list
                meant a link to a dealt-with one, or to anything past page one, opened nothing. */
             'opened' => $this->detail($open),
-            'filters' => ['show' => $show, 'q' => $term],
+            'filters' => ['show' => $show, 'source' => $source, 'q' => $term],
             'statuses' => Enquiry::STATUSES,
+            'sources' => Enquiry::SOURCES,
             'pagination' => $meta,
+            /*
+             * Two numbers, and they answer for whichever form is being looked at — the counts sit on
+             * the status filter, and that filter lives inside the source tab. Left whole they would
+             * say "waiting for a reply (12)" above three rows.
+             *
+             * Search is deliberately not applied: the pager already says how many a search found, and
+             * a count that moved on every keystroke would cost more than it told anybody.
+             */
             'counts' => [
-                'new' => Enquiry::outstanding()->count(),
-                'all' => Enquiry::count(),
+                'new' => (clone $scoped)->outstanding()->count(),
+                'all' => (clone $scoped)->count(),
             ],
         ]);
+    }
+
+    /** The rest of the screen assumes a filter is one of its own options. This is what makes that so. */
+    private function oneOf(mixed $value, array $allowed, string $fallback): string
+    {
+        return in_array($value, $allowed, true) ? (string) $value : $fallback;
+    }
+
+    /**
+     * A row's one line of context.
+     *
+     * The wizard's notes are optional, so a row whose sender did not add any would otherwise be a name
+     * and a time on an empty line, sitting among rows that all have something — which reads as a
+     * damaged record rather than a short enquiry. What they picked stands in.
+     */
+    private function snippet(Enquiry $enquiry): string
+    {
+        if (filled($enquiry->message)) {
+            return Str::limit((string) $enquiry->message, self::SNIPPET);
+        }
+
+        return implode(' · ', array_column($enquiry->answers(), 'value'));
     }
 
     private function detail(?int $id): ?array
@@ -96,6 +141,12 @@ class EnquiryController extends Controller
             'message' => $enquiry->message,
             'consented' => $enquiry->consented,
             'page' => $enquiry->page_slug,
+            'sourceLabel' => $enquiry->sourceLabel(),
+            /* What the sender is quoting if they ring before anybody has called them. */
+            'reference' => $enquiry->reference(),
+            /* Already wording, already in reading order, and empty for a contact-form enquiry so the
+               screen renders nothing rather than a heading over four dashes. */
+            'answers' => $enquiry->answers(),
             'at' => $enquiry->created_at?->toIso8601String(),
             'status' => $enquiry->status,
             'statusLabel' => $enquiry->statusLabel(),

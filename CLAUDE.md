@@ -475,10 +475,12 @@ rule saying which wins, is how a screen reports one thing and a count another. `
 question and deliberately not the same column, because read is not answered.
 
 An enquiry opens in a modal deep-linked at `/cms/enquiries?open={id}`, the same pattern as the media
-library's `?selected={id}`. **Opening it is what marks it read**, done in `index()` — a write on a GET,
-which is what "read on view" means everywhere. The header's counter is a closure resolved after the
-controller returns, so the badge falls in that same response; `CmsEnquiryTest` asserts that ordering
-rather than trusting it.
+library's `?selected={id}`. Opening it marks it read, but **not on the GET** — `?open=` only decides what
+is on screen, and the front end then posts `/cms/enquiries/{id}/read`, once, when an unread one is
+actually put in front of somebody. (This section used to say the write happened in `index()`; it does not,
+and `CmsEnquiryTest` asserts the GET leaves `read_at` alone.) The header's counter is a closure resolved
+after the controller returns, so the badge falls in that same response, and the read POST names
+`notifications` in its partial reload for the same reason.
 
 Setting the status is still its own single-key route, not an `update()`. The reason has not changed:
 the name, email and message are the sender's words, and a general endpoint here would be an
@@ -515,6 +517,34 @@ key belongs so the old wire format cannot come back.
 
 The reference the sender is told to quote is **derived, never stored**: `AF-{year}-{id}`. Nothing to keep
 in step, and it leads straight back to a row this CMS can open.
+
+### The inbox separates them with tabs, not badges
+
+A segmented strip — All / Contact form / Find My Agent — and **no source badge on the rows**. The rule
+it follows is already in `cms.css`: the status badge and the unread rule are as many markers as one row
+should compete with, and on a source tab every row *is* that source, so the row has nothing left to say.
+
+They are **links in a `role="group"`, not ARIA tabs**. Each one is a real address a colleague can be sent,
+and pressing it fetches a page rather than swapping a panel beside you, which is what `role="tab"` would
+promise. `aria-current` marks the active one.
+
+Three things that follow, and each was a way to mislead somebody:
+
+- **The counts are source-scoped.** They sit on the status filter, which sits inside the tab, so left
+  whole they would say "waiting for a reply (12)" above three rows. The `counts` prop keeps its exact
+  shape — a test pins that, and it is deliberately left untouched as proof nothing moved. Search is not
+  applied to them: the pager already says what a search found.
+- **`params()` has to carry `source`.** Anything missing from that object is dropped by the next visit,
+  so leaving it out sends searching, paging, changing a status and opening a row all back to every form.
+- **Both filters are allowlisted and echoed back normalised.** `?show=` had no allowlist: a mistyped
+  value fell through to "everything" while the control showed nothing chosen. Harmless until a tab strip
+  renders it as a row of unlit buttons, which reads as a broken screen rather than a bad address.
+
+A wizard enquiry's answers print in the modal as an unboxed `<dl>` above the message, under "In their own
+words". Unboxed on purpose — nothing on this screen may be edited, and a bordered field on a pale fill
+reads as one you could type into; the e2e suite asserts **zero** inputs in that modal, answers and all.
+Notes are optional there, so `snippet()` falls back to the picked answers rather than leaving a row as a
+name and a time among rows that all carry a sentence.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. There is no

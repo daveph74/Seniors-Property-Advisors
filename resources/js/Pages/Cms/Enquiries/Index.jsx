@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, Modal, SearchInput } from '../../../cms/components/ui';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
@@ -8,10 +8,25 @@ import { useDebounced } from '../../../cms/useDebounced';
 import { relative } from '../../../cms/relativeTime';
 import { useCmsToast } from '../../../cms/ToastContext';
 
+/* Keyed source then status, because an empty list with two filters on is the one place somebody
+   reasonably suspects the screen is broken — each message names both, so what is being hidden and
+   what is simply absent can be told apart. */
 const EMPTY = {
-    new: 'Nothing is waiting for a reply.',
-    handled: 'Nothing has been marked as dealt with yet.',
-    all: 'No enquiries yet. They arrive here when somebody sends the contact form.',
+    all: {
+        new: 'Nothing is waiting for a reply.',
+        handled: 'Nothing has been marked as dealt with yet.',
+        all: 'No enquiries yet. They arrive here when somebody uses the contact form or Find My Agent.',
+    },
+    contact_form: {
+        new: 'No contact form enquiries are waiting for a reply.',
+        handled: 'No contact form enquiries have been marked as dealt with yet.',
+        all: 'Nothing has come through the contact form yet.',
+    },
+    find_my_agent: {
+        new: 'No Find My Agent enquiries are waiting for a reply.',
+        handled: 'No Find My Agent enquiries have been marked as dealt with yet.',
+        all: 'Nobody has completed Find My Agent yet.',
+    },
 };
 
 const TONE = { new: 'info', in_progress: 'warning', dealt_with: 'neutral' };
@@ -20,7 +35,8 @@ const TONE = { new: 'info', in_progress: 'warning', dealt_with: 'neutral' };
 const DEFAULT_SIZE = 25;
 
 export default function EnquiriesIndex({
-    enquiries = [], filters = {}, counts = {}, statuses = {}, opened = null, pagination = null, auth,
+    enquiries = [], filters = {}, counts = {}, statuses = {}, sources = {}, opened = null,
+    pagination = null, auth,
 }) {
     const flash = useCmsToast();
     const canDelete = auth?.can?.['content.delete'] === true;
@@ -35,6 +51,10 @@ export default function EnquiriesIndex({
     const params = (extra = {}) => {
         const merged = {
             show: filters.show,
+            /* Carried like every other filter. Anything missing from here is dropped by the next
+               visit, so leaving it out would send searching, paging, changing status and opening a
+               row all back to every form. `all` is the default, so it stays out of the address. */
+            source: filters.source === 'all' ? undefined : filters.source,
             q: settled || undefined,
             per_page: pagination?.perPage === DEFAULT_SIZE ? undefined : pagination?.perPage,
             ...extra,
@@ -91,12 +111,47 @@ export default function EnquiriesIndex({
     return (
         <div className="cms-page">
             <div className="cms-toolbar">
+                {/*
+                  * Which form, before which state — the coarser cut first, and the one wrap this
+                  * gives on a narrow screen puts the tabs on their own line.
+                  *
+                  * Links rather than tabs: each one is a real address somebody can paste to a
+                  * colleague, and pressing it fetches a page rather than swapping a panel beside
+                  * you, which is what `role="tab"` would promise. Rows carry no source badge — the
+                  * active tab already says what they all are, and the status badge and the unread
+                  * rule are as many markers as one row should have to compete with.
+                  */}
+                <div className="cms-segmented" role="group" aria-label="Which form these came from">
+                    {[['all', 'All'], ...Object.entries(sources)].map(([value, label]) => {
+                        const active = (filters.source || 'all') === value;
+
+                        return (
+                            <Link
+                                key={value}
+                                href={`/cms/enquiries?${new URLSearchParams(params({
+                                    source: value === 'all' ? undefined : value,
+                                    page: undefined,
+                                }))}`}
+                                className={`cms-segmented__btn${active ? ' cms-segmented__btn--active' : ''}`}
+                                aria-current={active ? 'true' : undefined}
+                                preserveState
+                                preserveScroll
+                                replace
+                            >
+                                {label}
+                            </Link>
+                        );
+                    })}
+                </div>
+
                 <select
                     className="cms-select"
                     style={{ width: 210 }}
                     value={filters.show || 'new'}
                     onChange={(e) => show(e.target.value)}
                 >
+                    {/* The counts answer for the form being looked at, not the whole inbox — see the
+                        controller. A number describing rows that are not on screen is worse than none. */}
                     <option value="new">Waiting for a reply ({counts.new ?? 0})</option>
                     <option value="handled">Already dealt with</option>
                     <option value="all">Everything ({counts.all ?? 0})</option>
@@ -112,7 +167,9 @@ export default function EnquiriesIndex({
 
             {enquiries.length === 0 ? (
                 <div className="cms-media-empty">
-                    {settled.trim() ? 'Nothing matches that search.' : (EMPTY[filters.show] || EMPTY.all)}
+                    {settled.trim()
+                        ? 'Nothing matches that search.'
+                        : (EMPTY[filters.source] || EMPTY.all)[filters.show] || EMPTY.all.all}
                 </div>
             ) : (
                 <div className="cms-faq-list">
@@ -157,7 +214,11 @@ export default function EnquiriesIndex({
                                 <h3 className="cms-modal__title">{opened.name}</h3>
                                 <div className="cms-enquiry-detail__sent">
                                     Sent {opened.at ? relative(opened.at) : ''}
+                                    {/* A fact about the enquiry, so it joins this line rather than
+                                        becoming a third badge on a row that has two. */}
+                                    {opened.sourceLabel ? ` · ${opened.sourceLabel}` : ''}
                                     {opened.page ? ` from ${opened.page}` : ''}
+                                    {opened.reference ? ` · ${opened.reference}` : ''}
                                 </div>
                             </div>
                             <button type="button" className="cms-icon-btn-sm" aria-label="Close" onClick={close}>×</button>
@@ -170,8 +231,35 @@ export default function EnquiriesIndex({
                             {opened.suburb ? ` · ${opened.suburb}` : ''}
                         </div>
 
+                        {/*
+                          * What they picked from a list, and only what they actually answered — a
+                          * contact-form enquiry has none of this and renders exactly as it did before.
+                          *
+                          * A description list with no boxes, on purpose: every field on this screen is
+                          * something the sender wrote and may not be changed, so anything bordered
+                          * sitting on a light fill would read as a box somebody could type into.
+                          */}
+                        {opened.answers?.length ? (
+                            <dl className="cms-enquiry-detail__answers">
+                                {opened.answers.map((answer) => (
+                                    <div className="cms-enquiry-detail__answer" key={answer.label}>
+                                        <dt className="cms-enquiry-detail__answer-label">{answer.label}</dt>
+                                        <dd className="cms-enquiry-detail__answer-value">{answer.value}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        ) : null}
+
+                        {/* Says out loud what the panel below only implies, now that there is
+                            something above it they did not write. */}
+                        {opened.answers?.length ? (
+                            <div className="cms-enquiry-detail__caption">In their own words</div>
+                        ) : null}
+
                         <p className="cms-enquiry-detail__message">
-                            {opened.message || 'They did not leave a message.'}
+                            {opened.message || (opened.answers?.length
+                                ? 'They did not add any notes.'
+                                : 'They did not leave a message.')}
                         </p>
 
                         <div className="cms-field">

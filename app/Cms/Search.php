@@ -157,7 +157,11 @@ class Search
                 'id' => $enquiry->id,
                 'title' => $enquiry->name,
                 'meta' => $enquiry->status === Enquiry::DEALT_WITH ? null : $enquiry->statusLabel(),
-                'href' => '/cms/enquiries',
+                /* Opens the one that was found. A link to the inbox alone landed on the default view,
+                   where a dealt-with enquiry — or anything past the first page — was not on screen, so
+                   the result led to a list that appeared not to contain it. `show=all` because the
+                   default is not; no source, because its default already means every form. */
+                'href' => '/cms/enquiries?show=all&open='.$enquiry->id,
             ])
             ->all();
     }
