@@ -195,6 +195,12 @@ because an uploaded file is the one thing here a reader supplies.
   uploaded before any of this existed up to the same standard; re-running is safe.
 - **`media:init` creates the bucket and applies CORS.** A presigned PUT is cross-origin and fails
   without it. `global-setup.mjs` runs it before seeding for exactly that reason.
+- **The record call does not believe the browser.** `sign()` checks the name and extension, but
+  `store()` re-opens the object and judges it **by its bytes** — a PHP file uploaded as `lie.jpg`
+  with `image/jpeg` is refused and the object is removed — and it refuses any key this application
+  did not mint, so `../../etc/passwd` is not a way in. The signing step is where the rules are
+  explained; this is where they are enforced, because between the two the file was in the browser's
+  hands.
 - **Nothing is deleted while it is in use.** `usage()` scans section trees *and* testimonial and
   article images, and the delete route refuses with the list of what still points at it. The library
   asks before it offers the dialog, which is why blocking `**/media/**` in a test breaks the delete
@@ -219,6 +225,10 @@ row keyed by a string, so there is no id to point at and "edited Setting #global
 
 One trap: **restoring saves the row**, so `updated` fires alongside `restored` and would log an edit
 nobody made. The observer returns early when `deleted_at` is the only change.
+
+And one thing the log must **not** do: an enquiry's deletion is recorded without the sender's name.
+Erasing somebody while minting a permanent copy of their name is not erasing them —
+`OwaspTest::test_a09_the_log_does_not_keep_what_a_deletion_was_meant_to_remove` pins it.
 
 ## Deleted content
 
@@ -312,6 +322,10 @@ figures, which is worse than an empty dashboard because it reads as fact.
 - **`SectionDiff::between()`** flattens both trees to paths and compares, which is what the publish
   summary and the history drawer both read. `POST /pages/{page}/changes` is the same diff answered
   for an unsaved editor state.
+- **`duplicate()` copies into a draft and nothing else.** It takes the source's draft — or its
+  published tree if there is no draft — plus the SEO block, and takes **no revision history**: a copy
+  has not been published, so a history saying otherwise would offer restores to versions of a
+  different page.
 
 ## Accounts and permissions
 
@@ -447,6 +461,22 @@ rather than trusting it.
 Setting the status is still its own single-key route, not an `update()`. The reason has not changed:
 the name, email and message are the sender's words, and a general endpoint here would be an
 editable-enquiry endpoint by construction, whatever the request happened to carry.
+
+## The security suite
+
+`tests/Feature/Security/OwaspTest.php` is 37 tests named by OWASP category (`test_a01_…`), and it is
+one file on purpose: the alternative is a security assertion in whichever suite happened to touch the
+route, where nothing says which category has no cover at all.
+
+What it holds that lives nowhere else: that **every** CMS route refuses a signed-out visitor and no
+delete route is open to a client administrator (both derived, so a new route is covered the day it is
+added); that a wrong password and an unknown account answer identically; that the content policy both
+blocks what a policy is for **and permits the upload it signs** — the pair that caught `connect-src`
+killing every upload; that a wildcard in a search stays a literal; and that the one endpoint making
+an outbound request on a visitor's behalf cannot be steered.
+
+It is also where `security:check` is tested against a production misconfiguration, so the deployment
+list cannot rot.
 
 ## Browser tests
 
