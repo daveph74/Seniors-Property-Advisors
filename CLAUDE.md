@@ -2,7 +2,8 @@
 
 Seniors Property Advisors — public marketing site + CMS admin.
 
-Stack: Laravel + React (JSX), Puck for visual section editing.
+Stack: Laravel + React (JSX). The visual section builder is the application's own — Puck was
+evaluated, never installed, and is not going to be.
 Section storage is JSON-snapshot based, not normalised rows.
 
 ## Conventions
@@ -11,6 +12,27 @@ Section storage is JSON-snapshot based, not normalised rows.
 - Prefer minimal, targeted diffs over structural rewrites.
 - Separate data resolution from presentation in components.
 - Specs live in docs/specs/. Implement the referenced workstream only.
+- **This file is part of the change, not a write-up of it.** Anything that adds, removes or alters a
+  functionality updates `CLAUDE.md` in the *same* commit — no follow-up pass, no separate docs
+  commit. A change that lands without it is incomplete.
+
+### What that means in practice
+
+- **Added** — a section, or a paragraph in the nearest existing one. Say why the design is the way it
+  is and what breaks if somebody changes it back. An inventory of files is not documentation; this
+  file has been wrong twice precisely because it listed what existed instead of what was decided.
+- **Changed** — edit the sentence that is now false. Do not append a newer note beside it: two
+  statements with no rule saying which wins is how "the dashboard is a prototype" and "an image field
+  is a text box" both survived for several features after they stopped being true.
+- **Removed** — delete the paragraph. A trap that no longer exists is worse than no note, because the
+  next person spends their time avoiding it.
+- **New trap found** — the traps here were each paid for once. Write it down at the moment it is
+  understood, in the section it belongs to, with what the symptom looked like — the symptom is what
+  the next person will search for, not the cause.
+
+Two checks before considering a change done: does anything in this file now contradict the code, and
+does anything contradict another part of this file. If something here reads like a limitation, verify
+it against the code before repeating it — that is the failure mode this repository actually has.
 
 ## Commands
 
