@@ -650,11 +650,24 @@ than a passing click test, and it is the first thing to suspect if the drag code
 `npm run e2e:fast` skips the generated per-field tests (`@deep`); the full sweep is for before a
 merge.
 
-The public site is deliberately out of scope here; it is covered by the PHPUnit feature tests. What
-the suite does cover beyond the screens loading: the enquiry inbox including the bell and sidebar
+The public site is otherwise out of scope here; it is rendered from data the PHPUnit feature tests
+already assert. **`e2e/public/` holds the one exception, and it was paid for.** The Find My Agent
+wizard is four steps held together by React state, and renaming its options catalogue left one
+`options={TIMES}` behind: step 3 threw a `ReferenceError` the moment anybody reached it. `npm run
+build` was clean, 699 PHPUnit tests were green, the CMS suite was green, and the form was broken for
+every visitor — because nothing had ever pressed the buttons. A page that only breaks when somebody
+uses it needs a test that uses it.
+
+What the suite covers beyond the screens loading: the enquiry inbox including the bell and sidebar
 counts disagreeing on purpose, the search palette including that a page's link resolves through
 `cms_id`, and that **no screen violates the content security policy** — a blocked script does not
 error a response, so without this nobody would notice until something silently stopped working.
+
+One more lesson from the same afternoon: **assert the effect, not the marker.** The test for the
+inbox's source tabs checked `aria-current` and passed while the active tab was navy text on a navy
+fill — correct in the accessibility tree, invisible on screen. Comparing the two colours for
+inequality was not enough either (`rgb(27,58,105)` on `rgb(18,41,76)`), so it measures the contrast
+ratio an eye would see.
 
 That last one covers screens, and screens alone, which is why `09-media.spec.js` performs a **real
 upload** and asserts each step of it: sign, a cross-origin PUT with a 2xx, the record call, and the

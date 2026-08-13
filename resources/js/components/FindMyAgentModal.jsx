@@ -243,13 +243,28 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
         setSending(true);
         setFailed(null);
 
+        /*
+         * Whether the request was answered at all. Being turned away by the rate limiter is not a
+         * field being wrong, so it never reaches `onError` — and Inertia offers no hook for it
+         * either: this version calls onBefore, onStart, onProgress, onSuccess, onError and onFinish,
+         * and nothing else. So the outcome is recorded as it happens and read at the end; a request
+         * that finished having done neither had no answer, and the person is told so rather than
+         * pressing a button that has quietly stopped working.
+         */
+        let answered = false;
+
         router.post('/enquiries', payload(), {
             // The modal holds the answers in its own state and never unmounts, so the visit must not
             // remount the page under it.
             preserveState: true,
             preserveScroll: true,
-            onSuccess: () => setStep(4),
+            onSuccess: () => {
+                answered = true;
+                setStep(4);
+            },
             onError: (serverErrors) => {
+                answered = true;
+
                 /* Rules that only the server can apply land back on their own question. Stay on step
                    3 — moving on would hide the thing that needs fixing. */
                 const mapped = {};
@@ -260,11 +275,13 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                 setErrors(mapped);
                 focusTarget.current = Object.keys(mapped)[0] ?? null;
             },
-            /* Being turned away by the rate limiter is not a field being wrong, so it never reaches
-               onError and no question could carry it. Without this the button would simply stop
-               working with nothing said. */
-            onException: () => setFailed('We could not send that just now. Please try again in a minute.'),
-            onFinish: () => setSending(false),
+            onFinish: () => {
+                setSending(false);
+
+                if (! answered) {
+                    setFailed('We could not send that just now. Please try again in a minute.');
+                }
+            },
         });
     };
 
@@ -512,7 +529,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                                 Best time to chat <Required />
                             </span>
                             <OptGrid
-                                options={TIMES}
+                                options={BEST_TIMES}
                                 value={form.bestTime}
                                 onChange={set('bestTime')}
                                 className="three"
