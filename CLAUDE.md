@@ -631,8 +631,7 @@ list cannot rot.
 
 **There is no production equivalent of `composer dev`, and there should not be.** That command exists
 to make one laptop convenient; a server has a release step and a set of processes something else keeps
-alive. Nothing here is automated yet — no pipeline, no deploy script, and `docker-compose.yml` is local
-object storage only.
+alive. Nothing here is automated yet — no pipeline and no deploy script.
 
 The release step:
 
@@ -657,6 +656,14 @@ supervisord on Linux, a service wrapper on Windows:
 
 Neither of the last two can lose an enquiry — the notice is queued and the dispatch is wrapped, so a
 dead worker or an unreachable socket is a failed job, never a visitor's error page.
+
+**Docker is not part of any of this.** `docker-compose.yml` runs `floci`, an S3-compatible emulator on
+`:4566`, and it exists for a developer's machine and the browser suite — it is never deployed. A server
+points `AWS_*` at real object storage instead, and the only thing that has to be true of that bucket is
+the thing the emulator needed too: **CORS has to allow a presigned PUT from the site's own origin**, or
+every upload fails at the browser with a message about storage being unreachable while storage is
+perfectly well. `php artisan media:init` applies it and is safe to re-run — it reads whichever endpoint
+is configured, so it is a deployment step against a real bucket exactly as it is a setup step locally.
 
 Four things to get right, each of which fails quietly rather than loudly:
 

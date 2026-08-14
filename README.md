@@ -22,7 +22,7 @@ that proves it, is in `docs/acceptance.md`.
 
 ```sh
 composer setup          # install, .env, key, migrate, npm install, build
-docker compose up -d    # object storage for the media library, on :4566
+docker compose up -d    # floci, an S3 emulator for the media library, on :4566 — local only
 php artisan media:init  # create the bucket
 php artisan migrate:fresh --seed
 composer dev            # server, queue, Vite and Reverb together (`composer logs` for pail)
@@ -79,8 +79,10 @@ dead Vite server, and every page renders blank.
 fail quietly if they are wrong. `php artisan security:check --production` reports the same list, and
 is the thing to run on the day rather than a document to remember.
 
-Two more, which are about data rather than configuration: run `php artisan media:optimise` once, and
-point the `AWS_*` variables at real object storage rather than the local container.
+Two more, which are about data rather than configuration. Point `AWS_*` at real object storage — the
+`docker compose` container is a local emulator and is never deployed — then run `php artisan
+media:init` against that bucket so a presigned upload is allowed to reach it, and `php artisan
+media:optimise` once.
 
 **Do not run `php artisan db:seed` on a live site.** It is for setting one up. Pages are seeded with
 `updateOrCreate`, so every page the client has edited is replaced by the version in
