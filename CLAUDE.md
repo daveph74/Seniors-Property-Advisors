@@ -50,6 +50,11 @@ it against the code before repeating it — that is the failure mode this reposi
   Run from the project root: from inside `e2e/` Playwright finds no config and fails everything
 - `./vendor/bin/pint` — PHP formatting
 
+**Deploying is not one of these commands.** `composer dev` is a laptop convenience with no production
+equivalent — a server has a release step and three processes something else keeps alive. That is
+"Running it in production", further down, and it is the section to read before a first deploy: every
+mistake it lists fails silently rather than loudly.
+
 Run by hand, never scheduled or called from a migration: `content:import [--force]`,
 `content:purge-deleted [--days=90] [--force]`, `media:init`, `media:optimise [--dry-run]`,
 `pages:scaffold`, `security:check [--production]`, `cms:user`. Each says why under its own heading
@@ -619,6 +624,10 @@ It is also where `security:check` is tested against a production misconfiguratio
 list cannot rot.
 
 ## Running it in production
+
+> **Read this before the first deploy.** Everything in it fails quietly: the site renders blank, or the
+> inbox stops updating, or a worker runs last week's code — and none of it raises an error anybody
+> will see. `php artisan security:check --production` is the same list as a command.
 
 **There is no production equivalent of `composer dev`, and there should not be.** That command exists
 to make one laptop convenient; a server has a release step and a set of processes something else keeps

@@ -7,6 +7,17 @@ components.
 Built to `docs/specs/cms-scope.md`. Evidence that each acceptance criterion is met, and the test
 that proves it, is in `docs/acceptance.md`.
 
+> ### ⚠️ Going live? Read **[Running it in production](CLAUDE.md#running-it-in-production)** first.
+>
+> `composer dev` is for a laptop and has no production equivalent. A server needs a release step and
+> **three processes kept alive**: the site under PHP-FPM, `queue:work`, and `reverb:start`.
+>
+> Every way this goes wrong is silent. A `public/hot` copied to the server renders **every page
+> blank**. A `ws://` socket on an HTTPS page is refused as mixed content and the CMS **stops
+> updating** with no error. Workers keep running the old code until `queue:restart`.
+>
+> `php artisan security:check --production` reports the list on the day, so nobody has to remember it.
+
 ## Getting started
 
 ```sh
