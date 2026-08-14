@@ -63,15 +63,13 @@ dead Vite server, and every page renders blank.
 
 ## Deploying
 
-Two settings are deliberately left unset locally and must be chosen before going live — see the
-notes in `.env.example`:
+**The release step and the processes a server has to keep running are in `CLAUDE.md`, under
+"Running it in production"** — the site, a queue worker and the Reverb socket, plus the settings that
+fail quietly if they are wrong. `php artisan security:check --production` reports the same list, and
+is the thing to run on the day rather than a document to remember.
 
-- **`SESSION_SECURE_COOKIE=true`** once the CMS is served over HTTPS. It must stay off locally: a
-  secure-only cookie is never sent over `http://localhost`, so sign-in would simply fail.
-- **`SESSION_LIFETIME`** — decide it deliberately rather than taking the default.
-
-Also run `php artisan media:optimise` once, and point the `AWS_*` variables at real object storage
-rather than the local container.
+Two more, which are about data rather than configuration: run `php artisan media:optimise` once, and
+point the `AWS_*` variables at real object storage rather than the local container.
 
 **Do not run `php artisan db:seed` on a live site.** It is for setting one up. Pages are seeded with
 `updateOrCreate`, so every page the client has edited is replaced by the version in
