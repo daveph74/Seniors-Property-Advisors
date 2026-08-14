@@ -316,11 +316,17 @@ class OwaspTest extends TestCase
     public function test_a05_no_socket_is_permitted_where_none_is_configured(): void
     {
         /* An environment running without Reverb must not be handed a standing permission for a server
-           that is not there. */
-        config(['broadcasting.connections.reverb.key' => null]);
+           that is not there. Named rather than asserting the absence of `ws://` outright: Vite's hot
+           reloading is a websocket too, and on a machine with the dev server running that made this
+           test fail for a reason having nothing to do with what it is checking. */
+        config([
+            'broadcasting.connections.reverb.key' => null,
+            'broadcasting.connections.reverb.options.host' => 'realtime.example',
+            'broadcasting.connections.reverb.options.port' => 9999,
+        ]);
 
         $this->assertStringNotContainsString(
-            'ws://',
+            'realtime.example',
             $this->get('/cms/enquiries')->headers->get('Content-Security-Policy'),
         );
     }

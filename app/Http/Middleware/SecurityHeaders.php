@@ -119,11 +119,14 @@ class SecurityHeaders
 
         /* Development only, and only while the Vite server is actually running: hot reloading is
            a script and a websocket from another origin, which the policy would otherwise stop. */
-        if (Vite::isRunningHot()) {
-            $script[] = 'http://localhost:5173';
-            $connect[] = 'http://localhost:5173';
-            $connect[] = 'ws://localhost:5173';
-            $style[] = 'http://localhost:5173';
+        if ($vite = $this->viteOrigin()) {
+            $script[] = $vite;
+            $connect[] = $vite;
+            $connect[] = preg_replace('#^http#', 'ws', $vite);
+            $style[] = $vite;
+            /* The typeface too: built assets carry it on this origin, but while the dev server is
+               running it comes from there, and a blocked font is a page that renders in Times. */
+            $font[] = $vite;
         }
 
         return implode('; ', array_filter([
@@ -168,6 +171,35 @@ class SecurityHeaders
         $port = isset($parts['port']) ? ':'.$parts['port'] : '';
 
         return $scheme.'://'.$parts['host'].$port;
+    }
+
+    /**
+     * The address Vite actually published, read from the file it writes rather than assumed.
+     *
+     * This used to name `http://localhost:5173` outright, and both halves of that were guesses. Vite
+     * binds to whatever the machine gives it — here it wrote `http://[::1]:5173`, the IPv6 loopback,
+     * which a browser treats as a different origin from `localhost`, so every script and stylesheet on
+     * every page was refused and the site rendered blank with the reason only in the console. The port
+     * is a guess too: 5173 in use means Vite quietly moves to 5174 and the same thing happens.
+     *
+     * Null unless the server is running, so nothing is permitted in production, where the file is
+     * absent and the assets are built.
+     */
+    private function viteOrigin(): ?string
+    {
+        if (! Vite::isRunningHot()) {
+            return null;
+        }
+
+        $hot = @file_get_contents(public_path('hot'));
+
+        if (! is_string($hot)) {
+            return null;
+        }
+
+        $origin = rtrim(trim($hot), '/');
+
+        return preg_match('#^https?://#', $origin) === 1 ? $origin : null;
     }
 
     /**

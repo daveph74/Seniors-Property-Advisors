@@ -60,6 +60,11 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
     @endif
+    {{-- Only prints anything while the Vite dev server is running, and required when it is: the React
+         plugin refuses to start without its preamble, so every page came up blank with nothing but
+         "can't detect preamble" in the console. Absent for years because the app was always served
+         from built assets; `composer dev` runs Vite, so it is reachable now. --}}
+    @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     @inertiaHead
     {{-- Readers only. Measuring the admin would count the people editing the site as visitors, and
