@@ -16,7 +16,7 @@ const EMPTY = {
     all: {
         new: 'Nothing is waiting for a reply.',
         handled: 'Nothing has been marked as dealt with yet.',
-        all: 'No enquiries yet. They arrive here when somebody uses the contact form or Find My Agent.',
+        all: 'No enquiries yet. They arrive here when somebody uses the contact form or Agent Finder.',
     },
     contact_form: {
         new: 'No contact form enquiries are waiting for a reply.',
@@ -24,9 +24,9 @@ const EMPTY = {
         all: 'Nothing has come through the contact form yet.',
     },
     find_my_agent: {
-        new: 'No Find My Agent enquiries are waiting for a reply.',
-        handled: 'No Find My Agent enquiries have been marked as dealt with yet.',
-        all: 'Nobody has completed Find My Agent yet.',
+        new: 'No Agent Finder enquiries are waiting for a reply.',
+        handled: 'No Agent Finder enquiries have been marked as dealt with yet.',
+        all: 'Nobody has completed Agent Finder yet.',
     },
 };
 

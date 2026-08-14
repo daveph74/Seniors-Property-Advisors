@@ -233,7 +233,8 @@ class CmsEnquiryTest extends TestCase
         $this->get("/cms/enquiries?open={$enquiry->id}")->assertOk()->assertInertia(function ($page) {
             $opened = $page->toArray()['props']['opened'];
 
-            $this->assertSame('Find My Agent', $opened['sourceLabel']);
+            /* The service, not the instruction on the button that opened it — see `Enquiry::SOURCES`. */
+            $this->assertSame('Agent Finder', $opened['sourceLabel']);
             $this->assertMatchesRegularExpression('/^AF-\d{4}-\d{5}$/', $opened['reference']);
             $this->assertSame([
                 ['label' => 'Suburb', 'value' => 'Mosman NSW 2088'],

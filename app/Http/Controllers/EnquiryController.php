@@ -11,7 +11,7 @@ use Throwable;
 /**
  * Takes an enquiry and keeps it.
  *
- * Both public forms arrive here — the contact form and the Find My Agent wizard — and what they may
+ * Both public forms arrive here — the contact form and Agent Finder — and what they may
  * send is `StoreEnquiryRequest`'s business, per scope §12. This is the whole of what happens after.
  */
 class EnquiryController extends Controller

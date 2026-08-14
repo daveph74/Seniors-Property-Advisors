@@ -14,7 +14,7 @@ const FIELDS = [
  */
 export default function ContactFormSection({ data, anchor, editing = false, site = {} }) {
     const Heading = `h${useHeadingLevel()}`;
-    /* Scoped to this form's own source. The flash is one shared prop and the Find My Agent wizard
+    /* Scoped to this form's own source. The flash is one shared prop and Agent Finder
        posts to the same endpoint from pages this section also sits on, so without the source a
        wizard submission would make this form claim it had been sent. */
     const flash = usePage().props.enquiry;

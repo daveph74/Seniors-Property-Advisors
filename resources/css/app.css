@@ -964,7 +964,7 @@ footer{
 }
 .foot-bottom .links{ display:flex; gap: 18px; }
 
-/* ===================== Find My Agent modal ===================== */
+/* ===================== Agent Finder modal ===================== */
 .modal-back{
   position: fixed; inset: 0; z-index: 100;
   background: rgba(2,14,60,0.45);
@@ -1950,7 +1950,7 @@ a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
   .faq:hover, .article-card:hover{ transform: none; }
 }
 
-/* ===================== Find My Agent — suburb lookup and validation =====================
+/* ===================== Agent Finder — suburb lookup and validation =====================
    Ported with the modal from the prototype branch. The tokens are this branch's; the rules
    are the prototype's, which is where the reasoning in the comments comes from. */
 

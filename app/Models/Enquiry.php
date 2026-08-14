@@ -35,11 +35,17 @@ class Enquiry extends Model
      * which is a *where* and not a *what* — both forms can be sent from `/contact`, and the value
      * arrives from the browser. An inbox that filters by source needs a fact, not an inference.
      *
+     * "Agent Finder" and not "Find My Agent": these labels answer where an enquiry came from, so they
+     * are names of things, and "Find My Agent" is an instruction that belongs on the button a visitor
+     * presses. Sitting beside "Contact form" it read as a verb where a noun was wanted. The stored
+     * value stays `find_my_agent` — a label is wording and this is data, which is the whole reason
+     * they are separate.
+     *
      * @var array<string, string>
      */
     public const SOURCES = [
         self::CONTACT_FORM => 'Contact form',
-        self::FIND_MY_AGENT => 'Find My Agent',
+        self::FIND_MY_AGENT => 'Agent Finder',
     ];
 
     protected $table = 'enquiries';

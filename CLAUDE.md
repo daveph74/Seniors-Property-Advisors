@@ -496,9 +496,26 @@ Setting the status is still its own single-key route, not an `update()`. The rea
 the name, email and message are the sender's words, and a general endpoint here would be an
 editable-enquiry endpoint by construction, whatever the request happened to carry.
 
+### What the thing is called
+
+**Agent Finder** is the service — a noun, and what the site, this file and the CMS call it.
+**Find My Agent** is an instruction, and belongs only on a control a visitor presses.
+
+The feature answered to four names before that was written down, and the one that mattered was in the
+inbox: a tab reading "Find My Agent" beside "Contact form" put a verb where a noun belongs, when both
+are answering the same question — where did this come from. One CMS line had invented a third, "the
+agent-finder form".
+
+Everything below the surface keeps the name it has: `find_my_agent` on a row, `open-finder` on a button,
+the `AgentFinder` page, `FindMyAgentModal`, `/why-agent-finder`. Those are identifiers, and renaming
+them costs a migration or a public address for nothing a reader would see — the whole point of storing a
+key and resolving a label is that wording can move without data moving. "Wizard" survives in comments
+and test names as a description of its shape, four steps held together by React state, not as its name.
+The reference a sender quotes was already `AF-2026-00042`.
+
 ### Which form it came from
 
-Two forms write this table: the contact form section, and the Find My Agent wizard. `source` says which
+Two forms write this table: the contact form section, and Agent Finder. `source` says which
 — **a column, not a reading of `page_slug`**, because the slug records the address the form sat on, it
 arrives from the browser, and both forms appear on `/contact`. Every row that predates the column did
 come through the contact form, since nothing else could write here, so the backfill is a statement of
@@ -530,7 +547,7 @@ in step, and it leads straight back to a row this CMS can open.
 
 ### The inbox separates them with tabs, not badges
 
-A segmented strip — All / Contact form / Find My Agent — and **no source badge on the rows**. The rule
+A segmented strip — All / Contact form / Agent Finder — and **no source badge on the rows**. The rule
 it follows is already in `cms.css`: the status badge and the unread rule are as many markers as one row
 should compete with, and on a source tab every row *is* that source, so the row has nothing left to say.
 
@@ -763,8 +780,8 @@ than a passing click test, and it is the first thing to suspect if the drag code
 merge.
 
 The public site is otherwise out of scope here; it is rendered from data the PHPUnit feature tests
-already assert. **`e2e/public/` holds the one exception, and it was paid for.** The Find My Agent
-wizard is four steps held together by React state, and renaming its options catalogue left one
+already assert. **`e2e/public/` holds the one exception, and it was paid for.** Agent Finder is four
+steps held together by React state, and renaming its options catalogue left one
 `options={TIMES}` behind: step 3 threw a `ReferenceError` the moment anybody reached it. `npm run
 build` was clean, 699 PHPUnit tests were green, the CMS suite was green, and the form was broken for
 every visitor — because nothing had ever pressed the buttons. A page that only breaks when somebody

@@ -84,7 +84,7 @@ test('each form has its own tab, and the default shows both', async ({ page }) =
     await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Wizard' })).toBeVisible();
     await expect(page.locator('.cms-enquiry-row', { hasText: 'Playwright Enquirer' })).toBeVisible();
 
-    await tabs.getByText('Find My Agent').click();
+    await tabs.getByText('Agent Finder').click();
 
     await expect(page).toHaveURL(/source=find_my_agent/);
 
@@ -140,7 +140,7 @@ test('a wizard enquiry shows what they picked, and none of it can be typed into'
     const modal = page.locator('.cms-modal');
     await expect(modal).toBeVisible();
 
-    await expect(modal.locator('.cms-enquiry-detail__sent')).toContainText('Find My Agent');
+    await expect(modal.locator('.cms-enquiry-detail__sent')).toContainText('Agent Finder');
     await expect(modal.locator('.cms-enquiry-detail__sent')).toContainText(/AF-\d{4}-\d{5}/);
 
     const answers = modal.locator('.cms-enquiry-detail__answer');

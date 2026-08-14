@@ -19,7 +19,7 @@ use Illuminate\Validation\Rule;
  * Both forms come through this one request, and deliberately: the public endpoint is rate limited
  * (`throttle:6,1`), and a second route for the second form would be a public write path that
  * `OwaspTest` does not know exists. What differs between them is a block of rules that applies only
- * when the payload says it came from Find My Agent — not an endpoint of its own.
+ * when the payload says it came from Agent Finder — not an endpoint of its own.
  *
  * Nothing stored here is ever rendered as markup, so the HTML purifier a blog body goes through does
  * not apply; `Text::clean` strips tags and that is the whole of it.

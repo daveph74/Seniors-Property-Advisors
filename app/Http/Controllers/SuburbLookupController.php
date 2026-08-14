@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Proxies Google Places (New) lookups for the Find My Agent modal so the API
+ * Proxies Google Places (New) lookups for the Agent Finder modal so the API
  * key never reaches the browser.
  *
  * Two modes:

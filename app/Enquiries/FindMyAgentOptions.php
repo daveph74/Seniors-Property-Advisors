@@ -3,7 +3,7 @@
 namespace App\Enquiries;
 
 /**
- * The questions the Find My Agent form asks, and the answers it accepts.
+ * The questions Agent Finder asks, and the answers it accepts.
  *
  * Scope §12 keeps form fields and their validation in code, so this is where they live — one
  * catalogue read by the form request, by the CMS presenter, and mirrored in

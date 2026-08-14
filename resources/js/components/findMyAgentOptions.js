@@ -1,5 +1,5 @@
 /**
- * The answers the Find My Agent form offers.
+ * The answers Agent Finder offers.
  *
  * A mirror of `app/Enquiries/FindMyAgentOptions.php`, which is the one that decides — the server
  * validates against it and the CMS reads its labels. `FindMyAgentOptionsParityTest` fails if these
