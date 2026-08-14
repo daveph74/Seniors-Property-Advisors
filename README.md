@@ -14,7 +14,7 @@ composer setup          # install, .env, key, migrate, npm install, build
 docker compose up -d    # object storage for the media library, on :4566
 php artisan media:init  # create the bucket
 php artisan migrate:fresh --seed
-composer dev            # server, queue, logs and Vite together
+composer dev            # server, queue, Vite and Reverb together (`composer logs` for pail)
 ```
 
 Storage comes up **before** seeding: the pages point at pictures in the media library, and
@@ -41,8 +41,9 @@ actually sees.
 
 | Command | What it does |
 |---|---|
-| `composer dev` | Server, queue worker, logs and Vite together |
-| `composer test` | Clears config, then runs the suite (453 tests) |
+| `composer dev` | Server, queue worker, Vite and Reverb together |
+| `composer logs` | Tails the log with pail — needs the `pcntl` extension, which Windows PHP has not got |
+| `composer test` | Clears config, then runs the suite |
 | `./vendor/bin/pint` | PHP formatting |
 | `npm run build` | Build assets |
 | `php artisan cms:user email --name= --role= [--password=]` | Create or promote an account; prints a generated password when none is given |

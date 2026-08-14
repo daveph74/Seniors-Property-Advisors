@@ -380,8 +380,8 @@ the plaintext must be handed to `logoutOtherDevices()` **after** the save, and w
 is the acting user the guard needs `Auth::setUser()` first — it caches its own instance and
 would otherwise compare against the hash that was just replaced.
 
-Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
-`SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
+The session settings a deployment has to choose are in "Running it in production", with the rest of
+what a server needs, rather than stated twice here.
 
 ### What a password has to be
 
@@ -617,6 +617,53 @@ an outbound request on a visitor's behalf cannot be steered.
 
 It is also where `security:check` is tested against a production misconfiguration, so the deployment
 list cannot rot.
+
+## Running it in production
+
+**There is no production equivalent of `composer dev`, and there should not be.** That command exists
+to make one laptop convenient; a server has a release step and a set of processes something else keeps
+alive. Nothing here is automated yet — no pipeline, no deploy script, and `docker-compose.yml` is local
+object storage only.
+
+The release step:
+
+```sh
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+rm -f public/hot
+php artisan migrate --force
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+php artisan queue:restart
+php artisan security:check --production
+```
+
+And three processes, each under a supervisor that restarts them on failure and on boot — systemd or
+supervisord on Linux, a service wrapper on Windows:
+
+| what | how | what happens without it |
+|---|---|---|
+| the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
+| the queue | `php artisan queue:work --tries=3 --max-time=3600` | enquiries still arrive and are still kept; nothing tells an open CMS screen about them |
+| the socket | `php artisan reverb:start --host=0.0.0.0 --port=8080`, behind the proxy that terminates TLS | the same: the inbox updates when somebody looks at it |
+
+Neither of the last two can lose an enquiry — the notice is queued and the dispatch is wrapped, so a
+dead worker or an unreachable socket is a failed job, never a visitor's error page.
+
+Four things to get right, each of which fails quietly rather than loudly:
+
+- **`public/hot` must not exist on the server.** It is how a developer's machine says "assets are
+  coming from Vite"; copied to a server, every page asks a dev server that is not there and renders
+  blank, with the reason only in the browser console. Hence the `rm -f` above.
+- **`REVERB_SCHEME=https`**, with the proxy exposing the socket as `wss://`. A plain `ws://` socket on
+  an HTTPS page is refused as mixed content and the CMS silently stops updating. `security:check
+  --production` fails on this, which is the only reason anybody would notice.
+- **`php artisan queue:restart` after every release**, or workers go on running the code they were
+  started with.
+- **`SESSION_SECURE_COOKIE=true`** and a deliberate `SESSION_LIFETIME`, neither of which belongs in a
+  local `.env` — see `.env.example`, and `security:check` again.
+
+Rotating the socket credentials needs no rebuild: the browser is told what to connect to by the server
+that drew the page, not by a value baked into the assets — see `app/Cms/Realtime.php`.
 
 ## Browser tests
 
