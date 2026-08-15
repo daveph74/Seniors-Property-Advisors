@@ -95,10 +95,9 @@ class MediaController extends Controller
                 ->where('mime', 'like', 'image/%')
                 /* Also the description and caption: an editor looking for a photo remembers what is
                    in it long before they remember that it is called 134021038407023939.jpg. */
-                ->when($search !== '', fn ($q) => $q->where(fn ($find) => $find
-                    ->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('alt', 'like', '%'.$search.'%')
-                    ->orWhere('caption', 'like', '%'.$search.'%')))
+                /* Through `Like` like every other search box: typed straight in, a `%` here was a
+                   wildcard rather than a character, so searching for one matched the whole library. */
+                ->when($search !== '', fn ($q) => Like::any($q, $search, ['name', 'alt', 'caption']))
                 ->latest('id')
                 ->limit(60)
                 ->get()
@@ -419,11 +418,18 @@ class MediaController extends Controller
         $medium->delete();
     }
 
+    /**
+     * Both spellings of the address, because a section tree is stored as JSON and `json_encode`
+     * escapes the slashes — the same picture is `/media/…` in a column and `\/media\/…` inside a
+     * tree. Through `Like` so the pattern carries an `ESCAPE` clause: without one, MySQL reads that
+     * backslash as an escape character and the second spelling matches nothing at all.
+     */
     private function mentions(string $column, string $url): callable
     {
-        return fn ($query) => $query
-            ->where($column, 'like', '%'.$url.'%')
-            ->orWhere($column, 'like', '%'.str_replace('/', '\/', $url).'%');
+        return function ($query) use ($column, $url) {
+            Like::contains($query, $column, $url);
+            Like::orContains($query, $column, str_replace('/', '\/', $url));
+        };
     }
 
     private function holds(mixed $tree, string $url): bool
