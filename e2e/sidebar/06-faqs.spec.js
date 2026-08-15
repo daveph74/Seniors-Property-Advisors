@@ -28,6 +28,13 @@ test('a category can be added', async ({ page }) => {
     await page.goto('/cms/faqs');
 
     const rows = page.locator('.cms-cat-row');
+
+    /* Counted only once the list is actually on screen. `count()` answers immediately and does not
+       wait, so read before the screen rendered it returned nought — and the assertion below then
+       looked for one row on a screen that has seven. It passed for as long as the admin happened to
+       render faster than the next line ran. */
+    await expect(rows.first()).toBeVisible();
+
     const before = await rows.count();
 
     await page.getByPlaceholder('e.g. Downsizing').fill('E2E category');
