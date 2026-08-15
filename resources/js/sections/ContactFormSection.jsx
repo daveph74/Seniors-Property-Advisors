@@ -14,10 +14,15 @@ const FIELDS = [
  */
 export default function ContactFormSection({ data, anchor, editing = false, site = {} }) {
     const Heading = `h${useHeadingLevel()}`;
-    const sent = usePage().props.enquiry === 'sent';
+    /* Scoped to this form's own source. The flash is one shared prop and Agent Finder
+       posts to the same endpoint from pages this section also sits on, so without the source a
+       wizard submission would make this form claim it had been sent. */
+    const flash = usePage().props.enquiry;
+    const sent = flash?.status === 'sent' && flash?.source === 'contact_form';
 
     const { data: form, setData, post, processing, errors } = useForm({
         name: '', email: '', phone: '', suburb: '', message: '', consent: false,
+        source: 'contact_form',
         page: typeof window === 'undefined' ? null : window.location.pathname,
     });
 
@@ -97,7 +102,16 @@ export default function ContactFormSection({ data, anchor, editing = false, site
                                 {site.privacyUrl ? (
                                     <>
                                         {' '}
-                                        <a href={site.privacyUrl}>Read our privacy policy</a>.
+                                        {/* A new tab for the same reason as the wizard's: whatever has
+                                            been typed here is still unsent. */}
+                                        <a
+                                            href={site.privacyUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Read our privacy policy
+                                        </a>
+                                        .
                                     </>
                                 ) : null}
                             </span>

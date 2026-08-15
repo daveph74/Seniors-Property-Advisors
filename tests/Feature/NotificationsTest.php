@@ -66,6 +66,20 @@ class NotificationsTest extends TestCase
         $this->assertSame(0, $this->notifications()['counts']['enquiries']);
     }
 
+    /**
+     * The bell and the sidebar are whole-inbox on purpose — one number that can honestly reach zero,
+     * and one that says how much work is left. Neither is split by which form an enquiry came from,
+     * so a wizard enquiry has to count exactly like any other or the newer form develops a blind spot
+     * nobody would notice until a lead went unanswered.
+     */
+    public function test_an_enquiry_from_the_wizard_counts_like_any_other(): void
+    {
+        Enquiry::factory()->findMyAgent()->create();
+
+        $this->assertSame(1, $this->notifications()['unread']);
+        $this->assertSame(1, $this->notifications()['counts']['enquiries']);
+    }
+
     public function test_an_enquiry_in_progress_still_counts_as_outstanding(): void
     {
         $enquiry = $this->enquiry(['read_at' => now()]);

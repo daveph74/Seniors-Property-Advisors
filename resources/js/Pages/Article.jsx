@@ -109,7 +109,7 @@ export default function Article({ article, seo = {}, head = {}, related = [], gl
 
             <SiteFooter globals={globals} site={site} />
 
-            <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} />
+            <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} site={site} />
         </>
     );
 }

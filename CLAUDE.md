@@ -36,7 +36,12 @@ it against the code before repeating it — that is the failure mode this reposi
 
 ## Commands
 
-- `composer dev` — server, queue, logs, and Vite together
+- `composer dev` — server, queue, Vite and Reverb together, so the CMS updates live without a second
+  terminal. `concurrently --kill-others` means one process failing stops the rest, which is why
+  **`pail` is not in there**: it needs `pcntl`, XAMPP on Windows has no such extension, so it exited
+  immediately and took the whole stack down with it — the symptom is `composer dev` returning code 1
+  seconds after starting, naming the concurrently line rather than the command that actually failed.
+  Logs are `composer logs` instead, on a machine whose PHP can run them
 - `php artisan serve` — app at http://localhost:8000 (Vite only builds assets; it never serves pages)
 - `npm run dev` / `npm run build` — assets. Exit `npm run dev` with Ctrl+C so it removes `public/hot`; a stale `hot` file points assets at a dead Vite server and renders a blank page
 - `composer test` — clears config, then `php artisan test`
@@ -44,6 +49,11 @@ it against the code before repeating it — that is the failure mode this reposi
   shows the browser doing it, `e2e:ui` is the interactive runner, `e2e:report` opens the last report.
   Run from the project root: from inside `e2e/` Playwright finds no config and fails everything
 - `./vendor/bin/pint` — PHP formatting
+
+**Deploying is not one of these commands.** `composer dev` is a laptop convenience with no production
+equivalent — a server has a release step and three processes something else keeps alive. That is
+"Running it in production", further down, and it is the section to read before a first deploy: every
+mistake it lists fails silently rather than loudly.
 
 Run by hand, never scheduled or called from a migration: `content:import [--force]`,
 `content:purge-deleted [--days=90] [--force]`, `media:init`, `media:optimise [--dry-run]`,
@@ -375,8 +385,8 @@ the plaintext must be handed to `logoutOtherDevices()` **after** the save, and w
 is the acting user the guard needs `Auth::setUser()` first — it caches its own instance and
 would otherwise compare against the hash that was just replaced.
 
-Deployment: set `SESSION_SECURE_COOKIE=true` once the CMS is served over HTTPS, and choose
-`SESSION_LIFETIME` deliberately. Neither belongs in local `.env` — see `.env.example`.
+The session settings a deployment has to choose are in "Running it in production", with the rest of
+what a server needs, rather than stated twice here.
 
 ### What a password has to be
 
@@ -475,14 +485,144 @@ rule saying which wins, is how a screen reports one thing and a count another. `
 question and deliberately not the same column, because read is not answered.
 
 An enquiry opens in a modal deep-linked at `/cms/enquiries?open={id}`, the same pattern as the media
-library's `?selected={id}`. **Opening it is what marks it read**, done in `index()` — a write on a GET,
-which is what "read on view" means everywhere. The header's counter is a closure resolved after the
-controller returns, so the badge falls in that same response; `CmsEnquiryTest` asserts that ordering
-rather than trusting it.
+library's `?selected={id}`. Opening it marks it read, but **not on the GET** — `?open=` only decides what
+is on screen, and the front end then posts `/cms/enquiries/{id}/read`, once, when an unread one is
+actually put in front of somebody. (This section used to say the write happened in `index()`; it does not,
+and `CmsEnquiryTest` asserts the GET leaves `read_at` alone.) The header's counter is a closure resolved
+after the controller returns, so the badge falls in that same response, and the read POST names
+`notifications` in its partial reload for the same reason.
 
 Setting the status is still its own single-key route, not an `update()`. The reason has not changed:
 the name, email and message are the sender's words, and a general endpoint here would be an
 editable-enquiry endpoint by construction, whatever the request happened to carry.
+
+### What the thing is called
+
+**Agent Finder** is the service — a noun, and what the site, this file and the CMS call it.
+**Find My Agent** is an instruction, and belongs only on a control a visitor presses.
+
+The feature answered to four names before that was written down, and the one that mattered was in the
+inbox: a tab reading "Find My Agent" beside "Contact form" put a verb where a noun belongs, when both
+are answering the same question — where did this come from. One CMS line had invented a third, "the
+agent-finder form".
+
+Everything below the surface keeps the name it has: `find_my_agent` on a row, `open-finder` on a button,
+the `AgentFinder` page, `FindMyAgentModal`, `/why-agent-finder`. Those are identifiers, and renaming
+them costs a migration or a public address for nothing a reader would see — the whole point of storing a
+key and resolving a label is that wording can move without data moving. "Wizard" survives in comments
+and test names as a description of its shape, four steps held together by React state, not as its name.
+The reference a sender quotes was already `AF-2026-00042`.
+
+### Which form it came from
+
+Two forms write this table: the contact form section, and Agent Finder. `source` says which
+— **a column, not a reading of `page_slug`**, because the slug records the address the form sat on, it
+arrives from the browser, and both forms appear on `/contact`. Every row that predates the column did
+come through the contact form, since nothing else could write here, so the backfill is a statement of
+fact rather than a default nobody set.
+
+**One route, one throttle.** Both post to `/enquiries` (`throttle:6,1`), and `StoreEnquiryRequest` turns
+the wizard's extra rules on when the payload says so. A second endpoint would be a public write path
+`OwaspTest` does not know exists — so its rate-limit test now sends the seventh request as a wizard
+payload, which is the whole payoff of the decision.
+
+**`details` holds what they picked; `message` stays what they wrote.** The wizard asks four questions
+with fixed answers, and they live in a JSON column as **keys, never wording** — the labels are resolved
+for the screen by `app/Enquiries/FindMyAgentOptions.php`, so re-labelling an answer never rewrites a row.
+Composing them into `message` was rejected: the list snippet and the search palette both treat that
+column as the sender's own account, and every wizard enquiry would have opened with the same boilerplate.
+Discrete columns were rejected too — null for every contact-form row, and a migration per new question.
+
+The catalogue exists twice, in PHP and in `resources/js/components/findMyAgentOptions.js`, because the
+server validates it and the browser draws it. `FindMyAgentOptionsParityTest` reads the JavaScript and
+holds it to the PHP; without that the server would refuse an answer the form had just offered.
+
+**The wizard used to send the position of the chosen card.** An index makes the order of a JavaScript
+array the meaning of every answer already stored — reorder the cards and history is silently rewritten,
+with no test that could notice. `OptGrid` reports `o.value` now, and a test rejects an integer where a
+key belongs so the old wire format cannot come back.
+
+The reference the sender is told to quote is **derived, never stored**: `AF-{year}-{id}`. Nothing to keep
+in step, and it leads straight back to a row this CMS can open.
+
+### The inbox separates them with tabs, not badges
+
+A segmented strip — All / Contact form / Agent Finder — and **no source badge on the rows**. The rule
+it follows is already in `cms.css`: the status badge and the unread rule are as many markers as one row
+should compete with, and on a source tab every row *is* that source, so the row has nothing left to say.
+
+They are **links in a `role="group"`, not ARIA tabs**. Each one is a real address a colleague can be sent,
+and pressing it fetches a page rather than swapping a panel beside you, which is what `role="tab"` would
+promise. `aria-current` marks the active one.
+
+Three things that follow, and each was a way to mislead somebody:
+
+- **The counts are source-scoped.** They sit on the status filter, which sits inside the tab, so left
+  whole they would say "waiting for a reply (12)" above three rows. The `counts` prop keeps its exact
+  shape — a test pins that, and it is deliberately left untouched as proof nothing moved. Search is not
+  applied to them: the pager already says what a search found.
+- **`params()` has to carry `source`.** Anything missing from that object is dropped by the next visit,
+  so leaving it out sends searching, paging, changing a status and opening a row all back to every form.
+- **Both filters are allowlisted and echoed back normalised.** `?show=` had no allowlist: a mistyped
+  value fell through to "everything" while the control showed nothing chosen. Harmless until a tab strip
+  renders it as a row of unlit buttons, which reads as a broken screen rather than a bad address.
+
+A wizard enquiry's answers print in the modal as an unboxed `<dl>` above the message, under "In their own
+words". Unboxed on purpose — nothing on this screen may be edited, and a bordered field on a pale fill
+reads as one you could type into; the e2e suite asserts **zero** inputs in that modal, answers and all.
+Notes are optional there, so `snippet()` falls back to the picked answers rather than leaving a row as a
+name and a time among rows that all carry a sentence.
+
+### An open inbox hears about an arrival
+
+The screens are server-rendered, so a tab somebody left open used to keep showing what it fetched when
+they opened it. Laravel Reverb closes that: `EnquiryReceived` is broadcast on a private `cms` channel
+and any open CMS screen refreshes itself.
+
+**The message carries nothing.** Not the name, not the suburb, not the first line — `broadcastWith()`
+returns an empty array, on purpose. A payload would put somebody's account of their own circumstances
+into a queue record and a socket frame, delivered to every signed-in browser whether or not anyone is
+looking at the inbox; the search palette already refuses to index that message for the same reason. So
+the event is a nudge, and the browser refetches through `/cms/enquiries` — authorised, filtered and
+paged exactly as when somebody presses reload. One path to the data, and nothing to keep in step with
+the shape of the props.
+
+Four things that follow, each of which was a way for this to fail quietly:
+
+- **`connect-src` has to name the socket**, as `ws://` or `wss://` — naming the `http://` origin it
+  upgrades from does not permit it. Blocked, the only symptom is an inbox that has gone back to
+  updating on reload. `OwaspTest` pins both the permission and its absence where no key is configured,
+  and `security:check` fails a production environment still on `ws://`, since a plain socket on an
+  HTTPS page is blocked as mixed content.
+- **Echo must build its own client.** Handing it a pre-made Pusher instance keeps Pusher's defaults,
+  which authorise a private channel at `/pusher/auth` — an address this application answers with a 405
+  from the catch-all page route. The socket connects, the subscription is never authorised, and nothing
+  is ever delivered, with no error worth reading anywhere in the sequence.
+- **The dispatch cannot be allowed to cost an enquiry.** It is queued, so an unreachable Reverb is a
+  failed job; and it is wrapped, because on a `sync` queue the broadcast happens inside the request
+  that just saved somebody's enquiry and would otherwise answer them with a 500 after keeping it.
+- **The rule about who may listen lives in `app/Broadcasting/CmsChannel.php`, not in a closure.**
+  Testing it through `/broadcasting/auth` proved nothing: under the `null` broadcaster this suite runs
+  with, the endpoint answers without consulting the callback, so every channel refused every caller and
+  the denial tests passed vacuously. The rule mirrors `Permit` — an active account with
+  `content.manage` — because a socket outliving a deactivation is a way back into the screens the
+  account was locked out of.
+
+The list holds still while an enquiry is open: rows behind a modal are what somebody is about to click,
+and re-ordering them under a dialog is how the wrong person's message gets opened. The bell still moves,
+so nothing is hidden — only deferred until the modal closes, which visits the list anyway.
+
+Running it needs `php artisan reverb:start` **and** a queue worker. Without either, the CMS behaves
+exactly as it did before any of this: the inbox updates when somebody looks at it. `.env.e2e` sets
+`BROADCAST_CONNECTION=null` deliberately — the browser suite runs a synchronous queue, so a broadcast
+would happen inside the request and the run would depend on a socket server being up to pass.
+
+**No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
+a reference that was the same five digits for everybody, while storing nothing at all. There is no
+`app/Mail` in this repository — nobody internal is notified of a new enquiry either, which is arguably the
+more urgent half. Wizard submissions are also deliberately **not** written to the activity log:
+`Activity::labelFor()` falls through to `name`, and that log has no delete path, which is exactly what
+`OwaspTest`'s a09 test protects against.
 
 ## The security suite
 
@@ -499,6 +639,64 @@ an outbound request on a visitor's behalf cannot be steered.
 
 It is also where `security:check` is tested against a production misconfiguration, so the deployment
 list cannot rot.
+
+## Running it in production
+
+> **Read this before the first deploy.** Everything in it fails quietly: the site renders blank, or the
+> inbox stops updating, or a worker runs last week's code — and none of it raises an error anybody
+> will see. `php artisan security:check --production` is the same list as a command.
+
+**There is no production equivalent of `composer dev`, and there should not be.** That command exists
+to make one laptop convenient; a server has a release step and a set of processes something else keeps
+alive. Nothing here is automated yet — no pipeline and no deploy script.
+
+The release step:
+
+```sh
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+rm -f public/hot
+php artisan migrate --force
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+php artisan queue:restart
+php artisan security:check --production
+```
+
+And three processes, each under a supervisor that restarts them on failure and on boot — systemd or
+supervisord on Linux, a service wrapper on Windows:
+
+| what | how | what happens without it |
+|---|---|---|
+| the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
+| the queue | `php artisan queue:work --tries=3 --max-time=3600` | enquiries still arrive and are still kept; nothing tells an open CMS screen about them |
+| the socket | `php artisan reverb:start --host=0.0.0.0 --port=8080`, behind the proxy that terminates TLS | the same: the inbox updates when somebody looks at it |
+
+Neither of the last two can lose an enquiry — the notice is queued and the dispatch is wrapped, so a
+dead worker or an unreachable socket is a failed job, never a visitor's error page.
+
+**Docker is not part of any of this.** `docker-compose.yml` runs `floci`, an S3-compatible emulator on
+`:4566`, and it exists for a developer's machine and the browser suite — it is never deployed. A server
+points `AWS_*` at real object storage instead, and the only thing that has to be true of that bucket is
+the thing the emulator needed too: **CORS has to allow a presigned PUT from the site's own origin**, or
+every upload fails at the browser with a message about storage being unreachable while storage is
+perfectly well. `php artisan media:init` applies it and is safe to re-run — it reads whichever endpoint
+is configured, so it is a deployment step against a real bucket exactly as it is a setup step locally.
+
+Four things to get right, each of which fails quietly rather than loudly:
+
+- **`public/hot` must not exist on the server.** It is how a developer's machine says "assets are
+  coming from Vite"; copied to a server, every page asks a dev server that is not there and renders
+  blank, with the reason only in the browser console. Hence the `rm -f` above.
+- **`REVERB_SCHEME=https`**, with the proxy exposing the socket as `wss://`. A plain `ws://` socket on
+  an HTTPS page is refused as mixed content and the CMS silently stops updating. `security:check
+  --production` fails on this, which is the only reason anybody would notice.
+- **`php artisan queue:restart` after every release**, or workers go on running the code they were
+  started with.
+- **`SESSION_SECURE_COOKIE=true`** and a deliberate `SESSION_LIFETIME`, neither of which belongs in a
+  local `.env` — see `.env.example`, and `security:check` again.
+
+Rotating the socket credentials needs no rebuild: the browser is told what to connect to by the server
+that drew the page, not by a value baked into the assets — see `app/Cms/Realtime.php`.
 
 ## Browser tests
 
@@ -581,11 +779,24 @@ than a passing click test, and it is the first thing to suspect if the drag code
 `npm run e2e:fast` skips the generated per-field tests (`@deep`); the full sweep is for before a
 merge.
 
-The public site is deliberately out of scope here; it is covered by the PHPUnit feature tests. What
-the suite does cover beyond the screens loading: the enquiry inbox including the bell and sidebar
+The public site is otherwise out of scope here; it is rendered from data the PHPUnit feature tests
+already assert. **`e2e/public/` holds the one exception, and it was paid for.** Agent Finder is four
+steps held together by React state, and renaming its options catalogue left one
+`options={TIMES}` behind: step 3 threw a `ReferenceError` the moment anybody reached it. `npm run
+build` was clean, 699 PHPUnit tests were green, the CMS suite was green, and the form was broken for
+every visitor — because nothing had ever pressed the buttons. A page that only breaks when somebody
+uses it needs a test that uses it.
+
+What the suite covers beyond the screens loading: the enquiry inbox including the bell and sidebar
 counts disagreeing on purpose, the search palette including that a page's link resolves through
 `cms_id`, and that **no screen violates the content security policy** — a blocked script does not
 error a response, so without this nobody would notice until something silently stopped working.
+
+One more lesson from the same afternoon: **assert the effect, not the marker.** The test for the
+inbox's source tabs checked `aria-current` and passed while the active tab was navy text on a navy
+fill — correct in the accessibility tree, invisible on screen. Comparing the two colours for
+inequality was not enough either (`rgb(27,58,105)` on `rgb(18,41,76)`), so it measures the contrast
+ratio an eye would see.
 
 That last one covers screens, and screens alone, which is why `09-media.spec.js` performs a **real
 upload** and asserts each step of it: sign, a cross-origin PUT with a 2xx, the record call, and the

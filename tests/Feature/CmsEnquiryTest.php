@@ -56,11 +56,6 @@ class CmsEnquiryTest extends TestCase
         $this->enquiry(['name' => 'Picked up', 'status' => Enquiry::IN_PROGRESS]);
         $this->enquiry(['name' => 'Done', 'status' => Enquiry::DEALT_WITH]);
 
-        $names = fn (string $url) => array_column(
-            $this->get($url)->assertOk()->toArray()['props']['enquiries'] ?? [],
-            'name',
-        );
-
         /* "Waiting for a reply" has to include something picked up but not finished, or work in
            hand vanishes from the one view anybody keeps open. */
         $this->get('/cms/enquiries')->assertInertia(function ($page) {
@@ -178,6 +173,99 @@ class CmsEnquiryTest extends TestCase
             $this->assertSame('Long since answered', $props['opened']['name']);
             $this->assertSame('Helping my mother think about selling.', $props['opened']['message']);
         });
+    }
+
+    public function test_each_form_can_be_worked_through_on_its_own(): void
+    {
+        $this->enquiry(['name' => 'Wrote in']);
+        Enquiry::factory()->findMyAgent()->create(['name' => 'Used the wizard']);
+
+        $this->assertSame(['Used the wizard'], $this->names('/cms/enquiries?source=find_my_agent'));
+        $this->assertSame(['Wrote in'], $this->names('/cms/enquiries?source=contact_form'));
+        /* No source means every form, which is what the bell and the search palette both rely on. */
+        $this->assertCount(2, $this->names('/cms/enquiries'));
+    }
+
+    /** @return array<int, string> the names on screen, in the order the list puts them */
+    private function names(string $url): array
+    {
+        return array_column($this->get($url)->assertOk()->viewData('page')['props']['enquiries'], 'name');
+    }
+
+    public function test_the_counts_answer_for_the_form_being_looked_at(): void
+    {
+        $this->enquiry(['name' => 'Wrote in']);
+        $this->enquiry(['name' => 'Also wrote in']);
+        Enquiry::factory()->findMyAgent()->create(['name' => 'Used the wizard']);
+
+        /* The counts sit on the status filter and that filter sits inside the tab, so left whole they
+           would say "waiting for a reply (3)" over a list of one. */
+        $this->get('/cms/enquiries?source=find_my_agent')->assertInertia(function ($page) {
+            $counts = $page->toArray()['props']['counts'];
+
+            $this->assertSame(1, $counts['new']);
+            $this->assertSame(1, $counts['all']);
+        });
+
+        $this->get('/cms/enquiries')->assertInertia(
+            fn ($page) => $this->assertSame(3, $page->toArray()['props']['counts']['all']),
+        );
+    }
+
+    public function test_a_filter_it_does_not_offer_falls_back_to_one_it_does(): void
+    {
+        $this->enquiry(['name' => 'Waiting']);
+
+        /* A mistyped address used to fall through to "everything" while the control showed nothing
+           chosen — which a tab strip renders as a row of unlit buttons, reading as a broken screen. */
+        $this->get('/cms/enquiries?source=fma&show=Handled')->assertOk()->assertInertia(function ($page) {
+            $filters = $page->toArray()['props']['filters'];
+
+            $this->assertSame('all', $filters['source']);
+            $this->assertSame('new', $filters['show']);
+        });
+    }
+
+    public function test_an_opened_wizard_enquiry_carries_its_answers_as_wording(): void
+    {
+        $enquiry = Enquiry::factory()->findMyAgent()->create(['name' => 'Jane Wilson']);
+
+        $this->get("/cms/enquiries?open={$enquiry->id}")->assertOk()->assertInertia(function ($page) {
+            $opened = $page->toArray()['props']['opened'];
+
+            /* The service, not the instruction on the button that opened it — see `Enquiry::SOURCES`. */
+            $this->assertSame('Agent Finder', $opened['sourceLabel']);
+            $this->assertMatchesRegularExpression('/^AF-\d{4}-\d{5}$/', $opened['reference']);
+            $this->assertSame([
+                ['label' => 'Suburb', 'value' => 'Mosman NSW 2088'],
+                ['label' => 'Property type', 'value' => 'House'],
+                ['label' => 'Looking to sell', 'value' => 'Within 3 months'],
+                ['label' => 'Best time to call', 'value' => 'Morning'],
+            ], $opened['answers']);
+        });
+    }
+
+    public function test_a_contact_enquiry_has_no_answers_to_show(): void
+    {
+        /* So the modal renders exactly as it did before this existed, rather than a heading over
+           nothing. */
+        $enquiry = $this->enquiry();
+
+        $this->get("/cms/enquiries?open={$enquiry->id}")->assertOk()->assertInertia(
+            fn ($page) => $this->assertSame([], $page->toArray()['props']['opened']['answers']),
+        );
+    }
+
+    public function test_a_row_says_something_even_when_nobody_added_notes(): void
+    {
+        /* The wizard's notes box is optional, so this row would otherwise be a name and a time on an
+           empty line among rows that all carry a sentence. */
+        Enquiry::factory()->findMyAgent()->create(['name' => 'No notes', 'message' => null]);
+
+        $this->get('/cms/enquiries')->assertInertia(fn ($page) => $this->assertSame(
+            'Mosman NSW 2088 · House · Within 3 months · Morning',
+            $page->toArray()['props']['enquiries'][0]['snippet'],
+        ));
     }
 
     private function many(int $n): void

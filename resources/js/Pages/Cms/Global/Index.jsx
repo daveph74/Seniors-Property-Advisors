@@ -123,8 +123,8 @@ export default function GlobalIndex({ globals }) {
                     />
                 </Field>
                 <p className="cms-hint cms-global-section__note">
-                    The button opens the agent-finder form. Only its wording is editable — what it
-                    opens is part of how the website works.
+                    The button opens Agent Finder. Only its wording is editable — what it opens is
+                    part of how the website works.
                 </p>
             </section>
 

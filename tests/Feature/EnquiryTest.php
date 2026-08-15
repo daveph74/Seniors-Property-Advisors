@@ -23,7 +23,9 @@ class EnquiryTest extends TestCase
 
     public function test_an_enquiry_is_kept(): void
     {
-        $this->send()->assertRedirect()->assertSessionHas('enquiry', 'sent');
+        $this->send()
+            ->assertRedirect()
+            ->assertSessionHas('enquiry', fn (array $flash) => $flash['status'] === 'sent');
 
         $enquiry = Enquiry::sole();
 
@@ -32,7 +34,26 @@ class EnquiryTest extends TestCase
         $this->assertSame('Glen Iris', $enquiry->suburb);
         $this->assertTrue($enquiry->consented);
         $this->assertSame('/contact', $enquiry->page_slug);
-        $this->assertNull($enquiry->handled_at);
+        /* Replaces an assertion about `handled_at`, which the status migration dropped — it passed
+           only because Eloquent answers null for a column that is not there. */
+        $this->assertSame(Enquiry::CONTACT_FORM, $enquiry->source);
+        $this->assertNull($enquiry->details);
+    }
+
+    public function test_the_form_this_came_from_is_recorded_without_being_asked_for(): void
+    {
+        /* The contact form does send its source, but a payload without one is still a contact-form
+           enquiry — the column and the model agree on that so nothing can arrive sourceless. */
+        $this->send(['source' => null]);
+
+        $this->assertSame(Enquiry::CONTACT_FORM, Enquiry::sole()->source);
+    }
+
+    public function test_a_contact_enquiry_cannot_smuggle_wizard_answers(): void
+    {
+        $this->send(['details' => ['property_type' => 'house']]);
+
+        $this->assertNull(Enquiry::sole()->details);
     }
 
     public function test_a_visitor_who_is_not_signed_in_can_send_one(): void

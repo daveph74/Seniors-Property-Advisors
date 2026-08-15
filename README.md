@@ -7,14 +7,25 @@ components.
 Built to `docs/specs/cms-scope.md`. Evidence that each acceptance criterion is met, and the test
 that proves it, is in `docs/acceptance.md`.
 
+> ### ⚠️ Going live? Read **[Running it in production](CLAUDE.md#running-it-in-production)** first.
+>
+> `composer dev` is for a laptop and has no production equivalent. A server needs a release step and
+> **three processes kept alive**: the site under PHP-FPM, `queue:work`, and `reverb:start`.
+>
+> Every way this goes wrong is silent. A `public/hot` copied to the server renders **every page
+> blank**. A `ws://` socket on an HTTPS page is refused as mixed content and the CMS **stops
+> updating** with no error. Workers keep running the old code until `queue:restart`.
+>
+> `php artisan security:check --production` reports the list on the day, so nobody has to remember it.
+
 ## Getting started
 
 ```sh
 composer setup          # install, .env, key, migrate, npm install, build
-docker compose up -d    # object storage for the media library, on :4566
+docker compose up -d    # floci, an S3 emulator for the media library, on :4566 — local only
 php artisan media:init  # create the bucket
 php artisan migrate:fresh --seed
-composer dev            # server, queue, logs and Vite together
+composer dev            # server, queue, Vite and Reverb together (`composer logs` for pail)
 ```
 
 Storage comes up **before** seeding: the pages point at pictures in the media library, and
@@ -41,8 +52,9 @@ actually sees.
 
 | Command | What it does |
 |---|---|
-| `composer dev` | Server, queue worker, logs and Vite together |
-| `composer test` | Clears config, then runs the suite (453 tests) |
+| `composer dev` | Server, queue worker, Vite and Reverb together |
+| `composer logs` | Tails the log with pail — needs the `pcntl` extension, which Windows PHP has not got |
+| `composer test` | Clears config, then runs the suite |
 | `./vendor/bin/pint` | PHP formatting |
 | `npm run build` | Build assets |
 | `php artisan cms:user email --name= --role= [--password=]` | Create or promote an account; prints a generated password when none is given |
@@ -62,15 +74,15 @@ dead Vite server, and every page renders blank.
 
 ## Deploying
 
-Two settings are deliberately left unset locally and must be chosen before going live — see the
-notes in `.env.example`:
+**The release step and the processes a server has to keep running are in `CLAUDE.md`, under
+"Running it in production"** — the site, a queue worker and the Reverb socket, plus the settings that
+fail quietly if they are wrong. `php artisan security:check --production` reports the same list, and
+is the thing to run on the day rather than a document to remember.
 
-- **`SESSION_SECURE_COOKIE=true`** once the CMS is served over HTTPS. It must stay off locally: a
-  secure-only cookie is never sent over `http://localhost`, so sign-in would simply fail.
-- **`SESSION_LIFETIME`** — decide it deliberately rather than taking the default.
-
-Also run `php artisan media:optimise` once, and point the `AWS_*` variables at real object storage
-rather than the local container.
+Two more, which are about data rather than configuration. Point `AWS_*` at real object storage — the
+`docker compose` container is a local emulator and is never deployed — then run `php artisan
+media:init` against that bucket so a presigned upload is allowed to reach it, and `php artisan
+media:optimise` once.
 
 **Do not run `php artisan db:seed` on a live site.** It is for setting one up. Pages are seeded with
 `updateOrCreate`, so every page the client has edited is replaced by the version in

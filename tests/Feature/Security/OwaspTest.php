@@ -194,6 +194,18 @@ class OwaspTest extends TestCase
         }
 
         $send()->assertStatus(429);
+
+        /* Both public forms post here, which is the reason there is no second route: the seventh
+           attempt is turned away whichever of them makes it. A form with an endpoint of its own would
+           be a public write path this test does not know exists. */
+        $this->post('/enquiries', [
+            'source' => Enquiry::FIND_MY_AGENT,
+            'name' => 'Flood', 'email' => 'flood@example.com', 'phone' => '0400 000 000', 'consent' => true,
+            'details' => [
+                'property_type' => 'house', 'timeline' => 'within_3_months', 'best_time' => 'morning',
+                'location' => ['suburb' => 'Mosman'],
+            ],
+        ])->assertStatus(429);
     }
 
     public function test_a04_sign_in_locks_out_after_repeated_failures(): void
@@ -274,6 +286,51 @@ class OwaspTest extends TestCase
      * that origin or the upload cannot happen at all — and it must permit the origin only, since a
      * CSP source carrying `/bucket` matches by path prefix.
      */
+    public function test_a05_the_policy_permits_the_socket_that_watches_the_inbox(): void
+    {
+        /* The same shape of bug as the upload one below: a `connect-src` that does not name the socket
+           server blocks it with no error anybody reads, and the only symptom is an inbox quietly going
+           back to updating on reload. `ws://`, not `http://` — naming the origin the socket upgrades
+           from does not permit the socket. */
+        config([
+            'broadcasting.default' => 'reverb',
+            'broadcasting.connections.reverb.key' => 'a-key',
+            'broadcasting.connections.reverb.options.host' => '127.0.0.1',
+            'broadcasting.connections.reverb.options.port' => 8080,
+            'broadcasting.connections.reverb.options.scheme' => 'http',
+        ]);
+
+        $admin = $this->get('/cms/enquiries')->headers->get('Content-Security-Policy');
+
+        $this->assertMatchesRegularExpression('/connect-src [^;]*\bws:\/\/127\.0\.0\.1:8080\b/', $admin);
+
+        /* The public site does not listen, so it is not given the permission. */
+        auth()->logout();
+
+        $this->assertStringNotContainsString(
+            '127.0.0.1:8080',
+            $this->get('/')->headers->get('Content-Security-Policy'),
+        );
+    }
+
+    public function test_a05_no_socket_is_permitted_where_none_is_configured(): void
+    {
+        /* An environment running without Reverb must not be handed a standing permission for a server
+           that is not there. Named rather than asserting the absence of `ws://` outright: Vite's hot
+           reloading is a websocket too, and on a machine with the dev server running that made this
+           test fail for a reason having nothing to do with what it is checking. */
+        config([
+            'broadcasting.connections.reverb.key' => null,
+            'broadcasting.connections.reverb.options.host' => 'realtime.example',
+            'broadcasting.connections.reverb.options.port' => 9999,
+        ]);
+
+        $this->assertStringNotContainsString(
+            'realtime.example',
+            $this->get('/cms/enquiries')->headers->get('Content-Security-Policy'),
+        );
+    }
+
     public function test_a05_the_policy_permits_the_upload_it_signs(): void
     {
         config(['filesystems.disks.s3.url' => null]);

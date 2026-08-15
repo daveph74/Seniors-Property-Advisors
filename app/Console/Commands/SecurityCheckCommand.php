@@ -61,6 +61,20 @@ class SecurityCheckCommand extends Command
                 'Optional. Without it the suburb field falls back to free text, which is by design.',
                 'optional',
             ],
+            [
+                'The inbox socket is encrypted',
+                config('broadcasting.default') !== 'reverb'
+                    || config('broadcasting.connections.reverb.options.scheme') === 'https',
+                'REVERB_SCHEME=https once the site is served over HTTPS. A ws:// socket on an https page '
+                    .'is blocked by the browser as mixed content, so the CMS silently stops updating.',
+            ],
+            [
+                'Something is draining the queue',
+                config('queue.default') !== 'sync' || config('broadcasting.default') === 'null',
+                'Optional. The arrival notice is a queued job, so with no worker the CMS updates only '
+                    .'when somebody looks — which is how it behaved before the socket existed.',
+                'optional',
+            ],
         ];
 
         $failed = 0;

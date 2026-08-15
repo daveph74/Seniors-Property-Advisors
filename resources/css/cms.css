@@ -226,6 +226,16 @@
 .cms-segmented__btn--icon{ width: 30px; padding: 0; flex: none; }
 .cms-segmented__btn--active{ background: var(--cms-navy); color: #ffffffbf; }
 .cms-segmented__btn:disabled{ opacity: .35; cursor: not-allowed; }
+/* A segment may also be a link, where each choice is an address worth pasting rather than a panel
+   swapped in place — the enquiry inbox filters by form that way.
+   Scoped through `.cms-shell` on purpose: that selector sets a colour for every link in the admin and
+   is one step more specific than a lone class, so `--active` lost to it and painted navy text on the
+   navy fill — an active tab with nothing legible in it. Both rules need the same reach as the thing
+   they are correcting, and `--active` has to come second. */
+.cms-shell a.cms-segmented__btn{ color: var(--cms-text-mid); text-decoration: none; }
+.cms-shell a.cms-segmented__btn:hover{ background: var(--cms-tint-2); }
+.cms-shell a.cms-segmented__btn--active{ color: #ffffffbf; }
+.cms-shell a.cms-segmented__btn--active:hover{ background: var(--cms-navy); }
 .cms-version-more{ display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 10px 4px; }
 
 /* ---------- Badges ---------- */
@@ -489,6 +499,11 @@
 .cms-pager__gap{ padding: 0 2px; font-size: 12.5px; color: var(--cms-text-quiet); }
 .cms-pager .cms-btn:disabled{ opacity: 0.4; cursor: not-allowed; }
 @media (max-width: 720px){
+  /* The segments share one full-width row rather than wrapping into a ragged two-and-one, which
+     would lose the "one of these is chosen" reading that is the whole of what they say. */
+  .cms-toolbar > .cms-segmented{ width: 100%; }
+  .cms-toolbar > .cms-segmented > .cms-segmented__btn{ flex: 1 1 0; min-width: 0; padding: 0 6px; text-align: center; }
+  .cms-enquiry-detail__answers{ grid-template-columns: 1fr; gap: 12px; }
   .cms-pager__size{ margin-left: 0; }
   .cms-pager__pages{ width: 100%; justify-content: center; }
 }
@@ -509,6 +524,27 @@
 .cms-enquiry-detail__head .cms-icon-btn-sm{ margin-left: auto; font-size: 18px; line-height: 1; color: var(--cms-text-mid); }
 .cms-enquiry-detail__sent{ font-size: 12.5px; color: var(--cms-text-mid); }
 .cms-enquiry-detail__contact{ font-size: 13px; color: var(--cms-text-mid); margin-bottom: 14px; }
+/* The answers somebody picked from a list. Deliberately unboxed: this modal may not change a word of
+   what the sender wrote, and anything with a border and a pale fill in here starts reading as a field
+   you could type into. Two columns on desktop so four answers stay two compact rows and the notes and
+   the status control keep their place. */
+.cms-enquiry-detail__answers{
+  margin: 0 0 16px; display: grid; gap: 10px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.cms-enquiry-detail__answer{ min-width: 0; }
+.cms-enquiry-detail__answer-label{
+  font-size: 11.5px; font-weight: 500; letter-spacing: .02em; text-transform: uppercase;
+  color: var(--cms-text-quiet);
+}
+.cms-enquiry-detail__answer-value{
+  margin: 2px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--cms-ink-soft);
+  overflow-wrap: anywhere;
+}
+.cms-enquiry-detail__caption{
+  font-size: 11.5px; font-weight: 500; letter-spacing: .02em; text-transform: uppercase;
+  color: var(--cms-text-quiet); margin-bottom: 6px;
+}
 .cms-enquiry-detail__message{
   margin: 0 0 18px; padding: 14px 16px; border-radius: var(--cms-radius);
   background: var(--cms-bg); font-size: 13.5px; line-height: 1.6; color: var(--cms-text);

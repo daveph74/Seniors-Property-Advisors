@@ -60,4 +60,14 @@ export default function globalSetup() {
         '"page_slug" => "/contact",',
         ']);',
     ].join(''));
+
+    /* And one from the other form, so the source tabs and the read-only answers list have something
+       to show. A distinct name because the tests find their row by it. */
+    artisan('tinker', '--execute', [
+        'App\\Models\\Enquiry::factory()->findMyAgent()->create([',
+        '"name" => "Playwright Wizard",',
+        '"email" => "wizard@example.invalid",',
+        '"message" => "Sent by the end-to-end suite.",',
+        ']);',
+    ].join(''));
 }

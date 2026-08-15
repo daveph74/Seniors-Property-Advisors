@@ -30,7 +30,7 @@ export default function AgentFinder({ title, seo = {}, head = {}, sections = [],
 
             <SiteFooter globals={globals} site={site} />
 
-            <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} />
+            <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} site={site} />
         </>
     );
 }

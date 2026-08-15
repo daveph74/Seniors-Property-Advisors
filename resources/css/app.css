@@ -964,7 +964,7 @@ footer{
 }
 .foot-bottom .links{ display:flex; gap: 18px; }
 
-/* ===================== Find My Agent modal ===================== */
+/* ===================== Agent Finder modal ===================== */
 .modal-back{
   position: fixed; inset: 0; z-index: 100;
   background: rgba(2,14,60,0.45);
@@ -1012,6 +1012,9 @@ footer{
 .field.top-gap{ margin-top: 18px; }
 .field.top-gap-sm{ margin-top: 14px; }
 .field label{ display:block; font-size: 13.5px; color: var(--navy); font-weight: 600; margin-bottom: 6px;}
+/* A group of cards is labelled by a span, not a `label` — a `label` points at one control and these
+   point at a radio group. It still has to sit like one, or the words touch the cards underneath. */
+.field > .label{ display:block; font-size: 13.5px; color: var(--navy); font-weight: 600; margin-bottom: 8px;}
 .field label .opt-note{ font-weight:400; color: var(--text-mid); }
 .field input, .field select{
   width: 100%; height: 52px; padding: 0 18px;
@@ -1039,9 +1042,40 @@ footer{
 .opt small{ color: var(--text-mid); font-size: 12.5px; font-weight: 400; }
 .opt:hover{ border-color: var(--blue);}
 .opt.on{ border-color: var(--blue); background: var(--blue-tint); }
+/* Label wraps the box so the words are part of the target — a tick box on its own is a small thing
+   to hit, and this form is built for readers who may not want to hunt for it. */
+/* `label.fma-consent`, not `.fma-consent`: `.field label` sets `display: block` and, being a class
+   plus an element, outranks a lone class — so this row was never a flex container, and the `gap` and
+   the alignment below silently did nothing while the words sat against the box.
+
+   Aligned to the top and nudged to the middle of the first line rather than centred: centring is only
+   right while the sentence fits on one line, and it cannot be nudged — a margin on a centred item
+   grows the item and re-centres it, moving the words with it. */
+label.fma-consent{
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 14.5px; font-weight: 400; line-height: 1.5; color: var(--text-mid); cursor: pointer;
+}
+/* The box sits inside a `.field`, which dresses every input as a 52px-tall text box with an 18px
+   inset and a 1.5px border — so those have to be undone, not merely resized. A native tick box draws
+   its own corners and ignores a radius, which is why none is set here. */
+.fma-consent input[type="checkbox"]{
+  flex: none; width: 20px; height: 20px; padding: 0;
+  border: none; background: none;
+  accent-color: var(--blue-deep); cursor: pointer;
+  /* Dropped to the middle of the first line: the line is 1.5 × 14.5px, the box is 20px, so half the
+     difference. Under a pixel, which is why an earlier attempt to fix this by eye kept overshooting —
+     the fault was never the offset, it was the row not being a flex container at all. */
+  margin: calc((1.5 * 14.5px - 20px) / 2) 0 0;
+}
+.field.has-error .fma-consent input{ outline: 2px solid var(--danger); outline-offset: 2px; }
+/* Marked as a link, in the same way the rest of the site marks one. It inherited the sentence's own
+   colour with no underline, so the one thing in this row somebody might want to read first did not
+   look like something to press — and a policy nobody can find is not a policy they agreed to. */
+label.fma-consent a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .modal-actions{
   display:flex; justify-content: space-between; margin-top: 28px; align-items: center;
 }
+.modal-actions .btn:disabled{ opacity: .6; cursor: progress; }
 .modal-actions .step-count{ font-size: 13px; color: var(--text-mid);}
 .success{
   text-align: center; padding: 12px 0;
@@ -1653,6 +1687,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 }
 .contact-form__consent{ display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-mid); }
 .contact-form__consent input{ margin-top: 3px; accent-color: var(--blue-deep); flex: none; }
+/* Same reasoning as the wizard's: the privacy link has to look like one. */
+.contact-form__consent a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .contact-form__error{
   display: block; margin-top: 6px; font-style: normal; font-size: 13.5px; color: var(--danger);
 }
@@ -1914,7 +1950,7 @@ a.article-card:focus-visible, a.card:focus-visible, a.step:focus-visible{
   .faq:hover, .article-card:hover{ transform: none; }
 }
 
-/* ===================== Find My Agent — suburb lookup and validation =====================
+/* ===================== Agent Finder — suburb lookup and validation =====================
    Ported with the modal from the prototype branch. The tokens are this branch's; the rules
    are the prototype's, which is where the reasoning in the comments comes from. */
 

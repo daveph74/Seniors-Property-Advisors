@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Enquiries\FindMyAgentOptions;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Enquiry extends Model
 {
+    use HasFactory;
+
     public const NEW = 'new';
 
     public const IN_PROGRESS = 'in_progress';
@@ -20,22 +24,47 @@ class Enquiry extends Model
         self::DEALT_WITH => 'Dealt with',
     ];
 
+    public const CONTACT_FORM = 'contact_form';
+
+    public const FIND_MY_AGENT = 'find_my_agent';
+
+    /**
+     * Which form this came through.
+     *
+     * Its own column rather than a reading of `page_slug`: that records the address the form sat on,
+     * which is a *where* and not a *what* — both forms can be sent from `/contact`, and the value
+     * arrives from the browser. An inbox that filters by source needs a fact, not an inference.
+     *
+     * "Agent Finder" and not "Find My Agent": these labels answer where an enquiry came from, so they
+     * are names of things, and "Find My Agent" is an instruction that belongs on the button a visitor
+     * presses. Sitting beside "Contact form" it read as a verb where a noun was wanted. The stored
+     * value stays `find_my_agent` — a label is wording and this is data, which is the whole reason
+     * they are separate.
+     *
+     * @var array<string, string>
+     */
+    public const SOURCES = [
+        self::CONTACT_FORM => 'Contact form',
+        self::FIND_MY_AGENT => 'Agent Finder',
+    ];
+
     protected $table = 'enquiries';
 
     protected $fillable = [
         'name', 'email', 'phone', 'suburb', 'message', 'consented', 'page_slug',
-        'status', 'status_changed_at', 'read_at',
+        'source', 'details', 'status', 'status_changed_at', 'read_at',
     ];
 
     protected $casts = [
         'consented' => 'boolean',
+        'details' => 'array',
         'status_changed_at' => 'datetime',
         'read_at' => 'datetime',
     ];
 
-    /* The column defaults to this too, but a default only the database knows means a freshly
-       created instance reports no status at all until something reloads it. */
-    protected $attributes = ['status' => self::NEW];
+    /* The columns default to these too, but a default only the database knows means a freshly
+       created instance reports no status or source at all until something reloads it. */
+    protected $attributes = ['status' => self::NEW, 'source' => self::CONTACT_FORM];
 
     /**
      * Still waiting on somebody. This is the count the sidebar and the dashboard report, and it
@@ -52,8 +81,40 @@ class Enquiry extends Model
         return $query->whereNull('read_at');
     }
 
+    /** Narrows to one form. `all` is not a source, so it narrows nothing. */
+    public function scopeFromSource(Builder $query, ?string $source): Builder
+    {
+        return $query->when(
+            isset(self::SOURCES[(string) $source]),
+            fn (Builder $q) => $q->where('source', $source),
+        );
+    }
+
     public function statusLabel(): string
     {
         return self::STATUSES[$this->status] ?? $this->status;
+    }
+
+    public function sourceLabel(): string
+    {
+        return self::SOURCES[$this->source] ?? $this->source;
+    }
+
+    /**
+     * What the sender is told to quote if they ring before anybody has called them back.
+     *
+     * Derived, never stored: there is no second copy to keep in step, no uniqueness to enforce, and
+     * the number leads straight back to a row this CMS can open. The year is the row's own, so a
+     * reference stays the same next January.
+     */
+    public function reference(): string
+    {
+        return sprintf('AF-%s-%05d', ($this->created_at ?? now())->format('Y'), $this->id);
+    }
+
+    /** The answers they picked from a list, ready to print. Empty for a contact-form enquiry. */
+    public function answers(): array
+    {
+        return FindMyAgentOptions::describe($this->details);
     }
 }

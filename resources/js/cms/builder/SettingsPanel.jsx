@@ -356,7 +356,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     <label className="cms-field-label">Opens</label>
                                     <select className="cms-select" value={data.action || ''} onChange={(e) => patch('action', e.target.value)}>
                                         <option value="">The link address above</option>
-                                        <option value="open-finder">The Find My Agent form</option>
+                                        <option value="open-finder">The Agent Finder form</option>
                                     </select>
                                 </div>
                                 <div className="cms-toggle-row">
