@@ -55,6 +55,14 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     /*
+     * The proxy terminating TLS in front of this, as addresses or CIDRs. Read through config rather
+     * than `env()` where it is used, because `config:cache` stops the environment file being loaded
+     * at all — a proxy list read from `env()` in production would simply be null, and the failure is
+     * silent in both directions: no HSTS, and every visitor sharing one rate-limit bucket.
+     */
+    'trusted_proxies' => env('TRUSTED_PROXIES', ''),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------

@@ -1,9 +1,22 @@
 import { execFileSync } from 'node:child_process';
-import { closeSync, openSync, rmSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const database = resolve(root, 'database/e2e.sqlite');
+
+/** What `.env.e2e` says the suite runs against; anything but SQLite has no file to remove. */
+const usesSqlite = () => {
+    const env = resolve(root, '.env.e2e');
+
+    if (! existsSync(env)) {
+        return true;
+    }
+
+    const named = readFileSync(env, 'utf8').match(/^DB_CONNECTION=(.+)$/m);
+
+    return (named?.[1] ?? 'sqlite').trim() === 'sqlite';
+};
 
 const artisan = (...args) =>
     execFileSync('php', ['artisan', ...args], {
@@ -13,8 +26,16 @@ const artisan = (...args) =>
     });
 
 export default function globalSetup() {
-    rmSync(database, { force: true });
-    closeSync(openSync(database, 'w'));
+    /*
+     * Only SQLite keeps its database in a file this can delete. `.env.e2e` names the connection, so
+     * pointing it at MySQL is a matter of editing that file — and then `migrate:fresh` below is what
+     * empties the schema, exactly as it does here. Recreating the file first is what makes
+     * `migrate:fresh` possible at all on SQLite: it will not open a database that is not there.
+     */
+    if (usesSqlite()) {
+        rmSync(database, { force: true });
+        closeSync(openSync(database, 'w'));
+    }
 
     artisan('config:clear');
 

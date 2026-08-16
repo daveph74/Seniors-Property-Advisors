@@ -3,6 +3,7 @@
 namespace App\Cms;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
  * Substring matching across a few columns, with the one trap it carries stated once.
@@ -33,12 +34,44 @@ class Like
      */
     public static function any(Builder $query, string $term, array $columns): Builder
     {
-        $pattern = '%'.self::escape($term).'%';
-
-        return $query->where(function (Builder $inner) use ($pattern, $columns) {
+        return $query->where(function (Builder $inner) use ($term, $columns) {
             foreach ($columns as $column) {
-                $inner->orWhereRaw("{$column} like ? escape '".self::ESCAPE."'", [$pattern]);
+                self::orContains($inner->getQuery(), $column, $term);
             }
         });
+    }
+
+    /**
+     * One column contains this text. Takes either builder, because the closures the media usage scan
+     * hands around are given an Eloquent builder while its own inner queries are not.
+     */
+    public static function contains(QueryBuilder|Builder $query, string $column, string $needle): void
+    {
+        $query->whereRaw(self::fragment($query, $column), ['%'.self::escape($needle).'%']);
+    }
+
+    public static function orContains(QueryBuilder|Builder $query, string $column, string $needle): void
+    {
+        $query->orWhereRaw(self::fragment($query, $column), ['%'.self::escape($needle).'%']);
+    }
+
+    /**
+     * The comparison itself, and the two things about it that are not portable.
+     *
+     * The column is quoted by the connection's own grammar rather than pasted in: the media table
+     * has a column called `key`, a reserved word everywhere except SQLite, so unquoted it answered
+     * every search with a syntax error the moment this met MySQL.
+     *
+     * And the `ESCAPE` clause is doing a second job besides the wildcards. MySQL treats a backslash
+     * as an escape character inside a LIKE pattern and SQLite does not, so a search for the
+     * JSON-escaped `\/media\/…` — which is how a section tree stores an image address — matched on
+     * one engine and quietly matched nothing on the other. Naming an escape character makes the
+     * backslash a literal on both.
+     */
+    private static function fragment(QueryBuilder|Builder $query, string $column): string
+    {
+        $grammar = ($query instanceof Builder ? $query->getQuery() : $query)->getGrammar();
+
+        return $grammar->wrap($column)." like ? escape '".self::ESCAPE."'";
     }
 }

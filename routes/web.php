@@ -24,11 +24,11 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SuburbLookupController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PageController::class, 'home'])->name('agent-finder');
+Route::get('/', [PageController::class, 'home'])->middleware('throttle:public')->name('agent-finder');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:10,1');
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:sign-in');
 });
 
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
@@ -40,19 +40,20 @@ Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')-
 | Everything here needs an active CMS account. `permit:content.manage` covers
 | both roles; the tighter abilities are super-administrator only (scope §2).
 */
-Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.session'])->group(function () {
+Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.session', 'throttle:cms'])->group(function () {
     Route::get('/account', [AccountController::class, 'edit'])->name('account.edit');
-    Route::patch('/account/password', [AccountController::class, 'updatePassword'])->name('account.password');
+    Route::patch('/account/password', [AccountController::class, 'updatePassword'])
+        ->middleware('throttle:password')->name('account.password');
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     /* Throttled like any other endpoint that runs a query per keystroke. */
-    Route::get('/search', SearchController::class)->middleware('throttle:120,1')->name('search');
+    Route::get('/search', SearchController::class)->middleware('throttle:cms-search')->name('search');
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
     Route::post('/pages', [CmsPageController::class, 'store'])->name('pages.store');
     Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
-    Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->name('pages.draft');
+    Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->middleware('throttle:cms-write')->name('pages.draft');
     Route::patch('/pages/{page}/details', [CmsPageController::class, 'saveDetails'])->name('pages.details');
     Route::post('/pages/{page}/publish', [CmsPageController::class, 'publish'])->name('pages.publish');
     Route::get('/pages/{page}/preview', [CmsPageController::class, 'preview'])->name('pages.preview');
@@ -64,14 +65,14 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
         ->whereNumber('n')->middleware('permit:content.restore')->name('pages.restore');
     Route::get('/pages/{page}/compare/{n}', [CmsPageController::class, 'compare'])
         ->whereNumber('n')->name('pages.compare');
-    Route::post('/pages/{page}/changes', [CmsPageController::class, 'changes'])->name('pages.changes');
+    Route::post('/pages/{page}/changes', [CmsPageController::class, 'changes'])->middleware('throttle:cms-write')->name('pages.changes');
     Route::get('/pages/{page}/revisions', [CmsPageController::class, 'revisions'])->name('pages.revisions');
     Route::post('/pages/{page}/publish-now', [CmsPageController::class, 'publishNow'])->name('pages.publish-now');
     Route::post('/pages/{page}/unpublish', [CmsPageController::class, 'unpublish'])->name('pages.unpublish');
     Route::post('/pages/{page}/archive', [CmsPageController::class, 'archive'])->name('pages.archive');
     Route::post('/pages/{page}/unarchive', [CmsPageController::class, 'unarchive'])
         ->middleware('permit:content.restore')->name('pages.unarchive');
-    Route::post('/pages/{page}/duplicate', [CmsPageController::class, 'duplicate'])->name('pages.duplicate');
+    Route::post('/pages/{page}/duplicate', [CmsPageController::class, 'duplicate'])->middleware('throttle:cms-write')->name('pages.duplicate');
 
     Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
         ->whereNumber('reusable')->name('reusable.show');
@@ -81,16 +82,16 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
 
     Route::get('/blog', [CmsBlogController::class, 'index'])->name('blog.index');
     Route::get('/blog/new', [CmsBlogController::class, 'create'])->name('blog.create');
-    Route::post('/blog', [CmsBlogController::class, 'store'])->name('blog.store');
+    Route::post('/blog', [CmsBlogController::class, 'store'])->middleware('throttle:cms-write')->name('blog.store');
     Route::get('/blog/{post}/edit', [CmsBlogController::class, 'edit'])->whereNumber('post')->name('blog.edit');
-    Route::patch('/blog/{post}', [CmsBlogController::class, 'update'])->whereNumber('post')->name('blog.update');
+    Route::patch('/blog/{post}', [CmsBlogController::class, 'update'])->middleware('throttle:cms-write')->whereNumber('post')->name('blog.update');
     Route::get('/blog/{post}/preview', [CmsBlogController::class, 'preview'])->whereNumber('post')->name('blog.preview');
     Route::post('/blog/{post}/publish', [CmsBlogController::class, 'publish'])->whereNumber('post')->name('blog.publish');
     Route::post('/blog/{post}/unpublish', [CmsBlogController::class, 'unpublish'])->whereNumber('post')->name('blog.unpublish');
     Route::post('/blog/{post}/archive', [CmsBlogController::class, 'archive'])->whereNumber('post')->name('blog.archive');
     Route::post('/blog/{post}/unarchive', [CmsBlogController::class, 'unarchive'])
         ->whereNumber('post')->middleware('permit:content.restore')->name('blog.unarchive');
-    Route::post('/blog/{post}/duplicate', [CmsBlogController::class, 'duplicate'])->whereNumber('post')->name('blog.duplicate');
+    Route::post('/blog/{post}/duplicate', [CmsBlogController::class, 'duplicate'])->middleware('throttle:cms-write')->whereNumber('post')->name('blog.duplicate');
     Route::delete('/blog/{post}', [CmsBlogController::class, 'destroy'])
         ->whereNumber('post')->middleware('permit:content.delete')->name('blog.destroy');
     Route::post('/blog-categories', [CmsBlogController::class, 'storeCategory'])->name('blog.categories.store');
@@ -136,9 +137,9 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
         ->whereNumber('id')->middleware('permit:content.delete')->name('deleted.destroy');
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
     Route::get('/media/library', [MediaController::class, 'library'])->name('media.library');
-    Route::post('/media/sign', [MediaController::class, 'sign'])->name('media.sign');
-    Route::post('/media', [MediaController::class, 'store'])->name('media.store');
-    Route::post('/media/usage', [MediaController::class, 'usageFor'])->name('media.usage');
+    Route::post('/media/sign', [MediaController::class, 'sign'])->middleware('throttle:cms-upload')->name('media.sign');
+    Route::post('/media', [MediaController::class, 'store'])->middleware('throttle:cms-upload')->name('media.store');
+    Route::post('/media/usage', [MediaController::class, 'usageFor'])->middleware('throttle:cms-upload')->name('media.usage');
     Route::patch('/media/{medium}', [MediaController::class, 'update'])
         ->whereNumber('medium')->name('media.update');
     Route::delete('/media', [MediaController::class, 'destroyMany'])
@@ -146,9 +147,9 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::delete('/media/{medium}', [MediaController::class, 'destroy'])
         ->whereNumber('medium')->middleware('permit:content.delete')->name('media.destroy');
     Route::get('/navigation', [NavigationController::class, 'index'])->name('navigation.index');
-    Route::put('/navigation', [NavigationController::class, 'update'])->name('navigation.update');
+    Route::put('/navigation', [NavigationController::class, 'update'])->middleware('throttle:cms-write')->name('navigation.update');
     Route::get('/global-content', [GlobalContentController::class, 'index'])->name('global.index');
-    Route::put('/global-content', [GlobalContentController::class, 'update'])->name('global.update');
+    Route::put('/global-content', [GlobalContentController::class, 'update'])->middleware('throttle:cms-write')->name('global.update');
 
     Route::middleware('permit:users.manage')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -164,33 +165,33 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
 });
 
 Route::get('/media/{key}', [MediaController::class, 'show'])
-    ->where('key', '.*')->name('media.show');
+    ->where('key', '.*')->middleware('throttle:media')->name('media.show');
 
 /*
 | The listing at /blog is an ordinary CMS page holding a blog-list section, so it is
 | resolved by the catch-all below. These two claim the /blog/* namespace, which is why
 | "articles" is a reserved article slug and a page cannot be given a blog/... slug.
 */
-Route::get('/blog/articles', [BlogController::class, 'articles'])->name('blog.articles');
+Route::get('/blog/articles', [BlogController::class, 'articles'])->middleware('throttle:public')->name('blog.articles');
 
 /* Throttled like the sign-in form: a public endpoint that writes a row invites a script. */
 Route::post('/enquiries', [EnquiryController::class, 'store'])
-    ->middleware('throttle:6,1')->name('enquiries.store');
+    ->middleware('throttle:enquiries')->name('enquiries.store');
 
 /* Suburb autocomplete for the Find My Agent modal. Throttled because an unbounded autocomplete
    endpoint is a billing amplifier — every keystroke is a paid call to Google. */
 Route::get('/api/suburbs', SuburbLookupController::class)
-    ->middleware('throttle:60,1')->name('suburbs.lookup');
+    ->middleware('throttle:suburbs')->name('suburbs.lookup');
 Route::get('/blog/{article}', [BlogController::class, 'show'])
-    ->where('article', '[a-z0-9]+(?:-[a-z0-9]+)*')->name('blog.show');
+    ->where('article', '[a-z0-9]+(?:-[a-z0-9]+)*')->middleware('throttle:public')->name('blog.show');
 
 /* Safe above the catch-all either way: its slug pattern has no dot in it, so neither address
    could ever have reached a page. */
-Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->middleware('throttle:sitemap')->name('sitemap');
 Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 
 Route::redirect('/home', '/', 301);
 
 Route::get('/{path}', [PageController::class, 'show'])
     ->where('path', '(?!(?:cms|build|storage|up)(?:/|$))[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*')
-    ->name('page.show');
+    ->middleware('throttle:public')->name('page.show');

@@ -23,6 +23,14 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <!--
+            The fast default, not an assumption about production. PHPUnit leaves an existing
+            environment variable alone, so `DB_CONNECTION=mysql DB_DATABASE=… php artisan test` runs
+            the whole suite against another engine without editing this file — see CLAUDE.md, "Running
+            the suite on another database". Worth doing before a release: the engines disagree about
+            reserved words and about whether a backslash escapes inside LIKE, and both disagreements
+            were live bugs here until the suite was first run on MySQL.
+        -->
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>

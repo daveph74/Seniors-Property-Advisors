@@ -62,6 +62,24 @@ class SecurityCheckCommand extends Command
                 'optional',
             ],
             [
+                'The proxy in front is named',
+                /* Judged against where this is heading, not where it is: locally the address is
+                   plain http and no proxy exists, but `--production` is the question "would this be
+                   right on the day", and on the day there is one. */
+                filled(config('app.trusted_proxies'))
+                    || (! $production && ! str_starts_with((string) config('app.url'), 'https://')),
+                'TRUSTED_PROXIES must name the proxy terminating TLS. Without it every visitor shares '
+                    .'one rate-limit bucket — six enquiries a minute for the whole internet — and HSTS '
+                    .'is never sent, because the request does not look secure to PHP.',
+            ],
+            [
+                'Rate limiting is not counting in the database',
+                config('cache.default') !== 'database' || config('database.default') !== 'sqlite',
+                'Optional. Every throttled request writes to the cache table, and SQLite takes a '
+                    .'database-wide write lock to do it. CACHE_STORE=file on a single server.',
+                'optional',
+            ],
+            [
                 'The inbox socket is encrypted',
                 config('broadcasting.default') !== 'reverb'
                     || config('broadcasting.connections.reverb.options.scheme') === 'https',

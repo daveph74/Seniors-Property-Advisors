@@ -125,11 +125,16 @@ class ContentStorageTest extends TestCase
         $queries = DB::getQueryLog();
         DB::disableQueryLog();
 
+        /* Quoted by the connection's own grammar rather than assumed: SQLite writes "n" and MySQL
+           writes `n`, and this test is about which columns are selected, not about which characters
+           an engine puts around them. */
+        $wrap = fn (string $column) => DB::connection()->getQueryGrammar()->wrap($column);
+
         $listQuery = collect($queries)->firstWhere(fn ($q) => str_contains($q['query'], 'page_revisions')
-            && str_contains($q['query'], 'select "n"'));
+            && str_contains($q['query'], 'select '.$wrap('n')));
 
         $this->assertNotNull($listQuery, 'expected a column-scoped select against page_revisions');
-        $this->assertStringNotContainsString('"sections"', $listQuery['query']);
+        $this->assertStringNotContainsString($wrap('sections'), $listQuery['query']);
     }
 
     public function test_revisions_are_empty_for_an_unknown_page(): void

@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { useHeadingLevel } from './headingLevel';
 
 const FIELDS = [
@@ -20,6 +21,8 @@ export default function ContactFormSection({ data, anchor, editing = false, site
     const flash = usePage().props.enquiry;
     const sent = flash?.status === 'sent' && flash?.source === 'contact_form';
 
+    const [failed, setFailed] = useState(null);
+
     const { data: form, setData, post, processing, errors } = useForm({
         name: '', email: '', phone: '', suburb: '', message: '', consent: false,
         source: 'contact_form',
@@ -31,7 +34,24 @@ export default function ContactFormSection({ data, anchor, editing = false, site
 
         if (editing) return;
 
-        post('/enquiries', { preserveScroll: true });
+        /* Whether the request was answered at all. Being turned away by the rate limiter is not a
+           field being wrong, so it reaches neither the errors nor onSuccess — without this the button
+           would simply stop working and say nothing, which is the same trap the Agent Finder modal
+           already guards against. */
+        let answered = false;
+
+        setFailed(null);
+
+        post('/enquiries', {
+            preserveScroll: true,
+            onSuccess: () => { answered = true; },
+            onError: () => { answered = true; },
+            onFinish: () => {
+                if (! answered) {
+                    setFailed('We could not send that just now. Please wait a minute and try again.');
+                }
+            },
+        });
     };
 
     return (
@@ -118,6 +138,9 @@ export default function ContactFormSection({ data, anchor, editing = false, site
                         </label>
 
                         {errors.consent ? <em className="contact-form__error">{errors.consent}</em> : null}
+
+                        {/* Not attached to a field, because nothing they typed is wrong. */}
+                        {failed ? <em className="contact-form__error" role="status">{failed}</em> : null}
 
                         <button type="submit" className="btn primary" disabled={processing}>
                             {processing ? 'Sending…' : (data.submitLabel || 'Send enquiry')}

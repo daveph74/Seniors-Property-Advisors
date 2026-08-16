@@ -56,10 +56,36 @@ equivalent — a server has a release step and three processes something else ke
 mistake it lists fails silently rather than loudly.
 
 Run by hand, never scheduled or called from a migration: `content:import [--force]`,
-`content:purge-deleted [--days=90] [--force]`, `media:init`, `media:optimise [--dry-run]`,
-`pages:scaffold`, `security:check [--production]`, `cms:user`. Each says why under its own heading
-below; the pattern they share is that all of them either destroy something or touch the environment,
-and both are somebody's decision rather than a side effect of deploying.
+`content:purge-deleted [--days=90] [--force]`, `enquiries:purge [--months=24] [--force]`,
+`enquiries:erase {email} [--force]`, `activity:prune [--months=24] [--force]`, `media:init`,
+`media:optimise [--dry-run]`, `pages:scaffold`, `security:check [--production]`, `cms:user`. Each says
+why under its own heading below; the pattern they share is that all of them either destroy something
+or touch the environment, and both are somebody's decision rather than a side effect of deploying.
+
+### Running the suite on another database
+
+SQLite is the default because it is fast and needs nothing installed, not because it is what a server
+runs. PHPUnit leaves an environment variable alone if one is already set, so the whole suite runs
+against another engine without editing anything:
+
+```sh
+DB_CONNECTION=mysql DB_DATABASE=spa_cms_test DB_USERNAME=root DB_PASSWORD= php artisan test
+```
+
+**Worth doing before a release**, because the engines disagree in ways that are invisible until they
+are not, and both of these were live faults found the first time it was run:
+
+- **Reserved words.** `Like` pasted the column name into raw SQL, and the media table has a column
+  called `key` — every CMS search answered with a syntax error on MySQL and worked perfectly on
+  SQLite. It is wrapped by the connection's own grammar now.
+- **Backslashes inside `LIKE`.** MySQL treats one as an escape character and SQLite does not, so the
+  media usage scan — which looks for the `\/media\/…` spelling `json_encode` writes into a section
+  tree — quietly matched nothing, and an editor would have been told a published page's picture was
+  unused. Naming an `ESCAPE` character makes it a literal on both.
+
+Nothing else in the application is engine-specific: no `DB::raw`, and the JSON columns are read
+through casts rather than queried into. The browser suite reads its connection from `.env.e2e` and
+only deletes a database file when there is a file to delete.
 
 ## Layout
 
@@ -624,11 +650,64 @@ more urgent half. Wizard submissions are also deliberately **not** written to th
 `Activity::labelFor()` falls through to `name`, and that log has no delete path, which is exactly what
 `OwaspTest`'s a09 test protects against.
 
+## Limits, and what is not kept forever
+
+**`config/limits.php` holds every number and `app/Http/Limits.php` says why each one is that number**,
+against the screen it was measured on. A limit with no reasoning beside it is one somebody tightens
+later, and the symptom — a save button that stopped working — reads as a bug rather than a policy.
+
+They are not an access control: `permit:` is that, and it runs first. These bound a runaway script, a
+stolen session and a stranger with a word list, so they sit where honest use never reaches them.
+
+**Signed-in limits key on the account, public ones on the address.** An office shares one address, so
+keying the CMS on it would refuse the second person to save because of the first. `/media` keys on
+whichever exists, since the library grid and the public site share that route.
+
+Three numbers are deliberately unlike their neighbours:
+
+- **Uploads get 180 a minute, not 60.** Each picture is a sign and then a store, so dropping forty
+  images is eighty calls — the low number that looks prudent on paper ruins a real afternoon's work.
+- **Media gets 600.** An image-heavy page asks for dozens at once, and a limit that bites leaves a
+  reader looking at broken pictures with nothing to explain them. It exists to stop somebody walking
+  the whole library, not a browser.
+- **`/up` gets none at all.** A 429 on a health check is a supervisor restarting a healthy
+  application — a limiter causing the outage it was added to prevent.
+
+**A refusal has three audiences.** The admin gets its error back through Inertia, where the builder
+already toasts and leaves the draft unsaved. A reader gets `errors/429.blade.php`, which says we are
+busy in words and never prints the number. And `POST /enquiries` stays a **plain 429 on purpose**:
+both public forms treat a request that neither succeeded nor failed as "we could not send that just
+now", and a redirect would arrive as a *successful* Inertia visit and thank somebody for an enquiry
+that was never saved.
+
+**None of it means anything until a proxy is trusted.** `TRUSTED_PROXIES` is read in
+`AppServiceProvider` — not in `bootstrap/app.php`, where configuration does not exist yet, and not
+through `env()`, which is empty once config is cached. Without it every visitor is the proxy, six
+enquiries a minute becomes six for the whole internet, and `$request->secure()` stays false so the
+HSTS header this application has tested since the security review has never once been sent.
+`security:check --production` fails on it.
+
+Sign-in has its own counter in `LoginRequest`, five attempts keyed on email and address, and the decay
+is **five minutes rather than the default one** — at sixty seconds, five wrong guesses buy a pause and
+then five more, which is three hundred an hour for ever. `RecordSignInTrouble` logs failures and
+lockouts **to the log file and never to `activity_log`**: that email is unverified, belongs to somebody
+who is not a user here, and the audit table has no delete path — the same rule that keeps a deleted
+enquiry's name out of it. The account id goes in when the address matches somebody real, a hash when it
+does not, which still answers "one account or five hundred".
+
+**Personal data now has an end date.** `enquiries:purge --months=24` and `activity:prune --months=24`
+report by default and need `--force`, run by hand like everything else here that destroys something.
+`enquiries:erase {email}` answers somebody asking to be forgotten — every row for that address,
+whatever case they typed it in. All three record *that* something went without recording whose it was.
+Nothing is encrypted at rest, deliberately: the inbox searches name, email, suburb and message, and an
+encrypted column cannot be searched.
+
 ## The security suite
 
-`tests/Feature/Security/OwaspTest.php` is 37 tests named by OWASP category (`test_a01_…`), and it is
+`tests/Feature/Security/OwaspTest.php` names every test by OWASP category (`test_a01_…`), and it is
 one file on purpose: the alternative is a security assertion in whichever suite happened to touch the
-route, where nothing says which category has no cover at all.
+route, where nothing says which category has no cover at all. (This sentence used to carry a count of
+them, which was wrong within a fortnight — the categories are the point, not the total.)
 
 What it holds that lives nowhere else: that **every** CMS route refuses a signed-out visitor and no
 delete route is open to a client administrator (both derived, so a new route is covered the day it is
@@ -636,6 +715,13 @@ added); that a wrong password and an unknown account answer identically; that th
 blocks what a policy is for **and permits the upload it signs** — the pair that caught `connect-src`
 killing every upload; that a wildcard in a search stays a literal; and that the one endpoint making
 an outbound request on a visitor's behalf cannot be steered.
+
+Its A04 section is where the limits are pinned, and each test names the thing it protects rather than
+the number it uses: that two editors behind one address do not share a bucket, that a page's worth of
+images is not turned away, that the health check is never limited, that a refusal tells a reader when
+to come back and is never mistakable for success, and that a locked-out sign-in is recorded without
+the address. They set their own ceilings through `config('limits.…')`, which is how a limit is proved
+in three requests instead of a hundred and twenty-one.
 
 It is also where `security:check` is tested against a production misconfiguration, so the deployment
 list cannot rot.
@@ -694,6 +780,9 @@ Four things to get right, each of which fails quietly rather than loudly:
   started with.
 - **`SESSION_SECURE_COOKIE=true`** and a deliberate `SESSION_LIFETIME`, neither of which belongs in a
   local `.env` — see `.env.example`, and `security:check` again.
+- **`TRUSTED_PROXIES` must name the proxy**, or every rate limit keyed on a visitor collapses onto one
+  bucket and HSTS is never sent. `CACHE_STORE=file` too, on a single server: the limiter counts in the
+  cache, and counting in SQLite takes a database-wide write lock on every throttled request.
 
 Rotating the socket credentials needs no rebuild: the browser is told what to connect to by the server
 that drew the page, not by a value baked into the assets — see `app/Cms/Realtime.php`.
