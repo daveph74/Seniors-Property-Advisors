@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\Activity;
 use App\Models\BlogPost;
 use App\Models\Enquiry;
 use App\Models\Faq;
@@ -9,6 +10,7 @@ use App\Models\Media;
 use App\Models\Page;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -180,6 +182,146 @@ class OwaspTest extends TestCase
     }
 
     // --------------------------------------------------------------------- A04: Insecure design
+
+    /*
+     * The limits below set their own numbers through `config('limits.…')` rather than looping to the
+     * real ceiling. Three requests to prove a refusal instead of a hundred and twenty-one is the
+     * difference between a security suite that runs and one nobody waits for — and it is why those
+     * numbers live in a config file at all.
+     */
+
+    public function test_a04_two_editors_behind_one_address_do_not_share_a_limit(): void
+    {
+        /* The keying guarantee, and the one test that would catch a regression to keying on the
+           address: an office shares one, so the second person to save would be refused because of the
+           first, and it would look like the CMS breaking at random. */
+        config(['limits.cms.minute' => 3]);
+
+        $first = $this->clientAdmin(['email' => 'first@example.com']);
+        $second = $this->clientAdmin(['email' => 'second@example.com']);
+
+        $this->actingAs($first);
+
+        for ($i = 0; $i < 3; $i++) {
+            $this->get('/cms')->assertOk();
+        }
+
+        $this->get('/cms')->assertStatus(429);
+
+        $this->actingAs($second);
+        $this->get('/cms')->assertOk();
+    }
+
+    public function test_a04_a_page_worth_of_images_is_not_turned_away(): void
+    {
+        /* Named because the media number is the one most likely to be tightened later by somebody
+           being careful, and the failure is silent: broken pictures, no message, on a site whose
+           readers will assume they did something wrong. A single page legitimately asks for dozens. */
+        auth()->logout();
+        config(['limits.public.minute' => 2, 'limits.media.minute' => 60]);
+
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/08/photo.png', 'bytes');
+        Media::create([
+            'key' => '2026/08/photo.png', 'name' => 'photo.png',
+            'mime' => 'image/png', 'size' => 5, 'disk' => 's3',
+        ]);
+
+        $this->get('/')->assertOk();
+        $this->get('/')->assertOk();
+        $this->get('/')->assertStatus(429, 'the page limit is reached');
+
+        for ($i = 0; $i < 40; $i++) {
+            $this->get('/media/2026/08/photo.png')->assertOk();
+        }
+    }
+
+    public function test_a04_a_credential_change_is_rate_limited(): void
+    {
+        $user = $this->clientAdmin(['email' => 'target@example.com']);
+        $this->actingAs($user);
+
+        config(['limits.password.hour' => 2]);
+
+        $change = fn (string $password) => $this->patch('/cms/account/password', [
+            'current_password' => 'password',
+            'password' => $password,
+            'password_confirmation' => $password,
+        ]);
+
+        $change('short');
+        $change('short');
+
+        $change('Str0ng-Enough!2026')->assertStatus(429);
+
+        $this->assertTrue(Hash::check('password', $user->refresh()->password));
+    }
+
+    public function test_a04_the_health_check_is_never_rate_limited(): void
+    {
+        /* Cheap, and it pins the exemption that stops a limiter causing the outage it was added to
+           prevent: a 429 here is a supervisor restarting a perfectly healthy application. */
+        auth()->logout();
+        config(['limits.public.minute' => 1]);
+
+        for ($i = 0; $i < 30; $i++) {
+            $this->get('/up')->assertOk();
+        }
+    }
+
+    public function test_a04_a_refusal_says_when_to_come_back_and_never_looks_like_success(): void
+    {
+        auth()->logout();
+        config(['limits.public.minute' => 1, 'limits.enquiries.minute' => 1]);
+
+        $this->get('/');
+        $page = $this->get('/');
+
+        $page->assertStatus(429);
+        $page->assertHeader('Retry-After');
+        /* Written for the reader: no stack trace, no jargon, and not the number 429. */
+        $page->assertSee('busy', false);
+        $page->assertDontSee('429');
+
+        $enquiry = fn () => $this->post('/enquiries', [
+            'name' => 'Janet', 'email' => 'janet@example.com', 'consent' => true,
+        ], ['X-Inertia' => 'true']);
+
+        $enquiry();
+        $refused = $enquiry();
+
+        /*
+         * A refusal on this route must never be a redirect. Both public forms read a request that
+         * neither succeeded nor failed as "we could not send that just now"; a redirect would arrive
+         * as a successful Inertia visit and thank somebody for an enquiry that was never saved.
+         */
+        $refused->assertStatus(429);
+        $this->assertSame(1, Enquiry::count());
+    }
+
+    public function test_a04_a_locked_out_sign_in_is_recorded_without_the_address(): void
+    {
+        /*
+         * Ties this category to the A09 rule further down: `activity_log` has no delete path, and the
+         * email in a failed attempt is unverified and belongs to somebody who is not a user here. The
+         * log file gets the account id when the address matches a real one, and a hash when it does
+         * not — enough to tell five hundred attempts on one account from five hundred accounts.
+         */
+        auth()->logout();
+        Log::spy();
+
+        $before = Activity::count();
+
+        for ($i = 0; $i < 6; $i++) {
+            $this->post('/login', ['email' => 'stranger@example.com', 'password' => 'wrong']);
+        }
+
+        Log::shouldHaveReceived('warning')->atLeast()->once();
+        Log::shouldHaveReceived('info')->atLeast()->once();
+
+        $this->assertSame($before, Activity::count(), 'a stranger never reaches the audit log');
+        $this->assertDatabaseMissing('activity_log', ['subject_label' => 'stranger@example.com']);
+    }
 
     public function test_a04_the_public_form_is_rate_limited(): void
     {
@@ -470,7 +612,14 @@ class OwaspTest extends TestCase
 
         $this->artisan('security:check --production')->assertFailed();
 
-        config(['app.debug' => false, 'session.secure' => true, 'app.url' => 'https://example.com']);
+        config([
+            'app.debug' => false,
+            'session.secure' => true,
+            'app.url' => 'https://example.com',
+            /* An https site with nothing in front of it is a misconfiguration in its own right: the
+               limits key on an address the proxy has replaced, and HSTS never leaves the building. */
+            'app.trusted_proxies' => '10.0.0.0/8',
+        ]);
 
         $this->artisan('security:check --production')->assertSuccessful();
     }

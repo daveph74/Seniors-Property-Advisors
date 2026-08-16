@@ -12,6 +12,12 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    /** How long a run of wrong guesses is made to wait, in seconds. */
+    private const LOCKOUT = 300;
+
+    /** How many wrong guesses that run is. */
+    private const ATTEMPTS = 5;
+
     public function rules(): array
     {
         return [
@@ -26,7 +32,14 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            /*
+             * Five minutes, not the default minute. At sixty seconds five wrong guesses buy a pause
+             * and then five more — three hundred an hour against one address, for ever, which is a
+             * word list rather than a lockout. Five minutes is meant to be intolerable to a script
+             * and survivable for somebody who has genuinely forgotten: there is no self-serve reset
+             * here, so the alternative to waiting is telephoning an administrator.
+             */
+            RateLimiter::hit($this->throttleKey(), self::LOCKOUT);
 
             throw ValidationException::withMessages([
                 'email' => 'Those details do not match our records.',
@@ -46,7 +59,7 @@ class LoginRequest extends FormRequest
 
     private function ensureIsNotRateLimited(): void
     {
-        if (RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (RateLimiter::tooManyAttempts($this->throttleKey(), self::ATTEMPTS)) {
             Event::dispatch(new Lockout($this));
 
             $seconds = RateLimiter::availableIn($this->throttleKey());
