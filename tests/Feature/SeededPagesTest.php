@@ -146,19 +146,19 @@ class SeededPagesTest extends TestCase
         $this->assertTrue($owner($sections), "/{$slug} has no heading anywhere, so it would render with no h1");
     }
 
-    /**
-     * There is no longer a test that every menu page links somewhere else from its own copy, and its
-     * absence is the point rather than an oversight.
-     *
-     * It used to assert exactly that, on the argument that a page linking nowhere is thin for a reader
-     * following a train of thought and thinner for a crawler. Trimming these pages to one section
-     * removed the blocks that carried those links, so the assertion could only have been kept by
-     * exempting every page it covered — a test that answers nothing. The navigation these pages now
-     * rely on is the header menu and the footer, which `NavigationTest` covers.
-     *
-     * What that costs, written down so nobody has to rediscover it: five of the seven have no route
-     * into Agent Finder except the header button, and none of them points a reader at a related page.
-     */
+    /*
+       There is no longer a test that every menu page links somewhere else from its own copy, and its
+       absence is the point rather than an oversight.
+
+       It used to assert exactly that, on the argument that a page linking nowhere is thin for a reader
+       following a train of thought and thinner for a crawler. Trimming these pages to one section
+       removed the blocks that carried those links, so the assertion could only have been kept by
+       exempting every page it covered — a test that answers nothing. The navigation these pages now
+       rely on is the header menu and the footer, which `NavigationTest` covers.
+
+       What that costs, written down so nobody has to rediscover it: five of the seven have no route
+       into Agent Finder except the header button, and none of them points a reader at a related page.
+       */
     /**
      * It existed so the full-bleed hero could be compared against the boxed one. The home page
      * carries that hero now, so the comparison has no reader left — archived rather than deleted,

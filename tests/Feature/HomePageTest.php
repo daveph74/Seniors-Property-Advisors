@@ -19,13 +19,9 @@ class HomePageTest extends TestCase
         $this->get('/')->assertInertia(function ($page) {
             $types = collect($page->toArray()['props']['sections'])->pluck('type')->all();
 
-            $this->assertSame([
-                'hero-full',
-                'trust-cards',
-                'text-image',
-                'blog-list',
-                'cta',
-            ], $types);
+            /* One section, like every page in the menu. The hero is the one kept, and it is the
+               only page whose remaining section still carries a Find My Agent button. */
+            $this->assertSame(['hero-full'], $types);
         });
     }
 
