@@ -343,8 +343,9 @@ screens under two permissions is how a save from one silently reverts the other.
 Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
 there; a value stored twice is a value that disagrees with itself.
 
-`security:check [--production]` is the deployment list — `SESSION_SECURE_COOKIE`, `APP_DEBUG`,
-`SESSION_LIFETIME` — as a command rather than a paragraph, because nothing reads a security review
+`security:check [--production]` is the deployment list — the session cookie, debug mode, the proxy in
+front, where media is really stored, and whether anything from a developer's machine came along — as a
+command rather than a paragraph, because nothing reads a security review
 at deploy time. It **reports and never enforces**: refusing to boot on a misconfiguration turns a
 warning into an outage, and not every environment that runs it is production.
 
@@ -402,7 +403,12 @@ auth setup; `PermissionsTest` and `AuthTest` sign in as somebody else, or nobody
 
 Accounts are made with `php artisan cms:user email --name= --role= [--password=]`, which
 generates and prints a password when none is given (a supplied one is held to `PasswordPolicy`). `UserSeeder` creates local development
-accounts with a shared password and must never run in production.
+accounts with a shared password, and **refuses to run when `APP_ENV=production`** — it and
+`SampleContentSeeder` share the `DevelopmentOnly` trait for that. Saying so in a docblock was not
+enough: `UserSeeder` matches on email with `updateOrCreate`, so `db:seed --force` on a live site
+would not have added a test account, it would have reset the real site administrator's password to a
+well-known word and cleared `password_changed_at` on the way past. It reports and returns rather than
+throwing, so a seed run stops being destructive without becoming an exception somebody forces.
 
 Everyone changes their own password at `/cms/account`; only super administrators set anyone
 else's. Both paths end sessions on other devices, via `auth.session` on the `/cms` group plus
@@ -768,18 +774,34 @@ every upload fails at the browser with a message about storage being unreachable
 perfectly well. `php artisan media:init` applies it and is safe to re-run — it reads whichever endpoint
 is configured, so it is a deployment step against a real bucket exactly as it is a setup step locally.
 
-Four things to get right, each of which fails quietly rather than loudly:
+The way it reaches a server anyway is `.env`. **`.env.production.example` is the file to copy**, not
+`.env.example` — the local one carries `AWS_ENDPOINT=http://localhost:4566` and the emulator's dummy
+credentials, and a server provisioned by copying it and filling in only the obvious blanks keeps them.
+Uploads then land in a container's volume with no versioning and no backup, and **nothing looks wrong**:
+the `s3` disk is configured `'throw' => false`, so storage that is not there behaves like storage that
+is. `security:check --production` refuses a loopback endpoint, and refuses port 4566 on any host —
+because the emulator reached over a real hostname is still the emulator, and that is the shape a
+staging box takes when somebody runs floci on the server to make uploads work.
+
+`AWS_ENDPOINT` is therefore **absent** from `.env.production.example` rather than blank-and-commented:
+unset is what selects AWS. A non-AWS provider is still supported — an endpoint on a real host and port
+passes.
+
+The rest, each of which fails quietly rather than loudly (no count, because this list grows):
 
 - **`public/hot` must not exist on the server.** It is how a developer's machine says "assets are
   coming from Vite"; copied to a server, every page asks a dev server that is not there and renders
-  blank, with the reason only in the browser console. Hence the `rm -f` above.
+  blank, with the reason only in the browser console. Hence the `rm -f` above, and
+  `security:check` fails on it — reading the hot file Laravel itself would use, not a fixed path.
 - **`REVERB_SCHEME=https`**, with the proxy exposing the socket as `wss://`. A plain `ws://` socket on
   an HTTPS page is refused as mixed content and the CMS silently stops updating. `security:check
   --production` fails on this, which is the only reason anybody would notice.
 - **`php artisan queue:restart` after every release**, or workers go on running the code they were
   started with.
 - **`SESSION_SECURE_COOKIE=true`** and a deliberate `SESSION_LIFETIME`, neither of which belongs in a
-  local `.env` — see `.env.example`, and `security:check` again.
+  local `.env` — see `.env.production.example`, and `security:check` again.
+- **`AWS_BUCKET` and the credentials must be filled**, and `AWS_ENDPOINT` left unset. Blank credentials
+  are the same silence as a wrong endpoint: every upload fails at the browser and the log says nothing.
 - **`TRUSTED_PROXIES` must name the proxy**, or every rate limit keyed on a visitor collapses onto one
   bucket and HSTS is never sent. `CACHE_STORE=file` too, on a single server: the limiter counts in the
   cache, and counting in SQLite takes a database-wide write lock on every throttled request.
