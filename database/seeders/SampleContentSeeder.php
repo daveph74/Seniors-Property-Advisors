@@ -19,8 +19,14 @@ use Illuminate\Database\Seeder;
  */
 class SampleContentSeeder extends Seeder
 {
+    use DevelopmentOnly;
+
     public function run(): void
     {
+        if ($this->refusedInProduction()) {
+            return;
+        }
+
         $this->faqs();
         $this->articles();
     }

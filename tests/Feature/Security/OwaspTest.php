@@ -8,6 +8,10 @@ use App\Models\Enquiry;
 use App\Models\Faq;
 use App\Models\Media;
 use App\Models\Page;
+use App\Models\User;
+use Database\Seeders\SampleContentSeeder;
+use Database\Seeders\UserSeeder;
+use Illuminate\Foundation\Vite;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -606,8 +610,19 @@ class OwaspTest extends TestCase
         );
     }
 
+    /**
+     * `public/hot` is a real file on a developer's machine whenever `npm run dev` is running, and the
+     * deployment check is right to fail on it — so the tests that assert a *passing* check have to say
+     * where to look, or a second terminal decides whether this suite is green.
+     */
+    private function noDevelopmentBuildMarker(): void
+    {
+        app(Vite::class)->useHotFile(storage_path('framework/testing/absent-hot'));
+    }
+
     public function test_a05_the_deployment_check_fails_on_a_production_misconfiguration(): void
     {
+        $this->noDevelopmentBuildMarker();
         config(['app.debug' => true, 'session.secure' => false]);
 
         $this->artisan('security:check --production')->assertFailed();
@@ -619,9 +634,98 @@ class OwaspTest extends TestCase
             /* An https site with nothing in front of it is a misconfiguration in its own right: the
                limits key on an address the proxy has replaced, and HSTS never leaves the building. */
             'app.trusted_proxies' => '10.0.0.0/8',
+            'filesystems.disks.s3.bucket' => 'spa-media',
+            'filesystems.disks.s3.key' => 'AKIAREAL',
+            /* Explicitly, because the suite reads the developer's own `.env` — which points storage at
+               the local emulator, so without this line the check would fail here for a reason that has
+               nothing to do with what this test is about. */
+            'filesystems.disks.s3.endpoint' => null,
         ]);
 
         $this->artisan('security:check --production')->assertSuccessful();
+    }
+
+    /**
+     * The one misconfiguration that looks like a working site.
+     *
+     * `.env.example` points storage at floci, the S3 emulator `docker-compose.yml` runs for a
+     * developer's machine, and copying that file to a server instead of `.env.production.example`
+     * carries the endpoint with it. Every upload then lands in a container's volume — no versioning,
+     * no backup — and nothing complains, because the disk is configured not to throw. So the check has
+     * to be the thing that complains.
+     */
+    public function test_a05_the_deployment_check_refuses_a_local_storage_emulator(): void
+    {
+        $this->noDevelopmentBuildMarker();
+        config([
+            'app.debug' => false,
+            'session.secure' => true,
+            'app.url' => 'https://example.com',
+            'app.trusted_proxies' => '10.0.0.0/8',
+            'filesystems.disks.s3.bucket' => 'spa-media',
+            'filesystems.disks.s3.key' => 'AKIAREAL',
+        ]);
+
+        foreach (['http://localhost:4566', 'http://127.0.0.1:4566', 'http://host.docker.internal:4566'] as $endpoint) {
+            config(['filesystems.disks.s3.endpoint' => $endpoint]);
+            $this->artisan('security:check --production')->assertFailed();
+        }
+
+        /* A real hostname is not a defence: this is the shape a staging box takes when somebody runs
+           the emulator on the server itself, and it is indistinguishable from working. */
+        config(['filesystems.disks.s3.endpoint' => 'https://spa.example.com:4566']);
+        $this->artisan('security:check --production')->assertFailed();
+
+        /* Unset is the production value, and a real endpoint — object storage that is not AWS — is a
+           supported choice this must not refuse. */
+        config(['filesystems.disks.s3.endpoint' => null]);
+        $this->artisan('security:check --production')->assertSuccessful();
+
+        config(['filesystems.disks.s3.endpoint' => 'https://syd1.digitaloceanspaces.com']);
+        $this->artisan('security:check --production')->assertSuccessful();
+    }
+
+    /**
+     * The seed is development data, and one of its seeders matches on email.
+     *
+     * `db:seed --force` on a server is a plausible keystroke — after a restore, or from somebody
+     * following a README — and `UserSeeder` uses `updateOrCreate`, so it would not merely add a test
+     * account. It would reset the live site administrator's password to a well-known word. The
+     * docblocks said "local development accounts only" for a long time and nothing enforced it.
+     */
+    public function test_a05_the_development_seeders_refuse_to_run_on_a_live_site(): void
+    {
+        $email = 'superadmin@seniorspropertyadvisors.com.au';
+
+        (new UserSeeder)->run();
+        $this->assertTrue(Hash::check('password', User::where('email', $email)->value('password')));
+
+        User::where('email', $email)->update(['password' => Hash::make('a-real-chosen-password')]);
+
+        $this->app['env'] = 'production';
+
+        (new UserSeeder)->run();
+        (new SampleContentSeeder)->run();
+
+        $this->assertTrue(
+            Hash::check('a-real-chosen-password', User::where('email', $email)->value('password')),
+            'the development seeder overwrote a real account on a production environment',
+        );
+        $this->assertSame(0, BlogPost::count());
+    }
+
+    public function test_a05_the_deployment_check_fails_when_uploads_have_nowhere_to_go(): void
+    {
+        config([
+            'app.debug' => false,
+            'session.secure' => true,
+            'app.url' => 'https://example.com',
+            'app.trusted_proxies' => '10.0.0.0/8',
+            'filesystems.disks.s3.bucket' => null,
+            'filesystems.disks.s3.key' => null,
+        ]);
+
+        $this->artisan('security:check --production')->assertFailed();
     }
 
     // ------------------------------------------------- A06: Vulnerable and outdated components

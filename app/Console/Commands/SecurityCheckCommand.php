@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Foundation\Vite;
+use PHPUnit\Framework\TestCase;
 
 /**
  * The settings that have to be right on the day, checked rather than remembered.
@@ -80,6 +82,38 @@ class SecurityCheckCommand extends Command
                 'optional',
             ],
             [
+                'Development packages are not installed',
+                /* Optional, and it has to be: this command is itself run by the test suite, where
+                   PHPUnit is present and correct. On a server its presence means the release step
+                   ran a plain `composer install`, which is a signal about the rest of the step. */
+                ! class_exists(TestCase::class),
+                'Optional. `composer install --no-dev --optimize-autoloader` — the test suite, the '
+                    .'formatter and the log viewer have no business on a live site, and their being '
+                    .'there suggests the rest of the release step was skipped too.',
+                'optional',
+            ],
+            [
+                'No development build marker is present',
+                ! file_exists(app(Vite::class)->hotFile()),
+                'public/hot is how a developer\'s machine says "assets are coming from Vite". On a '
+                    .'server every page then asks a dev server that is not there and renders blank, '
+                    .'with the reason only in the browser console. `rm -f public/hot` in the release step.',
+            ],
+            [
+                'Media storage is real object storage',
+                ! self::looksLocal((string) config('filesystems.disks.s3.endpoint')),
+                'AWS_ENDPOINT names a local S3 emulator — floci, from docker-compose.yml, which is a '
+                    .'developer convenience and is never deployed. Uploads would live in its volume: no '
+                    .'versioning, no backup, and gone with the container. Leave AWS_ENDPOINT unset for AWS.',
+            ],
+            [
+                'The media bucket is configured',
+                filled(config('filesystems.disks.s3.bucket')) && filled(config('filesystems.disks.s3.key')),
+                'Without AWS_BUCKET and credentials every upload fails at the browser, and nothing in the '
+                    .'log says so: the disk is deliberately configured not to throw, so a missing bucket '
+                    .'looks exactly like a working one until somebody tries to add a picture.',
+            ],
+            [
                 'The inbox socket is encrypted',
                 config('broadcasting.default') !== 'reverb'
                     || config('broadcasting.connections.reverb.options.scheme') === 'https',
@@ -134,5 +168,26 @@ class SecurityCheckCommand extends Command
         $this->info('Every deployment setting checks out.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * An endpoint on this machine, or on the emulator's port anywhere.
+     *
+     * The port is part of it on purpose: floci reached over a real hostname is still floci, which is
+     * the shape a staging box ends up in when `.env.example` is copied instead of
+     * `.env.production.example`. An unset endpoint is the correct production value and passes.
+     */
+    private static function looksLocal(string $endpoint): bool
+    {
+        if ($endpoint === '') {
+            return false;
+        }
+
+        $host = strtolower((string) (parse_url($endpoint, PHP_URL_HOST) ?: $endpoint));
+
+        return in_array($host, ['localhost', '127.0.0.1', '::1', '0.0.0.0', 'host.docker.internal'], true)
+            || str_ends_with($host, '.local')
+            || str_ends_with($host, '.localhost')
+            || parse_url($endpoint, PHP_URL_PORT) === 4566;
     }
 }
