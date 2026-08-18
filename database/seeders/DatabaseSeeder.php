@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,11 +14,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        /* SampleContentSeeder is not in Tests\TestCase, which seeds ContentSeeder alone —
+           articles and questions in the seed every test runs would break the counts they assert. */
+        /* MediaSeeder before ContentSeeder: the pages name /media/ addresses, and a page that
+           renders before the rows exist shows broken images. It needs the storage service up. */
+        $this->call([UserSeeder::class, MediaSeeder::class, ContentSeeder::class, SampleContentSeeder::class]);
     }
 }

@@ -1,0 +1,148 @@
+{
+    "slug": "home",
+    "url": "/",
+    "cmsId": 1,
+    "title": "Agent Finder — Seniors Property Advisors",
+    "status": "published",
+    "seo": {
+        "title": "Agent Finder — Seniors Property Advisors",
+        "description": "Compare trusted local real estate agents, understand what selling will cost, and choose with confidence — with independent Australian guidance at every step, and nothing to sell you."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "hero",
+            "type": "hero-full",
+            "label": "Hero banner",
+            "active": true,
+            "data": {
+                "eyebrow": "Finding your agent",
+                "heading": "Find the right real estate agent,",
+                "headingEm": "without the stress.",
+                "lead": "We help Australian homeowners compare trusted local agents, understand their options, and make confident selling decisions — guided by an independent property advisor, not a salesperson.",
+                "image": {
+                    "src": "/media/2026/08/hero-home.jpg",
+                    "alt": "A property advisor with a tablet talking with a senior couple in their living room"
+                },
+                "ctas": [
+                    {
+                        "label": "Find My Agent",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Speak to an Advisor",
+                        "variant": "ghost",
+                        "href": "/contact",
+                        "onNavy": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": "trust",
+            "type": "trust-cards",
+            "label": "Why Agent Finder exists",
+            "active": true,
+            "anchor": "how",
+            "data": {
+                "eyebrow": "Why Agent Finder exists",
+                "heading": "Choosing an agent shouldn’t feel",
+                "headingEm": "overwhelming.",
+                "lead": "Picking the wrong agent can cost homeowners tens of thousands — in commission, marketing, and a price that falls short. Agent Finder gives you a calm, guided way to compare your options before you commit.",
+                "cta": {
+                    "label": "Read our approach",
+                    "href": "/why-agent-finder",
+                    "arrow": true
+                },
+                "items": [
+                    {
+                        "icon": "home",
+                        "title": "Compare trusted local agents",
+                        "body": "We shortlist agents who actually work — and recently sold — in your suburb, not just anyone willing to pay for leads."
+                    },
+                    {
+                        "icon": "dollar",
+                        "title": "Understand fees & marketing",
+                        "body": "See realistic commission and marketing costs side‑by‑side, with plain‑English notes on what’s reasonable for your area."
+                    },
+                    {
+                        "icon": "shield",
+                        "title": "Get independent support",
+                        "body": "A real property advisor stays beside you — from the first conversation to signing the agreement. No agent pressure."
+                    }
+                ]
+            }
+        },
+        {
+            "id": "in-short",
+            "type": "text-image",
+            "label": "How it works, in short",
+            "active": true,
+            "data": {
+                "eyebrow": "How it works",
+                "heading": "Four conversations, and",
+                "headingEm": "no obligation at any of them.",
+                "body": "It starts with a phone call about your home and when you might want to move. We do the research, bring you a shortlist you can actually compare, and stay in the room while you decide. Most people speak to us months before they list — that is the useful time to ask, not the week before.",
+                "imageSide": "right",
+                "image": {
+                    "src": "/media/2026/08/advisor-meeting.jpg",
+                    "alt": "An advisor showing a tablet to an older couple across a table"
+                },
+                "cta": {
+                    "label": "See the four steps in full",
+                    "href": "/how-it-works",
+                    "arrow": true
+                }
+            }
+        },
+        {
+            "id": "reading",
+            "type": "blog-list",
+            "label": "Latest articles",
+            "active": true,
+            "data": {
+                "eyebrow": "Worth reading first",
+                "heading": "Plain answers to the questions",
+                "headingEm": "that come up first.",
+                "lead": "Short pieces on downsizing, agent fees and the practical side of selling later in life.",
+                "limit": 3,
+                "showMore": true,
+                "articles": []
+            }
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

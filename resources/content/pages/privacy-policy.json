@@ -1,0 +1,201 @@
+{
+    "slug": "privacy-policy",
+    "url": "/privacy-policy",
+    "cmsId": 19,
+    "title": "Privacy Policy",
+    "navLabel": "Privacy",
+    "status": "published",
+    "seo": {
+        "title": "Privacy Policy",
+        "description": "What Seniors Property Advisors collects when you use this website or send an enquiry, why we hold it, who we share it with, and how to ask for a copy or have it deleted."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "privacy",
+            "type": "section",
+            "label": "Privacy policy",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "white",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "privacy-title",
+                    "type": "heading",
+                    "label": "Privacy Policy",
+                    "active": true,
+                    "data": {
+                        "heading": "Privacy Policy",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-intro",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Last updated: [DATE TO BE CONFIRMED BEFORE PUBLISHING]\n\nThis policy explains what Seniors Property Advisors Pty Ltd (ABN [TO BE CONFIRMED]) does with personal information collected through this website. It is written to be read, not to be waved at you — if anything here is unclear, ring us on 1300 277 228 and ask.\n\nWe handle personal information in line with the Australian Privacy Principles in the Privacy Act 1988 (Cth).",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "privacy-what-h",
+                    "type": "heading",
+                    "label": "What we collect",
+                    "active": true,
+                    "data": {
+                        "heading": "What we collect",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-what",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "When you send an enquiry through this website, the form asks for your name, email address, phone number and suburb, along with whatever you write in the message. It also records which page you sent it from, and that you ticked the consent box.\n\nThat is the whole of what the website itself asks you for. There is no account to create and no newsletter sign-up.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-what-checks",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Your name, email, phone number and suburb, when you send an enquiry.",
+                            "The message you write, and the page you sent it from.",
+                            "A session cookie, which keeps you signed in if you are a staff member using the admin.",
+                            "Whatever you tell an advisor on the phone or in person, which is recorded in our own systems rather than on this website."
+                        ],
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "privacy-why-h",
+                    "type": "heading",
+                    "label": "Why we hold it",
+                    "active": true,
+                    "data": {
+                        "heading": "Why we hold it",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-why",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "To answer you. An enquiry is a request to be contacted, and we cannot do that without a way to reach you.\n\nIf you go on to use the service, we hold what we need to give you advice about selling your home — which agents suit your property, what their fees look like, and what we discussed. We do not use your details to advertise to you, and we do not sell them to anybody.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "privacy-share-h",
+                    "type": "heading",
+                    "label": "Who we share it with",
+                    "active": true,
+                    "data": {
+                        "heading": "Who we share it with",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-share",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "No real estate agent is given your details without you asking us to introduce you. That is the point of an independent service: an agent who has not met you has not bought your name from us, because we do not sell it.\n\nWe use service providers to run the business — website hosting, email, and the software our advisors work in. They hold information on our behalf and may not use it for anything else. [ANY OTHER DISCLOSURES — SUCH AS CONVEYANCERS OR STYLISTS YOU REFER CLIENTS TO — TO BE CONFIRMED AND LISTED HERE.]\n\n[WHETHER ANY OF THESE PROVIDERS STORE DATA OVERSEAS, AND IN WHICH COUNTRIES, TO BE CONFIRMED — THE PRIVACY ACT REQUIRES THIS TO BE STATED.]",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "privacy-keep-h",
+                    "type": "heading",
+                    "label": "How long we keep it",
+                    "active": true,
+                    "data": {
+                        "heading": "How long we keep it",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-keep",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "[RETENTION PERIOD TO BE CONFIRMED. Say how long an enquiry that goes nowhere is kept, and how long a client's records are kept after the work ends — including any period you are required to keep them for.]\n\nWhen we no longer need information, we destroy it or remove anything that identifies you.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "privacy-analytics-h",
+                    "type": "heading",
+                    "label": "Cookies and measurement",
+                    "active": true,
+                    "data": {
+                        "heading": "Cookies and measurement",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-analytics",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "This website sets a session cookie so that staff signing in to the admin stay signed in. Reading the public pages does not require it.\n\n[IF GOOGLE ANALYTICS OR TAG MANAGER IS SWITCHED ON IN SETTINGS, SAY SO HERE AND EXPLAIN WHAT IT MEASURES. Both are off at the time of writing, so this page currently claims no measurement — that claim has to be revisited the moment either is enabled.]",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "privacy-access-h",
+                    "type": "heading",
+                    "label": "Asking for a copy, a correction, or deletion",
+                    "active": true,
+                    "data": {
+                        "heading": "Asking for a copy, a correction, or deletion",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-access",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "You can ask us what we hold about you, ask us to correct it, or ask us to delete it. Ring 1300 277 228 or write to hello@aspa.com.au and say what you would like. We will not charge you for asking.\n\n[RESPONSE TIMEFRAME TO BE CONFIRMED — 30 DAYS IS THE USUAL COMMITMENT.]\n\nIf you are unhappy with how we have handled your information, our complaints process is on this website, and you can take the matter to the Office of the Australian Information Commissioner at oaic.gov.au.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "privacy-link",
+                    "type": "button",
+                    "label": "How to make a complaint",
+                    "active": true,
+                    "data": {
+                        "label": "How to make a complaint",
+                        "href": "/complaints",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        }
+    ]
+}

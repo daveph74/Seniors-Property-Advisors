@@ -1,0 +1,180 @@
+{
+    "slug": "terms-and-conditions",
+    "url": "/terms-and-conditions",
+    "cmsId": 20,
+    "title": "Terms and Conditions",
+    "navLabel": "Terms",
+    "status": "published",
+    "seo": {
+        "title": "Terms and Conditions",
+        "description": "The terms on which Seniors Property Advisors provides this website — what the information here is and is not, and what you can rely on it for."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "terms",
+            "type": "section",
+            "label": "Terms and conditions",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "white",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "terms-title",
+                    "type": "heading",
+                    "label": "Terms and Conditions",
+                    "active": true,
+                    "data": {
+                        "heading": "Terms and Conditions",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-intro",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Last updated: [DATE TO BE CONFIRMED BEFORE PUBLISHING]\n\nThese terms cover your use of this website, which is operated by Seniors Property Advisors Pty Ltd (ABN [TO BE CONFIRMED]). Using the site means accepting them.\n\nThe terms of any advisory work we do for you are set out separately in the agreement you sign with us. Where the two differ, that agreement governs — this page is about the website.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "terms-info-h",
+                    "type": "heading",
+                    "label": "What the information here is",
+                    "active": true,
+                    "data": {
+                        "heading": "What the information here is",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-info",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "General information about selling a home, chosen to be useful to people thinking it over. It is not advice about your particular property, your finances, your tax position or your pension, because we do not know any of those from a web page.\n\nThe agent comparison shown on this website is a worked example. The agents, suburbs, commission rates and sales figures in it are made up to illustrate the format. Nothing in it is a representation about any real agent.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-info-checks",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "Nothing here is personal financial advice, legal advice or tax advice.",
+                            "Nothing here is a valuation or an appraisal of any property.",
+                            "We are not a real estate agency and we do not sell property.",
+                            "Market figures and examples change and may be out of date by the time you read them."
+                        ],
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "terms-pension-h",
+                    "type": "heading",
+                    "label": "Decisions about money and the pension",
+                    "active": true,
+                    "data": {
+                        "heading": "Decisions about money and the pension",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-pension",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Selling a home can affect the Age Pension, aged care fees and tax. We can tell you what usually comes up and what to ask about. We cannot tell you what it will mean for you, and we do not hold an Australian Financial Services Licence.\n\nBefore you act on anything that turns on those questions, speak to Services Australia, a licensed financial adviser or your accountant. If you would like, we will say plainly which parts of a decision we can help with and which need somebody else.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "terms-use-h",
+                    "type": "heading",
+                    "label": "Using this website",
+                    "active": true,
+                    "data": {
+                        "heading": "Using this website",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-use",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Read it, print it, and send pages to your family — that is what it is for. Please do not copy the wording or the images onto another website, or use the enquiry form to send anything abusive, misleading, or on behalf of somebody who has not asked you to.\n\nThe words, images and design on this site belong to us or are used with permission.\n\nWe try to keep the site available and accurate, but we do not promise it will always be either. Links to other websites are for convenience; we do not control what is on them.",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "terms-liability-h",
+                    "type": "heading",
+                    "label": "Where we stand if something goes wrong",
+                    "active": true,
+                    "data": {
+                        "heading": "Where we stand if something goes wrong",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-liability",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "Nothing in these terms takes away rights you have under the Australian Consumer Law. Those rights cannot be excluded, and we are not trying to.\n\n[THE REMAINDER OF THIS SECTION — ANY LIMITATION OF LIABILITY — TO BE DRAFTED BY YOUR SOLICITOR. It is the clause most likely to be unenforceable if it is copied from somewhere else, and we have deliberately not invented one.]",
+                        "spaceBelow": "medium"
+                    }
+                },
+                {
+                    "id": "terms-law-h",
+                    "type": "heading",
+                    "label": "Changes, and which law applies",
+                    "active": true,
+                    "data": {
+                        "heading": "Changes, and which law applies",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-law",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "We may update these terms. The date at the top says when they last changed, and using the site after that means accepting the new version.\n\nThese terms are governed by the law of [STATE TO BE CONFIRMED — New South Wales is the likely answer given the registered office at Level 14, 50 Carrington St, Sydney, but confirm it].\n\nIf something on this website is wrong, or you are unhappy with anything we have done, we would rather hear it from you than not.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "terms-link",
+                    "type": "button",
+                    "label": "Tell us about a problem",
+                    "active": true,
+                    "data": {
+                        "label": "Tell us about a problem",
+                        "href": "/complaints",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        }
+    ]
+}

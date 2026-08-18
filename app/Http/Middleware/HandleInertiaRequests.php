@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Auth\Permissions;
+use App\Cms\Notifications;
+use App\Cms\Realtime;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,9 +38,32 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
-            //
+            'auth' => [
+                'user' => $user === null ? null : [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'roleLabel' => $user->roleLabel(),
+                    'initials' => $user->initials(),
+                ],
+                'can' => Permissions::abilities($user),
+                'modules' => Permissions::modules($user),
+                'mustChangePassword' => $user !== null && $user->mustChangePassword(),
+            ],
+            /* So a form knows its enquiry arrived after the redirect back. */
+            'enquiry' => fn () => $request->session()->get('enquiry'),
+            /* The header's bell, and only where there is a header to put it in — the public site
+               shares this middleware, and two counts per page view is a bill nobody asked for. */
+            'notifications' => fn () => $request->routeIs('cms.*') ? Notifications::for() : null,
+            /* What the admin should connect to, if anything — the same answer the content policy is
+               built from, so the two cannot disagree about whether a socket exists. Only where the
+               admin is: the public site has nothing to listen for. */
+            'realtime' => fn () => $request->routeIs('cms.*') ? Realtime::config() : null,
         ];
     }
 }

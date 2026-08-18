@@ -100,6 +100,30 @@ export function SettingsIcon(props) {
     );
 }
 
+export function MenuIcon(props) {
+    return (
+        <Svg {...props}>
+            <path d="M4 6h16M4 12h16M4 18h16" />
+        </Svg>
+    );
+}
+
+export function PanelLeftIcon(props) {
+    return (
+        <Svg {...props}>
+            <path d="M4 4h16v16H4zM10 4v16" />
+        </Svg>
+    );
+}
+
+export function PanelRightIcon(props) {
+    return (
+        <Svg {...props}>
+            <path d="M4 4h16v16H4zM14 4v16" />
+        </Svg>
+    );
+}
+
 export function SearchIcon(props) {
     return (
         <Svg strokeWidth={2} stroke="#93A0B4" {...props}>
@@ -223,6 +247,15 @@ export function MobileIcon(props) {
     );
 }
 
+export function MailIcon(props) {
+    return (
+        <Svg {...props}>
+            <rect x="2.5" y="5" width="19" height="14" rx="2" />
+            <path d="m3 7 8.2 5.6a1.4 1.4 0 0 0 1.6 0L21 7" />
+        </Svg>
+    );
+}
+
 export function HistoryIcon(props) {
     return (
         <Svg {...props}>
@@ -279,6 +312,14 @@ export function CheckIcon(props) {
     return (
         <Svg strokeWidth={3} {...props}>
             <path d="m4 12 5.5 5.5L20 7" />
+        </Svg>
+    );
+}
+
+export function CrossIcon(props) {
+    return (
+        <Svg strokeWidth={2.6} {...props}>
+            <path d="M6 6l12 12M18 6 6 18" />
         </Svg>
     );
 }

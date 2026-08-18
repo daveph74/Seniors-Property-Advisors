@@ -1,0 +1,161 @@
+{
+    "slug": "why-agent-finder",
+    "url": "/why-agent-finder",
+    "cmsId": 12,
+    "title": "Why Agent Finder",
+    "navLabel": "Why Agent Finder",
+    "status": "published",
+    "seo": {
+        "title": "Why Use an Independent Advisor",
+        "description": "Save time, avoid sales pressure and understand commission before you sign anything — guided by 30+ years of property advisory experience, with nothing to sell you."
+    },
+    "draft": null,
+    "published": [
+        {
+            "id": "why",
+            "type": "why-list",
+            "label": "Why use Agent Finder",
+            "active": true,
+            "anchor": "why",
+            "data": {
+                "eyebrow": "Why use Agent Finder",
+                "heading": "Confidence before you ever",
+                "headingEm": "sign anything.",
+                "lead": "Selling the family home is one of life’s biggest financial decisions. Agent Finder gives you the time, the information and the independent support to make it feel calm — not pressured.",
+                "items": [
+                    {
+                        "title": "Save time researching agents",
+                        "body": "We do the long‑listing, vetting and reference checks for you."
+                    },
+                    {
+                        "title": "Avoid pressure from sales calls",
+                        "body": "You stay in control. Agents only contact you when you’re ready."
+                    },
+                    {
+                        "title": "Understand commission and marketing",
+                        "body": "Plain‑English breakdowns so you can compare like for like."
+                    },
+                    {
+                        "title": "Guidance from experienced advisors",
+                        "body": "30+ years of negotiating, listing and selling experience on your side."
+                    },
+                    {
+                        "title": "Feel confident before listing",
+                        "body": "Go to market with a clear plan, a fair price and an agent you trust."
+                    }
+                ],
+                "image": {
+                    "src": "/media/2026/08/home-exterior.jpg",
+                    "alt": "Charming Australian home exterior"
+                },
+                "stamp": {
+                    "value": "30+",
+                    "text": "years of property advisory experience guiding Australian families."
+                }
+            }
+        },
+        {
+            "id": "how-we-are-paid",
+            "type": "section",
+            "label": "How we are paid",
+            "active": true,
+            "data": {
+                "width": "narrow",
+                "background": "wash",
+                "spacing": "medium"
+            },
+            "children": [
+                {
+                    "id": "paid-eyebrow",
+                    "type": "eyebrow",
+                    "label": "The obvious question",
+                    "active": true,
+                    "data": {
+                        "eyebrow": "The obvious question"
+                    }
+                },
+                {
+                    "id": "paid-heading",
+                    "type": "heading",
+                    "label": "If we take nothing from the agent, how does this work?",
+                    "active": true,
+                    "data": {
+                        "heading": "If we take nothing from the agent,",
+                        "headingEm": "how does this work?",
+                        "level": "h2",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "paid-body",
+                    "type": "rich-text",
+                    "label": "Text",
+                    "active": true,
+                    "data": {
+                        "body": "It is the first thing people ask, and it should be. We are not paid by agents and we take no share of their commission, so no agent can buy their way onto your shortlist. That is the whole reason a shortlist from us is worth reading — there is nothing in it for us if you choose one over another.",
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "paid-checks",
+                    "type": "checklist",
+                    "label": "Checklist",
+                    "active": true,
+                    "data": {
+                        "checks": [
+                            "No agent pays us to appear on your shortlist, and none can.",
+                            "We take no share of the commission you end up paying.",
+                            "You are told what our own fee is before we start, not after.",
+                            "If you decide not to sell, that is a perfectly good outcome and it costs you nothing."
+                        ],
+                        "spaceBelow": "small"
+                    }
+                },
+                {
+                    "id": "paid-link",
+                    "type": "button",
+                    "label": "How this works for families",
+                    "active": true,
+                    "data": {
+                        "label": "How this works for families",
+                        "href": "/for-families",
+                        "variant": "ghost",
+                        "arrow": true
+                    }
+                }
+            ]
+        },
+        {
+            "id": "cta",
+            "type": "cta",
+            "label": "Call to action",
+            "active": true,
+            "data": {
+                "eyebrow": "Ready when you are",
+                "heading": "Ready to find",
+                "headingEm": "the right agent?",
+                "body": "Start with a free, no‑pressure conversation. We’ll help you understand your options — and only move forward when it feels right.",
+                "buttons": [
+                    {
+                        "label": "Get Started",
+                        "variant": "secondary",
+                        "action": "open-finder",
+                        "arrow": true
+                    },
+                    {
+                        "label": "Call 1300 277 228",
+                        "variant": "ghost",
+                        "href": "tel:1300277228",
+                        "onNavy": true
+                    }
+                ],
+                "trustMarks": [
+                    "Independent advice",
+                    "No agent commissions",
+                    "Australian owned",
+                    "No obligation"
+                ]
+            }
+        }
+    ]
+}

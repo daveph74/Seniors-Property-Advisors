@@ -1,0 +1,144 @@
+{
+    "notice": {
+        "text": "Free guide — 8 questions to ask before choosing an agent",
+        "href": "/free-guide"
+    },
+    "logo": {
+        "src": "/Seniors_Property_Advisors_Logo.svg",
+        "alt": "Seniors Property Advisors"
+    },
+    "phone": {
+        "label": "1300 277 228",
+        "href": "tel:1300277228"
+    },
+    "nav": {
+        "links": [
+            {
+                "href": "/how-it-works",
+                "label": "How it works"
+            },
+            {
+                "href": "/why-agent-finder",
+                "label": "Why Agent Finder"
+            },
+            {
+                "href": "/compare-agents",
+                "label": "Compare agents"
+            },
+            {
+                "href": "/for-families",
+                "label": "For families"
+            },
+            {
+                "href": "/contact",
+                "label": "Contact"
+            },
+            {
+                "href": null,
+                "label": "Resources",
+                "children": [
+                    {
+                        "href": "/faqs",
+                        "label": "FAQs"
+                    },
+                    {
+                        "href": "/blog",
+                        "label": "Blog"
+                    }
+                ]
+            }
+        ],
+        "cta": {
+            "label": "Find My Agent",
+            "action": "open-finder",
+            "arrow": true
+        }
+    },
+    "footer": {
+        "word": "Agent Finder",
+        "blurb": "An independent service from Seniors Property Advisors, helping homeowners and their families sell with confidence.",
+        "address": [
+            "Level 14, 50 Carrington St,",
+            "Sydney NSW 2000"
+        ],
+        "columns": [
+            {
+                "heading": "Service",
+                "links": [
+                    {
+                        "href": "/how-it-works",
+                        "label": "How it works"
+                    },
+                    {
+                        "href": "/compare-agents",
+                        "label": "Compare agents"
+                    },
+                    {
+                        "href": "/for-families",
+                        "label": "For families"
+                    }
+                ]
+            },
+            {
+                "heading": "Resources",
+                "links": [
+                    {
+                        "href": "/free-guide",
+                        "label": "Free guide"
+                    },
+                    {
+                        "href": "/selling-checklist",
+                        "label": "Selling checklist"
+                    },
+                    {
+                        "href": "/glossary",
+                        "label": "Glossary"
+                    },
+                    {
+                        "href": "/faqs",
+                        "label": "FAQs"
+                    },
+                    {
+                        "href": "/blog",
+                        "label": "Blog"
+                    }
+                ]
+            },
+            {
+                "heading": "Contact",
+                "links": [
+                    {
+                        "href": "/contact",
+                        "label": "Send an enquiry"
+                    },
+                    {
+                        "href": "tel:1300277228",
+                        "label": "1300 277 228"
+                    },
+                    {
+                        "href": "mailto:hello@aspa.com.au",
+                        "label": "hello@aspa.com.au"
+                    },
+                    {
+                        "label": "Mon–Fri, 8am – 6pm AEST"
+                    }
+                ]
+            }
+        ],
+        "legal": "© 2026 Seniors Property Advisors Pty Ltd · ABN 12 345 678 901",
+        "links": [
+            {
+                "href": "/privacy-policy",
+                "label": "Privacy"
+            },
+            {
+                "href": "/terms-and-conditions",
+                "label": "Terms"
+            },
+            {
+                "href": "/complaints",
+                "label": "Complaints"
+            }
+        ]
+    }
+}

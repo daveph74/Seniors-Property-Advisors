@@ -5,7 +5,9 @@
    unprefixed names like .btn, .card, .modal).
    ========================================================================= */
 
-.cms-shell{
+.cms-shell,
+.cms-builder,
+.cms-portal{
   --cms-bg: #F4F6F8;
   --cms-surface: #FFFFFF;
   --cms-ink: #0F1B2D;
@@ -57,7 +59,9 @@
   --cms-shadow-toast: 0 16px 40px rgba(16,32,58,0.3);
   --cms-font-sans: 'Instrument Sans', system-ui, sans-serif;
   --cms-font-serif: 'Instrument Serif', Georgia, serif;
+}
 
+.cms-shell{
   height: 100vh;
   width: 100%;
   display: flex;
@@ -68,6 +72,8 @@
   background: var(--cms-bg);
 }
 
+.cms-builder{ font-family: var(--cms-font-sans); color: var(--cms-ink); font-size: 14px; }
+.cms-builder *{ box-sizing: border-box; }
 .cms-shell *{ box-sizing: border-box; }
 .cms-shell a{ color: var(--cms-navy); text-decoration: none; }
 .cms-shell a:hover{ color: var(--cms-navy-hover); }
@@ -80,6 +86,32 @@
 @keyframes cms-rise{ from{ opacity: 0; transform: translateY(8px); } to{ opacity: 1; transform: none; } }
 @keyframes cms-spin{ to{ transform: rotate(360deg); } }
 .cms-anim-rise{ animation: cms-rise 150ms ease-out; }
+
+/* Elements that carry their own centring transform need keyframes that keep it:
+   animating to `transform: none` drops the centring mid-flight, so the element
+   plays from an offset position and then snaps into place when the animation ends. */
+@keyframes cms-modal-in{
+  from{ opacity: 0; transform: translate(-50%, calc(-50% + 10px)) scale(.985); }
+  to{ opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes cms-toast-in{
+  from{ opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to{ opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes cms-drawer-in{
+  from{ opacity: 0; transform: translateX(24px); }
+  to{ opacity: 1; transform: translateX(0); }
+}
+@keyframes cms-fade-in{ from{ opacity: 0; } to{ opacity: 1; } }
+
+.cms-anim-modal{ animation: cms-modal-in 160ms cubic-bezier(.2,.7,.4,1); }
+.cms-anim-toast{ animation: cms-toast-in 160ms cubic-bezier(.2,.7,.4,1); }
+.cms-anim-drawer{ animation: cms-drawer-in 180ms cubic-bezier(.2,.7,.4,1); }
+.cms-anim-fade{ animation: cms-fade-in 160ms ease-out; }
+
+@media (prefers-reduced-motion: reduce){
+  .cms-anim-rise, .cms-anim-modal, .cms-anim-toast, .cms-anim-drawer, .cms-anim-fade{ animation: none; }
+}
 
 /* ---------- Buttons ---------- */
 .cms-btn{
@@ -102,9 +134,16 @@
   border-color: var(--cms-navy); background: var(--cms-navy); color: #fff; font-weight: 600;
   box-shadow: 0 1px 2px rgba(16,32,58,0.2);
 }
+/* `.cms-shell a` is more specific than `.cms-btn`, so a link styled as a button would
+   take the shell's navy text — invisible on a navy button. */
+.cms-shell a.cms-btn{ color: var(--cms-ink-soft); }
+.cms-shell a.cms-btn--primary{ color: #fff; }
+.cms-shell a.cms-btn--danger-outline{ color: var(--cms-danger-text); }
 .cms-btn--primary:hover{ background: var(--cms-navy-hover); }
 .cms-btn--danger-outline{ border-color: var(--cms-danger-border); color: var(--cms-danger-text); }
 .cms-btn--danger-outline:hover{ background: var(--cms-danger-bg); }
+.cms-btn--danger{ background: var(--cms-danger-text); border-color: var(--cms-danger-text); color: #fff; }
+.cms-btn--danger:hover{ background: #8B2921; border-color: #8B2921; }
 .cms-btn--ghost{ border-color: transparent; background: transparent; }
 .cms-btn--ghost:hover{ background: #F1F4F8; }
 .cms-btn--block{ width: 100%; }
@@ -117,6 +156,15 @@
 .cms-icon-btn:hover{ background: #F1F4F8; }
 .cms-icon-btn__dot{
   position: absolute; top: 6px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: #C2410C;
+}
+/* Sits proud of the button so a two-digit count does not squash the icon it belongs to. */
+.cms-icon-btn__badge{
+  position: absolute; top: -6px; right: -6px;
+  min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
+  background: var(--cms-danger-text); color: #fff;
+  font-size: 10.5px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--cms-surface);
 }
 .cms-icon-btn-sm{
   width: 28px; height: 28px; border: 1px solid transparent; border-radius: 7px;
@@ -135,8 +183,24 @@
 }
 .cms-input:focus, .cms-select:focus, .cms-textarea:focus{ border-color: var(--cms-accent-2); }
 .cms-textarea{ padding: 8px 10px; height: auto; line-height: 1.5; resize: vertical; }
-.cms-select{ color: var(--cms-text); }
+/* The browser's own control was left showing here, so a select sat among the inputs with a
+   different arrow, a different text colour and its own idea of spacing. The arrow is drawn as a
+   background so it matches the icons beside it, and the room for it is real padding rather than a
+   guess — a long option would otherwise run underneath it. */
+.cms-select{
+  color: var(--cms-text);
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 30px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C99AB' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 12px;
+}
+.cms-select:disabled{ color: var(--cms-text-quiet); cursor: not-allowed; background-color: var(--cms-tint); }
 .cms-input--sm, .cms-select--sm{ height: 34px; font-size: 12.5px; }
+.cms-select--sm{ padding-right: 26px; background-position: right 8px center; }
 .cms-hint{ font-size: 12px; color: var(--cms-text-mid); margin-top: 6px; }
 
 .cms-search{
@@ -155,10 +219,24 @@
 .cms-segmented{ display: flex; padding: 2px; border: 1px solid var(--cms-border-input-2); border-radius: var(--cms-radius); background: var(--cms-surface); gap: 0; }
 .cms-segmented--tint{ background: var(--cms-tint); }
 .cms-segmented__btn{
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   height: 30px; padding: 0 12px; border: none; border-radius: 6px;
   font: 500 12.5px/1 var(--cms-font-sans); cursor: pointer; background: transparent; color: var(--cms-text-mid);
 }
-.cms-segmented__btn--active{ background: var(--cms-navy); color: #fff; }
+.cms-segmented__btn--icon{ width: 30px; padding: 0; flex: none; }
+.cms-segmented__btn--active{ background: var(--cms-navy); color: #ffffffbf; }
+.cms-segmented__btn:disabled{ opacity: .35; cursor: not-allowed; }
+/* A segment may also be a link, where each choice is an address worth pasting rather than a panel
+   swapped in place — the enquiry inbox filters by form that way.
+   Scoped through `.cms-shell` on purpose: that selector sets a colour for every link in the admin and
+   is one step more specific than a lone class, so `--active` lost to it and painted navy text on the
+   navy fill — an active tab with nothing legible in it. Both rules need the same reach as the thing
+   they are correcting, and `--active` has to come second. */
+.cms-shell a.cms-segmented__btn{ color: var(--cms-text-mid); text-decoration: none; }
+.cms-shell a.cms-segmented__btn:hover{ background: var(--cms-tint-2); }
+.cms-shell a.cms-segmented__btn--active{ color: #ffffffbf; }
+.cms-shell a.cms-segmented__btn--active:hover{ background: var(--cms-navy); }
+.cms-version-more{ display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 10px 4px; }
 
 /* ---------- Badges ---------- */
 .cms-badge{
@@ -174,6 +252,11 @@
 .cms-badge--danger{ color: var(--cms-danger-text); background: var(--cms-danger-bg); border-color: var(--cms-danger-border); }
 
 /* ---------- Cards / surfaces ---------- */
+/* The public stylesheet loads on CMS routes too, and it sets `section { padding: 120px 0 }` for the
+   website's own sections. Any <section> in the admin inherited that — the dashboard cards each had
+   120px of empty space above their heading, and the ones that looked right only did so because they
+   set padding inline. Reset once here rather than per card. */
+.cms-shell section{ padding: 0; }
 .cms-card{
   background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg);
   box-shadow: var(--cms-shadow-card);
@@ -187,6 +270,7 @@
 .cms-toggle__knob{ position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s ease; }
 .cms-toggle--on{ background: var(--cms-navy); }
 .cms-toggle--on .cms-toggle__knob{ left: 16px; }
+.cms-toggle:disabled{ opacity: .45; cursor: not-allowed; }
 
 /* ---------- Empty state ---------- */
 .cms-empty{ padding: 64px 40px; text-align: center; }
@@ -200,6 +284,7 @@
 .cms-empty__body{ margin: 0 0 16px; font-size: 13.5px; color: var(--cms-text-mid); line-height: 1.55; }
 
 /* ---------- Dropdown menu ---------- */
+.cms-portal{ font-family: var(--cms-font-sans); color: var(--cms-ink); font-size: 14px; }
 .cms-menu{
   position: absolute; z-index: 40; width: 190px; background: var(--cms-surface);
   border: 1px solid var(--cms-border-input-2); border-radius: 10px; box-shadow: var(--cms-shadow-menu);
@@ -225,6 +310,48 @@
 .cms-modal__title{ margin: 0 0 4px; font-size: 18px; font-weight: 600; }
 .cms-modal__lead{ margin: 0 0 18px; font-size: 13.5px; color: var(--cms-text-mid); line-height: 1.55; }
 .cms-modal__actions{ display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.cms-field-error{ margin-top: 5px; font-size: 12.5px; color: var(--cms-danger-text); }
+
+/* ---------- Password requirements ---------- */
+.cms-password-rules{ list-style: none; margin: 8px 0 0; padding: 0; }
+.cms-password-rules__item{
+  display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+  font-size: 12px; color: var(--cms-text-mid);
+}
+.cms-password-rules__item:last-child{ margin-bottom: 0; }
+.cms-password-rules__item--met{ color: var(--cms-success-text); font-weight: 500; }
+.cms-password-rules__mark{
+  width: 15px; height: 15px; border-radius: 50%; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cms-neutral-bg); border: 1px solid var(--cms-border-input);
+  color: var(--cms-text-quiet);
+}
+.cms-password-rules__item--met .cms-password-rules__mark{
+  background: var(--cms-success-dot); border-color: var(--cms-success-dot); color: #FFFFFF;
+}
+.cms-reveal{ position: relative; }
+.cms-reveal .cms-input{ padding-right: 36px; }
+.cms-reveal__btn{
+  position: absolute; top: 0; right: 0; width: 34px; height: 36px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; cursor: pointer; color: var(--cms-text-quiet);
+}
+.cms-reveal__btn:hover{ color: var(--cms-text-mid); }
+.cms-reveal__btn:focus-visible{ outline: 2px solid var(--cms-accent-2); outline-offset: -2px; border-radius: var(--cms-radius-sm); }
+.cms-fieldgroup{ margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--cms-border-soft); }
+.cms-fieldgroup__title{
+  margin-bottom: 10px; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--cms-text-quiet);
+}
+.cms-media-pick-row__thumb--img{ object-fit: cover; }
+.cms-confirm-detail{
+  margin: 0 0 18px; padding: 11px 13px; border: 1px solid var(--cms-border-soft);
+  border-radius: var(--cms-radius); background: var(--cms-tint-2);
+  font-size: 13px; line-height: 1.5; color: var(--cms-text);
+}
+.cms-confirm-detail--danger{
+  border-color: var(--cms-danger-border); background: var(--cms-danger-bg); color: var(--cms-danger-text);
+}
 .cms-drawer-overlay{ position: fixed; inset: 0; background: rgba(12,27,49,0.32); z-index: 70; }
 .cms-drawer{
   position: fixed; top: 0; right: 0; bottom: 0; width: 380px; background: var(--cms-surface); z-index: 71;
@@ -264,9 +391,9 @@
 }
 .cms-nav-item:hover{ background: #F1F4F8; color: var(--cms-navy); }
 .cms-nav-item svg{ opacity: .85; }
-.cms-nav-item--active{ background: var(--cms-navy); color: #fff; }
+.cms-shell a.cms-nav-item--active{ background: var(--cms-navy); color: #ffffffbf; }
 .cms-nav-item--active svg{ opacity: 1; }
-.cms-nav-item--active:hover{ background: var(--cms-navy); color: #fff; }
+.cms-shell a.cms-nav-item--active:hover{ background: var(--cms-navy); color: #ffffffbf; }
 .cms-nav-item__count{ margin-left: auto; font-size: 11.5px; color: var(--cms-text-mid); font-variant-numeric: tabular-nums; }
 .cms-nav-item--active .cms-nav-item__count{ color: rgba(255,255,255,0.75); }
 .cms-sidebar__footer{ margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -275,7 +402,13 @@
   font-size: 13px; color: #415064; border: 1px solid var(--cms-border);
 }
 .cms-view-site:hover{ background: #F1F4F8; }
-.cms-user-chip{ display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; background: #F7F9FB; }
+.cms-user-chip-wrap{ position: relative; }
+.cms-user-chip{
+  display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; background: #F7F9FB;
+  width: 100%; border: 0; text-align: left; cursor: pointer; font: inherit; color: inherit;
+}
+.cms-user-chip:hover{ background: #EFF4F9; }
+.cms-user-menu__head{ padding: 8px 12px; font-size: 11.5px; color: var(--cms-text-mid); word-break: break-all; }
 .cms-user-chip__avatar{
   width: 28px; height: 28px; flex: none; border-radius: 50%; background: #DDE6F2; color: var(--cms-navy);
   display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 600;
@@ -291,18 +424,157 @@
 .cms-header__crumb{ font-size: 11.5px; color: var(--cms-text-mid); line-height: 1.2; }
 .cms-header__title{ font-size: 15.5px; font-weight: 600; line-height: 1.3; }
 .cms-header__actions{ margin-left: auto; display: flex; align-items: center; gap: 10px; }
-.cms-header__search{ width: 260px; background: var(--cms-tint); }
+.cms-header__search{ width: 260px; background: var(--cms-tint); cursor: text; text-align: left; }
+.cms-header__search-label{
+  flex: 1; min-width: 0; font-size: 13px; color: var(--cms-text-mid);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .cms-header__kbd{ font-size: 11px; color: var(--cms-text-mid); border: 1px solid var(--cms-border-input-2); border-radius: 4px; padding: 1px 5px; background: #fff; }
+
+/* ---------- Search palette ---------- */
+.cms-palette{
+  position: fixed; top: 84px; left: 50%; transform: translateX(-50%); z-index: 81;
+  width: 560px; max-width: calc(100vw - 32px);
+  background: var(--cms-surface); border-radius: var(--cms-radius-xl); box-shadow: var(--cms-shadow-modal);
+  overflow: hidden;
+}
+.cms-palette__field{
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px; height: 52px; border-bottom: 1px solid var(--cms-border-softer);
+}
+.cms-palette__input{ flex: 1; border: none; outline: none; background: transparent; font-size: 15px; color: var(--cms-ink); }
+/* The shell rings every focusable thing, and rightly so — but this field is focused the instant
+   the dialog opens and is the only thing in it, so the ring marks what was never in doubt.
+   Specificity has to match `.cms-shell :focus-visible` to win, hence the pseudo-class here. */
+.cms-palette__input:focus-visible{ outline: none; }
+.cms-palette__results{ max-height: 60vh; overflow-y: auto; padding: 6px; }
+.cms-palette__hint{ margin: 0; padding: 18px 12px; font-size: 13px; color: var(--cms-text-mid); text-align: center; }
+.cms-palette__group + .cms-palette__group{ margin-top: 6px; }
+.cms-palette__group-label{
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--cms-text-mid); padding: 8px 10px 4px;
+}
+.cms-palette__result{
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border: none; border-radius: 7px; background: transparent;
+  cursor: pointer; text-align: left; font-size: 13.5px; color: var(--cms-ink);
+}
+.cms-palette__result--active{ background: #F1F4F8; }
+.cms-palette__result-title{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cms-palette__result-meta{ flex: none; font-size: 12px; color: var(--cms-text-mid); }
+.cms-palette__thumb{ width: 28px; height: 28px; border-radius: 5px; background: var(--cms-placeholder-img); flex: none; }
+.cms-palette__thumb--img{ object-fit: cover; }
+
+/* ---------- Notification bell ---------- */
+.cms-bell{ position: relative; }
+.cms-bell__menu{
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; width: 280px;
+  background: var(--cms-surface); border: 1px solid var(--cms-border-softer);
+  border-radius: var(--cms-radius); box-shadow: var(--cms-shadow-modal); padding: 6px;
+}
+.cms-bell__empty{ margin: 0; padding: 14px 10px; font-size: 13px; color: var(--cms-text-mid); text-align: center; }
+.cms-bell__item{
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 7px; font-size: 13px; color: var(--cms-ink); text-decoration: none;
+}
+.cms-bell__item:hover{ background: #F1F4F8; }
+/* ---------- Pagination ---------- */
+/* A sibling of the list, never inside it: the list clips its overflow to keep its rounded corners. */
+.cms-pager{ display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.cms-pager__count{ font-size: 12.5px; color: var(--cms-text-mid); }
+.cms-pager__size{ margin-left: auto; }
+/* Room for the arrow kept on the right — the old shorthand padding removed it and the option ran
+   underneath. */
+.cms-pager__size .cms-select{ width: auto; height: 30px; font-size: 12.5px; padding: 0 26px 0 8px; }
+.cms-pager__pages{ display: flex; align-items: center; gap: 4px; }
+.cms-pager__page{
+  min-width: 30px; height: 30px; padding: 0 8px;
+  border: 1px solid transparent; border-radius: var(--cms-radius-sm);
+  background: transparent; cursor: pointer;
+  font-size: 12.5px; color: var(--cms-text); font-variant-numeric: tabular-nums;
+}
+.cms-pager__page:hover{ background: #F1F4F8; }
+.cms-pager__page--current{ background: var(--cms-navy); border-color: var(--cms-navy); color: #fff; font-weight: 600; }
+.cms-pager__page--current:hover{ background: var(--cms-navy); }
+.cms-pager__gap{ padding: 0 2px; font-size: 12.5px; color: var(--cms-text-quiet); }
+.cms-pager .cms-btn:disabled{ opacity: 0.4; cursor: not-allowed; }
+@media (max-width: 720px){
+  /* The segments share one full-width row rather than wrapping into a ragged two-and-one, which
+     would lose the "one of these is chosen" reading that is the whole of what they say. */
+  .cms-toolbar > .cms-segmented{ width: 100%; }
+  .cms-toolbar > .cms-segmented > .cms-segmented__btn{ flex: 1 1 0; min-width: 0; padding: 0 6px; text-align: center; }
+  .cms-enquiry-detail__answers{ grid-template-columns: 1fr; gap: 12px; }
+  .cms-pager__size{ margin-left: 0; }
+  .cms-pager__pages{ width: 100%; justify-content: center; }
+}
+
+/* ---------- Enquiries ---------- */
+.cms-enquiry-row{ width: 100%; text-align: left; background: var(--cms-surface); cursor: pointer; font: inherit; color: inherit; }
+.cms-enquiry-row:hover{ background: #F1F4F8; }
+/* Unread carries a rule down its left edge rather than a badge of its own — the status badge is
+   already there, and two markers on one row start competing to be read first. */
+.cms-enquiry-row--unread{ box-shadow: inset 3px 0 0 var(--cms-accent-2); }
+.cms-enquiry-row--unread .cms-faq-row__q{ font-weight: 600; }
+.cms-enquiry-row__snippet{
+  display: block; margin-top: 4px; font-size: 12.5px; font-weight: 400; color: var(--cms-text-mid);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cms-enquiry-detail__head{ display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.cms-enquiry-detail__head .cms-modal__title{ margin-bottom: 2px; }
+.cms-enquiry-detail__head .cms-icon-btn-sm{ margin-left: auto; font-size: 18px; line-height: 1; color: var(--cms-text-mid); }
+.cms-enquiry-detail__sent{ font-size: 12.5px; color: var(--cms-text-mid); }
+.cms-enquiry-detail__contact{ font-size: 13px; color: var(--cms-text-mid); margin-bottom: 14px; }
+/* The answers somebody picked from a list. Deliberately unboxed: this modal may not change a word of
+   what the sender wrote, and anything with a border and a pale fill in here starts reading as a field
+   you could type into. Two columns on desktop so four answers stay two compact rows and the notes and
+   the status control keep their place. */
+.cms-enquiry-detail__answers{
+  margin: 0 0 16px; display: grid; gap: 10px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.cms-enquiry-detail__answer{ min-width: 0; }
+.cms-enquiry-detail__answer-label{
+  font-size: 11.5px; font-weight: 500; letter-spacing: .02em; text-transform: uppercase;
+  color: var(--cms-text-quiet);
+}
+.cms-enquiry-detail__answer-value{
+  margin: 2px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--cms-ink-soft);
+  overflow-wrap: anywhere;
+}
+.cms-enquiry-detail__caption{
+  font-size: 11.5px; font-weight: 500; letter-spacing: .02em; text-transform: uppercase;
+  color: var(--cms-text-quiet); margin-bottom: 6px;
+}
+.cms-enquiry-detail__message{
+  margin: 0 0 18px; padding: 14px 16px; border-radius: var(--cms-radius);
+  background: var(--cms-bg); font-size: 13.5px; line-height: 1.6; color: var(--cms-text);
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 40vh; overflow-y: auto;
+}
+
+.cms-bell__item-name{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cms-bell__item-at{ flex: none; font-size: 12px; color: var(--cms-text-mid); }
+.cms-bell__all{
+  display: block; margin-top: 4px; padding: 9px 10px;
+  border-top: 1px solid var(--cms-border-softer);
+  font-size: 12.5px; color: var(--cms-accent); text-decoration: none; text-align: center;
+}
+.cms-bell__all:hover{ text-decoration: underline; }
 
 /* ---------- Main content ---------- */
 .cms-main{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; }
+/* Positioned so it is the containing block for its own content. The drag-reorder screens end
+   with an absolutely positioned `.cms-sr-only` live region; with nothing positioned between it
+   and the document, it resolved against the initial containing block and kept its static offset
+   — a page scrolled 1400px deep put a 1px element at document y=1400, so the body itself grew a
+   scrollbar and left half a screen of white below the shell. */
+.cms-view{ flex: 1; min-height: 0; overflow: auto; min-width: 0; position: relative; }
+/* No cap on any of them. The dashboard lost its 1240px one for leaving 236px of nothing on a wide
+   window, and the width modifiers that survived did the same to Users, Global content and Settings
+   — 1020px of form against a 1717px window reads as a screen that failed to load. Fields that
+   should not stretch say so individually, which is where a width belongs: on the input that holds
+   a phone number, not on the page that happens to contain one. */
 .cms-page{ padding: 22px 32px 48px; }
-.cms-page--dash{ padding: 28px 32px 48px; max-width: 1240px; min-width: 760px; }
-.cms-page--narrow{ max-width: 1000px; }
-.cms-page--medium{ max-width: 1020px; }
-.cms-page--wide{ max-width: 1180px; }
-.cms-page--builder-modal{ max-width: 1080px; }
+.cms-page--dash{ padding: 28px 32px 48px; min-width: 760px; }
 
 /* ---------- Dashboard ---------- */
 .cms-welcome-title{ margin: 0 0 6px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 34px; line-height: 1.15; letter-spacing: -0.01em; }
@@ -354,7 +626,7 @@
 .cms-table__row:last-child{ border-bottom: none; }
 .cms-table__row:hover{ background: var(--cms-tint-2); }
 .cms-table__row--pages{ min-width: 900px; grid-template-columns: minmax(240px,2.4fr) minmax(120px,1fr) 130px 150px 130px 44px; }
-.cms-table__row--users{ min-width: 840px; grid-template-columns: minmax(240px,1.6fr) minmax(140px,1fr) 130px 150px 90px; }
+.cms-table__row--users{ min-width: 900px; grid-template-columns: minmax(240px,1.6fr) minmax(140px,1fr) 110px 130px 210px; }
 .cms-table__cell-title{ min-width: 0; }
 .cms-table__cell-title button{
   border: none; background: none; padding: 0; font: 500 13.5px/1.3 var(--cms-font-sans); color: var(--cms-ink);
@@ -384,20 +656,46 @@
 .cms-faq-group__title{ margin: 0; font-size: 13.5px; font-weight: 600; }
 .cms-faq-group__count{ font-size: 11.5px; color: var(--cms-text-mid); }
 .cms-faq-list{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); overflow: hidden; }
-.cms-faq-row{ display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--cms-border-softer); }
+.cms-faq-row{ position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--cms-border-softer); }
 .cms-faq-row:last-child{ border-bottom: none; }
 .cms-faq-row:hover{ background: var(--cms-tint-2); }
 .cms-faq-row__q{ flex: 1; min-width: 0; font-size: 13.5px; }
-.cms-drag-handle{ cursor: grab; flex: none; }
+/* touch-action on the handle alone: it has to swallow the browser's scroll gesture to receive
+   pointer moves, and anywhere wider than this would stop the page scrolling on a tablet. */
+.cms-drag-handle{
+  cursor: grab; flex: none; touch-action: none; color: var(--cms-text-mid);
+  width: 40px; height: 40px; font-size: 15px; line-height: 1;
+}
+.cms-drag-handle:active{ cursor: grabbing; }
+.cms-drag-handle[aria-pressed="true"]{
+  border-color: var(--cms-accent-2); background: var(--cms-accent-bg); color: var(--cms-accent-2);
+}
+.cms-sr-only{
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.cms-sort--lifted{ opacity: .55; transition: opacity .12s ease; }
+/* Inset rather than the builder's in-flow bar: .cms-faq-list is overflow:hidden, so a bar sitting
+   at top:-2px on the first row would be clipped away. */
+.cms-sort-line{
+  position: absolute; left: 0; right: 0; height: 3px; border-radius: 2px;
+  background: var(--cms-accent-2); pointer-events: none; z-index: 2;
+}
+.cms-sort-line--before{ top: 0; }
+.cms-sort-line--after{ bottom: 0; }
 
 /* ---------- Testimonials ---------- */
-.cms-testimonial-grid{ display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 14px; }
-.cms-testimonial-card{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 18px; box-shadow: var(--cms-shadow-card); }
+.cms-testimonial-grid{ --row-gap: 14px; display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: 14px; }
+.cms-testimonial-card{ position: relative; background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 18px; box-shadow: var(--cms-shadow-card); }
 .cms-testimonial-card__head{ display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .cms-testimonial-card__avatar{ width: 36px; height: 36px; border-radius: 50%; background: var(--cms-placeholder-img); flex: none; }
 .cms-testimonial-card__name{ font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cms-testimonial-card__loc{ font-size: 12px; color: var(--cms-text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cms-testimonial-card__quote{ font-size: 13px; line-height: 1.6; color: var(--cms-text); }
+/* Its own line, not a flex sibling of the buttons: sharing that row left it whatever width three
+   buttons did not want, which was four words on four lines. */
+.cms-testimonial-card__meta{ margin-top: 14px; font-size: 11.5px; color: var(--cms-text-mid); }
+.cms-testimonial-card__meta + .cms-testimonial-card__foot{ margin-top: 8px; padding-top: 10px; }
 .cms-testimonial-card__foot{ display: flex; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--cms-border-softer); }
 
 /* ---------- Media ---------- */
@@ -405,7 +703,9 @@
 .cms-media-main{ flex: 1; min-width: 0; padding: 22px 26px 48px; }
 .cms-upload-progress{ display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: 1px solid var(--cms-accent-border); background: #F5F9FF; border-radius: var(--cms-radius-md); margin-bottom: 16px; }
 .cms-upload-progress__bar{ height: 5px; border-radius: 3px; background: #DCE7F7; overflow: hidden; margin-top: 6px; }
-.cms-upload-progress__fill{ height: 100%; background: var(--cms-accent); }
+.cms-upload-progress__fill{ height: 100%; background: var(--cms-accent); transition: width 120ms linear; }
+.cms-upload-progress__fill--failed{ background: var(--cms-danger-text); }
+.cms-media-empty{ display: flex; align-items: center; justify-content: center; min-height: 220px; padding: 24px; border: 1.5px dashed var(--cms-border); border-radius: var(--cms-radius-md); background: var(--cms-tint); color: var(--cms-text-mid); font-size: 12.5px; text-align: center; }
 .cms-media-grid{ display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
 .cms-media-item{
   text-align: left; padding: 0; border: 1px solid var(--cms-border); border-radius: var(--cms-radius-md);
@@ -414,11 +714,13 @@
 .cms-media-item:hover{ border-color: #B9C9E2; }
 .cms-media-item--selected{ border-color: var(--cms-navy); }
 .cms-media-item__thumb{ height: 118px; background: var(--cms-placeholder-img); }
+.cms-media-item__thumb--img{ width: 100%; object-fit: cover; display: block; }
 .cms-media-item__meta{ padding: 9px 10px; }
 .cms-media-item__name{ font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cms-media-item__sub{ font-size: 11.5px; color: var(--cms-text-mid); }
 .cms-media-side{ flex: none; width: 308px; background: var(--cms-surface); border-left: 1px solid var(--cms-border); padding: 18px; overflow: auto; }
 .cms-media-side__preview{ height: 150px; border-radius: var(--cms-radius-md); background: var(--cms-placeholder-img); margin-bottom: 14px; }
+.cms-media-side__preview--img{ width: 100%; object-fit: cover; }
 .cms-usage-warning{ padding: 12px; border: 1px solid var(--cms-warning-border); background: var(--cms-warning-soft-bg); border-radius: 9px; margin-bottom: 14px; }
 .cms-usage-warning__title{ font-size: 12.5px; font-weight: 600; color: var(--cms-warning-text); margin-bottom: 4px; }
 .cms-usage-warning__body{ font-size: 12px; color: var(--cms-warning-soft-text-2); line-height: 1.55; }
@@ -449,11 +751,20 @@
 /* ---------- Global content ---------- */
 .cms-impact-banner{ display: flex; align-items: center; gap: 11px; padding: 12px 14px; border: 1px solid var(--cms-warning-border); background: var(--cms-warning-soft-bg); border-radius: var(--cms-radius-md); margin-bottom: 18px; }
 .cms-impact-banner__text{ font-size: 13px; color: var(--cms-warning-soft-text); line-height: 1.5; }
-.cms-global-grid{ display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
-.cms-global-card{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 18px; box-shadow: var(--cms-shadow-card); }
-.cms-global-card__head{ display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
-.cms-global-card__title{ font-size: 14px; font-weight: 600; }
-.cms-global-card__body{ margin: 0 0 14px; font-size: 13px; color: var(--cms-text-mid); line-height: 1.55; }
+.cms-impact-banner__text a{ color: var(--cms-warning-text); font-weight: 600; }
+/* The layout's own strip, outside any page — hence the margins a .cms-page would have given it. */
+.cms-impact-banner--global{ margin: 22px 32px -4px; }
+/* `.cms-shell section` zeroes padding to keep the public stylesheet out of here, and a type
+   selector outweighs a lone class — hence the shell prefix rather than a bare `.cms-global-section`. */
+.cms-shell .cms-global-section{ padding: 18px; margin-bottom: 18px; }
+.cms-global-section:last-child{ margin-bottom: 0; }
+.cms-global-section__head{ display: flex; align-items: center; gap: 12px; }
+.cms-global-section__switch{ display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.cms-global-section__note{ margin: 6px 0 14px; }
+.cms-global-section__note:last-child{ margin-bottom: 0; }
+.cms-shell .cms-global-section .cms-card__title{ margin-bottom: 12px; }
+.cms-global-section__head .cms-card__title{ margin-bottom: 0; }
+.cms-field-hint{ display: block; margin-top: 5px; }
 
 /* ---------- Settings ---------- */
 .cms-settings-layout{ display: flex; gap: 26px; }
@@ -462,7 +773,10 @@
 .cms-settings-tab:hover{ background: #F1F4F8; }
 .cms-settings-tab--active{ background: var(--cms-accent-bg); color: var(--cms-navy); }
 .cms-settings-content{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-.cms-settings-section{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 20px; box-shadow: var(--cms-shadow-card); }
+/* `.cms-shell` prefix for the same reason as `.cms-global-section`: `.cms-shell section` zeroes
+   padding to keep the public stylesheet out of the admin, and a type selector outweighs a lone
+   class. Without it these cards render with their fields flush to the edge. */
+.cms-shell .cms-settings-section{ background: var(--cms-surface); border: 1px solid var(--cms-border); border-radius: var(--cms-radius-lg); padding: 20px; box-shadow: var(--cms-shadow-card); }
 .cms-settings-section__title{ margin: 0 0 3px; font-size: 15px; font-weight: 600; }
 .cms-settings-section__lead{ margin: 0 0 16px; font-size: 13px; color: var(--cms-text-mid); }
 .cms-settings-grid-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -478,10 +792,17 @@
 .cms-template-option--active{ border-color: var(--cms-navy); background: var(--cms-accent-bg); }
 
 /* ---------- Builder ---------- */
-.cms-builder{ display: flex; flex-direction: column; width: 100%; height: 100%; background: #EFF2F6; }
+.cms-builder{ display: flex; flex-direction: column; width: 100%; height: 100vh; overflow: hidden; background: #EFF2F6; }
 .cms-builder-topbar{ flex: none; height: 54px; background: var(--cms-surface); border-bottom: 1px solid var(--cms-border); display: flex; align-items: center; gap: 12px; padding: 0 14px; }
 .cms-builder-topbar__divider{ width: 1px; height: 24px; background: var(--cms-border); }
 .cms-builder-topbar__title{ font-size: 14px; font-weight: 600; white-space: nowrap; }
+.cms-builder-topbar__title--input{
+  max-width: 320px; padding: 4px 8px; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: inherit; font: inherit; text-overflow: ellipsis;
+}
+.cms-builder-topbar__title--input:hover:not(:disabled){ border-color: var(--cms-border-input-2); }
+.cms-builder-topbar__title--input:focus{ outline: none; border-color: var(--cms-navy); background: var(--cms-surface); }
+.cms-builder-topbar__title--input:disabled{ border-color: transparent; }
 .cms-builder-topbar__save{ font-size: 12px; color: var(--cms-text-mid); white-space: nowrap; }
 .cms-builder-body{ flex: 1; min-height: 0; display: flex; }
 .cms-builder-left{ flex: none; width: 268px; background: var(--cms-surface); border-right: 1px solid var(--cms-border); display: flex; flex-direction: column; }
@@ -500,17 +821,45 @@
 .cms-layer-row__move{ width: 20px; height: 20px; border: none; background: none; cursor: pointer; color: var(--cms-text-mid); padding: 0; display: flex; align-items: center; justify-content: center; }
 .cms-layer-row__move:hover{ color: var(--cms-navy); }
 
-.cms-canvas-outer{ flex: 1; min-width: 0; overflow: auto; padding: 24px 24px 90px; display: flex; justify-content: center; }
-.cms-canvas-frame{ width: 100%; transition: max-width 220ms ease; }
+.cms-canvas-outer{ flex: 1; min-width: 0; overflow: auto; padding: 24px 24px 90px; }
+.cms-canvas-frame{ margin: 0 auto; transition: width 220ms ease; }
 .cms-canvas-caption{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 11.5px; color: var(--cms-text-mid); }
-.cms-canvas-page{ background: var(--cms-surface); border: 1px solid var(--cms-border-input-2); border-radius: 10px; overflow: hidden; box-shadow: var(--cms-shadow-frame); min-height: 400px; }
+.cms-canvas-page{ background: var(--cms-surface); min-height: 400px; }
 .cms-canvas-page__header{ display: flex; align-items: center; gap: 18px; padding: 14px 26px; border-bottom: 1px solid var(--cms-border-soft); background: var(--cms-tint); }
 .cms-canvas-page__header-logo{ font-family: var(--cms-font-serif); font-size: 17px; color: var(--cms-navy); }
 .cms-canvas-page__header-links{ margin-left: auto; display: flex; gap: 16px; font-size: 12.5px; color: var(--cms-text-mid); }
 .cms-global-tag{ font-size: 11.5px; color: var(--cms-text-mid); border: 1px dashed #D6DEE9; border-radius: 5px; padding: 2px 7px; }
 .cms-canvas-page__footer{ padding: 26px 40px; background: var(--cms-navy-deep); color: #B0C1D9; font-size: 12px; display: flex; gap: 20px; }
 .cms-global-tag--dark{ margin-left: auto; border: 1px dashed #2A3F60; border-radius: 5px; padding: 2px 7px; }
+.cms-canvas-chrome{ position: relative; pointer-events: none; }
+.cms-canvas-chrome .nav-wrap{ position: static; }
+.cms-canvas-chrome__tag{ position: absolute; top: 8px; right: 10px; z-index: 2; background: rgba(255,255,255,0.9); }
+.cms-global-tag--dark.cms-canvas-chrome__tag{ background: rgba(12,27,49,0.85); color: #B0C1D9; }
 .cms-canvas-drop-end{ margin-top: 12px; padding: 16px; border: 1.5px dashed #CBD6E4; border-radius: 10px; text-align: center; font-size: 12.5px; color: var(--cms-text-mid); background: rgba(255,255,255,0.6); }
+
+.cms-canvas-drop-end--active{ border-style: solid; border-color: var(--cms-accent-2); background: var(--cms-accent-bg); color: var(--cms-accent-2); }
+
+.cms-section-shell{ position: relative; min-height: 96px; padding-bottom: 14px; display: flex; flex-direction: column; gap: inherit; align-items: inherit; justify-content: inherit; }
+.column-container > .cms-section-shell{ flex: 1; }
+.cms-section-shell--empty{ min-height: 0; padding-bottom: 0; }
+
+.cms-nest-drop{ display: flex; align-items: center; justify-content: center; gap: 8px; margin: 14px 24px; padding: 28px 16px; border: 1.5px dashed var(--cms-border); border-radius: 10px; background: var(--cms-tint); color: var(--cms-text-mid); font-size: 12.5px; text-align: center; transition: border-color 140ms ease, background 140ms ease, color 140ms ease; }
+.cms-nest-drop:hover{ border-color: #B9C9E2; background: #FAFCFF; }
+.cms-nest-drop--page{ margin: 40px; padding: 44px 16px; }
+.cms-nest-drop--active{ border-style: solid; border-color: var(--cms-accent-2); background: var(--cms-accent-bg); color: var(--cms-accent-2); box-shadow: inset 0 0 0 1px var(--cms-accent-2); }
+.cms-nest-drop--blocked{ border-color: var(--cms-danger-border); background: var(--cms-danger-bg); color: var(--cms-danger-text); }
+.cms-nest-drop--blocked:hover{ border-color: var(--cms-danger-border); background: var(--cms-danger-bg); }
+.cms-nest-drop--column{ margin: 8px; padding: 18px 10px; font-size: 11.5px; }
+
+.cms-block-placeholder{ display: flex; align-items: center; justify-content: center; min-height: 64px; padding: 12px; border: 1px dashed var(--cms-border-input); border-radius: 8px; background: var(--cms-tint); color: var(--cms-text-quiet); font-size: 12px; }
+
+.cms-col-cell{ position: relative; min-width: 0; display: flex; flex-direction: column; }
+.cms-col-cell > .cms-block{ flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cms-col-cell > .cms-block > .column-container{ flex: 1; }
+
+.cms-drop-line--v{ position: absolute; top: 0; bottom: 0; width: 4px; height: auto; border-radius: 3px; background: var(--cms-accent-2); z-index: 7; }
+.cms-drop-line--before{ left: calc(var(--row-gap, 32px) / -2 - 2px); }
+.cms-drop-line--after{ right: calc(var(--row-gap, 32px) / -2 - 2px); }
 
 .cms-drop-line{ position: relative; height: 0; }
 .cms-drop-line__bar{ position: absolute; left: 0; right: 0; top: -2px; height: 4px; border-radius: 3px; background: var(--cms-accent-2); }
@@ -525,63 +874,56 @@
 .cms-block__toolbar-btn--danger{ color: #B4483C; }
 .cms-block__toolbar-btn--danger:hover{ background: var(--cms-danger-bg); }
 
-.cms-blk-hero{ padding: 56px 40px; background: var(--cms-navy); color: #fff; }
-.cms-blk-hero__inner{ max-width: 620px; }
-.cms-blk-hero__eyebrow{ font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: #BACDE9; margin-bottom: 12px; }
-.cms-blk-hero__heading{ margin: 0 0 14px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 40px; line-height: 1.12; }
-.cms-blk-hero__body{ margin: 0 0 22px; font-size: 15px; line-height: 1.6; color: #D5DEEC; }
-.cms-blk-hero__ctas{ display: flex; gap: 10px; }
-.cms-blk-hero__primary{ display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 7px; background: #fff; color: var(--cms-navy); font-size: 13.5px; font-weight: 600; }
-.cms-blk-hero__secondary{ display: inline-flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.45); color: #fff; font-size: 13.5px; font-weight: 500; }
-.cms-blk-services{ padding: 48px 40px; }
-.cms-blk-services__heading{ margin: 0 0 24px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 28px; color: var(--cms-navy); }
-.cms-blk-services__grid{ display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
-.cms-blk-services__item{ padding: 18px; border: 1px solid var(--cms-border); border-radius: 10px; background: var(--cms-tint-2); }
-.cms-blk-services__item-title{ font-size: 14.5px; font-weight: 600; margin-bottom: 6px; color: var(--cms-navy); }
-.cms-blk-services__item-text{ font-size: 13px; line-height: 1.55; color: var(--cms-text-mid); }
-.cms-blk-stats{ padding: 36px 40px; background: #F5F8FC; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
-.cms-blk-stats__n{ font-family: var(--cms-font-serif); font-size: 30px; color: var(--cms-navy); line-height: 1.1; }
-.cms-blk-stats__label{ font-size: 12.5px; color: var(--cms-text-mid); margin-top: 4px; }
-.cms-blk-testimonials{ padding: 48px 40px; }
-.cms-blk-testimonials__heading{ margin: 0 0 22px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 28px; color: var(--cms-navy); }
-.cms-blk-testimonials__grid{ display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
-.cms-blk-testimonials__item{ padding: 20px; border: 1px solid var(--cms-border); border-radius: 10px; }
-.cms-blk-testimonials__quote{ font-size: 13.5px; line-height: 1.6; color: #2A3A50; }
-.cms-blk-testimonials__name{ margin-top: 12px; font-size: 12.5px; color: var(--cms-text-mid); }
-.cms-blk-faqs{ padding: 48px 40px; background: var(--cms-tint); }
-.cms-blk-faqs__heading{ margin: 0 0 18px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 28px; color: var(--cms-navy); }
-.cms-blk-faqs__list{ display: flex; flex-direction: column; gap: 8px; max-width: 720px; }
-.cms-blk-faqs__item{ display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--cms-border); border-radius: 9px; background: #fff; }
-.cms-blk-faqs__item-q{ font-size: 13.5px; font-weight: 500; color: #22344B; }
-.cms-blk-cta{ padding: 44px 40px; background: var(--cms-navy); color: #fff; display: flex; align-items: center; gap: 24px; }
-.cms-blk-cta__heading{ margin: 0 0 8px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 26px; }
-.cms-blk-cta__body{ margin: 0; font-size: 14px; color: #D5DEEC; line-height: 1.55; }
-.cms-blk-cta__primary{ display: inline-flex; align-items: center; height: 42px; padding: 0 20px; border-radius: 7px; background: #fff; color: var(--cms-navy); font-size: 13.5px; font-weight: 600; white-space: nowrap; }
-.cms-blk-rich{ padding: 44px 40px; max-width: 760px; }
-.cms-blk-rich__heading{ margin: 0 0 12px; font-family: var(--cms-font-serif); font-weight: 400; font-size: 26px; color: var(--cms-navy); }
-.cms-blk-rich__body{ margin: 0; font-size: 14.5px; line-height: 1.7; color: var(--cms-text); }
-
 .cms-builder-right{ flex: none; width: 308px; background: var(--cms-surface); border-left: 1px solid var(--cms-border); display: flex; flex-direction: column; }
-.cms-builder-right__head{ padding: 12px 14px 0; border-bottom: 1px solid var(--cms-border-soft); }
+.cms-builder-right__head{ padding: 12px 14px; border-bottom: 1px solid var(--cms-border-soft); }
 .cms-builder-right__title-row{ display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .cms-builder-right__title{ font-size: 13.5px; font-weight: 600; }
 .cms-builder-right__type{ font-size: 11px; color: var(--cms-text-mid); background: #F2F5F9; border-radius: 5px; padding: 2px 7px; }
-.cms-panel-tabs{ display: flex; gap: 14px; }
-.cms-panel-tab{ padding: 0 0 9px; border: none; background: none; cursor: pointer; font: 500 12.5px/1 var(--cms-font-sans); color: var(--cms-text-quiet); border-bottom: 2px solid transparent; }
-.cms-panel-tab--active{ color: var(--cms-navy); border-bottom-color: var(--cms-navy); }
+.cms-accordion{ border-top: 1px solid var(--cms-border-softer); }
+.cms-accordion:first-child{ border-top: none; }
+.cms-accordion__head{
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 11px 0; border: none; background: none; cursor: pointer; text-align: left;
+}
+.cms-accordion__title{
+  font: 600 11px/1 var(--cms-font-sans); letter-spacing: .05em; text-transform: uppercase;
+  color: var(--cms-text-mid);
+}
+.cms-accordion__chevron{ display: flex; color: var(--cms-text-quiet); transition: transform .15s ease; }
+.cms-accordion__head:hover .cms-accordion__title{ color: var(--cms-navy); }
+.cms-accordion--open .cms-accordion__title{ color: var(--cms-navy); }
+.cms-accordion--open .cms-accordion__chevron{ transform: rotate(180deg); color: var(--cms-navy); }
+.cms-accordion__body{ padding-bottom: 14px; }
 .cms-builder-right__body{ flex: 1; min-height: 0; overflow: auto; padding: 14px; }
 .cms-align-row{ display: flex; gap: 6px; margin-bottom: 14px; }
 .cms-align-btn{ flex: 1; height: 32px; border: 1px solid var(--cms-border-input); border-radius: 7px; background: #fff; color: var(--cms-text-mid); font: 500 12.5px/1 var(--cms-font-sans); cursor: pointer; }
 .cms-align-btn--active{ border-color: var(--cms-navy); background: var(--cms-accent-bg); color: var(--cms-navy); }
+.cms-rep__item{ border: 1px solid var(--cms-border); border-radius: 8px; background: var(--cms-surface); margin-bottom: 6px; overflow: hidden; }
+.cms-rep__item--open{ border-color: var(--cms-accent-border); box-shadow: var(--cms-shadow-card); }
+.cms-rep__head{ display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 8px; cursor: pointer; }
+.cms-rep__head:hover{ background: var(--cms-tint); }
+.cms-rep__num{ flex: none; width: 18px; height: 18px; border-radius: 5px; background: var(--cms-neutral-bg); color: var(--cms-text-mid); font-size: 10.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+.cms-rep__summary{ flex: 1; min-width: 0; font-size: 12.5px; color: var(--cms-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cms-rep__summary em{ color: var(--cms-text-quiet); font-style: normal; }
+.cms-rep__head .cms-icon-btn-sm{ width: 24px; height: 24px; flex: none; }
+.cms-rep__head .cms-icon-btn-sm:disabled{ opacity: .3; cursor: not-allowed; }
+.cms-rep__body{ padding: 10px 10px 12px; border-top: 1px solid var(--cms-border-softer); background: var(--cms-tint); }
+
 .cms-swatch-row{ display: flex; gap: 8px; margin-bottom: 16px; }
-.cms-swatch{ width: 32px; height: 32px; border-radius: 7px; border: 1px solid var(--cms-border-input); cursor: pointer; }
+.cms-swatch{ width: 32px; height: 32px; padding: 0; border-radius: 7px; border: 1px solid var(--cms-border-input); cursor: pointer; }
 .cms-swatch--active{ box-shadow: 0 0 0 2px #C9DAF5; }
 .cms-toggle-row{ display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--cms-border-softer); }
 .cms-toggle-row__label{ font-size: 12.5px; color: var(--cms-text); }
+.cms-check-row{ display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; font-size: 12.5px; color: var(--cms-text); cursor: pointer; }
+.cms-check-row input{ margin: 2px 0 0; flex: none; }
 .cms-media-pick-row{ display: flex; align-items: center; gap: 10px; padding: 9px; border: 1px solid var(--cms-border-input); border-radius: 8px; margin-bottom: 14px; }
 .cms-media-pick-row__thumb{ width: 54px; height: 38px; border-radius: 5px; background: #DCE5F2; flex: none; }
 .cms-media-pick-row__name{ font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cms-media-pick-row__dims{ font-size: 11.5px; color: var(--cms-text-mid); }
+.cms-media-pick-row--over{ border-color: var(--cms-accent-2); background: var(--cms-accent-bg); }
+.cms-media-pick-row__pct{ font-size: 11.5px; font-weight: 600; color: var(--cms-accent-2); flex: none; }
+.cms-upload-bar{ height: 5px; border-radius: 3px; background: #DCE7F7; overflow: hidden; margin-top: 6px; }
+.cms-upload-bar__fill{ height: 100%; background: var(--cms-accent); transition: width 120ms linear; }
 .cms-reusable-box{ padding: 12px; border: 1px solid var(--cms-border); border-radius: 9px; background: var(--cms-tint-2); }
 .cms-reusable-box__title{ font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
 .cms-reusable-box__body{ margin: 0 0 10px; font-size: 12px; color: var(--cms-text-mid); line-height: 1.5; }
@@ -607,3 +949,445 @@
 .cms-publish-summary__value{ font-size: 13px; font-weight: 500; }
 .cms-publish-changes{ margin: 0 0 20px; padding-left: 17px; color: var(--cms-text-mid); font-size: 12.5px; line-height: 1.7; }
 .cms-publish-changes-title{ font-size: 12.5px; font-weight: 600; margin-bottom: 7px; }
+
+.cms-library__drop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+    color: var(--cms-text-mid);
+    background: var(--cms-bg-soft, #f8f9fb);
+    border: 1.5px dashed var(--cms-border);
+    border-radius: 8px;
+}
+
+.cms-library__drop--over {
+    border-color: var(--cms-accent);
+    background: var(--cms-accent-soft, #eef4ff);
+    color: var(--cms-accent);
+}
+
+.cms-library__queue {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.cms-library__queue-name {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cms-library__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+    gap: 10px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.cms-library__tile {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background: #fff;
+    border: 1px solid var(--cms-border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: left;
+}
+
+.cms-library__tile:hover {
+    border-color: var(--cms-accent);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.cms-library__tile img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--cms-bg-soft, #f4f5f7);
+}
+
+.cms-library__name {
+    padding: 6px 8px 0;
+    font-size: 12px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cms-library__meta {
+    padding: 0 8px 7px;
+    font-size: 11px;
+    color: var(--cms-text-mid);
+}
+
+.cms-library__empty {
+    padding: 28px 12px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--cms-text-mid);
+    border: 1px dashed var(--cms-border);
+    border-radius: 8px;
+}
+
+.cms-library--over .cms-library__drop {
+    border-color: var(--cms-accent);
+    background: var(--cms-accent-soft, #eef4ff);
+    color: var(--cms-accent);
+}
+
+.cms-library--over .cms-library__grid,
+.cms-library--over .cms-library__empty {
+    opacity: 0.45;
+}
+
+.cms-media-cell{ position: relative; display: flex; }
+
+.cms-media-item--picked{ border-color: var(--cms-accent); box-shadow: 0 0 0 2px var(--cms-accent-soft, #EEF4FF); }
+
+.cms-media-item__check{
+  position: absolute; top: 8px; left: 8px; width: 17px; height: 17px; margin: 0; cursor: pointer;
+  accent-color: var(--cms-accent); border-radius: 3px;
+  box-shadow: 0 0 0 2px #fff; background: #fff;
+}
+
+.cms-media-bulk{
+  display: flex; align-items: center; gap: 12px; padding: 9px 14px; margin-bottom: 16px;
+  border: 1px solid var(--cms-accent-border); background: #F5F9FF; border-radius: var(--cms-radius-md);
+  font-size: 12.5px;
+}
+
+.cms-media-bulk__all{ display: flex; align-items: center; gap: 7px; color: var(--cms-text-mid); cursor: pointer; }
+.cms-media-bulk__all input{ accent-color: var(--cms-accent); cursor: pointer; }
+.cms-media-bulk strong{ margin-left: auto; }
+
+.cms-media-side{ position: relative; }
+
+.cms-media-side__close{
+  position: absolute; top: 10px; right: 12px; width: 24px; height: 24px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--cms-border); border-radius: 6px; background: var(--cms-surface);
+  font-size: 16px; line-height: 1; color: var(--cms-text-mid); cursor: pointer;
+}
+
+.cms-media-side__close:hover{ border-color: #B9C9E2; color: var(--cms-navy); }
+
+.cms-canvas-iframe{
+  display: block; box-sizing: content-box; border: 1px solid var(--cms-border-input-2); border-radius: 10px;
+  background: var(--cms-surface); box-shadow: var(--cms-shadow-frame); overflow: hidden;
+}
+
+.cms-canvas-scale{ width: 100%; overflow: hidden; }
+
+.cms-canvas-iframe--waiting{ position: absolute; visibility: hidden; pointer-events: none; }
+
+.cms-skeleton-holder{ overflow: hidden; }
+
+.cms-skeleton{
+  border: 1px solid var(--cms-border-input-2); border-radius: 10px; background: var(--cms-surface);
+  box-shadow: var(--cms-shadow-frame); overflow: hidden; box-sizing: border-box;
+}
+
+.cms-skeleton__header{
+  display: flex; align-items: center; gap: 18px; padding: 18px 26px;
+  border-bottom: 1px solid var(--cms-border-soft);
+}
+
+.cms-skeleton__nav{ display: flex; gap: 14px; margin-left: auto; }
+.cms-skeleton__hero{ display: flex; gap: 40px; padding: 44px 40px; align-items: flex-start; }
+.cms-skeleton__col{ flex: 1; min-width: 0; }
+.cms-skeleton__actions{ display: flex; align-items: center; gap: 14px; margin-top: 26px; }
+
+.cms-skeleton__image{
+  width: 44%; aspect-ratio: 4 / 3; border-radius: 12px; flex: none;
+  background: var(--cms-placeholder-img);
+}
+
+.cms-skeleton__cards{ display: flex; gap: 18px; padding: 8px 40px 44px; }
+
+.cms-skeleton__card{
+  flex: 1; padding: 20px; border: 1px solid var(--cms-border-soft);
+  border-radius: 12px; background: var(--cms-tint);
+}
+
+.cms-skeleton__bar{
+  height: 12px; border-radius: 6px; margin-bottom: 12px;
+  background: linear-gradient(90deg, #EDF1F6 25%, #F7F9FC 50%, #EDF1F6 75%);
+  background-size: 400px 100%;
+  animation: cms-shimmer 1.4s ease-in-out infinite;
+}
+
+.cms-skeleton__bar--logo{ width: 150px; height: 20px; margin: 0; }
+.cms-skeleton__bar--nav{ width: 74px; height: 10px; margin: 0; }
+.cms-skeleton__bar--pill{ width: 118px; height: 34px; border-radius: 17px; margin: 0; }
+.cms-skeleton__bar--eyebrow{ width: 210px; height: 10px; margin-bottom: 22px; }
+.cms-skeleton__bar--title{ width: 88%; height: 34px; margin-bottom: 14px; }
+.cms-skeleton__bar--title-short{ width: 58%; margin-bottom: 26px; }
+.cms-skeleton__bar--text{ width: 100%; height: 11px; }
+.cms-skeleton__bar--text-short{ width: 72%; }
+.cms-skeleton__bar--button{ width: 148px; height: 42px; border-radius: 21px; margin: 0; }
+.cms-skeleton__bar--link{ width: 112px; height: 11px; margin: 0; }
+.cms-skeleton__bar--icon{ width: 26px; height: 26px; border-radius: 7px; margin-bottom: 16px; }
+.cms-skeleton__bar--cardtitle{ width: 74%; height: 14px; margin-bottom: 14px; }
+
+@keyframes cms-shimmer{ from{ background-position: -200px 0; } to{ background-position: 400px 0; } }
+
+/* ---------- Blog ---------- */
+.cms-blog-editor{ display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.cms-blog-side{ display: flex; flex-direction: column; gap: 16px; }
+/* The handle, the name, the toggle and the delete sit on one centred line; the question count goes
+   underneath, indented to the name. Hanging them all off the top of a row that also contains the
+   count left every control 8px above the middle of the field they belong to. */
+.cms-cat-row{ position: relative; margin-bottom: 12px; }
+.cms-cat-row__line{ display: flex; align-items: center; gap: 8px; }
+.cms-cat-row__count{ margin: 3px 0 0 48px; }
+.cms-check{ display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 13px; }
+.cms-check:last-child{ margin-bottom: 0; }
+
+/* A writing surface, not a code box: the same shapes the published article uses, so what an
+   editor sees while typing is what a reader gets. The public .prose rules live in app.css,
+   which the admin deliberately does not load, so they are restated here. */
+.cms-rt{ border: 1px solid var(--cms-border-input); border-radius: 8px; overflow: hidden; background: var(--cms-surface); }
+.cms-rt__bar{
+  display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  padding: 8px; background: var(--cms-tint); border-bottom: 1px solid var(--cms-border-soft);
+  position: sticky; top: 0; z-index: 2;
+}
+.cms-rt__style{
+  height: 32px; padding: 0 8px; border: 1px solid var(--cms-border-input);
+  border-radius: 6px; background: var(--cms-surface);
+  font: 500 13px/1 var(--cms-font-sans); color: var(--cms-ink); cursor: pointer;
+}
+.cms-rt__tool{
+  min-width: 34px; height: 32px; padding: 0 11px;
+  border: 1px solid transparent; border-radius: 6px; background: transparent;
+  font: 500 13px/1 var(--cms-font-sans); color: var(--cms-ink-soft); cursor: pointer;
+}
+.cms-rt__tool:hover:not(:disabled){ background: var(--cms-surface); border-color: var(--cms-border-input-2); }
+.cms-rt__tool--on{ background: var(--cms-navy); border-color: var(--cms-navy); color: #fff; }
+.cms-rt__tool:disabled{ opacity: .35; cursor: not-allowed; }
+.cms-rt__divider{ width: 1px; height: 22px; margin: 0 3px; background: var(--cms-border); }
+.cms-rt__spacer{ margin-left: auto; }
+
+.cms-rt__surface{
+  min-height: 420px; max-height: 70vh; overflow-y: auto; padding: 26px 30px; outline: none;
+  font-size: 16px; line-height: 1.75; color: var(--cms-text);
+}
+.cms-rt__surface > :first-child{ margin-top: 0; }
+.cms-rt__surface > :last-child{ margin-bottom: 0; }
+.cms-rt__surface h2{ margin: 30px 0 12px; font-size: 26px; line-height: 1.25; color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface h3{ margin: 26px 0 10px; font-size: 21px; line-height: 1.3; color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface h4{ margin: 22px 0 8px; font-size: 18px; color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface p{ margin: 0 0 18px; }
+.cms-rt__surface a{ color: var(--cms-accent); text-decoration: underline; }
+.cms-rt__surface strong{ color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface ul, .cms-rt__surface ol{ margin: 0 0 18px; padding-left: 26px; }
+.cms-rt__surface li{ margin-bottom: 7px; }
+.cms-rt__surface blockquote{
+  margin: 22px 0; padding: 2px 0 2px 18px;
+  border-left: 3px solid var(--cms-accent-border); color: var(--cms-ink-soft); font-size: 18px;
+}
+.cms-rt__surface img{ max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0 20px; }
+.cms-rt__surface hr{ margin: 26px 0; border: 0; border-top: 1px solid var(--cms-border); }
+.cms-rt__surface table{ width: 100%; border-collapse: collapse; margin: 0 0 20px; }
+.cms-rt__surface th, .cms-rt__surface td{
+  padding: 10px 12px; border: 1px solid var(--cms-border); text-align: left; vertical-align: top; min-width: 60px;
+}
+.cms-rt__surface th{ background: var(--cms-tint); color: var(--cms-ink); font-weight: 600; }
+.cms-rt__surface .selectedCell{ background: var(--cms-accent-bg); }
+/* The placeholder-ish hint when the article is empty. */
+.cms-rt__surface p.is-editor-empty:first-child::before{
+  content: 'Start writing the article here…';
+  float: left; height: 0; pointer-events: none; color: var(--cms-text-quiet);
+}
+
+@media (max-width: 1100px){
+  .cms-blog-editor{ grid-template-columns: minmax(0, 1fr); }
+}
+
+.cms-account-facts{
+  margin: 0; display: grid; grid-template-columns: 130px 1fr; gap: 8px 16px; font-size: 13px;
+}
+.cms-account-facts dt{ color: var(--cms-text-mid); }
+.cms-account-facts dd{ margin: 0; }
+
+/* ---------- Sign in ---------- */
+.cms-signin{ min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--cms-tint); }
+.cms-signin__card{
+  width: 100%; max-width: 380px; background: var(--cms-surface); border: 1px solid var(--cms-border);
+  border-radius: 12px; padding: 26px; box-shadow: 0 12px 32px rgba(20, 38, 66, .08);
+}
+.cms-signin__brand{ display: flex; align-items: center; gap: 11px; margin-bottom: 22px; }
+.cms-signin__name{ font-size: 14.5px; font-weight: 600; }
+.cms-signin__sub{ font-size: 12px; color: var(--cms-text-mid); }
+.cms-signin__status{
+  margin-bottom: 14px; padding: 9px 11px; border-radius: 7px; font-size: 12.5px;
+  background: var(--cms-tint); border: 1px solid var(--cms-border);
+}
+.cms-signin__error{
+  margin: -4px 0 14px; padding: 9px 11px; border-radius: 7px; font-size: 12.5px;
+  color: var(--cms-danger-text); background: var(--cms-danger-bg); border: 1px solid var(--cms-danger-border);
+}
+.cms-signin__remember{ display: flex; align-items: center; gap: 8px; margin: 14px 0 18px; font-size: 12.5px; color: var(--cms-text-mid); }
+.cms-signin__submit{ width: 100%; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce){
+  .cms-skeleton__bar{ animation: none; background: #EDF1F6; }
+  .cms-sort--lifted{ transition: none; }
+}
+
+/* ---------- Navigation editor ---------- */
+.cms-nav-row{ position: relative; padding: 4px 0; }
+.cms-nav-row__line{ display: flex; align-items: center; gap: 8px; }
+.cms-nav-row__note{ margin: 4px 0 0 48px; }
+.cms-nav-row__children{ margin: 8px 0 0 48px; display: flex; flex-direction: column; gap: 8px; }
+/* The little elbow that says "this belongs to the row above". */
+.cms-nav-row__branch{
+  width: 12px; height: 12px; flex: none; border-left: 1px solid var(--cms-border-input-2);
+  border-bottom: 1px solid var(--cms-border-input-2); border-bottom-left-radius: 4px; margin-bottom: 6px;
+}
+.cms-nav-row__nest{ margin: 8px 0 0 48px; }
+.cms-nav-column{
+  padding: 14px 0; border-top: 1px solid var(--cms-border-softer);
+}
+.cms-nav-column:first-of-type{ border-top: none; padding-top: 0; }
+
+/* =========================================================================
+   Responsive administration (scope §15)
+   The admin is a fixed three-column desktop layout: a 242px sidebar beside the
+   content, and in the builder a 268px and a 308px panel either side of the canvas.
+   On a tablet that chrome costs more than the work surface it frames — at 768px
+   the builder canvas measured 188px, narrower than either panel beside it. Below
+   the breakpoints here those columns stop holding space and become drawers over
+   the content, which is the only way the middle survives.
+
+   The drawers are opened by a class but positioned only inside these queries, so
+   above the breakpoint the panels stay in the flex row and the open/closed state
+   is inert. No component needs to measure the viewport.
+   ========================================================================= */
+.cms-nav-toggle, .cms-nav-scrim, .cms-drawer-toggle, .cms-builder-scrim{ display: none; }
+.cms-builder-topbar__ident{ display: flex; align-items: center; gap: 9px; min-width: 0; }
+.cms-builder-topbar__actions{ margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+@media (max-width: 1024px){
+  .cms-nav-toggle{
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; flex: none;
+    border: 1px solid var(--cms-border-input-2); border-radius: var(--cms-radius);
+    background: var(--cms-surface); color: var(--cms-ink-soft); cursor: pointer;
+  }
+  .cms-nav-toggle:hover{ background: #F1F4F8; }
+
+  /* visibility, not transform alone: an off-screen sidebar is still in the tab order,
+     so keyboard focus would walk into a menu nobody can see. */
+  .cms-sidebar{
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 60; width: 268px;
+    box-shadow: 12px 0 34px rgba(16,32,58,0.16);
+    transform: translateX(-100%); visibility: hidden;
+    transition: transform 180ms ease, visibility 0s linear 180ms;
+  }
+  .cms-shell--nav-open .cms-sidebar{
+    transform: none; visibility: visible;
+    transition: transform 180ms ease, visibility 0s;
+  }
+  .cms-nav-scrim{
+    display: block; position: fixed; inset: 0; z-index: 59;
+    border: 0; padding: 0; background: rgba(12,27,49,0.4);
+  }
+
+  .cms-header{ padding: 0 16px; gap: 12px; }
+  .cms-header__search{ display: none; }
+
+  .cms-page{ padding: 18px 20px 40px; }
+  /* The 760px floor was set to keep the two dashboard columns proportional. They stack
+     here instead, so the floor only forced the whole screen to scroll sideways. */
+  .cms-page--dash{ padding: 20px 20px 40px; min-width: 0; }
+  .cms-dash-grid, .cms-nav-grid, .cms-blog-editor{ grid-template-columns: minmax(0,1fr); }
+
+  .cms-settings-layout{ flex-direction: column; gap: 16px; }
+  .cms-settings-nav{
+    flex-direction: row; width: auto; position: static;
+    gap: 6px; overflow-x: auto; padding-bottom: 4px;
+  }
+  .cms-settings-tab{ flex: none; }
+
+  .cms-media-main{ padding: 18px 20px 40px; }
+  /* Media, Blog and FAQs all use this layout, but only Media's panel is a dismissible detail
+     view — the other two are permanent category rails with no close button. They stack under
+     the list; only the detail panel may cover it. */
+  .cms-media-layout{ flex-direction: column; height: auto; }
+  .cms-media-side{
+    width: auto; border-left: none; border-top: 1px solid var(--cms-border); overflow: visible;
+  }
+  /* Fixed rather than stacked: it already has a close button, and letting it hold 308px of a
+     768px screen left the grid one 170px column wide. Below the sidebar's layer, never above —
+     a panel inside the content must not cover the menu that navigates away from it. */
+  .cms-media-side--detail{
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 58; width: min(340px, 88vw);
+    border-top: none; overflow: auto;
+    box-shadow: -16px 0 40px rgba(16,32,58,0.18);
+  }
+}
+
+@media (max-width: 1180px){
+  .cms-drawer-toggle{
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; flex: none;
+    border: 1px solid var(--cms-border-input-2); border-radius: var(--cms-radius);
+    background: var(--cms-surface); color: var(--cms-ink-soft); cursor: pointer;
+  }
+  .cms-drawer-toggle:hover{ background: #F1F4F8; }
+  .cms-drawer-toggle[aria-expanded="true"]{
+    border-color: var(--cms-navy); background: var(--cms-accent-bg); color: var(--cms-navy);
+  }
+
+  /* Two rows. One row shrank the page name, its status and the save state into 46px between
+     the back button and the actions — the editor could not see which page was open. */
+  .cms-builder-topbar{ height: auto; flex-wrap: wrap; padding: 8px 12px; row-gap: 8px; }
+  .cms-builder-topbar__divider{ display: none; }
+  .cms-builder-topbar__ident{ flex: 1 1 auto; }
+  .cms-builder-topbar__actions{ flex: 1 0 100%; margin-left: 0; flex-wrap: wrap; }
+
+  .cms-builder-body{ position: relative; }
+  .cms-builder-left, .cms-builder-right{
+    position: absolute; top: 0; bottom: 0; z-index: 30;
+    visibility: hidden; transition: transform 180ms ease, visibility 0s linear 180ms;
+  }
+  .cms-builder-left{ left: 0; transform: translateX(-100%); box-shadow: 12px 0 34px rgba(16,32,58,0.16); }
+  .cms-builder-right{ right: 0; transform: translateX(100%); box-shadow: -12px 0 34px rgba(16,32,58,0.16); }
+  .cms-builder-left--open, .cms-builder-right--open{
+    transform: none; visibility: visible;
+    transition: transform 180ms ease, visibility 0s;
+  }
+  .cms-builder-scrim{
+    display: block; position: absolute; inset: 0; z-index: 29;
+    border: 0; padding: 0; background: rgba(12,27,49,0.35);
+  }
+  .cms-canvas-outer{ padding: 16px 16px 80px; }
+}
+
+@media (max-width: 680px){
+  .cms-page{ padding: 16px 14px 36px; }
+  .cms-page--dash{ padding: 16px 14px 36px; }
+  .cms-media-main{ padding: 16px 14px 36px; }
+  .cms-settings-grid-2, .cms-count-grid{ grid-template-columns: minmax(0,1fr); }
+  .cms-shell .cms-settings-section{ padding: 16px; }
+  .cms-shell .cms-global-section{ padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .cms-sidebar, .cms-builder-left, .cms-builder-right{ transition: none; }
+}

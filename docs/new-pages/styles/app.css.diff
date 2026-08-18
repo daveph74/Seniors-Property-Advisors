@@ -1,0 +1,424 @@
+diff --git a/resources/css/app.css b/resources/css/app.css
+index 189116e..dfe88ee 100644
+--- a/resources/css/app.css
++++ b/resources/css/app.css
+@@ -60,6 +60,11 @@ :root{
+   --blue-pale: #8FC2F7;       /* style-guide pale blue */
+ 
+   --green: #61CE70;
++  /* Error state. --danger clears 4.5:1 on white for body text, so error copy
++     never depends on colour perception alone. */
++  --danger: #B3261E;
++  --danger-line: #D98D88;
++  --danger-wash: #FDF4F3;
+   --text: #2B3140;
+   --text-mid: #5A6275;
+   --text-soft: #7A7A7A;
+@@ -94,7 +99,6 @@ :root{
+ 
+ *,*::before,*::after{ box-sizing: border-box; }
+ html,body{ margin:0; padding:0; }
+-html{ scroll-behavior: smooth; }
+ body{
+   font-family: var(--font-sans);
+   font-size: 17px;
+@@ -252,6 +256,74 @@ .nav .phone .ico{
+   color: var(--blue-deep);
+ }
+ 
++/* ===================== Mobile nav ===================== */
++/* Hidden on desktop; the 1220px breakpoint below swaps the two navs over. */
++.nav-toggle{
++  display: none;
++  width: 44px; height: 44px;
++  border-radius: 12px;
++  place-items: center;
++  border: 1.5px solid rgba(1,10,68,0.18);
++  color: var(--navy);
++}
++.nav-toggle:hover{ border-color: var(--navy); background: rgba(1,10,68,0.04); }
++.nav-toggle .bars{
++  display: grid; gap: 5px; width: 20px;
++}
++.nav-toggle .bars i{
++  display: block; height: 2px; border-radius: 2px;
++  background: currentColor;
++  transition: transform .22s ease, opacity .18s ease;
++}
++.nav-toggle .bars.open i:nth-child(1){ transform: translateY(7px) rotate(45deg); }
++.nav-toggle .bars.open i:nth-child(2){ opacity: 0; }
++.nav-toggle .bars.open i:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
++
++.nav-mobile{ display: none; }
++.nav-mobile.open{
++  background: var(--white);
++  border-bottom: 1px solid var(--line-soft);
++  box-shadow: 0 18px 40px rgba(2,14,60,0.10);
++  animation: nav-mobile-in .2s ease;
++}
++.nav-mobile .container{ padding-top: 8px; padding-bottom: 24px; }
++.nav-mobile ul{
++  list-style: none; padding: 0; margin: 0 0 20px;
++  display: grid;
++}
++.nav-mobile ul a{
++  display: block;
++  padding: 15px 14px;
++  color: var(--navy);
++  font-size: 17px; font-weight: 500;
++  border-bottom: 1px solid var(--line-soft);
++}
++.nav-mobile ul li:last-child a{ border-bottom: none; }
++.nav-mobile ul a:hover{ background: var(--blue-tint); color: var(--blue-deep); }
++.nav-mobile ul a.active{
++  color: var(--blue-deep); font-weight: 600;
++  box-shadow: inset 3px 0 0 var(--blue);
++}
++.nav-mobile-foot{ display: grid; gap: 16px; }
++.nav-mobile-foot .phone{
++  color: var(--navy); font-weight: 600; font-size: 16px;
++  display: flex; align-items: center; gap: 10px;
++}
++.nav-mobile-foot .phone .ico{
++  width: 34px; height: 34px; border-radius: 50%;
++  background: var(--blue-tint); display: grid; place-items: center;
++  color: var(--blue-deep); flex-shrink: 0;
++}
++
++@keyframes nav-mobile-in{
++  from{ opacity: 0; transform: translateY(-8px); }
++  to{ opacity: 1; transform: none; }
++}
++@media (prefers-reduced-motion: reduce){
++  .nav-mobile.open{ animation: none; }
++  .nav-toggle .bars i{ transition: none; }
++}
++
+ /* ===================== Buttons ===================== */
+ .btn{
+   display: inline-flex; align-items: center; gap: 10px;
+@@ -456,6 +528,78 @@ .hero-steps .hs-num, .block-steps-strip .hs-num{
+ }
+ .hero-steps b{ color: var(--navy); font-size: 16px; font-weight: 600; }
+ 
++/* ===================== Hero (full-bleed variant) ===================== */
++/* Photo runs edge to edge for one viewport; copy sits on the empty left of the frame.
++   Everything is scoped under .hero-full so the boxed hero above is untouched. */
++.hero-full{
++  position: relative;
++  display: flex; align-items: center;
++  padding: 72px 0;
++  overflow: hidden;
++  min-height: calc(100vh - 126px);      /* 42px topbar + 84px nav */
++  min-height: calc(100svh - 126px);     /* no jump when the mobile URL bar hides */
++}
++.hero-full-bg{
++  position: absolute; inset: 0;
++  background-image: url('/images/full_bg.png');
++  background-size: cover;
++  background-position: center right;
++  z-index: 0;
++}
++/* Navy scrim, heaviest over the copy. Brand shading rather than a grey wash. The stops
++   are set by measurement, not taste: the bright window behind the middle of the frame is
++   near-white, so the scrim has to still be ~0.74 where the lead paragraph ends for 18px
++   text to clear 4.5:1. It clears to nothing before it reaches the people. */
++.hero-full-bg::after{
++  content:""; position:absolute; inset: 0;
++  background: linear-gradient(
++    100deg,
++    rgba(13,34,63,0.92) 0%,
++    rgba(13,34,63,0.88) 26%,
++    rgba(13,34,63,0.74) 44%,
++    rgba(13,34,63,0.40) 60%,
++    rgba(13,34,63,0.12) 78%,
++    rgba(13,34,63,0.00) 92%
++  );
++}
++/* width:100% — as a flex item the container would otherwise shrink to its content and
++   the auto margins would centre it, pulling the copy off the page gutter. */
++.hero-full .container{ position: relative; z-index: 1; width: 100%; }
++.hero-full-copy{ max-width: 580px; }
++
++.eyebrow-rule{
++  display: inline-flex; align-items: center; gap: 14px;
++  font-size: 12.5px; font-weight: 600; letter-spacing: 0.18em;
++  text-transform: uppercase;
++  color: rgba(255,255,255,0.85);
++}
++.eyebrow-rule::before{
++  content:""; width: 34px; height: 2px;
++  background: var(--blue-pale);
++  flex-shrink: 0;
++}
++
++.hero-full h1{
++  font-family: var(--font-display);
++  font-weight: 700;
++  font-size: clamp(40px, 4.6vw, 60px);
++  line-height: 1.08;
++  letter-spacing: -0.015em;
++  color: var(--white);
++  margin: 24px 0 20px;
++}
++/* Inline, not display:block — "without the stress." should wrap mid-line. */
++.hero-full h1 em{
++  font-style: italic;
++  color: var(--blue-pale);
++}
++.hero-full p{
++  color: rgba(255,255,255,0.92);
++  font-size: 18px; line-height: 1.6;
++  max-width: 500px;
++  margin: 0 0 36px;
++}
++
+ /* ===================== Section base ===================== */
+ section{ padding: 120px 0; position: relative; }
+ section.tight{ padding: 96px 0; }
+@@ -469,6 +613,7 @@ .eyebrow-line::before{
+   content:""; width: 32px; height: 1.5px; background: var(--blue-deep);
+ }
+ h2,
++h1.section-title,
+ .section-head__title{
+   font-family: var(--font-display);
+   font-weight: 700;
+@@ -480,6 +625,7 @@ .section-head__title{
+   text-wrap: pretty;
+ }
+ h2 em,
++h1.section-title em,
+ .section-head__title em{ font-style: normal; color: var(--blue-deep); }
+ .section-lead{ color: var(--text-mid); font-size: 18px; line-height: 1.6; max-width: 640px; }
+ 
+@@ -487,6 +633,8 @@ .section-head{ display:flex; align-items:flex-end; justify-content:space-between
+ .section-head .left{ max-width: 640px; }
+ .section-head.center{ justify-content: center; text-align: center; flex-direction: column; align-items: center; margin-bottom: 72px; }
+ .section-head.center .eyebrow-line{ justify-content:center; }
++.section-head.center h2,
++.section-head.center h1.section-title,
+ .section-head.center .section-head__title{ text-align:center; }
+ .section-head.center .section-lead{ text-align:center; margin: 0 auto; }
+ 
+@@ -569,8 +717,8 @@ .why::before{
+ .why .container{ position: relative; z-index: 1;}
+ /* Both selectors on purpose: sections that go through SectionHead carry the class, and the ones
+    that render their own heading still use the tag. Dropping the tag turned these navy on navy. */
+-.why .section-head__title, .why h2{ color: var(--white); }
+-.why h2 em{ color: var(--blue); }
++.why .section-head__title, .why h2, .why h1.section-title{ color: var(--white); }
++.why h2 em, .why h1.section-title em{ color: var(--blue); }
+ .why .eyebrow-line{ color: var(--blue);}
+ .why .eyebrow-line::before{ background: var(--blue);}
+ .why .section-lead{ color: #B6C2DB; }
+@@ -742,19 +890,22 @@ .checks .c, .block-checklist .c{
+ .btn-row{ display:flex; gap: 12px; flex-wrap: wrap; }
+ 
+ /* ===================== Final CTA ===================== */
+-.cta{
++/* Scoped to `section.cta` on purpose: the comparison table's "Next step" cells
++   are `.cmp-cell.cta`, so a bare `.cta` selector painted them navy and laid the
++   ::before overlay over their buttons, making them unclickable. */
++section.cta{
+   background: var(--navy);
+   position: relative; overflow: hidden;
+ }
+-.cta::before{
++section.cta::before{
+   content:""; position:absolute; inset: 0;
+   background:
+     radial-gradient(800px 500px at 80% 0%, rgba(88,148,213,0.22), transparent 60%),
+     radial-gradient(600px 400px at 0% 100%, rgba(88,148,213,0.10), transparent 60%);
+ }
+ .cta .container{ position:relative; text-align: center;}
+-.cta .section-head__title, .cta h2{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
+-.cta h2 em{ color: var(--blue);}
++.cta .section-head__title, .cta h2, .cta h1.section-title{ color: var(--white); max-width: 760px; margin: 0 auto 18px;}
++.cta h2 em, .cta h1.section-title em{ color: var(--blue);}
+ .cta p{ color: #B6C2DB; max-width: 540px; margin: 0 auto 36px; font-size: 19px;}
+ .cta .row{ display:flex; gap: 14px; justify-content:center; flex-wrap: wrap;}
+ .cta .eyebrow-line{ justify-content:center; color: var(--blue); }
+@@ -766,8 +917,8 @@ .cta .marks{
+   font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
+   flex-wrap: wrap;
+ }
+-.cta .marks span{ display:flex; align-items:center; gap: 10px;}
+-.cta .marks span::before{ content:""; width: 8px; height: 8px; border-radius:50%; background: var(--blue); opacity:0.5;}
++section.cta .marks span{ display:flex; align-items:center; gap: 10px;}
++section.cta .marks span::before{ content:""; width: 8px; height: 8px; border-radius:50%; background: var(--blue); opacity:0.5;}
+ 
+ /* ===================== Footer ===================== */
+ footer{
+@@ -858,8 +1009,47 @@ .field{ display:block; margin-bottom: 14px; }
+ .field.flush{ margin: 0; }
+ .field.top-gap{ margin-top: 18px; }
+ .field.top-gap-sm{ margin-top: 14px; }
+-.field label{ display:block; font-size: 13.5px; color: var(--navy); font-weight: 600; margin-bottom: 6px;}
+-.field label .opt-note{ font-weight:400; color: var(--text-mid); }
++/* Labels sit on a row so the Required badge reads as part of the question.
++   15px, not the old 13.5px — this audience is the reason. */
++.field label, .field .label{
++  display:flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
++  font-size: 15px; color: var(--navy); font-weight: 600; margin-bottom: 6px;
++}
++.field label .opt-note, .field .label .opt-note{ font-weight:400; color: var(--text-mid); font-size: 13.5px; }
++
++/* ===== Required / optional marking =====
++   The literal word, not an asterisk: symbols are routinely missed or misread
++   by older users, and a legend forces them to hold a key in working memory. */
++.req{
++  font-size: 13px; font-weight: 700; letter-spacing: 0.01em;
++  color: var(--blue-deep); background: var(--blue-tint);
++  padding: 2px 9px; border-radius: 999px; white-space: nowrap;
++}
++.field.has-error .req{ color: var(--danger); background: var(--danger-wash); }
++/* Stated once per step as well — a per-field badge answers "is this one needed",
++   the note answers "how much of this form do I have to fill in". */
++.req-note{
++  font-size: 14.5px; color: var(--text-mid);
++  margin: -10px 0 20px; display: flex; align-items: center; gap: 8px;
++}
++
++/* ===== Error messaging ===== */
++.err-msg{
++  display: flex; align-items: flex-start; gap: 7px;
++  margin-top: 7px; font-size: 14.5px; line-height: 1.45;
++  color: var(--danger); font-weight: 500;
++}
++.err-msg .err-icon{ flex: none; font-weight: 700; }
++.field.has-error input{ border-color: var(--danger); }
++.field.has-error input:focus{
++  border-color: var(--danger); box-shadow: 0 0 0 4px rgba(179,38,30,0.14);
++}
++.opt-grid.has-error .opt{ border-color: var(--danger-line); }
++.opt-grid.has-error .opt.on{ border-color: var(--blue); }
++
++/* No error summary block: a failed Continue moves focus to the first
++   unanswered field instead, which carries its own inline message. */
++
+ .field input, .field select{
+   width: 100%; height: 52px; padding: 0 18px;
+   border-radius: 14px; border: 1.5px solid var(--line);
+@@ -871,6 +1061,41 @@ .field input:focus, .field select:focus{
+   outline: none; border-color: var(--blue);
+   box-shadow: 0 0 0 4px var(--blue-tint);
+ }
++
++/* Suburb autocomplete (Google Places) */
++.combo{ position: relative; }
++.combo-list{
++  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 5;
++  margin: 0; padding: 6px; list-style: none;
++  background: var(--white);
++  border: 1.5px solid var(--line); border-radius: 14px;
++  box-shadow: 0 18px 40px rgba(2,14,60,0.14);
++  max-height: 260px; overflow-y: auto;
++  animation: combo-in .16s ease;
++}
++@keyframes combo-in{ from{ opacity: 0; transform: translateY(-4px); } }
++.combo-option{
++  display: flex; flex-direction: column; gap: 2px;
++  padding: 11px 14px; min-height: 44px; justify-content: center;
++  border-radius: 10px; cursor: pointer;
++}
++.combo-option.active{ background: var(--blue-tint); }
++.combo-main{ font-size: 15px; color: var(--navy); font-weight: 500; }
++.combo-sub{ font-size: 12.5px; color: var(--text-mid); }
++.combo-empty{
++  padding: 12px 14px; font-size: 14px; color: var(--text-mid);
++}
++
++@media (prefers-reduced-motion: reduce){
++  .combo-list{ animation: none; }
++}
++
++.sr-only{
++  position: absolute; width: 1px; height: 1px;
++  padding: 0; margin: -1px; overflow: hidden;
++  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
++}
++
+ .opt-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+ .opt-grid.three{ grid-template-columns: 1fr 1fr 1fr;}
+ .opt{
+@@ -883,9 +1108,24 @@ .opt{
+   transition: all .2s ease;
+   display:flex; flex-direction: column; gap: 4px;
+ }
+-.opt small{ color: var(--text-mid); font-size: 12.5px; font-weight: 400; }
++.opt small{ color: var(--text-mid); font-size: 13px; font-weight: 400; }
+ .opt:hover{ border-color: var(--blue);}
+-.opt.on{ border-color: var(--blue); background: var(--blue-tint); }
++/* Nothing is pre-selected, so "chosen" has to be unmistakable: heavier border,
++   filled background, and a tick — shape and symbol, not colour alone. */
++.opt.on{
++  border-color: var(--blue); border-width: 2.5px;
++  background: var(--blue-tint);
++  padding: 14.5px 12.5px; /* offsets the thicker border so cards don't shift */
++}
++.opt .opt-tick{
++  position: absolute; top: 10px; right: 12px;
++  color: var(--blue-deep); font-weight: 700; font-size: 15px;
++}
++.opt{ position: relative; }
++.opt:focus-visible{ outline: 3px solid var(--navy); outline-offset: 2px; }
++.modal .btn:focus-visible, .modal .close:focus-visible{
++  outline: 3px solid var(--navy); outline-offset: 3px;
++}
+ .modal-actions{
+   display:flex; justify-content: space-between; margin-top: 28px; align-items: center;
+ }
+@@ -911,6 +1151,8 @@ @media (max-width: 760px){
+ }
+ @media (max-width: 1240px){
+   .nav ul{ display: none; }
++  .nav-toggle{ display: grid; }
++  .nav-mobile.open{ display: block; }
+ }
+ @media (max-width: 1080px){
+   .hero-grid{ grid-template-columns: 1fr; gap: 56px;}
+@@ -919,6 +1161,19 @@ @media (max-width: 1080px){
+   .hero-card.saving{ right: 0; }
+   .hero-pentagon{ display: none; }
+   .hero-steps, .block-steps-strip{ flex-wrap: wrap; gap: 8px; }
++  /* Hold the subjects in frame as the viewport narrows, and deepen the scrim to
++     compensate for the copy sitting closer to them. */
++  .hero-full-bg{ background-position: 72% center; }
++  .hero-full-bg::after{
++    background: linear-gradient(
++      100deg,
++      rgba(13,34,63,0.94) 0%,
++      rgba(13,34,63,0.90) 34%,
++      rgba(13,34,63,0.80) 56%,
++      rgba(13,34,63,0.45) 74%,
++      rgba(13,34,63,0.15) 90%
++    );
++  }
+   .why-grid, .family-grid{ grid-template-columns: 1fr; gap: 56px;}
+   .steps, .block-step-grid{ grid-template-columns: 1fr 1fr; }
+   .steps::before, .block-step-grid::before{ display: none;}
+@@ -929,6 +1184,23 @@ @media (max-width: 640px){
+   section{ padding: 80px 0;}
+   .hero{ padding: 32px 0 72px;}
+   .hero-card{ display: none;}
++  /* No room for copy beside the subjects — stack it over the photo instead, so the
++     scrim runs top to bottom rather than left to right. */
++  .hero-full{ min-height: auto; padding: 56px 0 72px; }
++  .hero-full-bg{ background-position: 68% center; }
++  .hero-full-bg::after{
++    background: linear-gradient(
++      180deg,
++      rgba(13,34,63,0.90) 0%,
++      rgba(13,34,63,0.70) 55%,
++      rgba(13,34,63,0.55) 100%
++    );
++  }
++  .hero-full h1{ font-size: 38px; }
++  .hero-full .hero-ctas .btn{ flex: 1 1 auto; justify-content: center; }
++  .nav .phone span{ display: none;}
++  /* The mobile panel carries the CTA, so drop it from the cramped bar. */
++  .nav .right > .btn.primary{ display: none;}
+   .hero-steps, .block-steps-strip{ flex-direction: column; gap: 0; padding: 8px 20px;}
+   .hero-steps .hs-item, .block-steps-strip .hs-item{ justify-content: flex-start; padding: 14px 0;}
+   .hero-steps .hs-item + .hs-item, .block-steps-strip .hs-item + .hs-item{ border-left: none; border-top: 1px solid var(--line-soft);}

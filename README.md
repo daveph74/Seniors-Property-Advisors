@@ -1,0 +1,126 @@
+# Seniors Property Advisors
+
+The public marketing site and its custom CMS, in one Laravel application. Laravel + React (JSX)
+over Inertia; content is stored in the database and rendered by a fixed registry of section
+components.
+
+Built to `docs/specs/cms-scope.md`. Evidence that each acceptance criterion is met, and the test
+that proves it, is in `docs/acceptance.md`.
+
+> ### ⚠️ Going live? Read **[Running it in production](CLAUDE.md#running-it-in-production)** first.
+>
+> `composer dev` is for a laptop and has no production equivalent. A server needs a release step and
+> **three processes kept alive**: the site under PHP-FPM, `queue:work`, and `reverb:start`.
+>
+> Every way this goes wrong is silent. A `public/hot` copied to the server renders **every page
+> blank**. A `ws://` socket on an HTTPS page is refused as mixed content and the CMS **stops
+> updating** with no error. Workers keep running the old code until `queue:restart`.
+>
+> `php artisan security:check --production` reports the list on the day, so nobody has to remember it.
+
+## Getting started
+
+```sh
+composer setup          # install, .env, key, migrate, npm install, build
+docker compose up -d    # floci, an S3 emulator for the media library, on :4566 — local only
+php artisan media:init  # create the bucket
+php artisan migrate:fresh --seed
+composer dev            # server, queue, Vite and Reverb together (`composer logs` for pail)
+```
+
+Storage comes up **before** seeding: the pages point at pictures in the media library, and
+`MediaSeeder` has nowhere to put them otherwise. Seed without it and the rows still appear with the
+right dimensions, but every picture 404s until you start it and seed again. See `docs/images.md`.
+
+The site is then at http://localhost:8000 and the CMS at http://localhost:8000/cms.
+**Vite only builds assets — it never serves pages**, so open the `artisan serve` address, not
+Vite's.
+
+Seeded local accounts (from `UserSeeder`, which must never run in production) share the password
+`password`:
+
+| Email | Role |
+|---|---|
+| `superadmin@seniorspropertyadvisors.com.au` | Super administrator |
+| `helen@seniorspropertyadvisors.com.au` | Client administrator |
+
+Sign in at `/login`. Use the super administrator for most work — settings, user management, deletes
+and archive restores are all super-admin only. Use Helen to check what a client administrator
+actually sees.
+
+## Everyday commands
+
+| Command | What it does |
+|---|---|
+| `composer dev` | Server, queue worker, Vite and Reverb together |
+| `composer logs` | Tails the log with pail — needs the `pcntl` extension, which Windows PHP has not got |
+| `composer test` | Clears config, then runs the suite |
+| `./vendor/bin/pint` | PHP formatting |
+| `npm run build` | Build assets |
+| `php artisan cms:user email --name= --role= [--password=]` | Create or promote an account; prints a generated password when none is given |
+
+Exit `npm run dev` with Ctrl+C so it removes `public/hot`. A stale `hot` file points assets at a
+dead Vite server, and every page renders blank.
+
+## Occasional commands
+
+| Command | When |
+|---|---|
+| `php artisan media:init` | Once per environment — creates the storage bucket |
+| `php artisan media:optimise [--dry-run]` | Once on any environment with pre-existing images; the migrations add the columns but this builds the small copies |
+| `php artisan pages:scaffold` | Creates the agreed page list as drafts; safe to run twice |
+| `php artisan content:import [--force]` | Migrates a legacy `storage/app/content/` overlay into the database. Run by hand, never from a migration |
+| `php artisan content:purge-deleted [--days=90] [--force]` | Reports, or removes, long-deleted content |
+
+## Deploying
+
+**The release step and the processes a server has to keep running are in `CLAUDE.md`, under
+"Running it in production"** — the site, a queue worker and the Reverb socket, plus the settings that
+fail quietly if they are wrong. `php artisan security:check --production` reports the same list, and
+is the thing to run on the day rather than a document to remember.
+
+Two more, which are about data rather than configuration. Point `AWS_*` at real object storage — the
+`docker compose` container is a local emulator and is never deployed — then run `php artisan
+media:init` against that bucket so a presigned upload is allowed to reach it, and `php artisan
+media:optimise` once.
+
+**Do not run `php artisan db:seed` on a live site.** It is for setting one up. Pages are seeded with
+`updateOrCreate`, so every page the client has edited is replaced by the version in
+`resources/content/pages/`, and a page has revision history to recover from but the seeder does not
+ask first. The two `settings` rows are protected — they are inserted once and never overwritten — so
+the menus, SEO defaults and analytics ids survive, but nothing else does. To bring one new page into
+a running site, use `--class=` with a seeder that only touches it, or add it through the CMS.
+
+## Where things live
+
+| Path | What |
+|---|---|
+| `routes/web.php` | `/` renders the `AgentFinder` page; `/cms/*` is the admin |
+| `app/Content/PageContentStore.php` | The only storage seam — both CMS controllers go through it |
+| `app/Auth/Permissions.php` | Scope §2's two roles, expressed once |
+| `app/Content/Html.php` | The only gate between what an editor types and what a reader receives |
+| `resources/js/Pages/` | Inertia pages, mirroring the route names |
+| `resources/js/sections/` | The public section components and their type rules |
+| `resources/js/cms/` | Admin shell: `layout/`, `builder/`, `components/` |
+| `database/database.sqlite` | The database |
+
+## The other documents
+
+Read these rather than rediscovering what they contain:
+
+- **`CLAUDE.md`** — conventions and the architectural decisions worth knowing before changing
+  anything: how content is stored, why publish history keeps whole snapshots, the ordering traps in
+  password changes. Start here before your first change.
+- **`docs/specs/cms-scope.md`** — the client scope, §1–§18.
+- **`docs/acceptance.md`** — how we know each acceptance criterion is met, and which test proves it.
+- **`docs/TODO.md`** — what is outstanding, and the decisions waiting on somebody.
+- **`design.md`** — brand colour, typography and tone, from the official style guide.
+- **`docs/specs/page-section-module.spec.md`** — the page and section module in detail.
+
+## A note on the section registry
+
+Adding a block type touches `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js`
+and the React registry — never the database. That constrained registry is what stops an editor
+building a layout the design does not support, and it is enforced on the server, so a hand-crafted
+request is refused exactly like a bad drag. `CmsBuilderTest` is what keeps that true; do not widen
+the allowlist without adding a case there.
