@@ -766,9 +766,14 @@ Three things about the builder are worth knowing before touching those tests:
   exact text for that reason; substring matching silently picks the wrong field.
 - **Only the Content accordion is open on arrival.** The Layout, Style, Responsive and Advanced
   inputs do not exist in the DOM until their heading is clicked.
-- **Toolbar buttons are dispatched, not clicked.** The canvas fades in, re-measures its height and
-  is drawn under a CSS `scale()`, so a real click is delivered to whatever occupies the coordinates
-  and Playwright's stability check never settles.
+- **Nothing in the canvas is clicked — blocks included.** The canvas fades in, re-measures its
+  height and is drawn under a CSS `scale()`, so a real click is delivered to whatever occupies the
+  coordinates and Playwright's stability check never settles. `toolbar`, `selectBlock` and
+  `selectLastBlock` all dispatch. The three specs that still called `.cms-block').last().click()`
+  passed for as long as the fixture pages were tall enough for the geometry to agree: trimming
+  Contact to a single section made one of them select nothing, and it surfaced two steps later as
+  "the selected block's toolbar has no Delete button" — which reads as a broken builder rather than
+  a missed click.
 
 **Dropping a block inside another goes through `support/dragShim.js`.** The canvas uses the native
 HTML5 drag API, which Playwright cannot drive; the shim dispatches the events itself. It works

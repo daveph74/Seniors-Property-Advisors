@@ -176,7 +176,7 @@ test.describe('Pages · Blocks', () => {
                     await B.saveAndReload(page);
                     await (await heading.count() > 0
                         ? B.selectBlock(page, marker)
-                        : B.canvas(page).locator('.cms-block').last().click());
+                        : B.selectLastBlock(page));
 
                     for (const [f, expected] of flipped) {
                         await expect(
