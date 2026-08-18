@@ -18,21 +18,27 @@ use Tests\TestCase;
 class SeededPagesTest extends TestCase
 {
     /**
-     * The whole section list per page, not just the first one. Every page used to be its one
-     * section plus the shared call to action, which left six pages two blocks deep with nothing
-     * linking to anything else — so the second block, and what it links on to, is now part of what
-     * these pages are and is asserted as such.
+     * One section per page, which is the whole point of these rows.
+     *
+     * They asserted three until now — the page's own block, a supporting one, and the shared call to
+     * action — on the argument that a page of one block left nothing linking anywhere else. That
+     * argument still holds; it is now a deliberate trade. Five of these pages have no route into
+     * Agent Finder except the header button, and if that proves too thin this list is where the
+     * second block comes back.
+     *
+     * The section kept is the first, which is why nothing stopped working: contact opens with its
+     * form, faqs with the question list, blog with the article listing.
      */
     public static function pages(): array
     {
         return [
-            'how it works' => ['how-it-works', 5, 'How it works', ['process-steps', 'trust-cards', 'cta']],
-            'why agent finder' => ['why-agent-finder', 12, 'Why Agent Finder', ['why-list', 'section', 'cta']],
-            'compare agents' => ['compare-agents', 13, 'Compare agents', ['agent-compare', 'trust-cards', 'cta']],
-            'for families' => ['for-families', 14, 'For families', ['family', 'section', 'cta']],
-            'contact' => ['contact', 18, 'Contact', ['contact-form', 'section', 'cta']],
-            'blog' => ['blog', 16, 'Blog', ['blog-list', 'cta']],
-            'faqs' => ['faqs', 17, 'FAQs', ['faq-list', 'section', 'cta']],
+            'how it works' => ['how-it-works', 5, 'How it works', ['process-steps']],
+            'why agent finder' => ['why-agent-finder', 12, 'Why Agent Finder', ['why-list']],
+            'compare agents' => ['compare-agents', 13, 'Compare agents', ['agent-compare']],
+            'for families' => ['for-families', 14, 'For families', ['family']],
+            'contact' => ['contact', 18, 'Contact', ['contact-form']],
+            'blog' => ['blog', 16, 'Blog', ['blog-list']],
+            'faqs' => ['faqs', 17, 'FAQs', ['faq-list']],
         ];
     }
 
@@ -141,28 +147,18 @@ class SeededPagesTest extends TestCase
     }
 
     /**
-     * The only internal links used to be the menu and the footer — no page pointed at another from
-     * its own copy, which is thin for a reader following a train of thought and thinner still for
-     * a crawler working out what relates to what.
+     * There is no longer a test that every menu page links somewhere else from its own copy, and its
+     * absence is the point rather than an oversight.
+     *
+     * It used to assert exactly that, on the argument that a page linking nowhere is thin for a reader
+     * following a train of thought and thinner for a crawler. Trimming these pages to one section
+     * removed the blocks that carried those links, so the assertion could only have been kept by
+     * exempting every page it covered — a test that answers nothing. The navigation these pages now
+     * rely on is the header menu and the footer, which `NavigationTest` covers.
+     *
+     * What that costs, written down so nobody has to rediscover it: five of the seven have no route
+     * into Agent Finder except the header button, and none of them points a reader at a related page.
      */
-    public function test_every_page_links_somewhere_else_on_the_site(): void
-    {
-        /* /blog is exempt: its links are the article list, which is built from the database at
-           render time rather than written into the section tree. */
-        foreach (array_diff(array_column(self::pages(), 0), ['blog']) as $slug) {
-            $tree = json_encode(Page::where('slug', $slug)->value('published'), JSON_UNESCAPED_SLASHES);
-
-            preg_match_all('#"href":"(/[a-z0-9/-]*)"#', $tree, $found);
-
-            $internal = array_values(array_filter(
-                array_unique($found[1]),
-                fn ($href) => $href !== '/'.$slug && $href !== '/',
-            ));
-
-            $this->assertNotEmpty($internal, "/{$slug} links nowhere else on the site");
-        }
-    }
-
     /**
      * It existed so the full-bleed hero could be compared against the boxed one. The home page
      * carries that hero now, so the comparison has no reader left — archived rather than deleted,
