@@ -20,6 +20,24 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
+     * The admin is not server-rendered, and that is a decision rather than an omission.
+     *
+     * SSR exists here so a crawler receives a page with a heading and links in it. Nothing crawls
+     * the admin — `robots.txt` refuses it and it is behind sign-in — so rendering it twice would
+     * buy a slower response and pull the editor, the socket client and every admin screen into a
+     * node process that has no browser to offer them. `resources/js/ssr.jsx` narrows its page glob
+     * to the two public pages for the same reason; if these two ever disagree, the request simply
+     * falls back to rendering in the browser, which is what it did before any of this.
+     *
+     * `app.blade.php` spells the same three paths out twice more, for the fonts and the analytics.
+     * Left as three separate conditions on purpose: they answer different questions and a shared
+     * helper would tie a stylesheet decision to a rendering one.
+     *
+     * @var array<int, string>
+     */
+    protected $withoutSsr = ['cms', 'cms/*', 'login'];
+
+    /**
      * Determines the current asset version.
      *
      * @see https://inertiajs.com/asset-versioning

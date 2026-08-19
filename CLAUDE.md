@@ -320,6 +320,45 @@ controllers check it before they 404. Three details, all easy to lose:
 
 ## SEO and crawlers
 
+### The page itself is server-rendered
+
+`resources/js/ssr.jsx` and a node process render the public site, so the delivered document carries the
+heading, the copy and the links. It did not, for a long time, and the reason it went unnoticed is worth
+keeping: the head tags and JSON-LD **were** always server-rendered, so sharing cards worked perfectly
+while the `<body>` was an empty div and a JSON blob. Google runs JavaScript and indexed the site anyway;
+Bing, LinkedIn, Slack and every AI crawler read what arrives, and what arrived was nothing. Measured on
+`/how-it-works`: 8KB with no `<h1>` and no links, against 38KB with both.
+
+Three things hold it together, and each is a way it would otherwise not work at all:
+
+- **`app.jsx` hydrates when the server sent HTML and mounts fresh when it did not.**
+  `createRoot().render()` on server-rendered nodes throws that HTML away and redraws — SSR would still
+  "work" and buy nothing, which is the version of this that nobody notices. The other branch is equally
+  load-bearing: the admin is never server-rendered, so it arrives as an empty div where `hydrateRoot`
+  would warn.
+- **The admin is excluded, by `HandleInertiaRequests::$withoutSsr`.** Nothing crawls it — `robots.txt`
+  refuses it and it is behind sign-in — so rendering it twice would buy a slower response and pull the
+  editor and the socket client into a process with no browser to offer them.
+- **`ssr.jsx` globs `./Pages/*.jsx`, one level, eagerly.** SSR needs an eager glob, and one level happens
+  to be exactly the two pages a visitor can reach, because `Login` lives under `Pages/Auth/` and the
+  admin under `Pages/Cms/`. A full glob would execute every admin module in node at boot — TipTap
+  reaching for `document` would kill the renderer before it served one request. `SsrScopeTest` asserts
+  the glob and the exclusion list still agree.
+
+The hydration contract that keeps it honest: **nothing may touch `window`, `document` or
+`localStorage` while rendering** — effects and handlers only — and a breakpoint is a CSS class, never a
+measured width. A section that formats a date or reads `innerWidth` during render produces a body that
+differs from what hydration wants, and React recovers by redrawing: the visible symptom is a flash, the
+crawled symptom is wrong content.
+
+Two local traps. **`public/hot` diverts SSR to Vite**, so with `composer dev` running the production path
+is never exercised — if you are checking whether SSR works, that file must be out of the way.
+And **Inertia memoises the render per request scope**, so a test or a script making two page visits in
+one PHP process gets the first page's HTML twice; it looks exactly like the renderer serving one page for
+every address.
+
+### The head, and the sitemap
+
 `app/Content/Seo.php` works out the head once, on the server, and `resources/views/app.blade.php`
 prints it — including the JSON-LD (Article, Organization). Two things it exists to get right:
 **`og:image` has to be absolute**, and content stores media as `/media/…`, which is correct for an
@@ -829,6 +868,7 @@ rm -f public/hot
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 php artisan queue:restart
+php artisan inertia:stop-ssr
 php artisan security:check --production
 ```
 
@@ -840,6 +880,7 @@ supervisord on Linux, a service wrapper on Windows:
 | the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
 | the queue | `php artisan queue:work --tries=3 --max-time=3600` | enquiries still arrive and are still kept; nothing tells an open CMS screen about them |
 | the socket | `php artisan reverb:start --host=0.0.0.0 --port=8080`, behind the proxy that terminates TLS | the same: the inbox updates when somebody looks at it |
+| the renderer | `php artisan inertia:start-ssr` | the site still works, and serves a body with no heading and no links — see below, because this is the quietest failure here |
 
 Neither of the last two can lose an enquiry — the notice is queued and the dispatch is wrapped, so a
 dead worker or an unreachable socket is a failed job, never a visitor's error page.
@@ -875,7 +916,18 @@ The rest, each of which fails quietly rather than loudly (no count, because this
   an HTTPS page is refused as mixed content and the CMS silently stops updating. `security:check
   --production` fails on this, which is the only reason anybody would notice.
 - **`php artisan queue:restart` after every release**, or workers go on running the code they were
-  started with.
+  started with. **`inertia:stop-ssr` is the same sentence about the renderer** — it holds the bundle it
+  started with, so without this readers are served last week's pages by a process nobody restarted. The
+  gap before the supervisor brings it back renders in the browser, which is what the site did before SSR
+  existed, so there is no outage in it.
+- **The renderer fails silently and looks fine.** A missing bundle, a dead process, or
+  `INERTIA_SSR_ENABLED` never reaching the server's `.env` all end the same way: Inertia answers `null`,
+  the browser draws the page, every screen looks right, and the delivered HTML quietly goes back to
+  having no heading and no links. `security:check --production` fails on a missing bundle — note the
+  bundle is **gitignored**, so a release that copies only tracked files loses it — `app/Listeners/RecordSsrFailure.php`
+  logs every failed render with the component and the browser API that caused it, and
+  `php artisan inertia:check-ssr` answers by hand. Three defences for one fault, because nothing else
+  would ever tell you.
 - **`SESSION_SECURE_COOKIE=true`** and a deliberate `SESSION_LIFETIME`, neither of which belongs in a
   local `.env` — see `.env.production.example`, and `security:check` again.
 - **`AWS_BUCKET` and the credentials must be filled**, and `AWS_ENDPOINT` left unset. Blank credentials

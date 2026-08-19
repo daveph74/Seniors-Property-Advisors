@@ -31,6 +31,13 @@
             reserved words and about whether a backslash escapes inside LIKE, and both disagreements
             were live bugs here until the suite was first run on MySQL.
         -->
+        <!--
+            Off, or every test that renders an Inertia page opens a TCP connection to the SSR
+            server on any machine where the bundle happens to be built — slow, and dependent on
+            whether a developer has run a build. `SsrScopeTest` turns it on deliberately and fakes
+            the HTTP, which asserts the routing decision rather than a live node process.
+        -->
+        <env name="INERTIA_SSR_ENABLED" value="false"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
