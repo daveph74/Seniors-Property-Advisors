@@ -5,7 +5,7 @@ import { DropdownMenu, MenuItem, MenuSeparator } from '../components/ui';
 import {
     DashboardIcon, PagesIcon, BlogIcon, FaqsIcon, TestimonialsIcon, MediaIcon,
     NavigationIcon, GlobalIcon, UsersIcon, SettingsIcon, ExternalLinkIcon, ChevronDownIcon, HistoryIcon, TrashIcon,
-    MailIcon,
+    MailIcon, SeoIcon,
 } from '../components/icons';
 
 const ICONS = {
@@ -16,6 +16,7 @@ const ICONS = {
     testimonials: TestimonialsIcon,
     enquiries: MailIcon,
     media: MediaIcon,
+    seo: SeoIcon,
     activity: HistoryIcon,
     deleted: TrashIcon,
     navigation: NavigationIcon,
@@ -32,6 +33,7 @@ const HREFS = {
     testimonials: '/cms/testimonials',
     enquiries: '/cms/enquiries',
     media: '/cms/media',
+    seo: '/cms/seo',
     activity: '/cms/activity',
     deleted: '/cms/deleted',
     navigation: '/cms/navigation',

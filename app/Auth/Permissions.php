@@ -20,6 +20,12 @@ class Permissions
         'media.upload_svg' => [User::SUPER_ADMIN],
         'content.restore' => [User::SUPER_ADMIN],
         'users.manage' => [User::SUPER_ADMIN],
+        /* A client administrator already writes every one of these fields in the page builder, so
+           a screen that gathers them up widens nobody's reach. It is its own ability rather than
+           `content.manage` because it also opens the site-wide SEO defaults, which used to sit
+           behind `settings.manage` beside the analytics ids and the legal wording — and those
+           stay there. */
+        'seo.manage' => [User::SUPER_ADMIN, User::CLIENT_ADMIN],
         'settings.manage' => [User::SUPER_ADMIN],
     ];
 
@@ -32,6 +38,7 @@ class Permissions
         'enquiries' => 'content.manage',
         'media' => 'content.manage',
         'activity' => 'content.manage',
+        'seo' => 'seo.manage',
         'deleted' => 'content.restore',
         'navigation' => 'content.manage',
         'global' => 'content.manage',

@@ -3,13 +3,14 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && vite build --ssr",
         "dev": "vite",
         "e2e": "npm run build && playwright test",
         "e2e:fast": "npm run build && playwright test --grep-invert @deep",
         "e2e:headed": "npm run build && playwright test --headed",
         "e2e:ui": "npm run build && playwright test --ui",
-        "e2e:report": "playwright show-report"
+        "e2e:report": "playwright show-report",
+        "build:client": "vite build"
     },
     "devDependencies": {
         "@playwright/test": "^1.62.1",

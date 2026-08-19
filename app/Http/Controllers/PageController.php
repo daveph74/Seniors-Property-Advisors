@@ -78,7 +78,7 @@ class PageController extends Controller
      */
     private function schema(array $head, array $page, string $slug, array $globals, array $library): array
     {
-        if (isset($head['robots'])) {
+        if (Seo::isHidden($head)) {
             return [];
         }
 

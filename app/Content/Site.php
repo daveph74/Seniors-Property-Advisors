@@ -10,8 +10,13 @@ use App\Models\Setting;
  *
  * Its own `settings` row rather than a corner of `globals`, because the two are reached by
  * different people. `globals` is wording a client administrator edits — the footer blurb, the
- * announcement bar. This is super-administrator territory (`settings.manage`), and one row edited
- * by two screens with two permissions is how a save from one silently reverts the other.
+ * announcement bar. Most of this is super-administrator territory (`settings.manage`).
+ *
+ * The SEO defaults are the exception, and they are why `merge()` exists. They are edited on the SEO
+ * screen under `seo.manage`, so this row now has two writers — which used to be stated here as the
+ * thing that must never happen, because `/cms/settings` replaced the row wholesale and a save from
+ * either screen would have erased the other's half of it. Both writers go through `merge()` now, so
+ * a save says what it changes rather than what the whole row should be.
  *
  * Nothing here duplicates `globals`. The phone number, address and copyright line live there and
  * stay there; a value stored twice is a value that disagrees with itself.
@@ -23,6 +28,27 @@ class Site
     public static function all(): array
     {
         return Setting::find(self::KEY)?->value ?? [];
+    }
+
+    /**
+     * Writes the keys given and leaves the rest alone.
+     *
+     * Two screens edit this row under two abilities, so a writer that sent the whole thing would be
+     * sending its own idea of the half it cannot see — and the SEO screen has no tracking ids to
+     * send, so a save there would have cleared them. Top-level keys only: every one of them is a
+     * whole area of the screen, and a caller wanting to change one field inside `seo` reads the
+     * group, changes it, and passes the group back.
+     *
+     * @param  array<string, mixed>  $changes
+     * @return array<string, mixed> the row as it now stands
+     */
+    public static function merge(array $changes): array
+    {
+        $value = array_replace(self::all(), $changes);
+
+        Setting::updateOrCreate(['key' => self::KEY], ['value' => $value]);
+
+        return $value;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Vite;
+use Inertia\Ssr\BundleDetector;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -91,6 +92,16 @@ class SecurityCheckCommand extends Command
                     .'formatter and the log viewer have no business on a live site, and their being '
                     .'there suggests the rest of the release step was skipped too.',
                 'optional',
+            ],
+            [
+                'The public site is server-rendered',
+                ! config('inertia.ssr.enabled')
+                    || app(BundleDetector::class)->detect() !== null,
+                'INERTIA_SSR_ENABLED is on but there is no bundle in bootstrap/ssr, so `npm run build` '
+                    .'did not build it — or the release copied only tracked files, and it is gitignored. '
+                    .'Nothing breaks, which is the problem: every page falls back to rendering in the '
+                    .'browser, so the delivered HTML goes back to having no heading and no links and the '
+                    .'site quietly stops being readable by anything that does not run JavaScript.',
             ],
             [
                 'No development build marker is present',

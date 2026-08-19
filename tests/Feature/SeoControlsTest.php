@@ -196,10 +196,15 @@ class SeoControlsTest extends TestCase
             $this->get("/cms/pages/{$page->cms_id}/preview")->assertOk()->getContent(),
         );
 
-        $this->assertStringNotContainsString(
-            'name="robots"',
-            $this->get('/services')->assertOk()->getContent(),
-        );
+        /* The page itself is not hidden, and it no longer stays silent either: every indexable page
+           asks for a large image preview, which is the one robots directive that changes what a
+           reader sees. What matters is that `noindex` is not among them. */
+        $html = $this->get('/services')->assertOk()->getContent();
+
+        $this->assertStringContainsString('name="robots" content="max-image-preview:large"', $html);
+        /* Scoped to the tag: the props blob carries `"noindex":false`, so a bare search for the
+           word finds the page's own answer to the question rather than a directive. */
+        $this->assertStringNotContainsString('content="noindex', $html);
     }
 
     public function test_an_article_preview_is_hidden_and_describes_nothing(): void

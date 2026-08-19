@@ -17,11 +17,8 @@ test.describe('Settings', () => {
     test('each tab reveals its own fields', async ({ page }) => {
         await expect(page.getByLabel('Website name')).toBeVisible();
 
-        await tab(page, 'SEO defaults').click();
-        await expect(page.getByLabel('Title pattern')).toBeVisible();
-        await expect(tab(page, 'SEO defaults')).toHaveClass(/cms-settings-tab--active/);
-
         await tab(page, 'Tracking').click();
+        await expect(tab(page, 'Tracking')).toHaveClass(/cms-settings-tab--active/);
         await expect(page.getByPlaceholder('G-XXXXXXXXXX')).toBeVisible();
 
         await tab(page, 'Legal').click();
@@ -29,6 +26,14 @@ test.describe('Settings', () => {
 
         await tab(page, 'General').click();
         await expect(page.getByLabel('Website name')).toBeVisible();
+    });
+
+    /* They moved to /cms/seo, beside the report that shows which addresses inherit them. Asserted
+       rather than merely absent: leaving a second copy here is how one screen's save comes to
+       revert the other's. */
+    test('the seo defaults are not edited here any more', async ({ page }) => {
+        await expect(tab(page, 'SEO defaults')).toHaveCount(0);
+        await expect(page.getByLabel('Title pattern')).toHaveCount(0);
     });
 
     test('the save button is inert until something changes', async ({ page }) => {
@@ -59,16 +64,6 @@ test.describe('Settings', () => {
         await page.getByPlaceholder('G-XXXXXXXXXX').fill(original);
         await save(page).click();
         await expect(page.getByText('Settings saved')).toBeVisible();
-    });
-
-    test('the description counter tracks what is typed', async ({ page }) => {
-        await tab(page, 'SEO defaults').click();
-
-        const text = uniqueValue('A description');
-        await page.getByLabel('Default description').fill(text);
-
-        await expect(page.locator('.cms-field-count, .cms-hint').filter({ hasText: 'of 320' }))
-            .toContainText(String(text.length));
     });
 
     test('the website name saves and comes back', async ({ page }) => {

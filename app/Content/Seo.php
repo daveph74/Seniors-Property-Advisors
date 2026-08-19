@@ -47,7 +47,15 @@ class Seo
             'title' => $title,
             'description' => $description,
             'canonical' => trim((string) ($seo['canonical'] ?? '')) ?: ($seo['url'] ?? null),
-            'robots' => ($seo['noindex'] ?? false) ? 'noindex, follow' : null,
+            /* Something on every page now, where only a noindexed one said anything. A page that
+               wants to be found still has a preference worth stating: `max-image-preview:large` is
+               what earns a full-width thumbnail in mobile results rather than a postage stamp. */
+            'robots' => ($seo['noindex'] ?? false) ? 'noindex, follow' : 'max-image-preview:large',
+            'siteName' => trim((string) ($defaults['name'] ?? '')) ?: null,
+            /* Australian English, stated. Facebook assumes en_US otherwise, which decides which
+               spelling of "advisor" a preview is rendered in and nothing else — small, and free. */
+            'locale' => 'en_AU',
+            'imageAlt' => $seo['imageAlt'] ?? null,
             'ogType' => $type,
             'ogUrl' => $seo['url'] ?? null,
             'image' => $seo['image'] ?? null,
@@ -55,6 +63,19 @@ class Seo
             'imageHeight' => $seo['imageHeight'] ?? null,
             'twitterCard' => ($seo['image'] ?? null) ? 'summary_large_image' : 'summary',
         ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    /**
+     * Whether this page has asked not to be listed.
+     *
+     * Both controllers used to ask `isset($head['robots'])`, which was the same question for as long as a
+     * robots tag only ever meant noindex. Every page sends one now — an indexable page asks for a large
+     * image preview — so that reading would have quietly stopped every page emitting structured data,
+     * which is the sort of regression a passing test suite is perfectly happy with.
+     */
+    public static function isHidden(array $head): bool
+    {
+        return str_contains((string) ($head['robots'] ?? ''), 'noindex');
     }
 
     /**
@@ -95,7 +116,13 @@ class Seo
                 ? ['@type' => 'Person', 'name' => $article['author']]
                 : null,
             /* The website's name, once the settings screen holds one — it was hardcoded here. */
-            'publisher' => ['@type' => 'Organization', 'name' => $publisher ?: 'Seniors Property Advisors'],
+            /* Pointing at the home page's entity rather than restating a name: two nodes describing
+               the same organisation are two organisations as far as a search engine is concerned. */
+            'publisher' => [
+                '@type' => 'ProfessionalService',
+                '@id' => url('/').'#organisation',
+                'name' => $publisher ?: 'Seniors Property Advisors',
+            ],
             'mainEntityOfPage' => isset($head['canonical'])
                 ? ['@type' => 'WebPage', '@id' => $head['canonical']]
                 : null,
@@ -109,19 +136,58 @@ class Seo
      * changing the footer address changes what search engines are told. A field we do not hold is
      * left out entirely — `array_filter` at the end — because an empty property is a claim that
      * the value is empty rather than unknown.
+     *
+     * **`ProfessionalService`, not `LocalBusiness`.** Both are more specific than `Organization` and
+     * both take an address, but `LocalBusiness` is a claim about a place a customer can walk into,
+     * which a 1300 number and a serviced office on level 14 is not. `areaServed` is the honest version
+     * of the same information: the service covers Australia, and says so.
+     *
+     * **No `aggregateRating`.** The testimonials table holds a rating, so this is the tempting place to
+     * put one, and it is a trap twice over: Google does not show review stars sourced from an
+     * organisation's own first-party testimonials, and marking up your own quote slider is the pattern
+     * that earns a manual action. `StructuredDataTest` asserts it is never emitted, so the next person
+     * to have this good idea finds out from a red test rather than from Search Console.
+     *
+     * The ABN is deliberately absent: the one in the footer is a placeholder (`12 345 678 901`), and an
+     * identifier invented for a search engine is worse than none.
      */
     public static function organizationSchema(array $globals, array $defaults, array $social = []): array
     {
         return array_filter([
             '@context' => 'https://schema.org',
-            '@type' => 'Organization',
+            '@type' => 'ProfessionalService',
+            /* Named so the article's publisher can point at this one entity rather than describing a
+               second, unlinked organisation of the same name. */
+            '@id' => url('/').'#organisation',
             'name' => $defaults['name'] ?? null,
             'url' => url('/'),
+            'description' => $defaults['description'] ?? null,
             'logo' => self::logo($globals, $defaults),
+            'image' => self::logo($globals, $defaults),
             'telephone' => $globals['phone']['label'] ?? null,
+            'email' => self::footerEmail($globals),
             'address' => self::postalAddress($globals['footer']['address'] ?? []),
+            'areaServed' => ['@type' => 'Country', 'name' => 'Australia'],
             'sameAs' => array_column($social, 'href') ?: null,
         ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    /**
+     * The contact address the footer already prints, rather than a second copy in settings. Read out of
+     * the footer columns because that is where it lives; a value stored twice is a value that disagrees
+     * with itself.
+     */
+    private static function footerEmail(array $globals): ?string
+    {
+        foreach ($globals['footer']['columns'] ?? [] as $column) {
+            foreach ($column['links'] ?? [] as $link) {
+                if (Str::startsWith((string) ($link['href'] ?? ''), 'mailto:')) {
+                    return Str::after($link['href'], 'mailto:');
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -327,13 +393,17 @@ class Seo
             return self::localDimensions($image);
         }
 
-        $media = Media::where('key', $key)->first(['width', 'height']);
+        $media = Media::where('key', $key)->first(['width', 'height', 'alt']);
+
+        /* The alt travels even when the size does not: they answer different questions, and a card
+           with a described picture is better than one with a measured picture. */
+        $alt = trim((string) $media?->alt) !== '' ? ['imageAlt' => $media->alt] : [];
 
         if ($media?->width === null || $media?->height === null) {
-            return [];
+            return $alt;
         }
 
-        return ['imageWidth' => (int) $media->width, 'imageHeight' => (int) $media->height];
+        return $alt + ['imageWidth' => (int) $media->width, 'imageHeight' => (int) $media->height];
     }
 
     /**

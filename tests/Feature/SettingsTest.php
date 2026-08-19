@@ -23,11 +23,24 @@ class SettingsTest extends TestCase
         return $this->put('/cms/settings', array_merge([
             'name' => 'Seniors Property Advisors',
             'favicon' => null,
-            'seo' => ['titleFormat' => '{title} | {site}', 'description' => null, 'image' => null],
             'social' => ['facebook' => null, 'linkedin' => null],
             'tracking' => ['ga4' => null, 'gtm' => null],
             'legal' => ['disclaimer' => null, 'privacyPage' => null],
         ], $overrides));
+    }
+
+    /**
+     * The SEO defaults are saved on their own screen under their own ability, so these go to
+     * `/cms/seo/defaults`. What they assert has not changed: the tests below are about a default
+     * reaching a delivered page, which is `Seo`'s job wherever the value was typed.
+     */
+    private function saveSeo(array $seo = []): TestResponse
+    {
+        return $this->put('/cms/seo/defaults', array_merge([
+            'titleFormat' => '{title} | {site}',
+            'description' => null,
+            'image' => null,
+        ], $seo));
     }
 
     /**
@@ -56,18 +69,19 @@ class SettingsTest extends TestCase
             $settings = $page->toArray()['props']['settings'];
 
             $this->assertSame('Seniors Property Advisors', $settings['name']);
-            $this->assertSame('{title} | {site}', $settings['seo']['titleFormat']);
+            /* The SEO defaults are not this screen's props any more. */
+            $this->assertArrayNotHasKey('seo', $settings);
         });
     }
 
     public function test_the_title_pattern_reaches_the_delivered_html(): void
     {
         $this->page('services');
-        $this->save(['seo' => [
+        $this->saveSeo([
             'titleFormat' => '{title} — {site}',
             'description' => null,
             'image' => null,
-        ]])->assertRedirect()->assertSessionHasNoErrors();
+        ])->assertRedirect()->assertSessionHasNoErrors();
 
         $html = $this->get('/services')->assertOk()->getContent();
 
@@ -92,11 +106,11 @@ class SettingsTest extends TestCase
     public function test_the_default_description_fills_in_for_a_page_that_has_none(): void
     {
         $this->page('services');
-        $this->save(['seo' => [
+        $this->saveSeo([
             'titleFormat' => null,
             'description' => 'Independent property advice for older Australians.',
             'image' => null,
-        ]])->assertRedirect();
+        ])->assertRedirect();
 
         $html = $this->get('/services')->assertOk()->getContent();
 
@@ -111,11 +125,11 @@ class SettingsTest extends TestCase
         $page = $this->page('services');
         $page->update(['seo' => ['description' => 'What this page says.']]);
 
-        $this->save(['seo' => [
+        $this->saveSeo([
             'titleFormat' => null,
             'description' => 'The site-wide one.',
             'image' => null,
-        ]])->assertRedirect();
+        ])->assertRedirect();
 
         $html = $this->get('/services')->assertOk()->getContent();
 
@@ -126,11 +140,11 @@ class SettingsTest extends TestCase
     public function test_the_default_sharing_image_stands_in_and_is_absolute(): void
     {
         $this->page('services');
-        $this->save(['seo' => [
+        $this->saveSeo([
             'titleFormat' => null,
             'description' => null,
             'image' => '/media/2026/08/share.jpg',
-        ]])->assertRedirect();
+        ])->assertRedirect();
 
         $html = $this->get('/services')->assertOk()->getContent();
 
@@ -143,11 +157,11 @@ class SettingsTest extends TestCase
 
     public function test_an_article_prefers_its_own_picture_over_the_site_default(): void
     {
-        $this->save(['seo' => [
+        $this->saveSeo([
             'titleFormat' => null,
             'description' => null,
             'image' => '/media/2026/08/share.jpg',
-        ]])->assertRedirect();
+        ])->assertRedirect();
 
         $this->post('/cms/blog', [
             'title' => 'Planning a downsize',
