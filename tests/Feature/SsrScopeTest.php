@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Vite;
 use Illuminate\Support\Facades\Http;
 use Inertia\Ssr\BundleDetector;
 use Tests\TestCase;
@@ -22,8 +23,21 @@ use Tests\TestCase;
  */
 class SsrScopeTest extends TestCase
 {
+    /**
+     * `public/hot` changes where SSR is dispatched: with Vite running, `HttpGateway` posts to the dev
+     * server's `/__inertia_ssr` instead of the renderer, so these tests would pass or fail depending on
+     * whether somebody had `composer dev` open. It also fails `security:check`. Pointed at a file that
+     * does not exist, the way the deployment tests already do it.
+     */
+    private function noViteDevServer(): void
+    {
+        app(Vite::class)->useHotFile(storage_path('framework/testing/absent-hot'));
+    }
+
     private function pretendTheRendererIsUp(): void
     {
+        $this->noViteDevServer();
+
         Http::fake([
             '127.0.0.1:13714/*' => Http::response(['head' => [], 'body' => '<h1>Rendered on the server</h1>']),
         ]);
@@ -72,6 +86,7 @@ class SsrScopeTest extends TestCase
      */
     public function test_a_missing_renderer_falls_back_rather_than_failing(): void
     {
+        $this->noViteDevServer();
         config(['inertia.ssr.enabled' => true, 'inertia.ssr.ensure_bundle_exists' => false]);
         Http::fake(['127.0.0.1:13714/*' => Http::response(status: 500)]);
 
@@ -87,6 +102,8 @@ class SsrScopeTest extends TestCase
      */
     public function test_the_deployment_check_fails_when_the_bundle_is_missing(): void
     {
+        $this->noViteDevServer();
+
         config([
             'app.debug' => false,
             'session.secure' => true,

@@ -256,6 +256,15 @@ class SeoReportTest extends TestCase
         Page::where('slug', 'faqs')->update(['seo' => ['noindex' => true]]);
         $this->article();
 
+        /* Every seeded page carries its own description now — `SeoContentTest` holds them to it — so
+           this makes the row it filters for instead of relying on one being absent. The site default
+           has to go too, or the page inherits it and is not "no description" at all. */
+        Page::where('slug', 'glossary')->update(['seo' => []]);
+        Setting::updateOrCreate(
+            ['key' => Site::KEY],
+            ['value' => array_replace(Site::all(), ['seo' => []])],
+        );
+
         foreach (['pages', 'articles', 'hidden', 'not-in-sitemap', 'no-description'] as $show) {
             $rows = $this->get('/cms/seo?show='.$show)->assertOk()->viewData('page')['props']['rows'];
 

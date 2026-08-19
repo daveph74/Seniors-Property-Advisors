@@ -352,7 +352,9 @@ differs from what hydration wants, and React recovers by redrawing: the visible 
 crawled symptom is wrong content.
 
 Two local traps. **`public/hot` diverts SSR to Vite**, so with `composer dev` running the production path
-is never exercised — if you are checking whether SSR works, that file must be out of the way.
+is never exercised — if you are checking whether SSR works, that file must be out of the way, and a test
+about SSR has to point Vite at a hot file that does not exist or it passes or fails on whether somebody
+had a dev server open.
 And **Inertia memoises the render per request scope**, so a test or a script making two page visits in
 one PHP process gets the first page's HTML twice; it looks exactly like the renderer serving one page for
 every address.
@@ -385,6 +387,29 @@ is the honest answer there. A page with no `published_at` gets **no lastmod at a
 protects, and several seeded pages are in that state. Absent means "unknown", which is true and valid;
 a wrong date is neither.
 
+### What the metadata has to fit inside
+
+Every published address carries its own title and description, and two numbers are enforced by
+`SeoContentTest` rather than left to judgement: a description of **155 characters** and a rendered title
+of **61**, the latter including the ` | Seniors Property Advisors` the site format appends. Neither is the
+stored limit — `seo.description` allows 320 — because the question is not what may be saved but what a
+search result shows before it cuts. Eleven descriptions were over the line when this was written, all of
+them perfectly valid and all of them truncated mid-sentence in the one place a reader decides whether to
+click.
+
+Three more rules that file pins, each of which had gone wrong:
+
+- **No address may inherit the site-wide description.** It exists as a fallback and was `null`, so a page
+  whose own description was ever cleared shipped no description and no `og:description` at all. It has a
+  value now, and a page relying on it is a finding rather than a pass — a sentence shared by twelve
+  addresses tells a reader nothing about which one to open.
+- **The three articles carry their own.** They had none, so each fell back to the site's — three results,
+  one sentence. An article's `summary` is not reusable for this: it is a card blurb, written for a listing
+  where the title sits directly above it.
+- **The seed files and the database must agree.** Both were written, because `resources/content/pages/*.json`
+  is the source of truth for a fresh install and the database is what serves. Applied through
+  `PageContentStore::saveDetails()`, which merges the `seo` key and leaves the section tree alone — not
+  through `ContentSeeder`, which is `updateOrCreate` over whole pages and would overwrite an editor's work.
 ### The SEO screen
 
 `/cms/seo` is two tabs over one ability, `seo.manage` — super **and** client administrator, because a
