@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BlogPost;
-use App\Models\Page;
+use App\Cms\SeoReport;
 use Illuminate\Http\Response;
 
 /**
  * The list of addresses worth crawling.
  *
- * `status` already carries the whole answer for both models — draft and archived are excluded by
- * it, and BlogPost's soft deletes drop trashed articles — so the only thing left to filter is a
- * page the editor has hidden from search. A sitemap that advertises a noindexed page asks a
- * crawler to fetch something it is then told to forget.
+ * The list itself is `SeoReport::sitemapUrls()`, which is also what `/cms/seo` and the public
+ * sitemap page read. It lives there rather than here because a report explaining why an address is
+ * absent has to be reading the very list it is explaining — a second copy of the rule, however
+ * carefully written, is a screen that eventually contradicts the file a crawler fetched.
  *
  * Deliberately uncached. This is two queries over a few dozen rows, where a cache would have to be
  * invalidated on publish, unpublish, archive, restore and every blog status change — five ways to
@@ -22,24 +21,8 @@ class SitemapController extends Controller
 {
     public function index(): Response
     {
-        $pages = Page::where('status', 'published')
-            ->get(['url', 'seo', 'published_at', 'updated_at'])
-            ->reject(fn (Page $page) => $page->seo['noindex'] ?? false)
-            ->map(fn (Page $page) => [
-                'loc' => url($page->url),
-                'lastmod' => ($page->updated_at ?? $page->published_at)?->toAtomString(),
-            ]);
-
-        $articles = BlogPost::published()
-            ->get(['slug', 'seo', 'published_at', 'updated_at'])
-            ->reject(fn (BlogPost $post) => $post->seo['noindex'] ?? false)
-            ->map(fn (BlogPost $post) => [
-                'loc' => url($post->url()),
-                'lastmod' => ($post->updated_at ?? $post->published_at)?->toAtomString(),
-            ]);
-
         return response()
-            ->view('sitemap', ['urls' => $pages->concat($articles)->values()])
+            ->view('sitemap', ['urls' => SeoReport::sitemapUrls()])
             ->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 
@@ -54,6 +37,9 @@ class SitemapController extends Controller
             'User-agent: *',
             'Disallow: /cms/',
             'Disallow: /login',
+            /* The blog's load-more endpoint: article content with no page around it, which is a
+               duplicate of the listing to anything that indexes it. */
+            'Disallow: /blog/articles',
             '',
             'Sitemap: '.url('/sitemap.xml'),
         ];

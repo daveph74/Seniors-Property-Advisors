@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Content\PageContentStore;
 use App\Models\BlogPost;
 use App\Models\Page;
 use Tests\TestCase;
@@ -44,6 +45,66 @@ class SitemapTest extends TestCase
         /* The home page lives at the site root, never at /home — which 301s. */
         $response->assertSee('<loc>'.url('/').'</loc>', false);
         $response->assertDontSee('<loc>'.url('/home').'</loc>', false);
+    }
+
+    /**
+     * `lastmod` is a promise that the reader's copy changed, and a page has a draft — so its
+     * `updated_at` moves the moment somebody saves work nobody can see. Reporting that asks every
+     * crawler to re-fetch a page that did not move, which is the one thing this field exists to
+     * avoid, so a page's answer comes from its last publish instead.
+     */
+    public function test_saving_a_draft_does_not_tell_crawlers_the_live_page_changed(): void
+    {
+        $store = new PageContentStore;
+
+        /* Published through the CMS first, because that is what stamps `published_at`. A seeded
+           page has never been published by anybody, so it has no honest answer — asserted below. */
+        $store->publish('faqs', 'Tester');
+
+        $before = $this->lastmodFor(url('/faqs'));
+        $this->assertNotNull($before);
+
+        $this->travel(2)->days();
+        $store->saveDraft('faqs', [['id' => 'a', 'type' => 'hero', 'active' => true, 'data' => []]], 'Tester');
+
+        $this->assertSame($before, $this->lastmodFor(url('/faqs')), 'a draft save moved lastmod');
+
+        $store->publish('faqs', 'Tester');
+
+        $this->assertNotSame($before, $this->lastmodFor(url('/faqs')), 'publishing did not move lastmod');
+    }
+
+    /**
+     * A page nobody has published through the CMS has no publish date, so "when did this last
+     * change" is genuinely unknown. It is left out rather than filled in from `updated_at` —
+     * which was the first attempt, and put the draft-save time back for exactly the pages the
+     * rule above protects.
+     */
+    public function test_a_page_with_no_publish_date_is_listed_without_a_lastmod(): void
+    {
+        Page::where('slug', 'faqs')->update(['published_at' => null]);
+
+        $this->get('/sitemap.xml')->assertOk()->assertSee('<loc>'.url('/faqs').'</loc>', false);
+
+        $this->assertNull($this->lastmodFor(url('/faqs')));
+    }
+
+    private function lastmodFor(string $loc): ?string
+    {
+        $xml = $this->get('/sitemap.xml')->assertOk()->getContent();
+
+        return preg_match('#<loc>'.preg_quote($loc, '#').'</loc>\s*<lastmod>([^<]+)</lastmod>#', $xml, $m) === 1
+            ? $m[1]
+            : null;
+    }
+
+    /**
+     * The blog's load-more endpoint answers with article content and no page around it, which is a
+     * duplicate of the listing to anything that indexes it.
+     */
+    public function test_robots_keeps_crawlers_out_of_the_json_endpoint(): void
+    {
+        $this->assertStringContainsString('Disallow: /blog/articles', $this->get('/robots.txt')->getContent());
     }
 
     public function test_a_page_hidden_from_search_is_not_advertised(): void

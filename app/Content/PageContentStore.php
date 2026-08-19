@@ -220,9 +220,14 @@ class PageContentStore
         return $document['draft'] ?? $document['published'] ?? [];
     }
 
+    /**
+     * A null `$title` means "not sent, leave it alone", which is what lets the SEO overview patch a
+     * description without also restating a title it read some minutes ago. The seo array is merged
+     * rather than replaced for the same reason: a caller sends the fields it changed.
+     */
     public function saveDetails(
         string $slug,
-        string $title,
+        ?string $title,
         array $seo,
         string $by,
         ?string $navLabel = null,
@@ -235,7 +240,6 @@ class PageContentStore
         }
 
         $changes = [
-            'title' => $title,
             /* Null and empty are dropped, but `false` is kept: switching "hide from search engines"
                off writes false, and discarding it would merge the old true straight back in. */
             'seo' => array_filter(
@@ -244,6 +248,10 @@ class PageContentStore
             ),
             'last_updated_by' => $by,
         ];
+
+        if ($title !== null) {
+            $changes['title'] = $title;
+        }
 
         if ($navLabel !== null) {
             $changes['nav_label'] = $navLabel === '' ? null : $navLabel;

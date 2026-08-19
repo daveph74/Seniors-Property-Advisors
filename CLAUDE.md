@@ -327,18 +327,94 @@ prints it — including the JSON-LD (Article, Organization). Two things it exist
 that has not fetched the image yet renders the small card, so the first person to share a link gets
 the worse preview. The media table already knows both.
 
-`/sitemap.xml` and `/robots.txt` are routes, not files. The sitemap filters on `status` and the
-page's own noindex flag and nothing else — advertising a noindexed page asks a crawler to fetch
-something it is then told to forget. It is **deliberately uncached**: two queries over a few dozen
-rows against five ways to serve a stale sitemap.
+`/sitemap.xml` and `/robots.txt` are routes, not files. The list of addresses lives in
+`SeoReport::sitemapUrls()` rather than in the controller, and that placement is the design: `/cms/seo`
+reports *why* an address is missing from the sitemap, and a report explaining a list has to be reading
+the very list it explains. A shared predicate would have left two call sites free to drift; membership
+of one produced list cannot. `SitemapController` is four lines over it now, and it is **deliberately
+uncached** — two queries over a few dozen rows against five ways to serve a stale sitemap.
+
+It filters on `status` and the page's own noindex flag and nothing else — advertising a noindexed page
+asks a crawler to fetch something it is then told to forget. `robots.txt` also disallows
+`/blog/articles`, the load-more endpoint, which answers with article content and no page around it.
+
+**`lastmod` is a page's last publish, never its last save.** A page has a draft, so `updated_at` moves
+when somebody saves work no reader can see, and reporting that asks every crawler to re-fetch a page
+that did not move. An article has no draft — editing a published one changes it live — so `updated_at`
+is the honest answer there. A page with no `published_at` gets **no lastmod at all**: falling back to
+`updated_at` was written first and put the draft-save time back for precisely the pages the rule
+protects, and several seeded pages are in that state. Absent means "unknown", which is true and valid;
+a wrong date is neither.
+
+### The SEO screen
+
+`/cms/seo` is two tabs over one ability, `seo.manage` — super **and** client administrator, because a
+client admin already writes every one of these fields in the page builder, so gathering them onto one
+screen widens nobody's reach.
+
+**Overview** is a row per publicly addressable URL — pages, articles, and trashed articles too, since
+an address a search engine still holds is exactly what somebody comes here to explain. **A deleted row
+is reported and never editable**: it has no edit link, its address is plain text rather than a button,
+and the server refuses the patch anyway (`findOrFail` excludes trashed). All three, because two of them
+were not enough — the row was clickable, the editor opened, and its save answered 404 while the panel
+sat there looking busy. Restoring is the Deleted content screen's job, behind a different ability. What it reports
+is what a crawler *receives*, not what the column holds: every row goes through `Seo::head()`, the same
+function `app.blade.php` prints from. That works only because `head()` never reads the request — the
+callers pass the URL — so the report hands it each row's **public** address. Get that wrong and every
+row claims the admin screen is its canonical, which is the kind of report somebody acts on before
+noticing. `descriptionInherited` is called out separately from "has a description": twelve addresses
+sharing one site default is a finding, not a pass.
+
+**Defaults** is the title pattern, default description and default sharing image — which used to be a
+tab on `/cms/settings` and **moved rather than being copied**. Settings is `settings.manage`, so
+leaving them there kept them from the person most likely to want them, and dragging Settings' gate down
+would have handed out the GA4 ids and the legal wording with it.
+
+That move gave the `site` settings row **two writers**, which this file used to describe as the thing
+that must never happen. It is safe now for one reason: both go through `Site::merge()`, so a save says
+which top-level keys it changes instead of asserting the whole row. `/cms/settings` replaced it
+wholesale before, and a save from the SEO screen — which has no analytics ids to send — would have
+cleared them, failing silently until a monthly report came back empty. `SeoEditingTest` pins both
+directions.
+
+Two fields are editable from a row, description and hide-from-search, through `PATCH /cms/seo/{kind}/{id}`
+with `sometimes` on both — so a toggle patches one field alone, the rule the testimonials screen
+already pays for. **The canonical and the search title are deliberately not offered here**: a canonical
+typed into a list row is an address de-indexed by a fat finger, and it stays in the builder's SEO panel
+where there is room to explain it. `SeoFieldRules` holds the limits for all four requests that write
+these values, because a description that saves from the builder and is refused here reads as one of the
+two screens being broken.
+
+Two traps in its own table markup. `--seo` is the grid modifier and **the head row wears it too**, so
+`.cms-table__row--seo` first() resolves to the header — which fails as "the row does not contain that
+text" and reads as a broken save; a data row is the one that also has `.cms-table__row`. And the screen
+carries **two segmented strips** — the Overview/Defaults tabs and the filter row — plus a sidebar with
+its own "Pages" link, so every locator has to name the strip it means or Playwright reports a
+strict-mode violation rather than clicking the wrong thing.
+
+Two smaller things worth knowing. A page row's link is built from **`cms_id`, not `id`** — the same trap
+the search palette pays for, since `CmsPageController::edit` resolves through `findByCmsId` — and
+`SeoReportTest` follows the link rather than matching its shape, which is the only reason that is
+caught. And filtering and search run **in PHP, not SQL**: the title after the site format, an inherited
+description and sitemap membership are not columns, so `Like` cannot see them and a search pushed down
+to the database would find fewer rows than the eye can see on screen. The row set is capped at
+`SeoReport::CEILING`, with a `truncated` prop so the screen says so rather than quietly slowing down
+every month.
+
+There is **no CSV export**. One was built and removed: Google reads the XML, and a spreadsheet was a
+workflow nobody had asked for, carrying formula-injection escaping and an export-versus-screen filter
+mismatch to keep in step for it.
 
 ## Site settings and global content
 
 Two `settings` rows, and the split is a permissions boundary rather than a filing choice. `globals`
 is wording a **client administrator** edits at `/cms/global-content` — footer blurb, announcement
 bar, phone. `app/Content/Site.php` is the row behind `/cms/settings`, **super administrator only**
-(`settings.manage`) — SEO defaults, the GA4/GTM ids, the switches set once. One row edited by two
-screens under two permissions is how a save from one silently reverts the other.
+(`settings.manage`) — the GA4/GTM ids, the legal wording, the switches set once.
+
+The SEO defaults are the exception and they live on `/cms/seo` under `seo.manage`, so this row has two
+writers. That is only safe because both go through `Site::merge()`; see "The SEO screen" above for
+what the wholesale write it replaced would have erased.
 
 Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
 there; a value stored twice is a value that disagrees with itself.
@@ -393,8 +469,10 @@ figures, which is worse than an empty dashboard because it reads as fact.
 middleware, the `Gate` definitions in `AppServiceProvider`, and the sidebar's shared
 `auth.modules` prop all read from it. Nothing else should hard-code a role name.
 
-Client administrators create, edit, publish and unpublish content. Super administrators
-additionally delete content, restore archived pages, manage accounts and reach settings.
+Client administrators create, edit, publish and unpublish content, and reach `/cms/seo` — its own
+`seo.manage` ability, since the report and the two fields it patches are things they already write in
+the builder. Super administrators additionally delete content, restore archived pages, manage accounts
+and reach settings.
 Deleting anything is therefore a super-admin route — the scope never gives client users a
 delete, only disable and archive.
 

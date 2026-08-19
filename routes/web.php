@@ -15,6 +15,7 @@ use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\NavigationController;
 use App\Http\Controllers\Cms\ReusableSectionController;
 use App\Http\Controllers\Cms\SearchController;
+use App\Http\Controllers\Cms\SeoController;
 use App\Http\Controllers\Cms\SettingsController;
 use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
@@ -128,6 +129,17 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::delete('/enquiries/{enquiry}', [CmsEnquiryController::class, 'destroy'])
         ->whereNumber('enquiry')->middleware('permit:content.delete')->name('enquiries.destroy');
 
+    /* Its own ability rather than `settings.manage`: the report is over fields a client
+       administrator already edits in the builder, and the defaults moved here from Settings so they
+       would sit beside the thing that shows what they do. */
+    Route::middleware('permit:seo.manage')->group(function () {
+        Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');
+        Route::put('/seo/defaults', [SeoController::class, 'updateDefaults'])
+            ->middleware('throttle:cms-write')->name('seo.defaults');
+        Route::patch('/seo/{kind}/{id}', [SeoController::class, 'updateFields'])
+            ->whereIn('kind', ['page', 'article'])->whereNumber('id')
+            ->middleware('throttle:cms-write')->name('seo.fields');
+    });
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::get('/deleted', [DeletedContentController::class, 'index'])
         ->middleware('permit:content.restore')->name('deleted.index');
