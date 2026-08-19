@@ -444,6 +444,39 @@ table has a `rating` column, so this is the obvious place to add stars — and i
 Google does not show review rich results sourced from an organisation's own first-party testimonials, and
 marking up your own quote slider is the pattern that earns a manual action. The absence was already
 correct; now the next person to have the idea finds out from a red test instead of from Search Console.
+### Unfinished content, and four checks that were not worth making
+
+`PublishedContentTest` fails when a published page carries text a reader would see as unfinished —
+"TO BE CONFIRMED", "[X business days]", "PLACEHOLDER" and the rest. It exists because three pages already
+do: `privacy-policy`, `terms-and-conditions` and `complaints`, the last of which says **in its own words**
+that its timeframes are placeholders and must not be published, and is published. Nothing in the
+application had an opinion: a placeholder validates, saves, publishes and is served exactly like a finished
+sentence.
+
+It **pins the exact set** rather than failing or skipping. A permanently red suite teaches people to ignore
+it, and a skip would break this file's own rule that a standing skip is a standing question — so a new
+placeholder anywhere fails it, and *finishing* one of the three fails it too, with the list to shorten,
+which is the most useful moment to be asked. Still outstanding, and not inventable here: the ABN, the
+complaint response timeframe, who handles complaints, and an effective date.
+
+Four things an audit flagged and the code did not need, recorded so nobody pays to find out twice:
+
+- **`width`/`height` on every image.** The wrappers already carry `aspect-ratio` in `app.css` —
+  `.hero-visual`, `.why-visual`, `.family-visual`, `.team-member__photo`, `.article-card__image`,
+  `.article__hero` — so the space is reserved before the image arrives. The two rules without a ratio,
+  `.block-image img` and `.text-image__media img`, belong to blocks **no seeded page uses at all**. The
+  finding came from reading the markup and not the stylesheet.
+- **An eager-loading escape hatch for `ImageBlock`.** Same reason: it would let a page opt out of lazy
+  loading for its largest image, and no page has one.
+- **A single-`<h1>` guard.** Two hero sections on one page would produce two, and nothing prevents it — but
+  no page has two, and multiple `h1`s have not been a ranking problem for years. The cost of the guard is
+  making every hero ask whether it is the first one.
+- **Editorial internal links.** Real finding: `/how-it-works`, `/why-agent-finder`, `/faqs` and `/contact`
+  have no internal links in their body at all, so nothing but the header and footer passes any authority to
+  them. It is not fixable as metadata, and it is somebody's decision rather than a defect: section text
+  cannot hold markup (`SaveSectionsRequest::sanitise()` strips tags from every string), so a link means a
+  button or a call-to-action block — which is exactly what was deliberately removed when every page was cut
+  to one section.
 ### The SEO screen
 
 `/cms/seo` is two tabs over one ability, `seo.manage` — super **and** client administrator, because a
