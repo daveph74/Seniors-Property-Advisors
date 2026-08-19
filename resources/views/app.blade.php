@@ -31,12 +31,29 @@
     @isset($head['ogUrl'])
         <meta inertia="og:url" property="og:url" content="{{ $head['ogUrl'] }}" />
     @endisset
+    @isset($head['siteName'])
+        <meta inertia="og:site_name" property="og:site_name" content="{{ $head['siteName'] }}" />
+    @endisset
+    @isset($head['locale'])
+        <meta inertia="og:locale" property="og:locale" content="{{ $head['locale'] }}" />
+    @endisset
     @isset($head['image'])
         <meta inertia="og:image" property="og:image" content="{{ $head['image'] }}" />
     @endisset
     @isset($head['imageWidth'])
         <meta inertia="og:image:width" property="og:image:width" content="{{ $head['imageWidth'] }}" />
         <meta inertia="og:image:height" property="og:image:height" content="{{ $head['imageHeight'] }}" />
+    @endisset
+    @isset($head['imageAlt'])
+        <meta inertia="og:image:alt" property="og:image:alt" content="{{ $head['imageAlt'] }}" />
+    @endisset
+    {{-- Article dates, which are what a preview reads to say how fresh a piece is. Only an article
+         has them, so only an article prints them. --}}
+    @isset($head['publishedTime'])
+        <meta inertia="article:published_time" property="article:published_time" content="{{ $head['publishedTime'] }}" />
+    @endisset
+    @isset($head['modifiedTime'])
+        <meta inertia="article:modified_time" property="article:modified_time" content="{{ $head['modifiedTime'] }}" />
     @endisset
     @isset($head['twitterCard'])
         <meta inertia name="twitter:card" content="{{ $head['twitterCard'] }}" />

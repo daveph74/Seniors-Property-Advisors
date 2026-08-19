@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\BlogPost;
 use App\Models\Faq;
 use App\Models\Page;
 use App\Models\Setting;
+use App\Models\Testimonial;
 use Tests\TestCase;
 
 /**
@@ -51,7 +53,7 @@ class StructuredDataTest extends TestCase
 
     public function test_the_home_page_says_who_the_website_belongs_to(): void
     {
-        $organisation = $this->ofType('/', 'Organization');
+        $organisation = $this->ofType('/', 'ProfessionalService');
 
         $this->assertSame('Seniors Property Advisors', $organisation['name']);
         $this->assertSame(url('/'), $organisation['url']);
@@ -68,29 +70,98 @@ class StructuredDataTest extends TestCase
      * Google will not take an SVG as an organisation's logo. The site's own logo is one, so the
      * default sharing picture stands in rather than shipping something that fails validation.
      */
+    /**
+     * `ProfessionalService` rather than `LocalBusiness`, and the difference is a claim about the world.
+     * Both take an address; only `LocalBusiness` says a customer can walk in, which a 1300 number and a
+     * serviced office on level 14 is not. `areaServed` says the true thing instead.
+     */
+    public function test_the_organisation_is_a_service_that_covers_australia(): void
+    {
+        $organisation = $this->ofType('/', 'ProfessionalService');
+
+        $this->assertSame('Australia', $organisation['areaServed']['name']);
+        $this->assertSame('Country', $organisation['areaServed']['@type']);
+        $this->assertSame('1300 277 228', $organisation['telephone']);
+        $this->assertSame('AU', $organisation['address']['addressCountry']);
+    }
+
+    /** Read out of the footer rather than stored a second time, so the two cannot disagree. */
+    public function test_the_contact_address_comes_from_the_footer(): void
+    {
+        $this->assertSame('hello@aspa.com.au', $this->ofType('/', 'ProfessionalService')['email']);
+    }
+
+    /**
+     * An article's publisher points at the home page's entity instead of describing a second
+     * organisation of the same name — two nodes for one business is two businesses to a search engine.
+     */
+    public function test_an_article_names_the_same_organisation_the_home_page_does(): void
+    {
+        $article = BlogPost::create([
+            'slug' => 'a-linked-article',
+            'title' => 'A linked article',
+            'body' => '<p>Words.</p>',
+            'status' => 'published',
+            'published_at' => now()->subDay(),
+        ]);
+
+        $schema = $this->ofType($article->url(), 'Article');
+
+        $this->assertSame(url('/').'#organisation', $schema['publisher']['@id']);
+        $this->assertSame(url('/').'#organisation', $this->ofType('/', 'ProfessionalService')['@id']);
+    }
+
+    /**
+     * The one absence worth a test of its own.
+     *
+     * `testimonials` carries a `rating` column, so this is the obvious place to add stars and it must not
+     * happen: Google does not show review rich results sourced from an organisation's own first-party
+     * testimonials, and marking up your own quote slider is precisely the pattern that earns a manual
+     * action. The next person to have this idea should hear it from a red test.
+     */
+    public function test_no_page_ever_claims_a_rating_of_its_own(): void
+    {
+        Testimonial::create([
+            'name' => 'A client',
+            'quote' => 'They were patient with us.',
+            'rating' => 5,
+            'active' => true,
+            'consent_confirmed_at' => now(),
+            'consent_confirmed_by' => 'Tester',
+        ]);
+
+        foreach (['/', '/how-it-works', '/faqs'] as $path) {
+            $html = $this->get($path)->assertOk()->getContent();
+
+            $this->assertStringNotContainsString('aggregateRating', $html, "{$path} claims a rating");
+            $this->assertStringNotContainsString('AggregateRating', $html, "{$path} claims a rating");
+            $this->assertStringNotContainsString('"@type":"Review"', $html, "{$path} marks up a review");
+        }
+    }
+
     public function test_the_logo_is_never_the_svg(): void
     {
         /* The site logo is an SVG, so the default sharing picture stands in. */
-        $this->assertSame(url('/media/2026/08/share-card.jpg'), $this->ofType('/', 'Organization')['logo']);
+        $this->assertSame(url('/media/2026/08/share-card.jpg'), $this->ofType('/', 'ProfessionalService')['logo']);
 
         $globals = Setting::where('key', 'globals')->value('value');
         $globals['logo']['src'] = '/media/2026/08/logo.png';
         Setting::where('key', 'globals')->update(['value' => $globals]);
 
         /* A raster logo is picked up the moment one exists. */
-        $this->assertSame(url('/media/2026/08/logo.png'), $this->ofType('/', 'Organization')['logo']);
+        $this->assertSame(url('/media/2026/08/logo.png'), $this->ofType('/', 'ProfessionalService')['logo']);
     }
 
     /** An empty property claims the value is empty; a missing one says we do not know it. */
     public function test_social_addresses_are_left_out_when_there_are_none(): void
     {
-        $this->assertArrayNotHasKey('sameAs', $this->ofType('/', 'Organization'));
+        $this->assertArrayNotHasKey('sameAs', $this->ofType('/', 'ProfessionalService'));
 
         $site = Setting::where('key', 'site')->value('value');
         $site['social']['facebook'] = 'https://facebook.com/example';
         Setting::where('key', 'site')->update(['value' => $site]);
 
-        $this->assertSame(['https://facebook.com/example'], $this->ofType('/', 'Organization')['sameAs']);
+        $this->assertSame(['https://facebook.com/example'], $this->ofType('/', 'ProfessionalService')['sameAs']);
     }
 
     public function test_a_page_below_the_home_page_carries_a_trail(): void

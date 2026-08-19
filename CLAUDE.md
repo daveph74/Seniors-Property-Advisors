@@ -410,6 +410,40 @@ Three more rules that file pins, each of which had gone wrong:
   is the source of truth for a fresh install and the database is what serves. Applied through
   `PageContentStore::saveDetails()`, which merges the `seo` key and leaves the section tree alone — not
   through `ContentSeeder`, which is `updateOrCreate` over whole pages and would overwrite an editor's work.
+### The head, and what is deliberately not in it
+
+Added because the data was already there and the tag was not: `og:site_name` and `og:locale` (`en_AU` —
+Facebook assumes American otherwise), `og:image:alt` from the media row, `article:published_time` and
+`article:modified_time` on articles, and **a `robots` tag on every page** rather than only on a hidden
+one, because an indexable page still has a preference worth stating: `max-image-preview:large` is what
+earns a full-width thumbnail in mobile results instead of a postage stamp.
+
+That last one broke something invisible, which is the part worth remembering. Both public controllers
+asked `isset($head['robots'])` to mean "is this page hidden from search", which was true only while a
+robots tag existed for no other reason. Every page sends one now, so that reading would have silently
+stopped **every page emitting any structured data at all** — a change no existing test would have
+noticed. `Seo::isHidden()` is the question actually being asked, in one place.
+
+Left out on purpose, all of it cargo cult for this site: `twitter:site` and `twitter:creator` (there is no
+X account, and X falls back to the Open Graph tags anyway), `theme-color`, `rel=prev/next` (Google dropped
+it in 2019 and there are no paginated addresses), `speakable` (news publishers only), a standalone
+`WebPage` node, and font preconnect — DM Sans is bundled, so preconnecting to Google Fonts on a public
+page would make it slower.
+
+**`ProfessionalService`, not `LocalBusiness`.** Both are narrower than `Organization` and both take an
+address, but `LocalBusiness` claims a place a customer can walk into, and a 1300 number with a serviced
+office on level 14 is not that. `areaServed: Australia` says the true thing instead. The organisation node
+carries an `@id`, and an article's `publisher` points at it rather than restating the name — two nodes
+describing one business are two businesses as far as a search engine is concerned. The email is read out of
+the footer's own contact column, so it cannot disagree with what a reader sees. **The ABN is deliberately
+absent**: the one in the footer is a placeholder, and an identifier invented for a search engine is worse
+than none.
+
+**No `aggregateRating`, and there is a test whose whole job is to keep it that way.** The `testimonials`
+table has a `rating` column, so this is the obvious place to add stars — and it is a trap twice over:
+Google does not show review rich results sourced from an organisation's own first-party testimonials, and
+marking up your own quote slider is the pattern that earns a manual action. The absence was already
+correct; now the next person to have the idea finds out from a red test instead of from Search Console.
 ### The SEO screen
 
 `/cms/seo` is two tabs over one ability, `seo.manage` — super **and** client administrator, because a
