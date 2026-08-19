@@ -55,7 +55,7 @@ equivalent — a server has a release step and three processes something else ke
 "Running it in production", further down, and it is the section to read before a first deploy: every
 mistake it lists fails silently rather than loudly.
 
-Run by hand, never scheduled or called from a migration: `content:import [--force]`,
+Run by hand, never scheduled or called from a migration: `content:import [--force]`, `seo:apply [--force]`,
 `content:purge-deleted [--days=90] [--force]`, `enquiries:purge [--months=24] [--force]`,
 `enquiries:erase {email} [--force]`, `activity:prune [--months=24] [--force]`, `media:init`,
 `media:optimise [--dry-run]`, `pages:scaffold`, `security:check [--production]`, `cms:user`. Each says
@@ -410,6 +410,23 @@ Three more rules that file pins, each of which had gone wrong:
   is the source of truth for a fresh install and the database is what serves. Applied through
   `PageContentStore::saveDetails()`, which merges the `seo` key and leaves the section tree alone — not
   through `ContentSeeder`, which is `updateOrCreate` over whole pages and would overwrite an editor's work.
+### Getting metadata onto a site that already has content
+
+`php artisan seo:apply` writes the titles and descriptions from `resources/content/pages/*.json` onto
+pages that already exist, reporting unless given `--force`. It exists because the obvious way is
+destructive: those files are the source of truth for a *fresh* install, and `db:seed` runs
+`updateOrCreate` across the **whole page** — sections included — so on a live site it would replace
+every page with the repository's version and silently undo months of editing.
+
+So the command writes **two fields and nothing else**, through `PageContentStore::saveDetails()`, which
+merges. A seed file that does not mention a sharing image is not an instruction to remove one — an image
+and a canonical are per-page choices an editor made in the builder, and `ApplySeoMetadataTest` asserts
+they survive. A page in the repository the site has never had is reported and stepped over rather than
+created; creating one is `pages:scaffold`'s job.
+
+The practical consequence is worth stating plainly, because it is the thing that looks like a failed
+deploy: **releasing this changes nothing a reader sees.** The release step has no `db:seed`, correctly, so
+the live titles and descriptions stay as they were until somebody runs `seo:apply --force`.
 ### The head, and what is deliberately not in it
 
 Added because the data was already there and the tag was not: `og:site_name` and `og:locale` (`en_AU` —
@@ -960,7 +977,7 @@ rm -f public/hot
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 php artisan queue:restart
-php artisan inertia:stop-ssr
+php artisan inertia:stop-ssr || true
 php artisan security:check --production
 ```
 
@@ -972,7 +989,7 @@ supervisord on Linux, a service wrapper on Windows:
 | the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
 | the queue | `php artisan queue:work --tries=3 --max-time=3600` | enquiries still arrive and are still kept; nothing tells an open CMS screen about them |
 | the socket | `php artisan reverb:start --host=0.0.0.0 --port=8080`, behind the proxy that terminates TLS | the same: the inbox updates when somebody looks at it |
-| the renderer | `php artisan inertia:start-ssr` | the site still works, and serves a body with no heading and no links — see below, because this is the quietest failure here |
+| the renderer | `php artisan inertia:start-ssr` — a unit file is in `deploy/seniors-ssr.service` | the site still works, and serves a body with no heading and no links — see below, because this is the quietest failure here |
 
 Neither of the last two can lose an enquiry — the notice is queued and the dispatch is wrapped, so a
 dead worker or an unreachable socket is a failed job, never a visitor's error page.
@@ -998,6 +1015,36 @@ staging box takes when somebody runs floci on the server to make uploads work.
 unset is what selects AWS. A non-AWS provider is still supported — an endpoint on a real host and port
 passes.
 
+### The first deploy, in order
+
+The release step above assumes a server that has already run one. The first one has an order, and two of
+these steps are safe to do and unsafe to skip:
+
+1. **Copy `.env.production.example`, not `.env.example`** — the second carries the storage emulator's
+   endpoint and dummy credentials, and a server that keeps them stores uploads in a container's volume
+   while looking perfectly well.
+2. `php artisan key:generate`, then fill in the database, the `AWS_*` values and `TRUSTED_PROXIES`.
+3. `php artisan migrate --force`, then `php artisan db:seed --force` — **on an empty database only.**
+   `UserSeeder` and `SampleContentSeeder` refuse to run in production, so this installs the client's pages
+   and settings and nothing else. On a site that already has content this is the wrong command; see
+   `seo:apply` for changing metadata on a live site.
+4. `php artisan cms:user you@example.com --name="Your Name" --role=super_admin` — it prints a password.
+5. `php artisan media:init` against the real bucket, which applies the CORS rules a presigned upload needs.
+6. The release step, then `php artisan security:check --production` until it is silent.
+7. **Server-side rendering is off in the template on purpose, and is the last thing to turn on.** Install
+   `deploy/seniors-ssr.service`, `systemctl enable --now`, set `INERTIA_SSR_ENABLED=true`, re-run
+   `config:cache`, and then prove it rather than believing it:
+
+   ```sh
+   curl -s https://your-domain/how-it-works | grep -c '<h1'
+   ```
+
+   One means it is working. Zero means it fell back — and the page still looks perfect in a browser, which
+   is the whole reason this is the step people think they have done.
+
+Leaving it off is a supported state, not a broken one: `security:check` passes, and everything else on the
+site — the metadata, the structured data, the sitemap — is unaffected. What is lost is only that anything
+which does not run JavaScript reads a blank page.
 The rest, each of which fails quietly rather than loudly (no count, because this list grows):
 
 - **`public/hot` must not exist on the server.** It is how a developer's machine says "assets are
@@ -1011,7 +1058,11 @@ The rest, each of which fails quietly rather than loudly (no count, because this
   started with. **`inertia:stop-ssr` is the same sentence about the renderer** — it holds the bundle it
   started with, so without this readers are served last week's pages by a process nobody restarted. The
   gap before the supervisor brings it back renders in the browser, which is what the site did before SSR
-  existed, so there is no outage in it.
+  existed, so there is no outage in it. **`|| true` is not decoration**: the command exits 1 when there
+  is no renderer to stop, which is the normal state of a first deploy and of any server running with SSR
+  off — and a release script with `set -e` would abort there, having already built and migrated. Found by
+  checking the exit code rather than the message; the first measurement said 0 because the pipe to `tail`
+  was reporting its own success.
 - **The renderer fails silently and looks fine.** A missing bundle, a dead process, or
   `INERTIA_SSR_ENABLED` never reaching the server's `.env` all end the same way: Inertia answers `null`,
   the browser draws the page, every screen looks right, and the delivered HTML quietly goes back to

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { WarningIcon } from '../../../cms/components/icons';
@@ -65,6 +65,14 @@ export default function SettingsIndex({ settings, pages = [] }) {
                             {t.label}
                         </button>
                     ))}
+
+                    {/* The SEO defaults were a tab here and are now on their own screen, beside the
+                        report that shows which addresses inherit them. Somebody who knew where they
+                        were will look here first, so this says where they went rather than leaving
+                        them to conclude the fields were removed. */}
+                    <Link href="/cms/seo" className="cms-settings-nav__aside">
+                        SEO defaults moved to SEO →
+                    </Link>
                 </nav>
 
                 <div className="cms-settings-content">
