@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use App\Auth\Permissions;
 use App\Cms\Notifications;
-use App\Cms\Realtime;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -24,8 +23,8 @@ class HandleInertiaRequests extends Middleware
      *
      * SSR exists here so a crawler receives a page with a heading and links in it. Nothing crawls
      * the admin — `robots.txt` refuses it and it is behind sign-in — so rendering it twice would
-     * buy a slower response and pull the editor, the socket client and every admin screen into a
-     * node process that has no browser to offer them. `resources/js/ssr.jsx` narrows its page glob
+     * buy a slower response and pull the editor and every admin screen into a node process that has
+     * no browser to offer them. `resources/js/ssr.jsx` narrows its page glob
      * to the two public pages for the same reason; if these two ever disagree, the request simply
      * falls back to rendering in the browser, which is what it did before any of this.
      *
@@ -78,10 +77,6 @@ class HandleInertiaRequests extends Middleware
             /* The header's bell, and only where there is a header to put it in — the public site
                shares this middleware, and two counts per page view is a bill nobody asked for. */
             'notifications' => fn () => $request->routeIs('cms.*') ? Notifications::for() : null,
-            /* What the admin should connect to, if anything — the same answer the content policy is
-               built from, so the two cannot disagree about whether a socket exists. Only where the
-               admin is: the public site has nothing to listen for. */
-            'realtime' => fn () => $request->routeIs('cms.*') ? Realtime::config() : null,
         ];
     }
 }

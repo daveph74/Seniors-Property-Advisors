@@ -124,20 +124,6 @@ class SecurityCheckCommand extends Command
                     .'log says so: the disk is deliberately configured not to throw, so a missing bucket '
                     .'looks exactly like a working one until somebody tries to add a picture.',
             ],
-            [
-                'The inbox socket is encrypted',
-                config('broadcasting.default') !== 'reverb'
-                    || config('broadcasting.connections.reverb.options.scheme') === 'https',
-                'REVERB_SCHEME=https once the site is served over HTTPS. A ws:// socket on an https page '
-                    .'is blocked by the browser as mixed content, so the CMS silently stops updating.',
-            ],
-            [
-                'Something is draining the queue',
-                config('queue.default') !== 'sync' || config('broadcasting.default') === 'null',
-                'Optional. The arrival notice is a queued job, so with no worker the CMS updates only '
-                    .'when somebody looks — which is how it behaved before the socket existed.',
-                'optional',
-            ],
         ];
 
         $failed = 0;

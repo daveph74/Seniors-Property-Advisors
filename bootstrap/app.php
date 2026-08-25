@@ -15,14 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    /* Registered here rather than through `withRouting(channels:)` so the authorisation endpoint can
-       carry a limit: the framework registers it for us, so there is no line in `routes/web.php` to
-       attach one to, and a socket that keeps dropping asks in bursts. `/up` deliberately gets none —
-       a 429 on a health check is a supervisor restarting a perfectly healthy application. */
-    ->withBroadcasting(
-        __DIR__.'/../routes/channels.php',
-        ['middleware' => ['web', 'throttle:broadcasting']],
-    )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             HandleInertiaRequests::class,

@@ -6,7 +6,6 @@ import Header from './Header';
 import { SCREEN_TITLES } from '../data/constants';
 import { ToastProvider } from '../ToastContext';
 import { WarningIcon } from '../components/icons';
-import { onEnquiryReceived } from '../realtime';
 
 function navIdFromUrl(url) {
     const path = url.split('?')[0];
@@ -37,17 +36,6 @@ export default function CmsLayout({ children }) {
     const [navOpen, setNavOpen] = useState(false);
 
     useEffect(() => setNavOpen(false), [url]);
-
-    /*
-     * The bell and the sidebar counts, kept current on whatever screen somebody happens to be on —
-     * they are one shared prop, so this is one small request rather than a reload of the page.
-     *
-     * The event carries nothing, deliberately: what arrives here is "the inbox changed", and the
-     * counts then come back down the authorised path that always serves them.
-     */
-    useEffect(() => onEnquiryReceived(props.realtime, () => {
-        router.reload({ only: ['notifications'] });
-    }), [props.realtime?.key]);
 
     useEffect(() => {
         if (! navOpen) return undefined;

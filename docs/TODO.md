@@ -52,6 +52,10 @@ lists them, one opens in a modal, and `status` carries new / in progress / dealt
 enquiry is no longer invisible. But it still arrives silently, and §12 leaves notification routing
 with the development team, so somebody has to be watching the screen. That is the remaining half.
 
+The socket that used to nudge an open inbox has been removed, so "watching the screen" now means
+reloading it. That makes this gap wider rather than different: the answer was always an email, and a
+live-updating screen was only ever a consolation for not having one.
+
 **Look for a fourth write-only control.** Three editable fields turned out to save and never
 render: the media caption, the contact form's confirmation message, and `enquiries.handled_at`,
 which existed but was not fillable. A fourth of the same family has since turned up — the enquiries

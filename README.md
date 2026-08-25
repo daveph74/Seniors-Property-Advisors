@@ -10,11 +10,11 @@ that proves it, is in `docs/acceptance.md`.
 > ### ⚠️ Going live? Read **[Running it in production](CLAUDE.md#running-it-in-production)** first.
 >
 > `composer dev` is for a laptop and has no production equivalent. A server needs a release step and
-> **three processes kept alive**: the site under PHP-FPM, `queue:work`, and `reverb:start`.
+> **two processes kept alive**: the site under PHP-FPM, and `inertia:start-ssr`.
 >
 > Every way this goes wrong is silent. A `public/hot` copied to the server renders **every page
-> blank**. A `ws://` socket on an HTTPS page is refused as mixed content and the CMS **stops
-> updating** with no error. Workers keep running the old code until `queue:restart`.
+> blank**. A renderer left running after a release serves **last week's pages**, and one that is not
+> running at all serves a body with **no heading and no links** while looking perfect in a browser.
 >
 > `php artisan security:check --production` reports the list on the day, so nobody has to remember it.
 
@@ -25,7 +25,7 @@ composer setup          # install, .env, key, migrate, npm install, build
 docker compose up -d    # floci, an S3 emulator for the media library, on :4566 — local only
 php artisan media:init  # create the bucket
 php artisan migrate:fresh --seed
-composer dev            # server, queue, Vite and Reverb together (`composer logs` for pail)
+composer dev            # the server and Vite together (`composer logs` for pail)
 ```
 
 Storage comes up **before** seeding: the pages point at pictures in the media library, and
@@ -52,7 +52,7 @@ actually sees.
 
 | Command | What it does |
 |---|---|
-| `composer dev` | Server, queue worker, Vite and Reverb together |
+| `composer dev` | The server and Vite together |
 | `composer logs` | Tails the log with pail — needs the `pcntl` extension, which Windows PHP has not got |
 | `composer test` | Clears config, then runs the suite |
 | `./vendor/bin/pint` | PHP formatting |
@@ -75,7 +75,7 @@ dead Vite server, and every page renders blank.
 ## Deploying
 
 **The release step and the processes a server has to keep running are in `CLAUDE.md`, under
-"Running it in production"** — the site, a queue worker and the Reverb socket, plus the settings that
+"Running it in production"** — the site and the SSR renderer, plus the settings that
 fail quietly if they are wrong. `php artisan security:check --production` reports the same list, and
 is the thing to run on the day rather than a document to remember.
 

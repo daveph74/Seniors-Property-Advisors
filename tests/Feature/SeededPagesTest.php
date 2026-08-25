@@ -12,8 +12,8 @@ use Tests\TestCase;
 
 /**
  * The menu pages ship as default content rather than as hardcoded page components, so
- * every word of them is editable. Composition follows docs/new-pages/pages/*.jsx: one section
- * per page, and that section carries the h1. These guard the shape; the copy is free to change.
+ * every word of them is editable. Composition is one section per page, and that section carries
+ * the h1. These guard the shape; the copy is free to change.
  */
 class SeededPagesTest extends TestCase
 {
