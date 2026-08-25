@@ -7,8 +7,9 @@ of rules that are not obvious from looking at the screen.
 Everything here describes what is actually on the screen. Where a button is named in **bold**, that is
 the wording you are looking for.
 
-Some screens are for **Super Administrators** only. Those are marked. If you are a **Client
-Administrator**, your sidebar is shorter — that is correct, not a fault.
+A few things in the CMS are reserved for whoever looks after the site for you, and this guide does
+not cover them. If your sidebar is shorter than a colleague's, or a button answers that you are not
+allowed, that is how the CMS is set up rather than something going wrong.
 
 ---
 
@@ -19,8 +20,8 @@ The website has two halves.
 - **The public website** is what visitors see.
 - **The CMS** is where you change it. You reach it by adding `/cms` to the end of the website address.
 
-You need an account. Somebody who already has one — a Super Administrator — creates it and gives you
-a password to start with.
+You need an account. Whoever looks after the site sets one up for you and gives you a password to
+start with.
 
 ---
 
@@ -135,8 +136,8 @@ Above the canvas it says **All changes saved** or **Unsaved changes**, so you al
 ### Going back to an earlier version
 
 **History** at the top of the builder opens a list of every time the page was published. Each version
-offers **Preview**, **Compare with live** and **Restore**. Restoring is a Super Administrator action —
-a Client Administrator pressing it is refused rather than obeyed.
+offers **Preview**, **Compare with live** and **Restore**. Restoring may not be something your account
+is allowed to do; if it answers that you are not allowed, ask whoever looks after the site.
 
 Restoring does **not** put the old version straight onto the website. It becomes your draft, so you
 can look at it, change your mind, and publish it only when you mean to.
@@ -147,8 +148,8 @@ The three-dots button at the end of each row of the pages list opens a menu: **E
 **Preview**, **View history**, **Duplicate**, **Publish changes**, **Unpublish** and **Archive page**.
 
 - **Unpublish** takes the page off the public website. Nothing is lost.
-- **Archive page** puts it out of the way. It comes back from the **Archived** filter — restoring is a
-  Super Administrator job.
+- **Archive page** puts it out of the way. It comes back from the **Archived** filter, though bringing
+  one back may not be something your account is allowed to do.
 
 ---
 
@@ -334,7 +335,7 @@ An image that is still used on a page, an article or a testimonial **cannot be d
 CMS tells you what is still using it. Take it off those first.
 
 Deleting an image that genuinely is unused is permanent — the file is removed from storage. This is one
-of the few things in the CMS that cannot be undone, and it is a Super Administrator action.
+of the few things in the CMS that cannot be undone, and not every account is allowed to do it.
 
 ---
 
@@ -391,8 +392,8 @@ Two lengths are worth respecting, because Google cuts the rest off mid-sentence:
 any address that has not been given its own. Treat them as a safety net, not as the answer.
 
 A deleted article still appears in the list — its address may still be sitting in somebody's search
-results, which is exactly what you would come here to explain — but it cannot be edited. Bring it back
-from **Recently deleted** first.
+results, which is exactly what you would come here to explain — but it cannot be edited. It has to be
+brought back before it can be changed, which is something to ask whoever looks after the site for.
 
 ---
 
@@ -408,64 +409,6 @@ Nothing on this screen can be edited, by anybody.
 
 ---
 
-## For Super Administrators only
-
-Three screens do not appear at all for a Client Administrator: **Recently deleted**, **Users and roles**
-and **Settings**.
-
-**Deleting anything is also this role's alone** — articles, questions, testimonials, images and
-enquiries. Most delete buttons are simply not drawn for a Client Administrator. A few controls are
-still shown and refused when pressed, because the server is what decides rather than the screen:
-deleting an image, and restoring an old version of a page from **History**.
-
-### Users and roles
-
-**Users and roles** lists every account: **Full name**, **Email address**, **Role**, **Status** and
-**Last sign-in**.
-
-**Add a user** creates an account: **Full name**, **Email address**, **Role** and a **Password**, which
-you choose and which has to meet the same rules as your own — the checklist under the box holds you to
-them. Send it to the person, and expect them to replace it. They are prompted to, on every screen,
-until they do.
-
-- **Disable** stops an account signing in without deleting anything they have done. This is the right
-  answer when somebody leaves.
-- Editing a user and leaving **New password** empty keeps their current password.
-- Changing someone else's password signs them out everywhere.
-
-Roles are **Client Administrator** — creates, edits, publishes and unpublishes content, and manages
-search metadata — and **Super Administrator**, which additionally deletes, restores, manages accounts
-and reaches Settings.
-
-### Recently deleted
-
-Deleting an article, a question or a testimonial from its list screen does not destroy it. It goes to
-**Recently deleted**, which is one screen for all three, because somebody looking for what they deleted
-does not always remember what it was filed as.
-
-Each row offers:
-
-- **Restore** — puts it back where it came from.
-- **Delete for good** — the only thing in the CMS that genuinely destroys content. There is no way back
-  from it.
-
-Deleted pages are not here. Pages are **archived** instead, and come back from the **Archived** filter
-on the Pages screen.
-
-### Settings
-
-**Settings** holds what is set once and rarely touched:
-
-- **Website details** — the **Website name** and the **Favicon**.
-- **Tracking** — the **Google Analytics 4** and **Google Tag Manager** ids.
-- **Social profiles** — **Facebook** and **LinkedIn**.
-- **Legal** — the **Footer disclaimer** and which page is the **Privacy policy page**.
-
-The phone number, address and footer wording are **not** here — they are on **Global content**, so a
-Client Administrator can change them.
-
----
-
 ## Nine things that surprise people
 
 1. **Saving is not publishing.** **Save draft** keeps your work; only **Publish** changes the website.
@@ -473,8 +416,8 @@ Client Administrator can change them.
    linking to it from a menu.
 3. **A testimonial shows nothing until permission is recorded** — not the quote, not the name, not the
    photo.
-4. **Deleting content is recoverable.** Articles, questions and testimonials go to **Recently deleted**.
-   The only permanent deletions are **Delete for good** from that screen, and deleting an unused image.
+4. **Deleting content is recoverable.** A deleted article, question or testimonial is not destroyed, and
+   can be brought back. Deleting an unused image is the exception — that one is final.
 5. **Renaming a live page keeps the old link working.** Anyone following the old address is sent to the
    new one.
 6. **Enquiries cannot be edited.** The words are the sender's, and there is no way to change them.
@@ -487,23 +430,23 @@ Client Administrator can change them.
 
 ## Where everything lives
 
-| Screen | Address | What it is for | Who |
-|---|---|---|---|
-| Dashboard | `/cms` | What is outstanding, and what changed recently | Both |
-| Pages | `/cms/pages` | Every page on the website, and the builder | Both |
-| Blog | `/cms/blog` | Articles and their categories | Both |
-| FAQs | `/cms/faqs` | Questions, answers and categories | Both |
-| Testimonials | `/cms/testimonials` | Client quotes, and their permission | Both |
-| Enquiries | `/cms/enquiries` | Everything sent through the two forms | Both |
-| Media library | `/cms/media` | Every image, and where each one is used | Both |
-| SEO overview | `/cms/seo` | Titles and descriptions as a search engine sees them | Both |
-| Activity | `/cms/activity` | Who changed what, and when | Both |
-| Recently deleted | `/cms/deleted` | Restore, or destroy for good | Super Administrator |
-| Navigation | `/cms/navigation` | Header menu, footer columns, small print | Both |
-| Global content | `/cms/global-content` | Announcement bar, phone, address, footer wording | Both |
-| Users and roles | `/cms/users` | Accounts and what they may do | Super Administrator |
-| Settings | `/cms/settings` | Site name, tracking ids, social links, legal | Super Administrator |
-| Your account | `/cms/account` | Your own name, role and password | Both |
+| Screen | Address | What it is for |
+|---|---|---|
+| Dashboard | `/cms` | What is outstanding, and what changed recently |
+| Pages | `/cms/pages` | Every page on the website, and the builder |
+| Blog | `/cms/blog` | Articles and their categories |
+| FAQs | `/cms/faqs` | Questions, answers and categories |
+| Testimonials | `/cms/testimonials` | Client quotes, and their permission |
+| Enquiries | `/cms/enquiries` | Everything sent through the two forms |
+| Media library | `/cms/media` | Every image, and where each one is used |
+| SEO overview | `/cms/seo` | Titles and descriptions as a search engine sees them |
+| Activity | `/cms/activity` | Who changed what, and when |
+| Navigation | `/cms/navigation` | Header menu, footer columns, small print |
+| Global content | `/cms/global-content` | Announcement bar, phone, address, footer wording |
+| Your account | `/cms/account` | Your own name and password |
+
+Your sidebar may not show every one of these, and may show others this guide does not cover. That
+depends on how your account is set up.
 
 ---
 
@@ -511,9 +454,9 @@ Client Administrator can change them.
 
 - **A change is not showing on the website.** Nine times in ten it was saved and not published. Open the
   page and look for **Unpublished changes**.
-- **You cannot find a screen this guide mentions.** Check the table above — it may be a Super
-  Administrator screen.
+- **You cannot find a screen this guide mentions.** Check the table above for its address. A sidebar
+  with fewer entries than a colleague's is how your account is set up, not a fault.
 - **A button refuses and explains why.** Read it. The CMS is deliberate about refusing rather than
   quietly doing something surprising — an image still in use, a page you may not restore, a password
   that is not strong enough.
-- **Anything else** — ask whoever set up your account.
+- **Anything else** — ask whoever looks after the site for you.

@@ -19,7 +19,15 @@ Section storage is JSON-snapshot based, not normalised rows.
   **The markdown is the source; `docs/cms-user-guide.html` is built from it** by `docs:guide` and is
   what staff are actually given — so edit the markdown and rebuild, never the page. The two are held
   together by `UserGuideTest`, because the drift would otherwise be silent and in the worst
-  direction: the copy nobody reads being the corrected one.
+  direction: the copy nobody reads being the corrected one. `App\Docs\UserGuide` renders both that
+  file and `/cms/help`, which serves the same page inside the admin; one renderer, or the served page
+  and the file become two designs.
+- **The guide is written for a client administrator and stops there.** It does not describe Users and
+  roles, Settings or Recently deleted, and does not name the roles at all — where a control is visible
+  but refused it says so without saying who may. It also **names no accounts**: who currently holds a
+  role is the Users screen's business, a list of colleagues is wrong the first time somebody leaves,
+  and the built file is handed out as a file. `HelpController` reads nothing from the database for
+  that reason, and a test pins it.
 - **This file is part of the change, not a write-up of it.** Anything that adds, removes or alters a
   functionality updates `CLAUDE.md` in the *same* commit — no follow-up pass, no separate docs
   commit. A change that lands without it is incomplete.

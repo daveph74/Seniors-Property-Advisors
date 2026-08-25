@@ -11,6 +11,7 @@ use App\Http\Controllers\Cms\DeletedContentController;
 use App\Http\Controllers\Cms\EnquiryController as CmsEnquiryController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\GlobalContentController;
+use App\Http\Controllers\Cms\HelpController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\NavigationController;
 use App\Http\Controllers\Cms\ReusableSectionController;
@@ -47,6 +48,10 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
         ->middleware('throttle:password')->name('account.password');
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    /* The staff guide. Answers with a whole HTML document rather than an Inertia payload, which is
+       why the sidebar reaches it with a plain anchor. Both roles: everybody who signs in needs it. */
+    Route::get('/help', HelpController::class)->name('help');
 
     /* Throttled like any other endpoint that runs a query per keystroke. */
     Route::get('/search', SearchController::class)->middleware('throttle:cms-search')->name('search');

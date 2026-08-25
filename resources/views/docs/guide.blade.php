@@ -267,16 +267,6 @@ a:hover { color: var(--navy); }
 .chapter__title { display: block; }
 .chapter__title::first-letter { text-transform: uppercase; }
 
-/* the one section a client administrator cannot open */
-.chapter--restricted {
-  background: var(--neutral-bg);
-  border: 1px solid var(--neutral-border);
-  border-radius: var(--radius-xl);
-  padding: 40px 36px 44px;
-  margin-top: 60px;
-}
-.chapter--restricted + .chapter { border-top: 0; }
-
 .chapter h3 {
   font-family: var(--sans);
   font-size: 1.12rem;
@@ -419,27 +409,16 @@ a:hover { color: var(--navy); }
 .doc tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--paper-warm) 45%, transparent); }
 .doc tbody td:first-child { color: var(--ink); font-weight: 500; }
 
-/* ---------- role pills ---------- */
+/* ---------- back to the CMS ---------- */
 
-.pill {
+.toc__back {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-mid);
+  text-decoration: none;
 }
-.pill--both {
-  background: var(--success-bg);
-  border: 1px solid var(--success-border);
-  color: var(--success-text);
-}
-.pill--super {
-  background: var(--warning-bg);
-  border: 1px solid var(--warning-border);
-  color: var(--warning-text);
-}
+.toc__back:hover { color: var(--accent); }
 
 /* ---------- colophon ---------- */
 
@@ -495,7 +474,6 @@ a:hover { color: var(--navy); }
   }
   .doc { padding-top: 8px; }
   .masthead { padding-top: 32px; }
-  .chapter--restricted { padding: 30px 22px 34px; }
   body { font-size: 16.5px; }
 }
 
@@ -534,11 +512,7 @@ a:hover { color: var(--navy); }
     break-inside: avoid;
   }
   .chapter h3 { break-after: avoid; }
-  .chapter--restricted {
-    background: none;
-    border: 1pt solid #999;
-    padding: 14pt;
-  }
+  .toc__back { display: none; }
   .doc blockquote,
   .table-wrap,
   .doc li { break-inside: avoid; }
@@ -551,7 +525,6 @@ a:hover { color: var(--navy); }
   .doc thead th { background: #eee; color: #000; }
   .doc tbody tr:nth-child(even) td { background: none; }
   .doc code { background: none; border: 0; }
-  .pill { border: 1pt solid #999 !important; background: none !important; color: #000 !important; }
   .colophon { color: #444; }
 }
 </style>
@@ -563,6 +536,9 @@ a:hover { color: var(--navy); }
 <div class="shell">
     <aside class="toc">
         <a class="toc__brand" href="#top"><span>Seniors Property Advisors</span>{{ $title }}</a>
+        @if ($home)
+            <a class="toc__back" href="{{ $home }}">&larr; Back to the CMS</a>
+        @endif
         <p class="toc__heading">Contents</p>
         <nav aria-label="Contents">
             <ul class="toc__list">
@@ -587,13 +563,13 @@ a:hover { color: var(--navy); }
 
         <p class="colophon">
             <strong>{{ $title }}</strong> — generated from <code>docs/cms-user-guide.md</code>, which is
-            the copy to edit. Rebuild with <code>php artisan docs:guide</code> after changing it.
+            the copy to edit.@unless ($home) Rebuild with <code>php artisan docs:guide</code> after changing it.@endunless
         </p>
     </main>
 </div>
 
+<script{!! $nonce ? ' nonce="'.e($nonce).'"' : '' !!}>
 @verbatim
-<script>
 (function () {
     var links = Array.prototype.slice.call(document.querySelectorAll('.toc__link'));
     var targets = links.map(function (link) {
@@ -647,7 +623,7 @@ a:hover { color: var(--navy); }
     window.addEventListener('resize', schedule);
     mark();
 })();
-</script>
 @endverbatim
+</script>
 </body>
 </html>

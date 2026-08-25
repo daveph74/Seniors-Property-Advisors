@@ -5,7 +5,7 @@ import { DropdownMenu, MenuItem, MenuSeparator } from '../components/ui';
 import {
     DashboardIcon, PagesIcon, BlogIcon, FaqsIcon, TestimonialsIcon, MediaIcon,
     NavigationIcon, GlobalIcon, UsersIcon, SettingsIcon, ExternalLinkIcon, ChevronDownIcon, HistoryIcon, TrashIcon,
-    MailIcon, SeoIcon,
+    MailIcon, SeoIcon, HelpIcon,
 } from '../components/icons';
 
 const ICONS = {
@@ -87,6 +87,13 @@ export default function Sidebar({ active }) {
             </nav>
 
             <div className="cms-sidebar__footer">
+                {/* A plain anchor, not an Inertia Link: /cms/help answers with a whole HTML document
+                    rather than an Inertia payload. New tab because it is a reference somebody reads
+                    beside the screen they are being told about, not instead of it. */}
+                <a href="/cms/help" className="cms-view-site" target="_blank" rel="noopener">
+                    <HelpIcon size={15} />
+                    How to use the CMS
+                </a>
                 <a href="/" className="cms-view-site">
                     <ExternalLinkIcon size={15} />
                     View public website

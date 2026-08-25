@@ -267,16 +267,6 @@ a:hover { color: var(--navy); }
 .chapter__title { display: block; }
 .chapter__title::first-letter { text-transform: uppercase; }
 
-/* the one section a client administrator cannot open */
-.chapter--restricted {
-  background: var(--neutral-bg);
-  border: 1px solid var(--neutral-border);
-  border-radius: var(--radius-xl);
-  padding: 40px 36px 44px;
-  margin-top: 60px;
-}
-.chapter--restricted + .chapter { border-top: 0; }
-
 .chapter h3 {
   font-family: var(--sans);
   font-size: 1.12rem;
@@ -419,27 +409,16 @@ a:hover { color: var(--navy); }
 .doc tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--paper-warm) 45%, transparent); }
 .doc tbody td:first-child { color: var(--ink); font-weight: 500; }
 
-/* ---------- role pills ---------- */
+/* ---------- back to the CMS ---------- */
 
-.pill {
+.toc__back {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--text-mid);
+  text-decoration: none;
 }
-.pill--both {
-  background: var(--success-bg);
-  border: 1px solid var(--success-border);
-  color: var(--success-text);
-}
-.pill--super {
-  background: var(--warning-bg);
-  border: 1px solid var(--warning-border);
-  color: var(--warning-text);
-}
+.toc__back:hover { color: var(--accent); }
 
 /* ---------- colophon ---------- */
 
@@ -495,7 +474,6 @@ a:hover { color: var(--navy); }
   }
   .doc { padding-top: 8px; }
   .masthead { padding-top: 32px; }
-  .chapter--restricted { padding: 30px 22px 34px; }
   body { font-size: 16.5px; }
 }
 
@@ -534,11 +512,7 @@ a:hover { color: var(--navy); }
     break-inside: avoid;
   }
   .chapter h3 { break-after: avoid; }
-  .chapter--restricted {
-    background: none;
-    border: 1pt solid #999;
-    padding: 14pt;
-  }
+  .toc__back { display: none; }
   .doc blockquote,
   .table-wrap,
   .doc li { break-inside: avoid; }
@@ -551,7 +525,6 @@ a:hover { color: var(--navy); }
   .doc thead th { background: #eee; color: #000; }
   .doc tbody tr:nth-child(even) td { background: none; }
   .doc code { background: none; border: 0; }
-  .pill { border: 1pt solid #999 !important; background: none !important; color: #000 !important; }
   .colophon { color: #444; }
 }
 </style>
@@ -563,7 +536,7 @@ a:hover { color: var(--navy); }
 <div class="shell">
     <aside class="toc">
         <a class="toc__brand" href="#top"><span>Seniors Property Advisors</span>Using the CMS</a>
-        <p class="toc__heading">Contents</p>
+                <p class="toc__heading">Contents</p>
         <nav aria-label="Contents">
             <ul class="toc__list">
                                     <li>
@@ -606,9 +579,6 @@ a:hover { color: var(--navy); }
                         <a class="toc__link" href="#keeping-an-eye-on-things">Keeping an eye on things</a>
                     </li>
                                     <li>
-                        <a class="toc__link" href="#for-super-administrators-only">For Super Administrators only</a>
-                    </li>
-                                    <li>
                         <a class="toc__link" href="#nine-things-that-surprise-people">Nine things that surprise people</a>
                     </li>
                                     <li>
@@ -630,8 +600,9 @@ first hour: signing in, finding your way around, changing a page and putting it 
 of rules that are not obvious from looking at the screen.</p>
 <p>Everything here describes what is actually on the screen. Where a button is named in <strong>bold</strong>, that is
 the wording you are looking for.</p>
-<p>Some screens are for <strong>Super Administrators</strong> only. Those are marked. If you are a <strong>Client
-Administrator</strong>, your sidebar is shorter — that is correct, not a fault.</p>
+<p>A few things in the CMS are reserved for whoever looks after the site for you, and this guide does
+not cover them. If your sidebar is shorter than a colleague's, or a button answers that you are not
+allowed, that is how the CMS is set up rather than something going wrong.</p>
         </header>
 
         <div id="guide">
@@ -641,8 +612,8 @@ Administrator</strong>, your sidebar is shorter — that is correct, not a fault
 <li><strong>The public website</strong> is what visitors see.</li>
 <li><strong>The CMS</strong> is where you change it. You reach it by adding <code>/cms</code> to the end of the website address.</li>
 </ul>
-<p>You need an account. Somebody who already has one — a Super Administrator — creates it and gives you
-a password to start with.</p></section><section class="chapter"><h2 id="your-first-five-minutes">Your first five minutes</h2>
+<p>You need an account. Whoever looks after the site sets one up for you and gives you a password to
+start with.</p></section><section class="chapter"><h2 id="your-first-five-minutes">Your first five minutes</h2>
 <h3 id="1-sign-in">1. Sign in</h3>
 <p>Go to <code>/login</code>. Enter your <strong>Email address</strong> and <strong>Password</strong>, then <strong>Sign in</strong>.</p>
 <ul>
@@ -749,8 +720,8 @@ live. Read it; it is the last chance to notice you changed something you did not
 </ol>
 <h3 id="going-back-to-an-earlier-version">Going back to an earlier version</h3>
 <p><strong>History</strong> at the top of the builder opens a list of every time the page was published. Each version
-offers <strong>Preview</strong>, <strong>Compare with live</strong> and <strong>Restore</strong>. Restoring is a Super Administrator action —
-a Client Administrator pressing it is refused rather than obeyed.</p>
+offers <strong>Preview</strong>, <strong>Compare with live</strong> and <strong>Restore</strong>. Restoring may not be something your account
+is allowed to do; if it answers that you are not allowed, ask whoever looks after the site.</p>
 <p>Restoring does <strong>not</strong> put the old version straight onto the website. It becomes your draft, so you
 can look at it, change your mind, and publish it only when you mean to.</p>
 <h3 id="from-the-list-without-opening-the-builder">From the list, without opening the builder</h3>
@@ -758,8 +729,8 @@ can look at it, change your mind, and publish it only when you mean to.</p>
 <strong>Preview</strong>, <strong>View history</strong>, <strong>Duplicate</strong>, <strong>Publish changes</strong>, <strong>Unpublish</strong> and <strong>Archive page</strong>.</p>
 <ul>
 <li><strong>Unpublish</strong> takes the page off the public website. Nothing is lost.</li>
-<li><strong>Archive page</strong> puts it out of the way. It comes back from the <strong>Archived</strong> filter — restoring is a
-Super Administrator job.</li>
+<li><strong>Archive page</strong> puts it out of the way. It comes back from the <strong>Archived</strong> filter, though bringing
+one back may not be something your account is allowed to do.</li>
 </ul></section><section class="chapter"><h2 id="walkthrough-2-create-a-new-page"><span class="chapter__eyebrow"><span class="chapter__num">2</span>Walkthrough</span><span class="chapter__title">create a new page</span></h2>
 <p><strong>Pages</strong> → <strong>New page</strong>, top right. The <strong>Create a page</strong> dialog asks for four things:</p>
 <ul>
@@ -890,7 +861,7 @@ live on this site, or they will not be shown to readers at all.</p>
 <p>An image that is still used on a page, an article or a testimonial <strong>cannot be deleted</strong>. Try it and the
 CMS tells you what is still using it. Take it off those first.</p>
 <p>Deleting an image that genuinely is unused is permanent — the file is removed from storage. This is one
-of the few things in the CMS that cannot be undone, and it is a Super Administrator action.</p></section><section class="chapter"><h2 id="walkthrough-8-the-menus-and-the-wording-on-every-page"><span class="chapter__eyebrow"><span class="chapter__num">8</span>Walkthrough</span><span class="chapter__title">the menus, and the wording on every page</span></h2>
+of the few things in the CMS that cannot be undone, and not every account is allowed to do it.</p></section><section class="chapter"><h2 id="walkthrough-8-the-menus-and-the-wording-on-every-page"><span class="chapter__eyebrow"><span class="chapter__num">8</span>Walkthrough</span><span class="chapter__title">the menus, and the wording on every page</span></h2>
 <p>Two screens change things that appear on <em>every</em> page, so a change here is seen everywhere at once.</p>
 <p><strong>Navigation</strong> has three lists:</p>
 <ul>
@@ -932,66 +903,22 @@ panel.</p>
 <p><strong>Defaults</strong> sets the <strong>Title pattern</strong>, <strong>Default description</strong> and <strong>Default sharing image</strong> used by
 any address that has not been given its own. Treat them as a safety net, not as the answer.</p>
 <p>A deleted article still appears in the list — its address may still be sitting in somebody's search
-results, which is exactly what you would come here to explain — but it cannot be edited. Bring it back
-from <strong>Recently deleted</strong> first.</p></section><section class="chapter"><h2 id="keeping-an-eye-on-things">Keeping an eye on things</h2>
+results, which is exactly what you would come here to explain — but it cannot be edited. It has to be
+brought back before it can be changed, which is something to ask whoever looks after the site for.</p></section><section class="chapter"><h2 id="keeping-an-eye-on-things">Keeping an eye on things</h2>
 <p><strong>Dashboard</strong> is the first screen you land on. It shows what is <strong>Waiting to be published</strong>, what was
 <strong>Recently edited</strong> and <strong>Recently published</strong>, and <strong>Recent activity</strong>. Everything on it is counted at
 the moment you open it.</p>
 <p><strong>Activity</strong> is the full record: who changed what, and when. Every change made anywhere in the CMS is
 recorded against the person signed in, including publishing, unpublishing, archiving and deleting.
-Nothing on this screen can be edited, by anybody.</p></section><section class="chapter chapter--restricted"><h2 id="for-super-administrators-only">For Super Administrators only</h2>
-<p>Three screens do not appear at all for a Client Administrator: <strong>Recently deleted</strong>, <strong>Users and roles</strong>
-and <strong>Settings</strong>.</p>
-<p><strong>Deleting anything is also this role's alone</strong> — articles, questions, testimonials, images and
-enquiries. Most delete buttons are simply not drawn for a Client Administrator. A few controls are
-still shown and refused when pressed, because the server is what decides rather than the screen:
-deleting an image, and restoring an old version of a page from <strong>History</strong>.</p>
-<h3 id="users-and-roles">Users and roles</h3>
-<p><strong>Users and roles</strong> lists every account: <strong>Full name</strong>, <strong>Email address</strong>, <strong>Role</strong>, <strong>Status</strong> and
-<strong>Last sign-in</strong>.</p>
-<p><strong>Add a user</strong> creates an account: <strong>Full name</strong>, <strong>Email address</strong>, <strong>Role</strong> and a <strong>Password</strong>, which
-you choose and which has to meet the same rules as your own — the checklist under the box holds you to
-them. Send it to the person, and expect them to replace it. They are prompted to, on every screen,
-until they do.</p>
-<ul>
-<li><strong>Disable</strong> stops an account signing in without deleting anything they have done. This is the right
-answer when somebody leaves.</li>
-<li>Editing a user and leaving <strong>New password</strong> empty keeps their current password.</li>
-<li>Changing someone else's password signs them out everywhere.</li>
-</ul>
-<p>Roles are <strong>Client Administrator</strong> — creates, edits, publishes and unpublishes content, and manages
-search metadata — and <strong>Super Administrator</strong>, which additionally deletes, restores, manages accounts
-and reaches Settings.</p>
-<h3 id="recently-deleted">Recently deleted</h3>
-<p>Deleting an article, a question or a testimonial from its list screen does not destroy it. It goes to
-<strong>Recently deleted</strong>, which is one screen for all three, because somebody looking for what they deleted
-does not always remember what it was filed as.</p>
-<p>Each row offers:</p>
-<ul>
-<li><strong>Restore</strong> — puts it back where it came from.</li>
-<li><strong>Delete for good</strong> — the only thing in the CMS that genuinely destroys content. There is no way back
-from it.</li>
-</ul>
-<p>Deleted pages are not here. Pages are <strong>archived</strong> instead, and come back from the <strong>Archived</strong> filter
-on the Pages screen.</p>
-<h3 id="settings">Settings</h3>
-<p><strong>Settings</strong> holds what is set once and rarely touched:</p>
-<ul>
-<li><strong>Website details</strong> — the <strong>Website name</strong> and the <strong>Favicon</strong>.</li>
-<li><strong>Tracking</strong> — the <strong>Google Analytics 4</strong> and <strong>Google Tag Manager</strong> ids.</li>
-<li><strong>Social profiles</strong> — <strong>Facebook</strong> and <strong>LinkedIn</strong>.</li>
-<li><strong>Legal</strong> — the <strong>Footer disclaimer</strong> and which page is the <strong>Privacy policy page</strong>.</li>
-</ul>
-<p>The phone number, address and footer wording are <strong>not</strong> here — they are on <strong>Global content</strong>, so a
-Client Administrator can change them.</p></section><section class="chapter"><h2 id="nine-things-that-surprise-people">Nine things that surprise people</h2>
+Nothing on this screen can be edited, by anybody.</p></section><section class="chapter"><h2 id="nine-things-that-surprise-people">Nine things that surprise people</h2>
 <ol>
 <li><strong>Saving is not publishing.</strong> <strong>Save draft</strong> keeps your work; only <strong>Publish</strong> changes the website.</li>
 <li><strong>A page that has never been published is invisible.</strong> Creating it is not enough, and neither is
 linking to it from a menu.</li>
 <li><strong>A testimonial shows nothing until permission is recorded</strong> — not the quote, not the name, not the
 photo.</li>
-<li><strong>Deleting content is recoverable.</strong> Articles, questions and testimonials go to <strong>Recently deleted</strong>.
-The only permanent deletions are <strong>Delete for good</strong> from that screen, and deleting an unused image.</li>
+<li><strong>Deleting content is recoverable.</strong> A deleted article, question or testimonial is not destroyed, and
+can be brought back. Deleting an unused image is the exception — that one is final.</li>
 <li><strong>Renaming a live page keeps the old link working.</strong> Anyone following the old address is sent to the
 new one.</li>
 <li><strong>Enquiries cannot be edited.</strong> The words are the sender's, and there is no way to change them.</li>
@@ -1006,7 +933,6 @@ sidebar is what nobody has dealt with.</li>
 <th>Screen</th>
 <th>Address</th>
 <th>What it is for</th>
-<th>Who</th>
 </tr>
 </thead>
 <tbody>
@@ -1014,115 +940,86 @@ sidebar is what nobody has dealt with.</li>
 <td>Dashboard</td>
 <td><code>/cms</code></td>
 <td>What is outstanding, and what changed recently</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>Pages</td>
 <td><code>/cms/pages</code></td>
 <td>Every page on the website, and the builder</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>Blog</td>
 <td><code>/cms/blog</code></td>
 <td>Articles and their categories</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>FAQs</td>
 <td><code>/cms/faqs</code></td>
 <td>Questions, answers and categories</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>Testimonials</td>
 <td><code>/cms/testimonials</code></td>
 <td>Client quotes, and their permission</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>Enquiries</td>
 <td><code>/cms/enquiries</code></td>
 <td>Everything sent through the two forms</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>Media library</td>
 <td><code>/cms/media</code></td>
 <td>Every image, and where each one is used</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>SEO overview</td>
 <td><code>/cms/seo</code></td>
 <td>Titles and descriptions as a search engine sees them</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>Activity</td>
 <td><code>/cms/activity</code></td>
 <td>Who changed what, and when</td>
-<td><span class="pill pill--both">Both</span></td>
-</tr>
-<tr>
-<td>Recently deleted</td>
-<td><code>/cms/deleted</code></td>
-<td>Restore, or destroy for good</td>
-<td><span class="pill pill--super">Super Administrator</span></td>
 </tr>
 <tr>
 <td>Navigation</td>
 <td><code>/cms/navigation</code></td>
 <td>Header menu, footer columns, small print</td>
-<td><span class="pill pill--both">Both</span></td>
 </tr>
 <tr>
 <td>Global content</td>
 <td><code>/cms/global-content</code></td>
 <td>Announcement bar, phone, address, footer wording</td>
-<td><span class="pill pill--both">Both</span></td>
-</tr>
-<tr>
-<td>Users and roles</td>
-<td><code>/cms/users</code></td>
-<td>Accounts and what they may do</td>
-<td><span class="pill pill--super">Super Administrator</span></td>
-</tr>
-<tr>
-<td>Settings</td>
-<td><code>/cms/settings</code></td>
-<td>Site name, tracking ids, social links, legal</td>
-<td><span class="pill pill--super">Super Administrator</span></td>
 </tr>
 <tr>
 <td>Your account</td>
 <td><code>/cms/account</code></td>
-<td>Your own name, role and password</td>
-<td><span class="pill pill--both">Both</span></td>
+<td>Your own name and password</td>
 </tr>
 </tbody>
-</table></div></section><section class="chapter"><h2 id="if-something-looks-wrong">If something looks wrong</h2>
+</table></div>
+<p>Your sidebar may not show every one of these, and may show others this guide does not cover. That
+depends on how your account is set up.</p></section><section class="chapter"><h2 id="if-something-looks-wrong">If something looks wrong</h2>
 <ul>
 <li><strong>A change is not showing on the website.</strong> Nine times in ten it was saved and not published. Open the
 page and look for <strong>Unpublished changes</strong>.</li>
-<li><strong>You cannot find a screen this guide mentions.</strong> Check the table above — it may be a Super
-Administrator screen.</li>
+<li><strong>You cannot find a screen this guide mentions.</strong> Check the table above for its address. A sidebar
+with fewer entries than a colleague's is how your account is set up, not a fault.</li>
 <li><strong>A button refuses and explains why.</strong> Read it. The CMS is deliberate about refusing rather than
 quietly doing something surprising — an image still in use, a page you may not restore, a password
 that is not strong enough.</li>
-<li><strong>Anything else</strong> — ask whoever set up your account.</li>
+<li><strong>Anything else</strong> — ask whoever looks after the site for you.</li>
 </ul></section>
         </div>
 
         <p class="colophon">
             <strong>Using the CMS</strong> — generated from <code>docs/cms-user-guide.md</code>, which is
-            the copy to edit. Rebuild with <code>php artisan docs:guide</code> after changing it.
-        </p>
+            the copy to edit. Rebuild with <code>php artisan docs:guide</code> after changing it.        </p>
     </main>
 </div>
 
-
 <script>
+
 (function () {
     var links = Array.prototype.slice.call(document.querySelectorAll('.toc__link'));
     var targets = links.map(function (link) {
@@ -1176,7 +1073,7 @@ that is not strong enough.</li>
     window.addEventListener('resize', schedule);
     mark();
 })();
-</script>
 
+</script>
 </body>
 </html>
