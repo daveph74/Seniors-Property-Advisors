@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Using the CMS — Seniors Property Advisors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+
+<style>
+:root {
+  --paper: #FFFDFA;
+  --paper-warm: #FFF9EE;
+  --surface: #FFFFFF;
+  --ink: #0F1B2D;
+  --ink-soft: #1D2A3D;
+  --text: #3A4A60;
+  --text-mid: #5B6A7E;
+  --text-quiet: #8C99AB;
+  --line: #E6EAF0;
+  --line-soft: #EDF0F5;
+  --navy: #12294C;
+  --accent: #2F5FA8;
+  --accent-bg: #EEF3FA;
+  --accent-border: #CFDEF4;
+  --warning-text: #8A5300;
+  --warning-bg: #FDF4E4;
+  --warning-border: #F3E0BE;
+  --success-text: #166149;
+  --success-bg: #E9F5F0;
+  --success-border: #CDE8DE;
+  --neutral-bg: #F2F4F8;
+  --neutral-border: #E2E7EF;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --shadow-card: 0 1px 2px rgba(16,32,58,0.04);
+  --shadow-frame: 0 8px 28px rgba(16,32,58,0.08);
+  --sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --serif: 'Instrument Serif', ui-serif, Georgia, 'Times New Roman', serif;
+  --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0E1725;
+    --paper-warm: #131E2F;
+    --surface: #162234;
+    --ink: #F2F5FA;
+    --ink-soft: #E3EAF4;
+    --text: #BAC6D8;
+    --text-mid: #93A2B8;
+    --text-quiet: #6F7F96;
+    --line: #253449;
+    --line-soft: #1D2A3D;
+    --navy: #DCE6F5;
+    --accent: #86B2EA;
+    --accent-bg: #17293F;
+    --accent-border: #2A445F;
+    --warning-text: #F0C583;
+    --warning-bg: #2A2113;
+    --warning-border: #4A3A1D;
+    --success-text: #86D9B6;
+    --success-bg: #12271F;
+    --success-border: #234438;
+    --neutral-bg: #16222F;
+    --neutral-border: #253449;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-frame: 0 8px 28px rgba(0,0,0,0.5);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--navy); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.skip {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--navy); color: #fff; padding: 12px 18px; z-index: 20;
+  border-radius: 0 0 var(--radius) 0;
+}
+.skip:focus { left: 0; color: #fff; }
+
+/* ---------- shell ---------- */
+
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: 244px minmax(0, 1fr);
+  gap: 64px;
+  align-items: start;
+}
+
+/* ---------- contents ---------- */
+
+.toc {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: 40px 0 48px;
+  scrollbar-width: thin;
+}
+
+.toc__brand {
+  display: block;
+  font-family: var(--serif);
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--navy);
+  text-decoration: none;
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.toc__brand span {
+  display: block;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+  margin-bottom: 6px;
+}
+
+.toc__heading {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+  margin: 0 0 12px;
+}
+
+.toc__list { list-style: none; margin: 0; padding: 0; }
+
+.toc__link {
+  display: block;
+  position: relative;
+  padding: 6px 0 6px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-mid);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+.toc__link:hover { color: var(--navy); border-left-color: var(--line); }
+.toc__link[aria-current="true"] {
+  color: var(--navy);
+  font-weight: 600;
+  border-left-color: var(--accent);
+}
+.toc__link em {
+  font-style: normal;
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--accent);
+  margin-right: 7px;
+}
+
+/* ---------- document ---------- */
+
+.doc {
+  max-width: 68ch;
+  padding: 40px 0 120px;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  padding: 40px 0 44px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+
+.masthead__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 20px;
+}
+
+.masthead h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2.7rem, 6vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  color: var(--navy);
+  margin: 0 0 26px;
+}
+
+.masthead p {
+  font-size: 19px;
+  line-height: 1.65;
+  color: var(--text-mid);
+  margin: 0 0 16px;
+}
+.masthead p:first-of-type { color: var(--ink-soft); }
+.masthead p strong { color: var(--navy); }
+
+/* ---------- chapters ---------- */
+
+.chapter { padding-top: 60px; }
+.chapter + .chapter { border-top: 1px solid var(--line-soft); }
+
+.chapter h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(1.85rem, 3.4vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+  margin: 0 0 26px;
+  scroll-margin-top: 24px;
+}
+
+.chapter__eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+  margin-bottom: 4px;
+}
+
+.chapter__num {
+  font-family: var(--serif);
+  font-size: 2.7rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+}
+
+.chapter__title { display: block; }
+.chapter__title::first-letter { text-transform: uppercase; }
+
+/* the one section a client administrator cannot open */
+.chapter--restricted {
+  background: var(--neutral-bg);
+  border: 1px solid var(--neutral-border);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px 44px;
+  margin-top: 60px;
+}
+.chapter--restricted + .chapter { border-top: 0; }
+
+.chapter h3 {
+  font-family: var(--sans);
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin: 42px 0 14px;
+  scroll-margin-top: 24px;
+}
+
+/* ---------- prose ---------- */
+
+.doc p { margin: 0 0 20px; }
+.doc strong { color: var(--navy); font-weight: 600; }
+.doc em { color: var(--text-mid); }
+
+.doc ul, .doc ol { margin: 0 0 22px; padding: 0; list-style: none; }
+.doc li { position: relative; margin-bottom: 12px; padding-left: 26px; }
+.doc li:last-child { margin-bottom: 0; }
+
+.doc ul > li::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.doc ol { counter-reset: step; }
+.doc ol > li { counter-increment: step; padding-left: 38px; }
+.doc ol > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0.16em;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.doc li > ul, .doc li > ol { margin-top: 12px; }
+
+/* a sentence the author stopped to make on its own */
+.doc p.lede {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(1.45rem, 2.6vw, 1.85rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--navy);
+  margin: 2px 0 24px;
+}
+
+/* ---------- the rules that stop you ---------- */
+
+.doc blockquote {
+  margin: 30px 0;
+  padding: 26px 30px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+.doc blockquote p,
+.doc blockquote p.lede {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+}
+.doc blockquote p + p { margin-top: 12px; }
+.doc blockquote strong { color: var(--navy); }
+
+/* ---------- addresses and keys ---------- */
+
+.doc code {
+  font-family: var(--mono);
+  font-size: 0.855em;
+  padding: 2px 6px;
+  background: var(--paper-warm);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* ---------- tables ---------- */
+
+.table-wrap {
+  margin: 0 0 26px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.doc thead th {
+  text-align: left;
+  padding: 13px 18px;
+  background: var(--paper-warm);
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+  white-space: nowrap;
+}
+
+.doc tbody td {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+  line-height: 1.55;
+}
+.doc tbody tr:last-child td { border-bottom: 0; }
+.doc tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--paper-warm) 45%, transparent); }
+.doc tbody td:first-child { color: var(--ink); font-weight: 500; }
+
+/* ---------- role pills ---------- */
+
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.pill--both {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+}
+.pill--super {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
+}
+
+/* ---------- colophon ---------- */
+
+.colophon {
+  margin-top: 72px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-quiet);
+}
+.colophon strong { color: var(--text-mid); font-weight: 600; }
+
+/* ---------- narrow ---------- */
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 0 22px;
+  }
+  .toc {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 28px 0 0;
+    border-bottom: 1px solid var(--line);
+  }
+  /* One scrolling row, not a wrapped block: seventeen chips stacked is a wall of navigation
+     between a reader and the first sentence of the document they opened. */
+  .toc__list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding-bottom: 22px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .toc__list::-webkit-scrollbar { display: none; }
+  .toc__link {
+    flex: none;
+    padding: 5px 13px;
+    border: 1px solid var(--line);
+    border-left-width: 1px;
+    border-radius: 999px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .toc__link[aria-current="true"] {
+    border-color: var(--accent-border);
+    background: var(--accent-bg);
+  }
+  .doc { padding-top: 8px; }
+  .masthead { padding-top: 32px; }
+  .chapter--restricted { padding: 30px 22px 34px; }
+  body { font-size: 16.5px; }
+}
+
+/* ---------- print ---------- */
+
+@media print {
+  @page { margin: 18mm 16mm; }
+  html { scroll-behavior: auto; }
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 10.5pt;
+    line-height: 1.55;
+  }
+  .toc, .skip { display: none !important; }
+  .shell { display: block; max-width: none; padding: 0; }
+  .doc { max-width: none; padding: 0; }
+  a { color: #000; text-decoration: underline; }
+  .doc a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8.5pt;
+    color: #444;
+    word-break: break-all;
+  }
+  /* Navy prints as mid grey on a mono office printer, which makes the emphasised words fainter
+     than the sentence around them — the opposite of what bold is for. */
+  .doc strong, .doc p.lede, .toc__brand { color: #000; }
+  .masthead h1 { font-size: 26pt; color: #000; }
+  .masthead { border-bottom: 1pt solid #999; }
+  .chapter { padding-top: 22pt; break-inside: auto; }
+  .chapter + .chapter { border-top: 0; }
+  .chapter h2 {
+    font-size: 16pt;
+    color: #000;
+    break-after: avoid;
+    break-inside: avoid;
+  }
+  .chapter h3 { break-after: avoid; }
+  .chapter--restricted {
+    background: none;
+    border: 1pt solid #999;
+    padding: 14pt;
+  }
+  .doc blockquote,
+  .table-wrap,
+  .doc li { break-inside: avoid; }
+  .doc blockquote {
+    background: none;
+    border: 1pt solid #999;
+    border-left: 3pt solid #000;
+  }
+  .table-wrap { box-shadow: none; border: 1pt solid #999; }
+  .doc thead th { background: #eee; color: #000; }
+  .doc tbody tr:nth-child(even) td { background: none; }
+  .doc code { background: none; border: 0; }
+  .pill { border: 1pt solid #999 !important; background: none !important; color: #000 !important; }
+  .colophon { color: #444; }
+}
+</style>
+
+</head>
+<body>
+<a class="skip" href="#guide">Skip to the guide</a>
+
+<div class="shell">
+    <aside class="toc">
+        <a class="toc__brand" href="#top"><span>Seniors Property Advisors</span>Using the CMS</a>
+        <p class="toc__heading">Contents</p>
+        <nav aria-label="Contents">
+            <ul class="toc__list">
+                                    <li>
+                        <a class="toc__link" href="#before-you-start">Before you start</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#your-first-five-minutes">Your first five minutes</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#the-one-rule-that-explains-everything">The one rule that explains everything</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-1-change-a-page-and-put-it-live"><em>1</em>Change a page and put it live</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-2-create-a-new-page"><em>2</em>Create a new page</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-3-write-an-article"><em>3</em>Write an article</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-4-add-a-question-to-the-faqs"><em>4</em>Add a question to the FAQs</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-5-add-a-testimonial"><em>5</em>Add a testimonial</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-6-deal-with-an-enquiry"><em>6</em>Deal with an enquiry</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-7-upload-an-image-and-put-it-on-a-page"><em>7</em>Upload an image and put it on a page</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-8-the-menus-and-the-wording-on-every-page"><em>8</em>The menus, and the wording on every page</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#walkthrough-9-check-how-a-page-looks-in-a-search-result"><em>9</em>Check how a page looks in a search result</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#keeping-an-eye-on-things">Keeping an eye on things</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#for-super-administrators-only">For Super Administrators only</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#nine-things-that-surprise-people">Nine things that surprise people</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#where-everything-lives">Where everything lives</a>
+                    </li>
+                                    <li>
+                        <a class="toc__link" href="#if-something-looks-wrong">If something looks wrong</a>
+                    </li>
+                            </ul>
+        </nav>
+    </aside>
+
+    <main class="doc" id="top">
+        <header class="masthead">
+            <p class="masthead__eyebrow">Staff handbook</p>
+            <h1>Using the CMS — a starter guide</h1>
+<p>For the people who sign in and keep the Seniors Property Advisors website up to date. It covers your
+first hour: signing in, finding your way around, changing a page and putting it live, and the handful
+of rules that are not obvious from looking at the screen.</p>
+<p>Everything here describes what is actually on the screen. Where a button is named in <strong>bold</strong>, that is
+the wording you are looking for.</p>
+<p>Some screens are for <strong>Super Administrators</strong> only. Those are marked. If you are a <strong>Client
+Administrator</strong>, your sidebar is shorter — that is correct, not a fault.</p>
+        </header>
+
+        <div id="guide">
+            <section class="chapter"><h2 id="before-you-start">Before you start</h2>
+<p>The website has two halves.</p>
+<ul>
+<li><strong>The public website</strong> is what visitors see.</li>
+<li><strong>The CMS</strong> is where you change it. You reach it by adding <code>/cms</code> to the end of the website address.</li>
+</ul>
+<p>You need an account. Somebody who already has one — a Super Administrator — creates it and gives you
+a password to start with.</p></section><section class="chapter"><h2 id="your-first-five-minutes">Your first five minutes</h2>
+<h3 id="1-sign-in">1. Sign in</h3>
+<p>Go to <code>/login</code>. Enter your <strong>Email address</strong> and <strong>Password</strong>, then <strong>Sign in</strong>.</p>
+<ul>
+<li><strong>Keep me signed in on this device</strong> is worth ticking on your own computer, and worth leaving alone
+on a shared one.</li>
+<li>Five wrong passwords in a row pauses sign-in for a few minutes. Wait it out rather than trying
+harder — the pause is per account and per computer.</li>
+</ul>
+<h3 id="2-change-the-password-you-were-given">2. Change the password you were given</h3>
+<p>Once you are in, an amber strip sits across the top of every screen:</p>
+<blockquote>
+<p><strong>Change your password.</strong> This account is still using the password it was given, which somebody else
+chose and may still know. <strong>Set your own password</strong>.</p>
+</blockquote>
+<p>It does not go away when you dismiss it, because there is nothing to dismiss. The way to clear it is to
+change the password — that is the entire point of it.</p>
+<p>Click <strong>Set your own password</strong> (or go to <strong>Your account</strong> at the bottom of the sidebar). Fill in
+<strong>Current password</strong>, <strong>New password</strong> and <strong>Confirm new password</strong>.</p>
+<p>A checklist appears under the box as you type and ticks itself off:</p>
+<ul>
+<li>At least 10 characters long</li>
+<li>At least one uppercase letter</li>
+<li>At least one lowercase letter</li>
+<li>At least one number</li>
+<li>At least one special character</li>
+</ul>
+<p>One more rule is not on that list, because it is checked when you save rather than as you type: a
+password already known to have been leaked in somebody else's data breach is refused, however strong it
+looks. If a password with five green ticks is turned away, that is why — choose a different one.</p>
+<p>Saving it <strong>signs you out on every other device</strong> — your phone, another browser, an office computer
+you forgot about. That is deliberate. Sign back in on those when you next need them.</p>
+<h3 id="3-look-around">3. Look around</h3>
+<p>The sidebar down the left is the whole CMS. Along the top:</p>
+<ul>
+<li><strong>Search pages, articles, media…</strong> — press it, or press <code>Ctrl</code>+<code>K</code> (<code>⌘K</code> on a Mac). Start typing and
+it finds pages, articles, images, questions, testimonials and enquiries, and takes you straight to
+them. Two letters is the minimum.</li>
+<li><strong>The bell</strong> — how many enquiries nobody has opened yet.</li>
+<li><strong>Preview site</strong> — takes you to the public website, so you can see what a visitor sees. Use the
+browser's back button to return.</li>
+</ul>
+<p>At the bottom of the sidebar are <strong>Your account</strong> and <strong>Sign out</strong>.</p></section><section class="chapter"><h2 id="the-one-rule-that-explains-everything">The one rule that explains everything</h2>
+<p class="lede">Saving is not publishing.</p>
+<p>Every page has two versions at once: the one visitors are reading, and the one you are working on.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>What you press</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save draft</strong></td>
+<td>Your work is kept. <strong>The website does not change.</strong> You can close the browser and come back to it.</td>
+</tr>
+<tr>
+<td><strong>Preview</strong></td>
+<td>Shows you your draft in a new tab, exactly as it will look. Only you can see it.</td>
+</tr>
+<tr>
+<td><strong>Publish</strong></td>
+<td>Replaces what visitors see with your draft. This is the only button that changes the public website.</td>
+</tr>
+</tbody>
+</table></div>
+<p>A page you have saved but not published shows <strong>Unpublished changes</strong> in the pages list, and the number
+beside <strong>Pages</strong> in the sidebar counts how many pages are in that state — it is a reminder list of work
+you started and have not finished.</p>
+<p>Articles work slightly differently, and that is covered in the article walkthrough below.</p></section><section class="chapter"><h2 id="walkthrough-1-change-a-page-and-put-it-live"><span class="chapter__eyebrow"><span class="chapter__num">1</span>Walkthrough</span><span class="chapter__title">change a page and put it live</span></h2>
+<p><strong>Pages</strong> in the sidebar.</p>
+<p>You get a list of every page, with its <strong>Status</strong>, how many <strong>Sections</strong> it has, when it was <strong>Last
+updated</strong> and by whom. The <strong>List</strong> / <strong>Site tree</strong> buttons switch between a flat list and the same
+pages arranged the way the website nests them.</p>
+<ol>
+<li>Find the page and press <strong>Edit page</strong>. The builder opens.</li>
+<li>The builder has three parts:
+<ul>
+<li><strong>Components</strong> on the left — the blocks you can add, grouped as Layout, Text, Media, Lists &amp;
+grids, Badges &amp; callouts, and Website sections. <strong>Layers</strong> beside it shows the <strong>Page structure</strong>
+as a list, which is the easier way to find something on a long page.</li>
+<li><strong>The canvas</strong> in the middle — the page itself. Click a block to select it.</li>
+<li><strong>The settings panel</strong> on the right — every setting for whatever you have selected, in
+accordions: Content is already open, and Layout, Style, Responsive and Advanced open when you
+click their heading.</li>
+</ul>
+</li>
+<li>Click the text you want to change, and edit it in the panel on the right.</li>
+<li>To add something, drag it from <strong>Components</strong> onto the page.</li>
+<li>Hovering a block gives you a small toolbar: move it, duplicate it, save it as a reusable section,
+<strong>Hide on page</strong>, or delete it. Hiding is not deleting — the block stays, and stops being shown.</li>
+<li><strong>Undo</strong> and <strong>Redo</strong> are at the top left, next to the Desktop / Tablet / Mobile buttons. Those three
+change what the canvas shows you; they do not change the page.</li>
+</ol>
+<p>Above the canvas it says <strong>All changes saved</strong> or <strong>Unsaved changes</strong>, so you always know where you are.</p>
+<ol start="7">
+<li>Press <strong>Save draft</strong>. It says <em>Draft saved</em>.</li>
+<li>Press <strong>Preview</strong>. If you have unsaved work it asks first — <strong>You have unsaved changes</strong> — and offers
+to save and preview, or to <strong>Preview last saved</strong>.</li>
+<li>When you are happy, press <strong>Publish</strong>. A dialog opens showing the page, its address, its current
+status and <strong>Changes being published</strong> — a plain list of what is actually different from what is
+live. Read it; it is the last chance to notice you changed something you did not mean to.</li>
+<li>Confirm. It says <em>[Page name] is now live</em>.</li>
+</ol>
+<h3 id="going-back-to-an-earlier-version">Going back to an earlier version</h3>
+<p><strong>History</strong> at the top of the builder opens a list of every time the page was published. Each version
+offers <strong>Preview</strong>, <strong>Compare with live</strong> and <strong>Restore</strong>. Restoring is a Super Administrator action —
+a Client Administrator pressing it is refused rather than obeyed.</p>
+<p>Restoring does <strong>not</strong> put the old version straight onto the website. It becomes your draft, so you
+can look at it, change your mind, and publish it only when you mean to.</p>
+<h3 id="from-the-list-without-opening-the-builder">From the list, without opening the builder</h3>
+<p>The three-dots button at the end of each row of the pages list opens a menu: <strong>Edit page</strong>,
+<strong>Preview</strong>, <strong>View history</strong>, <strong>Duplicate</strong>, <strong>Publish changes</strong>, <strong>Unpublish</strong> and <strong>Archive page</strong>.</p>
+<ul>
+<li><strong>Unpublish</strong> takes the page off the public website. Nothing is lost.</li>
+<li><strong>Archive page</strong> puts it out of the way. It comes back from the <strong>Archived</strong> filter — restoring is a
+Super Administrator job.</li>
+</ul></section><section class="chapter"><h2 id="walkthrough-2-create-a-new-page"><span class="chapter__eyebrow"><span class="chapter__num">2</span>Walkthrough</span><span class="chapter__title">create a new page</span></h2>
+<p><strong>Pages</strong> → <strong>New page</strong>, top right. The <strong>Create a page</strong> dialog asks for four things:</p>
+<ul>
+<li><strong>Page name</strong> — what it is called. For example, <em>Preparing to Move</em>.</li>
+<li><strong>Web address</strong> — filled in for you from the name. This is what visitors will see in their browser.</li>
+<li><strong>Sits under</strong> — leave it alone for a top-level page, or choose a parent to nest it beneath.</li>
+<li><strong>Start from</strong> — a starting layout: blank, or one already arranged as a standard page, a service
+page, a landing page or a blog listing. It is only a starting point; everything in it can be changed
+or deleted.</li>
+</ul>
+<p>Create it and the builder opens on the new page.</p>
+<p><strong>A new page is not on the website until you publish it.</strong> You can leave it half-finished for a week
+and no visitor will ever find it.</p>
+<h3 id="renaming-a-page-that-is-already-live">Renaming a page that is already live</h3>
+<p>You can change a page's <strong>Web address</strong> in the builder, under <strong>Page settings</strong>. If the page has been
+published, anyone following the old link is sent to the new address automatically, so links in emails,
+newsletters and search results keep working. If the page was never published there is nothing to
+preserve, so nothing is kept.</p>
+<p>The home page cannot be renamed.</p></section><section class="chapter"><h2 id="walkthrough-3-write-an-article"><span class="chapter__eyebrow"><span class="chapter__num">3</span>Walkthrough</span><span class="chapter__title">write an article</span></h2>
+<p><strong>Blog</strong> in the sidebar lists every article with its status. <strong>New article</strong> starts a new one.</p>
+<p>The editor is in two halves. On the left, the article itself: <strong>Title</strong>, <strong>Web address</strong> (made from the
+title if you leave it), <strong>Short summary</strong> — the blurb under the headline on the blog listing — and the
+body, which you write the way you would write in a word processor. The toolbar gives you headings,
+bold, italic, lists, links, quotes and images.</p>
+<p>On the right:</p>
+<ul>
+<li><strong>Details</strong> — <strong>Author name</strong>, <strong>Published date</strong>, <strong>Featured image</strong> and <strong>Categories</strong>.</li>
+<li><strong>Search and sharing</strong> — <strong>SEO title</strong>, <strong>SEO description</strong>, a <strong>Social sharing image</strong>, a
+<strong>Canonical address</strong> and <strong>Hide from search engines</strong>.</li>
+</ul>
+<p>Press <strong>Create article</strong> (or <strong>Save</strong> on an existing one), then <strong>Preview</strong> to see it as a reader will,
+then <strong>Publish</strong>.</p>
+<p>Three things worth knowing:</p>
+<ul>
+<li><strong>Published date is the date readers see. It does not schedule anything.</strong> Setting it to next
+Tuesday does not publish it on Tuesday — it publishes when you press <strong>Publish</strong>, and then says
+Tuesday on it.</li>
+<li><strong>Editing a published article changes it immediately.</strong> Articles have no separate draft the way pages
+do. If you need to work on a live article at length, <strong>Unpublish</strong> it first, or write it fresh and
+publish when it is finished.</li>
+<li><strong>Pasting an article from somewhere else keeps your words and drops any pictures that live on another
+website.</strong> A message tells you how many were removed. Add the pictures again from the image button in
+the toolbar, which opens the media library.</li>
+</ul>
+<p><strong>Categories</strong> are managed from the blog list: <strong>Add a category</strong>, then press Enter. Deleting a category
+keeps its articles — anything left without one moves to Uncategorised.</p></section><section class="chapter"><h2 id="walkthrough-4-add-a-question-to-the-faqs"><span class="chapter__eyebrow"><span class="chapter__num">4</span>Walkthrough</span><span class="chapter__title">add a question to the FAQs</span></h2>
+<p><strong>FAQs</strong> in the sidebar. <strong>Add a question</strong> opens a small form:</p>
+<ul>
+<li><strong>Question</strong> and <strong>Answer</strong>. The answer is plain text, one or two paragraphs.</li>
+<li><strong>Category</strong> — optional, and managed on the same screen under <strong>Categories</strong>.</li>
+<li><strong>Show only on this page</strong> — the one that catches people. <strong>Leave it empty and the question appears
+wherever FAQs are shown on the site.</strong> Put a page's address in it and the question belongs to that
+page and appears nowhere else.</li>
+</ul>
+<p>Drag the questions into the order you want them read; the order is saved as you drop them, and the
+whole point of the screen is that the most-asked question sits at the top.</p>
+<p>The switch at the end of a row takes a question off the website without deleting it; the row then
+shows a <strong>Hidden</strong> badge. Categories have the same switch, and hiding a category hides the category,
+not its questions.</p>
+<p>Questions appear on the public site wherever a page has an FAQ section in it. Adding a question does
+not add it to a page that has no such section.</p></section><section class="chapter"><h2 id="walkthrough-5-add-a-testimonial"><span class="chapter__eyebrow"><span class="chapter__num">5</span>Walkthrough</span><span class="chapter__title">add a testimonial</span></h2>
+<p><strong>Testimonials</strong> in the sidebar, then <strong>Add a testimonial</strong>: <strong>Client name</strong>, <strong>Location or suburb</strong>,
+a <strong>Short heading</strong>, the <strong>Testimonial</strong> itself, a <strong>Rating</strong> and a <strong>Client photo</strong>.</p>
+<p>Then the part that surprises everybody:</p>
+<blockquote>
+<p><strong>A testimonial does not appear on the website until you record the client's permission.</strong></p>
+</blockquote>
+<p>A new testimonial shows <strong>Permission needed</strong> and sits under <strong>Waiting on permission</strong>. Press <strong>Record
+permission</strong>, confirm, and it changes to <strong>Permission recorded</strong>. The CMS keeps who confirmed it and
+when.</p>
+<p>Two switches control where it appears, and they only do anything once permission is recorded:</p>
+<ul>
+<li><strong>Showing on the website</strong> — whether it is used at all.</li>
+<li><strong>Featured on the home page</strong> — whether it is one of the highlighted few.</li>
+</ul>
+<p><strong>Withdraw permission</strong> is there for when a client changes their mind. It takes the testimonial off the
+website straight away and unfeatures it in the same move. You do not have to remember to also turn the
+switches off.</p>
+<p>Drag to reorder, the same as the FAQs.</p></section><section class="chapter"><h2 id="walkthrough-6-deal-with-an-enquiry"><span class="chapter__eyebrow"><span class="chapter__num">6</span>Walkthrough</span><span class="chapter__title">deal with an enquiry</span></h2>
+<p><strong>Enquiries</strong> in the sidebar. Two kinds of enquiry arrive here, and the tabs across the top separate
+them: <strong>All</strong>, <strong>Contact form</strong> and <strong>Agent Finder</strong>.</p>
+<p>Beside the tabs, a dropdown chooses <strong>Waiting for a reply</strong>, <strong>Already dealt with</strong> or <strong>Everything</strong>,
+and there is a box to search a name, email, suburb or message.</p>
+<p>Click a row to open it. You get:</p>
+<ul>
+<li>who wrote in, when, which form it came from, which page they were on, and — for Agent Finder — the
+reference they were given, such as <code>AF-2026-00042</code>.</li>
+<li>their email address and phone number as links, so replying is a click.</li>
+<li>for an Agent Finder enquiry, the answers they picked from the four questions, then <strong>In their own
+words</strong> above anything they typed.</li>
+<li><strong>Where has this got to?</strong> — set it to <strong>New</strong>, <strong>In progress</strong> or <strong>Dealt with</strong>. Underneath it says
+<em>Only you can see this. Nothing here is sent to the person who wrote in.</em></li>
+</ul>
+<p><strong>Reply by email</strong> opens your email program with their address already filled in. <strong>Replies are sent
+from your own email, not from the CMS</strong> — the CMS does not send email at all, and nothing you do on
+this screen is seen by the person who wrote in.</p>
+<p><strong>Nothing on this screen can be edited.</strong> The name, the message and the answers are the sender's own
+words, so there is deliberately no way to change them.</p>
+<h3 id="two-counts-that-mean-different-things">Two counts that mean different things</h3>
+<p>This confuses people, so it is worth being clear:</p>
+<ul>
+<li><strong>The bell at the top</strong> counts enquiries <strong>nobody has opened</strong>. Opening one clears it. It can honestly
+reach zero.</li>
+<li><strong>The number beside Enquiries in the sidebar</strong> counts enquiries <strong>still waiting for a reply</strong>. Reading
+one does not change it. Only marking it <strong>Dealt with</strong> does.</li>
+</ul>
+<p>Glancing at something is not the same as doing it, which is why the two numbers disagree on purpose.</p>
+<p>If you leave the inbox open, a new enquiry can appear on its own without you refreshing. That relies
+on a live-updates service running on the server, so if it is not happening on your setup, nothing is
+lost — reload the page and everything that has arrived is there.</p></section><section class="chapter"><h2 id="walkthrough-7-upload-an-image-and-put-it-on-a-page"><span class="chapter__eyebrow"><span class="chapter__num">7</span>Walkthrough</span><span class="chapter__title">upload an image and put it on a page</span></h2>
+<h3 id="getting-the-image-in">Getting the image in</h3>
+<p><strong>Media</strong> in the sidebar. Drag files onto the page, or press <strong>Upload</strong>.</p>
+<p>Click an uploaded image and fill in two boxes:</p>
+<ul>
+<li><strong>Describe the image</strong> — read aloud to visitors who cannot see it, and used by search engines. Say
+what is in the picture: <em>Advisor guiding a senior couple</em>. Worth doing on every image; a great many
+of our visitors use a screen reader.</li>
+<li><strong>Caption</strong> — optional, and shown under the image on the page.</li>
+</ul>
+<p><strong>Address</strong> on that panel is where the image lives. You do not need to copy it anywhere — as the hint
+says, <em>To put it on a page, use Choose on the block itself.</em></p>
+<h3 id="putting-it-on-a-page">Putting it on a page</h3>
+<p>In the builder, select an image block. The panel on the right has a <strong>Choose</strong> button (<strong>Replace</strong> once
+there is an image) which opens the media library. Pick one, or drop a new file straight onto the block.</p>
+<p><strong>There is nothing to type.</strong> You cannot paste an image address from another website — pictures have to
+live on this site, or they will not be shown to readers at all.</p>
+<h3 id="deleting-images">Deleting images</h3>
+<p>An image that is still used on a page, an article or a testimonial <strong>cannot be deleted</strong>. Try it and the
+CMS tells you what is still using it. Take it off those first.</p>
+<p>Deleting an image that genuinely is unused is permanent — the file is removed from storage. This is one
+of the few things in the CMS that cannot be undone, and it is a Super Administrator action.</p></section><section class="chapter"><h2 id="walkthrough-8-the-menus-and-the-wording-on-every-page"><span class="chapter__eyebrow"><span class="chapter__num">8</span>Walkthrough</span><span class="chapter__title">the menus, and the wording on every page</span></h2>
+<p>Two screens change things that appear on <em>every</em> page, so a change here is seen everywhere at once.</p>
+<p><strong>Navigation</strong> has three lists:</p>
+<ul>
+<li><strong>Header menu</strong> — the links across the top. A link can be set to <strong>Opens a dropdown</strong>, in which case the links
+under it become the dropdown.</li>
+<li><strong>Footer columns</strong> — the grouped links at the bottom.</li>
+<li><strong>Small print</strong> — the row underneath those.</li>
+</ul>
+<p>Drag to reorder, then <strong>Save menus</strong>. Nothing changes on the website until you press it.</p>
+<p><strong>Global content</strong> holds the wording around the edges:</p>
+<ul>
+<li><strong>Header</strong> — the logo, the <strong>Name beside the logo</strong>, and what to <strong>Describe the logo</strong> as.</li>
+<li><strong>Announcement bar</strong> — the strip across the top of the site. <strong>Show the announcement bar</strong>, the
+<strong>Wording</strong>, <strong>Button wording</strong> and <strong>Where it goes</strong>. Turn it off when the announcement is over.</li>
+<li><strong>Footer</strong> — the <strong>Short description</strong>, <strong>Phone number</strong>, <strong>Address</strong> and <strong>Copyright line</strong>.</li>
+</ul>
+<p>The phone number and address are stored here and nowhere else, so this is the one place to change them.</p></section><section class="chapter"><h2 id="walkthrough-9-check-how-a-page-looks-in-a-search-result"><span class="chapter__eyebrow"><span class="chapter__num">9</span>Walkthrough</span><span class="chapter__title">check how a page looks in a search result</span></h2>
+<p><strong>SEO</strong> in the sidebar. Two tabs: <strong>Overview</strong> and <strong>Defaults</strong>.</p>
+<p><strong>Overview</strong> is one row per address on the public website — every page and every article. The columns
+tell you what a search engine actually receives:</p>
+<ul>
+<li><strong>Address</strong> — the public address, and a link to edit it.</li>
+<li><strong>Search title</strong> — the title in a search result. It gets <code> | Seniors Property Advisors</code> added to the
+end, and the row warns you when the whole thing is <strong>Long for a search result</strong> or <strong>Very short</strong>.</li>
+<li><strong>Search description</strong> — the sentence under the title. It is flagged when it is <strong>Using the site
+default</strong>, which is worth fixing: a sentence shared by a dozen addresses tells a reader nothing about
+which one to open.</li>
+<li><strong>In sitemap</strong> — whether search engines are being told this address exists.</li>
+<li><strong>Changed</strong> — when it last changed.</li>
+</ul>
+<p>Two things can be edited straight from a row: <strong>Search description</strong> and <strong>Hide from search engines</strong>.
+Everything else is edited in the builder's <strong>Page settings</strong>, or in an article's <strong>Search and sharing</strong>
+panel.</p>
+<p>Two lengths are worth respecting, because Google cuts the rest off mid-sentence:</p>
+<ul>
+<li><strong>Descriptions: about 155 characters.</strong></li>
+<li><strong>Titles: about 61 characters</strong>, including the <code> | Seniors Property Advisors</code> on the end.</li>
+</ul>
+<p><strong>Defaults</strong> sets the <strong>Title pattern</strong>, <strong>Default description</strong> and <strong>Default sharing image</strong> used by
+any address that has not been given its own. Treat them as a safety net, not as the answer.</p>
+<p>A deleted article still appears in the list — its address may still be sitting in somebody's search
+results, which is exactly what you would come here to explain — but it cannot be edited. Bring it back
+from <strong>Recently deleted</strong> first.</p></section><section class="chapter"><h2 id="keeping-an-eye-on-things">Keeping an eye on things</h2>
+<p><strong>Dashboard</strong> is the first screen you land on. It shows what is <strong>Waiting to be published</strong>, what was
+<strong>Recently edited</strong> and <strong>Recently published</strong>, and <strong>Recent activity</strong>. Everything on it is counted at
+the moment you open it.</p>
+<p><strong>Activity</strong> is the full record: who changed what, and when. Every change made anywhere in the CMS is
+recorded against the person signed in, including publishing, unpublishing, archiving and deleting.
+Nothing on this screen can be edited, by anybody.</p></section><section class="chapter chapter--restricted"><h2 id="for-super-administrators-only">For Super Administrators only</h2>
+<p>Three screens do not appear at all for a Client Administrator: <strong>Recently deleted</strong>, <strong>Users and roles</strong>
+and <strong>Settings</strong>.</p>
+<p><strong>Deleting anything is also this role's alone</strong> — articles, questions, testimonials, images and
+enquiries. Most delete buttons are simply not drawn for a Client Administrator. A few controls are
+still shown and refused when pressed, because the server is what decides rather than the screen:
+deleting an image, and restoring an old version of a page from <strong>History</strong>.</p>
+<h3 id="users-and-roles">Users and roles</h3>
+<p><strong>Users and roles</strong> lists every account: <strong>Full name</strong>, <strong>Email address</strong>, <strong>Role</strong>, <strong>Status</strong> and
+<strong>Last sign-in</strong>.</p>
+<p><strong>Add a user</strong> creates an account: <strong>Full name</strong>, <strong>Email address</strong>, <strong>Role</strong> and a <strong>Password</strong>, which
+you choose and which has to meet the same rules as your own — the checklist under the box holds you to
+them. Send it to the person, and expect them to replace it. They are prompted to, on every screen,
+until they do.</p>
+<ul>
+<li><strong>Disable</strong> stops an account signing in without deleting anything they have done. This is the right
+answer when somebody leaves.</li>
+<li>Editing a user and leaving <strong>New password</strong> empty keeps their current password.</li>
+<li>Changing someone else's password signs them out everywhere.</li>
+</ul>
+<p>Roles are <strong>Client Administrator</strong> — creates, edits, publishes and unpublishes content, and manages
+search metadata — and <strong>Super Administrator</strong>, which additionally deletes, restores, manages accounts
+and reaches Settings.</p>
+<h3 id="recently-deleted">Recently deleted</h3>
+<p>Deleting an article, a question or a testimonial from its list screen does not destroy it. It goes to
+<strong>Recently deleted</strong>, which is one screen for all three, because somebody looking for what they deleted
+does not always remember what it was filed as.</p>
+<p>Each row offers:</p>
+<ul>
+<li><strong>Restore</strong> — puts it back where it came from.</li>
+<li><strong>Delete for good</strong> — the only thing in the CMS that genuinely destroys content. There is no way back
+from it.</li>
+</ul>
+<p>Deleted pages are not here. Pages are <strong>archived</strong> instead, and come back from the <strong>Archived</strong> filter
+on the Pages screen.</p>
+<h3 id="settings">Settings</h3>
+<p><strong>Settings</strong> holds what is set once and rarely touched:</p>
+<ul>
+<li><strong>Website details</strong> — the <strong>Website name</strong> and the <strong>Favicon</strong>.</li>
+<li><strong>Tracking</strong> — the <strong>Google Analytics 4</strong> and <strong>Google Tag Manager</strong> ids.</li>
+<li><strong>Social profiles</strong> — <strong>Facebook</strong> and <strong>LinkedIn</strong>.</li>
+<li><strong>Legal</strong> — the <strong>Footer disclaimer</strong> and which page is the <strong>Privacy policy page</strong>.</li>
+</ul>
+<p>The phone number, address and footer wording are <strong>not</strong> here — they are on <strong>Global content</strong>, so a
+Client Administrator can change them.</p></section><section class="chapter"><h2 id="nine-things-that-surprise-people">Nine things that surprise people</h2>
+<ol>
+<li><strong>Saving is not publishing.</strong> <strong>Save draft</strong> keeps your work; only <strong>Publish</strong> changes the website.</li>
+<li><strong>A page that has never been published is invisible.</strong> Creating it is not enough, and neither is
+linking to it from a menu.</li>
+<li><strong>A testimonial shows nothing until permission is recorded</strong> — not the quote, not the name, not the
+photo.</li>
+<li><strong>Deleting content is recoverable.</strong> Articles, questions and testimonials go to <strong>Recently deleted</strong>.
+The only permanent deletions are <strong>Delete for good</strong> from that screen, and deleting an unused image.</li>
+<li><strong>Renaming a live page keeps the old link working.</strong> Anyone following the old address is sent to the
+new one.</li>
+<li><strong>Enquiries cannot be edited.</strong> The words are the sender's, and there is no way to change them.</li>
+<li><strong>The bell and the sidebar number count different things.</strong> The bell is what nobody has opened; the
+sidebar is what nobody has dealt with.</li>
+<li><strong>An article's published date does not schedule it.</strong> It publishes when you press <strong>Publish</strong>.</li>
+<li><strong>An image in use cannot be deleted</strong>, and the CMS will tell you what is still using it.</li>
+</ol></section><section class="chapter"><h2 id="where-everything-lives">Where everything lives</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Screen</th>
+<th>Address</th>
+<th>What it is for</th>
+<th>Who</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dashboard</td>
+<td><code>/cms</code></td>
+<td>What is outstanding, and what changed recently</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Pages</td>
+<td><code>/cms/pages</code></td>
+<td>Every page on the website, and the builder</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Blog</td>
+<td><code>/cms/blog</code></td>
+<td>Articles and their categories</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>FAQs</td>
+<td><code>/cms/faqs</code></td>
+<td>Questions, answers and categories</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Testimonials</td>
+<td><code>/cms/testimonials</code></td>
+<td>Client quotes, and their permission</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Enquiries</td>
+<td><code>/cms/enquiries</code></td>
+<td>Everything sent through the two forms</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Media library</td>
+<td><code>/cms/media</code></td>
+<td>Every image, and where each one is used</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>SEO overview</td>
+<td><code>/cms/seo</code></td>
+<td>Titles and descriptions as a search engine sees them</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Activity</td>
+<td><code>/cms/activity</code></td>
+<td>Who changed what, and when</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Recently deleted</td>
+<td><code>/cms/deleted</code></td>
+<td>Restore, or destroy for good</td>
+<td><span class="pill pill--super">Super Administrator</span></td>
+</tr>
+<tr>
+<td>Navigation</td>
+<td><code>/cms/navigation</code></td>
+<td>Header menu, footer columns, small print</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Global content</td>
+<td><code>/cms/global-content</code></td>
+<td>Announcement bar, phone, address, footer wording</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+<tr>
+<td>Users and roles</td>
+<td><code>/cms/users</code></td>
+<td>Accounts and what they may do</td>
+<td><span class="pill pill--super">Super Administrator</span></td>
+</tr>
+<tr>
+<td>Settings</td>
+<td><code>/cms/settings</code></td>
+<td>Site name, tracking ids, social links, legal</td>
+<td><span class="pill pill--super">Super Administrator</span></td>
+</tr>
+<tr>
+<td>Your account</td>
+<td><code>/cms/account</code></td>
+<td>Your own name, role and password</td>
+<td><span class="pill pill--both">Both</span></td>
+</tr>
+</tbody>
+</table></div></section><section class="chapter"><h2 id="if-something-looks-wrong">If something looks wrong</h2>
+<ul>
+<li><strong>A change is not showing on the website.</strong> Nine times in ten it was saved and not published. Open the
+page and look for <strong>Unpublished changes</strong>.</li>
+<li><strong>You cannot find a screen this guide mentions.</strong> Check the table above — it may be a Super
+Administrator screen.</li>
+<li><strong>A button refuses and explains why.</strong> Read it. The CMS is deliberate about refusing rather than
+quietly doing something surprising — an image still in use, a page you may not restore, a password
+that is not strong enough.</li>
+<li><strong>Anything else</strong> — ask whoever set up your account.</li>
+</ul></section>
+        </div>
+
+        <p class="colophon">
+            <strong>Using the CMS</strong> — generated from <code>docs/cms-user-guide.md</code>, which is
+            the copy to edit. Rebuild with <code>php artisan docs:guide</code> after changing it.
+        </p>
+    </main>
+</div>
+
+
+<script>
+(function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.toc__link'));
+    var targets = links.map(function (link) {
+        return { link: link, heading: document.getElementById(decodeURIComponent(link.hash.slice(1))) };
+    }).filter(function (pair) { return pair.heading; });
+
+    if (!targets.length) return;
+
+    var current = null;
+    var queued = false;
+
+    /* The last heading to have passed the top of the window is the one being read. Measured on
+       every frame that scrolls rather than remembered from an observer callback, because a
+       remembered rectangle is a rectangle from where the page used to be. */
+    function mark() {
+        queued = false;
+
+        var found = targets[0];
+
+        for (var i = 0; i < targets.length; i += 1) {
+            if (targets[i].heading.getBoundingClientRect().top <= 140) found = targets[i];
+        }
+
+        /* The last section is shorter than the window, so its heading never reaches the top and it
+           could otherwise never be the marked one. At the bottom of the page it is what is being read. */
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+            found = targets[targets.length - 1];
+        }
+
+        if (found === current) return;
+
+        if (current) current.link.removeAttribute('aria-current');
+        found.link.setAttribute('aria-current', 'true');
+        current = found;
+
+        if (found.link.scrollIntoView && window.innerWidth > 900) {
+            var box = found.link.getBoundingClientRect();
+            if (box.top < 0 || box.bottom > window.innerHeight) {
+                found.link.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }
+
+    function schedule() {
+        if (queued) return;
+        queued = true;
+        window.requestAnimationFrame(mark);
+    }
+
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    mark();
+})();
+</script>
+
+</body>
+</html>

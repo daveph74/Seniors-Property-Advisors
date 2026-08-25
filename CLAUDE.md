@@ -12,6 +12,14 @@ Section storage is JSON-snapshot based, not normalised rows.
 - Prefer minimal, targeted diffs over structural rewrites.
 - Separate data resolution from presentation in components.
 - Specs live in docs/specs/. Implement the referenced workstream only.
+- `docs/cms-user-guide.md` is the only document here written for the people who *use* the CMS, and
+  it quotes the screens word for word — a renamed button or a reworded hint makes it wrong in the
+  one place a reader cannot check against the code. Changing screen wording updates it, same rule
+  as this file. It states behaviour a reader must know and nothing else: no paths, no class names.
+  **The markdown is the source; `docs/cms-user-guide.html` is built from it** by `docs:guide` and is
+  what staff are actually given — so edit the markdown and rebuild, never the page. The two are held
+  together by `UserGuideTest`, because the drift would otherwise be silent and in the worst
+  direction: the copy nobody reads being the corrected one.
 - **This file is part of the change, not a write-up of it.** Anything that adds, removes or alters a
   functionality updates `CLAUDE.md` in the *same* commit — no follow-up pass, no separate docs
   commit. A change that lands without it is incomplete.
@@ -49,6 +57,8 @@ it against the code before repeating it — that is the failure mode this reposi
   shows the browser doing it, `e2e:ui` is the interactive runner, `e2e:report` opens the last report.
   Run from the project root: from inside `e2e/` Playwright finds no config and fails everything
 - `./vendor/bin/pint` — PHP formatting
+- `php artisan docs:guide` — rebuilds `docs/cms-user-guide.html` from the markdown guide. `--check`
+  reports whether it is stale and writes nothing, which is what `UserGuideTest` runs
 
 **Deploying is not one of these commands.** `composer dev` is a laptop convenience with no production
 equivalent — a server has a release step and three processes something else keeps alive. That is
