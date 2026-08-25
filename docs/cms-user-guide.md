@@ -299,9 +299,8 @@ This confuses people, so it is worth being clear:
 
 Glancing at something is not the same as doing it, which is why the two numbers disagree on purpose.
 
-If you leave the inbox open, a new enquiry can appear on its own without you refreshing. That relies
-on a live-updates service running on the server, so if it is not happening on your setup, nothing is
-lost — reload the page and everything that has arrived is there.
+The inbox does not update itself while you sit on it. Reload the page and everything that has arrived
+since is there.
 
 ---
 

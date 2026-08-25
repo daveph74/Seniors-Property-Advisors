@@ -52,7 +52,7 @@ it against the code before repeating it — that is the failure mode this reposi
 
 ## Commands
 
-- `composer dev` — server, queue, Vite and Reverb together, so the CMS updates live without a second
+- `composer dev` — the server and Vite together, so assets rebuild without a second
   terminal. `concurrently --kill-others` means one process failing stops the rest, which is why
   **`pail` is not in there**: it needs `pcntl`, XAMPP on Windows has no such extension, so it exited
   immediately and took the whole stack down with it — the symptom is `composer dev` returning code 1
@@ -69,7 +69,7 @@ it against the code before repeating it — that is the failure mode this reposi
   reports whether it is stale and writes nothing, which is what `UserGuideTest` runs
 
 **Deploying is not one of these commands.** `composer dev` is a laptop convenience with no production
-equivalent — a server has a release step and three processes something else keeps alive. That is
+equivalent — a server has a release step and two processes something else keeps alive. That is
 "Running it in production", further down, and it is the section to read before a first deploy: every
 mistake it lists fails silently rather than loudly.
 
@@ -356,7 +356,7 @@ Three things hold it together, and each is a way it would otherwise not work at 
   would warn.
 - **The admin is excluded, by `HandleInertiaRequests::$withoutSsr`.** Nothing crawls it — `robots.txt`
   refuses it and it is behind sign-in — so rendering it twice would buy a slower response and pull the
-  editor and the socket client into a process with no browser to offer them.
+  editor into a process with no browser to offer them.
 - **`ssr.jsx` globs `./Pages/*.jsx`, one level, eagerly.** SSR needs an eager glob, and one level happens
   to be exactly the two pages a visitor can reach, because `Login` lives under `Pages/Auth/` and the
   admin under `Pages/Cms/`. A full glob would execute every admin module in node at boot — TipTap
@@ -849,49 +849,22 @@ reads as one you could type into; the e2e suite asserts **zero** inputs in that 
 Notes are optional there, so `snippet()` falls back to the picked answers rather than leaving a row as a
 name and a time among rows that all carry a sentence.
 
-### An open inbox hears about an arrival
+### The inbox updates when somebody looks at it
 
-The screens are server-rendered, so a tab somebody left open used to keep showing what it fetched when
-they opened it. Laravel Reverb closes that: `EnquiryReceived` is broadcast on a private `cms` channel
-and any open CMS screen refreshes itself.
+The screens are server-rendered and there is no socket, so a tab left open keeps showing what it
+fetched when it was opened. Reloading is what refreshes it, and that is the whole of the behaviour.
 
-**The message carries nothing.** Not the name, not the suburb, not the first line — `broadcastWith()`
-returns an empty array, on purpose. A payload would put somebody's account of their own circumstances
-into a queue record and a socket frame, delivered to every signed-in browser whether or not anyone is
-looking at the inbox; the search palette already refuses to index that message for the same reason. So
-the event is a nudge, and the browser refetches through `/cms/enquiries` — authorised, filtered and
-paged exactly as when somebody presses reload. One path to the data, and nothing to keep in step with
-the shape of the props.
+**Laravel Reverb used to close that gap and was removed deliberately** — the event, the private
+channel, the Echo client and the Reverb and queue processes with it. It cost two long-lived processes,
+a `connect-src` permission and 40KB of Pusher client, to save somebody pressing reload on a site whose
+inbox measures in enquiries a week — and every one of its failure modes was silent: a socket blocked by
+the policy, a subscription never authorised, a queue nobody was draining. If it comes back, the pieces
+it needed are in this file's history — but the question to answer first is what a live inbox is worth
+against two more things a server has to keep alive.
 
-Four things that follow, each of which was a way for this to fail quietly:
-
-- **`connect-src` has to name the socket**, as `ws://` or `wss://` — naming the `http://` origin it
-  upgrades from does not permit it. Blocked, the only symptom is an inbox that has gone back to
-  updating on reload. `OwaspTest` pins both the permission and its absence where no key is configured,
-  and `security:check` fails a production environment still on `ws://`, since a plain socket on an
-  HTTPS page is blocked as mixed content.
-- **Echo must build its own client.** Handing it a pre-made Pusher instance keeps Pusher's defaults,
-  which authorise a private channel at `/pusher/auth` — an address this application answers with a 405
-  from the catch-all page route. The socket connects, the subscription is never authorised, and nothing
-  is ever delivered, with no error worth reading anywhere in the sequence.
-- **The dispatch cannot be allowed to cost an enquiry.** It is queued, so an unreachable Reverb is a
-  failed job; and it is wrapped, because on a `sync` queue the broadcast happens inside the request
-  that just saved somebody's enquiry and would otherwise answer them with a 500 after keeping it.
-- **The rule about who may listen lives in `app/Broadcasting/CmsChannel.php`, not in a closure.**
-  Testing it through `/broadcasting/auth` proved nothing: under the `null` broadcaster this suite runs
-  with, the endpoint answers without consulting the callback, so every channel refused every caller and
-  the denial tests passed vacuously. The rule mirrors `Permit` — an active account with
-  `content.manage` — because a socket outliving a deactivation is a way back into the screens the
-  account was locked out of.
-
-The list holds still while an enquiry is open: rows behind a modal are what somebody is about to click,
-and re-ordering them under a dialog is how the wrong person's message gets opened. The bell still moves,
-so nothing is hidden — only deferred until the modal closes, which visits the list anyway.
-
-Running it needs `php artisan reverb:start` **and** a queue worker. Without either, the CMS behaves
-exactly as it did before any of this: the inbox updates when somebody looks at it. `.env.e2e` sets
-`BROADCAST_CONNECTION=null` deliberately — the browser suite runs a synchronous queue, so a broadcast
-would happen inside the request and the run would depend on a socket server being up to pass.
+Nothing is queued now, which is why there is no worker in `composer dev` and none in the process table
+under "Running it in production". An enquiry is saved in the request that brings it, full stop. The
+first mailable to land here changes that, and the worker comes back in the same commit.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. There is no
@@ -994,23 +967,22 @@ npm ci && npm run build
 rm -f public/hot
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
-php artisan queue:restart
 php artisan inertia:stop-ssr || true
 php artisan security:check --production
 ```
 
-And three processes, each under a supervisor that restarts them on failure and on boot — systemd or
+And two processes, each under a supervisor that restarts them on failure and on boot — systemd or
 supervisord on Linux, a service wrapper on Windows:
 
 | what | how | what happens without it |
 |---|---|---|
 | the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
-| the queue | `php artisan queue:work --tries=3 --max-time=3600` | enquiries still arrive and are still kept; nothing tells an open CMS screen about them |
-| the socket | `php artisan reverb:start --host=0.0.0.0 --port=8080`, behind the proxy that terminates TLS | the same: the inbox updates when somebody looks at it |
 | the renderer | `php artisan inertia:start-ssr` — a unit file is in `deploy/seniors-ssr.service` | the site still works, and serves a body with no heading and no links — see below, because this is the quietest failure here |
 
-Neither of the last two can lose an enquiry — the notice is queued and the dispatch is wrapped, so a
-dead worker or an unreachable socket is a failed job, never a visitor's error page.
+**There is no queue worker, because nothing is queued** — see "The inbox updates when somebody looks at
+it". An enquiry is written in the request that carries it, so no background process can lose one. The
+first mailable or deferred job to land here brings the worker and `queue:restart` back with it, in the
+same commit.
 
 **Docker is not part of any of this.** `docker-compose.yml` runs `floci`, an S3-compatible emulator on
 `:4566`, and it exists for a developer's machine and the browser suite — it is never deployed. A server
@@ -1069,11 +1041,7 @@ The rest, each of which fails quietly rather than loudly (no count, because this
   coming from Vite"; copied to a server, every page asks a dev server that is not there and renders
   blank, with the reason only in the browser console. Hence the `rm -f` above, and
   `security:check` fails on it — reading the hot file Laravel itself would use, not a fixed path.
-- **`REVERB_SCHEME=https`**, with the proxy exposing the socket as `wss://`. A plain `ws://` socket on
-  an HTTPS page is refused as mixed content and the CMS silently stops updating. `security:check
-  --production` fails on this, which is the only reason anybody would notice.
-- **`php artisan queue:restart` after every release**, or workers go on running the code they were
-  started with. **`inertia:stop-ssr` is the same sentence about the renderer** — it holds the bundle it
+- **`php artisan inertia:stop-ssr` after every release.** The renderer holds the bundle it
   started with, so without this readers are served last week's pages by a process nobody restarted. The
   gap before the supervisor brings it back renders in the browser, which is what the site did before SSR
   existed, so there is no outage in it. **`|| true` is not decoration**: the command exits 1 when there
@@ -1096,9 +1064,6 @@ The rest, each of which fails quietly rather than loudly (no count, because this
 - **`TRUSTED_PROXIES` must name the proxy**, or every rate limit keyed on a visitor collapses onto one
   bucket and HSTS is never sent. `CACHE_STORE=file` too, on a single server: the limiter counts in the
   cache, and counting in SQLite takes a database-wide write lock on every throttled request.
-
-Rotating the socket credentials needs no rebuild: the browser is told what to connect to by the server
-that drew the page, not by a value baked into the assets — see `app/Cms/Realtime.php`.
 
 ## Browser tests
 

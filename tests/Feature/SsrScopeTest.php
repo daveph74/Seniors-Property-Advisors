@@ -58,7 +58,7 @@ class SsrScopeTest extends TestCase
     /**
      * The admin is excluded by `HandleInertiaRequests::$withoutSsr`. Nothing crawls it — `robots.txt`
      * refuses it and it is behind sign-in — so rendering it twice would buy a slower response and pull
-     * the editor and the socket client into a process with no browser to offer them.
+     * the editor into a process with no browser to offer them.
      */
     public function test_the_admin_is_never_sent_to_the_renderer(): void
     {

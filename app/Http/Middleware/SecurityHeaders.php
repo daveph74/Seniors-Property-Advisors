@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Cms\Realtime;
 use App\Content\Site;
 use Closure;
 use Illuminate\Http\Request;
@@ -96,15 +95,6 @@ class SecurityHeaders
                is the only thing that uploads, so the public site is not given the origin. */
             if ($request->is('cms', 'cms/*') && $origin = $this->storageOrigin()) {
                 $connect[] = $origin;
-            }
-
-            /* The socket that tells an open screen an enquiry arrived. Another origin again — a
-               websocket server on its own port — and blocked without naming it, with no error a
-               reader would ever see: the inbox would simply go back to updating only when somebody
-               reloads, which is precisely the thing it stopped doing. Only where the admin is, and
-               only when a server is actually configured. */
-            if ($request->is('cms', 'cms/*') && $socket = Realtime::socketOrigin()) {
-                $connect[] = $socket;
             }
         } else {
             foreach ($this->tracking() as $host) {
