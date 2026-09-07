@@ -86,7 +86,8 @@ const EMPTY = {
     propertyType: null,
     timeline: null,
     notes: '',
-    name: '',
+    firstName: '',
+    surname: '',
     phone: '',
     email: '',
     bestTime: null,
@@ -98,7 +99,7 @@ const EMPTY = {
  * the card or box the person actually filled rather than nowhere.
  */
 const SERVER_FIELDS = {
-    name: 'name',
+    name: 'firstName',
     email: 'email',
     phone: 'phone',
     consent: 'consent',
@@ -120,10 +121,8 @@ const VALIDATORS = {
         propertyType: (v) => (v === null ? 'Choose the type of property you have.' : null),
     },
     2: {
-        timeline: (v) => (v === null ? 'Choose when you are hoping to sell.' : null),
-    },
-    3: {
-        name: (v) => (v.trim().length >= 2 ? null : 'Enter your full name.'),
+        firstName: (v) => (v.trim() ? null : 'Enter your first name.'),
+        surname: (v) => (v.trim() ? null : 'Enter your surname.'),
         phone: (v) => {
             const digits = v.replace(/[^\d]/g, '');
             if (!digits) return 'Enter a phone number we can reach you on.';
@@ -141,6 +140,9 @@ const VALIDATORS = {
         },
         bestTime: (v) => (v === null ? 'Choose the time of day that suits you best.' : null),
         consent: (v) => (v ? null : 'Tick the box to say we may contact you about selling.'),
+    },
+    3: {
+        timeline: (v) => (v === null ? 'Choose when you are hoping to sell.' : null),
     },
 };
 
@@ -216,7 +218,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
      */
     const payload = () => ({
         source: 'find_my_agent',
-        name: form.name,
+        name: `${form.firstName.trim()} ${form.surname.trim()}`,
         email: form.email,
         phone: form.phone,
         message: form.notes,
@@ -265,15 +267,17 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
             onError: (serverErrors) => {
                 answered = true;
 
-                /* Rules that only the server can apply land back on their own question. Stay on step
-                   3 — moving on would hide the thing that needs fixing. */
+                /* Return to the step containing the first rejected field so its error is visible. */
                 const mapped = {};
                 for (const [field, message] of Object.entries(serverErrors)) {
                     mapped[SERVER_FIELDS[field] ?? field] = message;
                 }
 
+                const firstField = Object.keys(mapped)[0] ?? null;
+                const errorStep = Object.entries(VALIDATORS).find(([, fields]) => firstField in fields);
+                if (errorStep) setStep(Number(errorStep[0]));
                 setErrors(mapped);
-                focusTarget.current = Object.keys(mapped)[0] ?? null;
+                focusTarget.current = firstField;
             },
             onFinish: () => {
                 setSending(false);
@@ -319,7 +323,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
 
     const errFor = (field) => (errors[field] ? `fma-${field}-error` : undefined);
 
-    const firstName = form.name.trim().split(/\s+/)[0];
+    const firstName = form.firstName.trim();
     const bestTimeLabel = labelFor(BEST_TIMES, form.bestTime);
 
     return (
@@ -410,75 +414,53 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
 
                 {step === 2 && (
                     <div>
-                        <h3 id="modal-title">When are you hoping to sell?</h3>
-                        <p className="help">
-                            There’s no wrong answer — even “just thinking” is the right time to call.
-                        </p>
-                        <p className="req-note">Choose one. The note at the bottom is up to you.</p>
-
-                        <div className={`field${errors.timeline ? ' has-error' : ''}`}>
-                            <span className="label" id="fma-timeline-label">
-                                When you are hoping to sell <Required />
-                            </span>
-                            <OptGrid
-                                options={TIMELINES}
-                                value={form.timeline}
-                                onChange={set('timeline')}
-                                labelledBy="fma-timeline-label"
-                                describedBy={errFor('timeline')}
-                                invalid={!!errors.timeline}
-                                itemRef={(el) => (fieldRefs.current.timeline = el)}
-                            />
-                            {errors.timeline && (
-                                <ErrorMessage id="fma-timeline-error">
-                                    {errors.timeline}
-                                </ErrorMessage>
-                            )}
-                        </div>
-
-                        <div className="field top-gap">
-                            <label htmlFor="fma-notes">
-                                Anything we should know?{' '}
-                                <span className="opt-note">Optional — you can skip this</span>
-                            </label>
-                            <input
-                                id="fma-notes"
-                                type="text"
-                                placeholder="e.g. We’re helping Mum downsize"
-                                value={form.notes}
-                                onChange={(e) => set('notes')(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {step === 3 && (
-                    <div>
                         <h3 id="modal-title">How would you like us to reach you?</h3>
                         <p className="help">
                             A quick 15‑minute conversation with your advisor — at a time that suits.
                         </p>
-                        <p className="req-note">All four questions below are needed.</p>
+                        <p className="req-note">All five questions below are needed.</p>
 
-                        <div className={`field${errors.name ? ' has-error' : ''}`}>
-                            <label htmlFor="fma-name">
-                                Full name <Required />
-                            </label>
-                            <input
-                                id="fma-name"
-                                type="text"
-                                autoComplete="name"
-                                placeholder="Jane Wilson"
-                                aria-required="true"
-                                aria-invalid={errors.name ? 'true' : undefined}
-                                aria-describedby={errFor('name')}
-                                ref={(el) => (fieldRefs.current.name = el)}
-                                value={form.name}
-                                onChange={(e) => set('name')(e.target.value)}
-                            />
-                            {errors.name && (
-                                <ErrorMessage id="fma-name-error">{errors.name}</ErrorMessage>
-                            )}
+                        <div className="opt-grid">
+                            <div className={`field${errors.firstName ? ' has-error' : ''}`}>
+                                <label htmlFor="fma-firstName">
+                                    First Name <Required />
+                                </label>
+                                <input
+                                    id="fma-firstName"
+                                    type="text"
+                                    autoComplete="given-name"
+                                    placeholder="Jane"
+                                    aria-required="true"
+                                    aria-invalid={errors.firstName ? 'true' : undefined}
+                                    aria-describedby={errFor('firstName')}
+                                    ref={(el) => (fieldRefs.current.firstName = el)}
+                                    value={form.firstName}
+                                    onChange={(e) => set('firstName')(e.target.value)}
+                                />
+                                {errors.firstName && (
+                                    <ErrorMessage id="fma-firstName-error">{errors.firstName}</ErrorMessage>
+                                )}
+                            </div>
+                            <div className={`field${errors.surname ? ' has-error' : ''}`}>
+                                <label htmlFor="fma-surname">
+                                    Surname <Required />
+                                </label>
+                                <input
+                                    id="fma-surname"
+                                    type="text"
+                                    autoComplete="family-name"
+                                    placeholder="Wilson"
+                                    aria-required="true"
+                                    aria-invalid={errors.surname ? 'true' : undefined}
+                                    aria-describedby={errFor('surname')}
+                                    ref={(el) => (fieldRefs.current.surname = el)}
+                                    value={form.surname}
+                                    onChange={(e) => set('surname')(e.target.value)}
+                                />
+                                {errors.surname && (
+                                    <ErrorMessage id="fma-surname-error">{errors.surname}</ErrorMessage>
+                                )}
+                            </div>
                         </div>
 
                         <div className="opt-grid">
@@ -583,6 +565,50 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                             {errors.consent && (
                                 <ErrorMessage id="fma-consent-error">{errors.consent}</ErrorMessage>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {step === 3 && (
+                    <div>
+                        <h3 id="modal-title">When are you hoping to sell?</h3>
+                        <p className="help">
+                            There’s no wrong answer — even “just thinking” is the right time to call.
+                        </p>
+                        <p className="req-note">Choose one. The note at the bottom is up to you.</p>
+
+                        <div className={`field${errors.timeline ? ' has-error' : ''}`}>
+                            <span className="label" id="fma-timeline-label">
+                                When you are hoping to sell <Required />
+                            </span>
+                            <OptGrid
+                                options={TIMELINES}
+                                value={form.timeline}
+                                onChange={set('timeline')}
+                                labelledBy="fma-timeline-label"
+                                describedBy={errFor('timeline')}
+                                invalid={!!errors.timeline}
+                                itemRef={(el) => (fieldRefs.current.timeline = el)}
+                            />
+                            {errors.timeline && (
+                                <ErrorMessage id="fma-timeline-error">
+                                    {errors.timeline}
+                                </ErrorMessage>
+                            )}
+                        </div>
+
+                        <div className="field top-gap">
+                            <label htmlFor="fma-notes">
+                                Anything we should know?{' '}
+                                <span className="opt-note">Optional — you can skip this</span>
+                            </label>
+                            <input
+                                id="fma-notes"
+                                type="text"
+                                placeholder="e.g. We’re helping Mum downsize"
+                                value={form.notes}
+                                onChange={(e) => set('notes')(e.target.value)}
+                            />
                         </div>
                     </div>
                 )}

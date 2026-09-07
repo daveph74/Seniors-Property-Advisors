@@ -25,7 +25,7 @@ class FindMyAgentOptions
     ];
 
     public const TIMELINES = [
-        'within_3_months' => 'Within 3 months',
+        'within_3_months' => 'Now',
         'in_3_6_months' => 'In 3 – 6 months',
         'in_6_12_months' => 'In 6 – 12 months',
         'just_exploring' => 'Just exploring',

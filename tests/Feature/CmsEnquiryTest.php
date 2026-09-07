@@ -239,7 +239,7 @@ class CmsEnquiryTest extends TestCase
             $this->assertSame([
                 ['label' => 'Suburb', 'value' => 'Mosman NSW 2088'],
                 ['label' => 'Property type', 'value' => 'House'],
-                ['label' => 'Looking to sell', 'value' => 'Within 3 months'],
+                ['label' => 'Looking to sell', 'value' => 'Now'],
                 ['label' => 'Best time to call', 'value' => 'Morning'],
             ], $opened['answers']);
         });
@@ -263,7 +263,7 @@ class CmsEnquiryTest extends TestCase
         Enquiry::factory()->findMyAgent()->create(['name' => 'No notes', 'message' => null]);
 
         $this->get('/cms/enquiries')->assertInertia(fn ($page) => $this->assertSame(
-            'Mosman NSW 2088 · House · Within 3 months · Morning',
+            'Mosman NSW 2088 · House · Now · Morning',
             $page->toArray()['props']['enquiries'][0]['snippet'],
         ));
     }

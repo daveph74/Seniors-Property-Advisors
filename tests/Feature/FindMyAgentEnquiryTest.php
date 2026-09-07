@@ -88,7 +88,7 @@ class FindMyAgentEnquiryTest extends TestCase
         $this->assertSame('NSW', $details['location']['state']);
         $this->assertSame('2088', $details['location']['postcode']);
         /* Wording is resolved when it is shown, so re-labelling an answer never rewrites a row. */
-        $this->assertStringNotContainsString('Within 3 months', json_encode($details));
+        $this->assertStringNotContainsString('Now', json_encode($details));
     }
 
     public function test_the_wording_is_resolved_for_the_screen(): void
@@ -98,7 +98,7 @@ class FindMyAgentEnquiryTest extends TestCase
         $this->assertSame([
             ['label' => 'Suburb', 'value' => 'Mosman NSW 2088'],
             ['label' => 'Property type', 'value' => 'House'],
-            ['label' => 'Looking to sell', 'value' => 'Within 3 months'],
+            ['label' => 'Looking to sell', 'value' => 'Now'],
             ['label' => 'Best time to call', 'value' => 'Morning'],
         ], Enquiry::sole()->answers());
     }
