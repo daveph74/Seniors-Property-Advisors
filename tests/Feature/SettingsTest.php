@@ -196,18 +196,30 @@ class SettingsTest extends TestCase
         $this->assertStringContainsString('"name":"Agent Finder Australia"', $html);
     }
 
-    public function test_the_favicon_is_linked_only_once_one_is_chosen(): void
+    public function test_the_brand_icon_is_linked_until_a_favicon_is_chosen(): void
     {
         $this->page('services');
 
-        $this->assertStringNotContainsString('rel="icon"', $this->get('/services')->getContent());
+        $html = $this->get('/services')->getContent();
+        $this->assertStringContainsString('<link rel="icon" href="/favicon.ico" sizes="48x48" />', $html);
+        $this->assertStringContainsString('<link rel="icon" href="/favicon.svg" type="image/svg+xml" />', $html);
+        $this->assertStringContainsString('<link rel="apple-touch-icon" href="/apple-touch-icon.png" />', $html);
 
         $this->save(['favicon' => '/media/2026/08/icon.png'])->assertRedirect();
 
-        $this->assertStringContainsString(
-            '<link rel="icon" href="/media/2026/08/icon.png" />',
-            $this->get('/services')->getContent(),
-        );
+        $html = $this->get('/services')->getContent();
+        $this->assertStringContainsString('<link rel="icon" href="/media/2026/08/icon.png" />', $html);
+        $this->assertStringNotContainsString('/favicon.ico', $html);
+    }
+
+    public function test_the_brand_icon_files_are_real_images(): void
+    {
+        foreach (['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'] as $file) {
+            $this->assertGreaterThan(0, filesize(public_path($file)), "{$file} is empty");
+        }
+
+        $this->assertSame("\x00\x00\x01\x00", substr(file_get_contents(public_path('favicon.ico')), 0, 4));
+        $this->assertStringStartsWith("\x89PNG", file_get_contents(public_path('apple-touch-icon.png')));
     }
 
     public function test_an_analytics_id_has_to_look_like_one(): void

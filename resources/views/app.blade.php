@@ -12,7 +12,11 @@
     @php($site = App\Content\Site::all())
     @isset($site['favicon'])
         <link rel="icon" href="{{ $site['favicon'] }}" />
+    @else
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     @endisset
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title inertia>{{ $head['title'] ?? 'Agent Finder — Seniors Property Advisors' }}</title>
     @isset($head['description'])
         <meta inertia name="description" content="{{ $head['description'] }}" />
