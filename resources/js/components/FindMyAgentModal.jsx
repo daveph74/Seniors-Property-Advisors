@@ -1,6 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import SuburbAutocomplete from './SuburbAutocomplete';
+import AddressAutocomplete from './AddressAutocomplete';
 import { BEST_TIMES, PROPERTY_TYPES, TIMELINES, labelFor } from './findMyAgentOptions';
 
 /** Marks a question as one that has to be answered. */
@@ -107,7 +107,7 @@ const SERVER_FIELDS = {
     'details.property_type': 'propertyType',
     'details.timeline': 'timeline',
     'details.best_time': 'bestTime',
-    'details.location.suburb': 'location',
+    'details.location.street': 'location',
 };
 
 /**
@@ -117,7 +117,9 @@ const SERVER_FIELDS = {
 const VALIDATORS = {
     1: {
         location: (v) =>
-            v?.suburb ? null : 'Enter the suburb your property is in, for example Mosman NSW.',
+            v?.street
+                ? null
+                : 'Enter the street address of your property, for example 12 Smith Street, Mosman NSW.',
         propertyType: (v) => (v === null ? 'Choose the type of property you have.' : null),
     },
     2: {
@@ -146,7 +148,7 @@ const VALIDATORS = {
     },
 };
 
-export default function FindMyAgentModal({ open, onClose, site = {} }) {
+export default function FindMyAgentModal({ open, onClose, site = {}, start = null }) {
     const [step, setStep] = useState(1);
     const [form, setForm] = useState(EMPTY);
     const [errors, setErrors] = useState({});
@@ -216,6 +218,15 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
      * and the notes stay in `message` on their own — they are the only words here that are the
      * sender's, and the CMS shows them as such.
      */
+    /*
+     * Where the suburb, state and postcode come from. The address wins whenever it resolved a suburb;
+     * otherwise a suburb *picked* in the start box fills them. A typed-but-unpicked start box never
+     * does — it may be a postcode — and stays in `area` as the visitor wrote it.
+     */
+    const picked = start && start.placeId && !start.freeText ? start : null;
+    const locality = form.location?.suburb ? form.location : picked ?? form.location;
+    const area = start ? start.description ?? start.suburb ?? start.postcode ?? null : null;
+
     const payload = () => ({
         source: 'find_my_agent',
         name: `${form.firstName.trim()} ${form.surname.trim()}`,
@@ -230,9 +241,11 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
             best_time: form.bestTime,
             location: {
                 place_id: form.location?.placeId ?? null,
-                suburb: form.location?.suburb ?? null,
-                state: form.location?.state ?? null,
-                postcode: form.location?.postcode ?? null,
+                street: form.location?.street ?? null,
+                area,
+                suburb: locality?.suburb ?? null,
+                state: locality?.state ?? null,
+                postcode: locality?.postcode ?? null,
                 description: form.location?.description ?? null,
                 lat: form.location?.lat ?? null,
                 lng: form.location?.lng ?? null,
@@ -359,20 +372,20 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                     <div>
                         <h3 id="modal-title">Let’s start with where you live</h3>
                         <p className="help">
-                            Your suburb helps us shortlist the right local agents — not generic
-                            state‑wide lists.
+                            Your property’s address helps us shortlist agents who know your street
+                            – not generic state‑wide lists.
                         </p>
                         <p className="req-note">Both questions below are needed.</p>
 
                         <div className={`field${errors.location ? ' has-error' : ''}`}>
-                            <label htmlFor="fma-suburb">
-                                Suburb <Required />
+                            <label htmlFor="fma-address">
+                                Property address <Required />
                             </label>
-                            <SuburbAutocomplete
-                                id="fma-suburb"
+                            <AddressAutocomplete
+                                id="fma-address"
                                 value={form.location}
                                 onChange={set('location')}
-                                placeholder="e.g. Mosman NSW"
+                                placeholder="e.g. 12 Smith Street, Mosman NSW"
                                 active={open}
                                 invalid={!!errors.location}
                                 describedBy={errFor('location')}
@@ -416,7 +429,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                     <div>
                         <h3 id="modal-title">How would you like us to reach you?</h3>
                         <p className="help">
-                            A quick 15‑minute conversation with your advisor — at a time that suits.
+                            A quick 15‑minute conversation with your advisor – at a time that suits.
                         </p>
                         <p className="req-note">All five questions below are needed.</p>
 
@@ -573,7 +586,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                     <div>
                         <h3 id="modal-title">When are you hoping to sell?</h3>
                         <p className="help">
-                            There’s no wrong answer — even “just thinking” is the right time to call.
+                            There’s no wrong answer – even “just thinking” is the right time to call.
                         </p>
                         <p className="req-note">Choose one. The note at the bottom is up to you.</p>
 
@@ -600,7 +613,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                         <div className="field top-gap">
                             <label htmlFor="fma-notes">
                                 Anything we should know?{' '}
-                                <span className="opt-note">Optional — you can skip this</span>
+                                <span className="opt-note">Optional – you can skip this</span>
                             </label>
                             <input
                                 id="fma-notes"
@@ -627,7 +640,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                         </p>
                         {reference ? (
                             <p className="ref">
-                                Reference: <strong>{reference}</strong> — quote it if you call us
+                                Reference: <strong>{reference}</strong> – quote it if you call us
                                 first.
                             </p>
                         ) : null}

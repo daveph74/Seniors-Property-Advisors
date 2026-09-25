@@ -360,7 +360,7 @@ class CmsBuilderTest extends TestCase
             $this->assertContains($type, PageContentStore::BLOCK_TYPES, "{$type} is missing");
         }
 
-        $this->assertCount(31, PageContentStore::BLOCK_TYPES);
+        $this->assertCount(33, PageContentStore::BLOCK_TYPES);
     }
 
     public function test_the_scoped_section_types_are_registered(): void

@@ -237,7 +237,7 @@ class CmsEnquiryTest extends TestCase
             $this->assertSame('Agent Finder', $opened['sourceLabel']);
             $this->assertMatchesRegularExpression('/^AF-\d{4}-\d{5}$/', $opened['reference']);
             $this->assertSame([
-                ['label' => 'Suburb', 'value' => 'Mosman NSW 2088'],
+                ['label' => 'Property address', 'value' => '12 Smith Street, Mosman NSW 2088'],
                 ['label' => 'Property type', 'value' => 'House'],
                 ['label' => 'Looking to sell', 'value' => 'Now'],
                 ['label' => 'Best time to call', 'value' => 'Morning'],
@@ -263,7 +263,7 @@ class CmsEnquiryTest extends TestCase
         Enquiry::factory()->findMyAgent()->create(['name' => 'No notes', 'message' => null]);
 
         $this->get('/cms/enquiries')->assertInertia(fn ($page) => $this->assertSame(
-            'Mosman NSW 2088 · House · Now · Morning',
+            '12 Smith Street, Mosman NSW 2088 · House · Now · Morning',
             $page->toArray()['props']['enquiries'][0]['snippet'],
         ));
     }

@@ -53,7 +53,7 @@ class FindMyAgentOptions
         }
 
         $answers = [
-            ['label' => 'Suburb', 'value' => self::place($details['location'] ?? null)],
+            ['label' => 'Property address', 'value' => self::place($details['location'] ?? null)],
             ['label' => 'Property type', 'value' => self::label(self::PROPERTY_TYPES, $details['property_type'] ?? null)],
             ['label' => 'Looking to sell', 'value' => self::label(self::TIMELINES, $details['timeline'] ?? null)],
             ['label' => 'Best time to call', 'value' => self::label(self::BEST_TIMES, $details['best_time'] ?? null)],
@@ -67,19 +67,26 @@ class FindMyAgentOptions
         return $key === null ? null : ($group[$key] ?? $key);
     }
 
-    /** "Mosman NSW 2088" from whichever parts the lookup returned — it may only have a name. */
+    /**
+     * "12 Smith Street, Mosman NSW 2088" from whichever parts the lookup returned. A typed address
+     * has only its street line, and an enquiry from before the form asked for an address has only
+     * its suburb. The suburb or postcode typed into a start box stands in when the address resolved
+     * no suburb of its own, and never overrules one that did.
+     */
     private static function place(?array $location): ?string
     {
         if ($location === null) {
             return null;
         }
 
-        $parts = array_filter([
+        $locality = implode(' ', array_filter([
             $location['suburb'] ?? null,
             $location['state'] ?? null,
             $location['postcode'] ?? null,
-        ], 'filled');
+        ], 'filled'));
 
-        return $parts === [] ? null : implode(' ', $parts);
+        $lines = array_filter([$location['street'] ?? null, $locality ?: ($location['area'] ?? null)], 'filled');
+
+        return $lines === [] ? null : implode(', ', $lines);
     }
 }

@@ -14,7 +14,7 @@ test rather than only by convention.
 
 Criterion 14 turned out to be the opposite of the worry once recorded here. "Content editing does
 not allow users to break the approved website layout" is enforced in four server-side layers — the
-type allowlist, the nesting rules, `SaveSectionsRequest::checkTree()` and `sanitise()` — with about
+type allowlist, the nesting rules, `ValidatesSectionTree::checkSectionTree()` and `sanitiseTree()` — with about
 twenty negative tests already behind it. What makes it a guarantee is that all four run on the
 server: a hand-crafted POST is refused on the same rules as a bad drag.
 

@@ -15,8 +15,9 @@ use Illuminate\Support\Facades\Log;
  * key never reaches the browser.
  *
  * Two modes:
- *   ?q=mosm        → suburb predictions for the autocomplete list
- *   ?place_id=…    → resolved detail for the suburb the visitor picked
+ *   ?q=12 smith    → street address predictions for the autocomplete list
+ *                    (with &kind=suburb, suburb and postcode predictions instead)
+ *   ?place_id=…    → resolved detail for the address the visitor picked
  *
  * Google failures always degrade to an empty-but-successful payload. The field
  * falls back to free text, so a Places outage can never block the form.
@@ -27,12 +28,22 @@ class SuburbLookupController extends Controller
 
     private const DETAILS_URL = 'https://places.googleapis.com/v1/places/';
 
+    /**
+     * What each kind of box looks up. An address is Agent Finder's first question; a suburb is the
+     * start box, and `postal_code` is in it because the box invites a postcode as readily as a name.
+     */
+    private const KINDS = [
+        'address' => ['street_address', 'premise', 'subpremise'],
+        'suburb' => ['locality', 'sublocality', 'postal_code'],
+    ];
+
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'q' => ['required_without:place_id', 'string', 'min:2', 'max:100'],
             'place_id' => ['required_without:q', 'string', 'max:255'],
             'session' => ['nullable', 'string', 'max:64'],
+            'kind' => ['nullable', 'string', 'in:'.implode(',', array_keys(self::KINDS))],
         ]);
 
         $key = config('services.google.places_key');
@@ -48,17 +59,19 @@ class SuburbLookupController extends Controller
             : response()->json(['suggestions' => $this->suggestions(
                 $validated['q'],
                 $key,
-                $validated['session'] ?? null
+                $validated['session'] ?? null,
+                $validated['kind'] ?? 'address',
             )]);
     }
 
     /**
-     * Suburb predictions, cached for a day — suburb names don't move, and an
-     * autocomplete endpoint bills per keystroke without a cache in front.
+     * Predictions, cached for a day — places don't move, and an autocomplete endpoint bills per
+     * keystroke without a cache in front. The kind is in the key, or "mosman" typed into the start
+     * box would be answered with the addresses somebody looked up in Step 1.
      */
-    private function suggestions(string $query, string $key, ?string $sessionToken): array
+    private function suggestions(string $query, string $key, ?string $sessionToken, string $kind): array
     {
-        $cacheKey = 'suburbs:autocomplete:'.md5(mb_strtolower(trim($query)));
+        $cacheKey = "places:{$kind}:autocomplete:".md5(mb_strtolower(trim($query)));
         $cached = Cache::get($cacheKey);
 
         if ($cached !== null) {
@@ -71,7 +84,7 @@ class SuburbLookupController extends Controller
                 'X-Goog-FieldMask' => 'suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat',
             ])->timeout(4)->connectTimeout(2)->post(self::AUTOCOMPLETE_URL, array_filter([
                 'input' => $query,
-                'includedPrimaryTypes' => ['locality', 'sublocality'],
+                'includedPrimaryTypes' => self::KINDS[$kind],
                 'includedRegionCodes' => ['au'],
                 'sessionToken' => $sessionToken,
             ])),
@@ -134,16 +147,16 @@ class SuburbLookupController extends Controller
     }
 
     /**
-     * Resolve the picked suburb. A `locality` prediction carries no coordinates
-     * or postcode, hence the second call.
+     * Resolve the picked address. A prediction carries no coordinates, postcode
+     * or parts, hence the second call — which is also where the suburb comes
+     * from, so an address answer still says which suburb the property is in.
      *
-     * Note: Australian localities frequently come back with no postal_code
-     * component at all, so `postcode` is best-effort and often null. The
-     * coordinates are always present and are the dependable matching signal.
+     * Note: `postcode` is best-effort and can be null. The coordinates are
+     * always present and are the dependable matching signal.
      */
     private function details(string $placeId, string $key): ?array
     {
-        $cacheKey = 'suburbs:details:'.md5($placeId);
+        $cacheKey = 'places:address:details:'.md5($placeId);
         $cached = Cache::get($cacheKey);
 
         if ($cached !== null) {
@@ -152,8 +165,7 @@ class SuburbLookupController extends Controller
 
         /* `rawurlencode`, not interpolation. A place id arrives from a visitor, and one containing
            `../` walked back up the path to reach a different endpoint on Google's host with this
-           site's billable key on the request. The cache key above stays on the raw value, so
-           nothing already cached is orphaned by the change. */
+           site's billable key on the request. */
         $response = $this->call(
             fn () => Http::withHeaders([
                 'X-Goog-Api-Key' => $key,
@@ -171,8 +183,17 @@ class SuburbLookupController extends Controller
         $component = fn (string $type, string $field) => $components
             ->first(fn (array $c) => in_array($type, $c['types'] ?? [], true))[$field] ?? null;
 
+        $street = trim(implode(' ', array_filter([
+            implode('/', array_filter([
+                $component('subpremise', 'longText'),
+                $component('street_number', 'longText'),
+            ])),
+            $component('route', 'longText'),
+        ])));
+
         $place = [
             'place_id' => $placeId,
+            'street' => $street === '' ? null : $street,
             'suburb' => $component('locality', 'longText')
                 ?? $component('sublocality', 'longText'),
             'state' => $component('administrative_area_level_1', 'shortText'),

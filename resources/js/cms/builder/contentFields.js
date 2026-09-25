@@ -89,6 +89,11 @@ const CONTENT_SCHEMAS = {
         PICK('background', 'Background', [['navy', 'Navy'], ['white', 'White'], ['image', 'Photograph']]),
         IMG('image.src', 'Background photograph', 'image.alt'),
     ],
+    'finder-start': [
+        TEXT('prompt', 'Box prompt'),
+        TEXT('buttonLabel', 'Button label'),
+        AREA('note', 'Note under the box'),
+    ],
     'info-card': [
         PICK('cardStyle', 'Card style', ['rating', 'saving']),
         TEXT('title', 'Title'),

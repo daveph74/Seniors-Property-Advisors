@@ -132,7 +132,7 @@ that already has the row, and `/cms/navigation` is where a running site is edite
 
 Adding a block type touches `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js`
 and the React registry — never the database. Adding a `data` key touches nothing.
-Note that `SaveSectionsRequest::sanitise()` strips tags from every string in the tree,
+Note that `ValidatesSectionTree::sanitiseTree()` strips tags from every string in the tree,
 so no `data` key can hold markup.
 
 `php artisan content:import [--force]` migrates a legacy `storage/app/content/` overlay
@@ -151,6 +151,35 @@ test asserts that. Publishing an unchanged tree records no revision.
 Reusable sections are **independent copies**, stored whole in `reusable_sections` with
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
+
+### Moving a page between sites
+
+A page travels as a **file, not a seed**: **Download as file** on the Pages list (`GET
+/cms/pages/{page}/export`) and **Import page** (`POST /cms/pages/import`). That is how a page built
+locally reaches a server that already has content, and it is why the code push and the content are
+separate — a seed file ships with every deploy, and only loads on a fresh install anyway, where
+`updateOrCreate` would overwrite whatever an editor has done since.
+
+What the file deliberately leaves out is the design, and each omission closes a way to go wrong:
+
+- **No `cms_id`** — the receiving site assigns its own. `content:import` trusts the file's and can
+  collide; this path cannot.
+- **No status** — an import is always a **draft**, so uploading a file never publishes anything.
+- **No revisions or audit names** — history belongs to the site where it happened.
+- **No image bytes** — only their `/media/…` addresses. `PageContentStore::mediaKeysIn()` finds them,
+  and the Pages list names the ones this site's library lacks, in a banner that stays put, not a toast
+  that is gone in under three seconds.
+
+**Importing is super administrator only** (`pages.import`); downloading stays with `content.manage`. A
+file is a whole section tree arriving from outside the site, which is a bigger decision than editing
+one already here. The Import button is hidden, not merely refused, for everyone else, so the user guide
+tells a client administrator to pass the file on rather than describing a button they cannot see.
+
+**An address that already exists is refused**, archived pages included, and nothing is created: an
+upload can never overwrite a page somebody edited. The tree goes through `ValidatesSectionTree` — the
+same rules, messages and tag-stripping as a draft save, extracted from `SaveSectionsRequest` so there
+is one opinion about what a legal page is rather than two, where the looser would be the way round the
+stricter. Seed files (`published` rather than `sections`) import too.
 
 ## Testimonials
 
@@ -494,22 +523,29 @@ placeholder anywhere fails it, and *finishing* one of the three fails it too, wi
 which is the most useful moment to be asked. Still outstanding, and not inventable here: the ABN, the
 complaint response timeframe, who handles complaints, and an effective date.
 
+One trap: it scans the stored tree **keys included, and ignoring case**, so a block whose data key is
+called `placeholder` lists every page it sits on as unfinished. The symptom is a finished page appearing
+in that list with no bracketed text anywhere on it. Name the key something else — the start box's is
+`prompt` for exactly this reason.
+
 Four things an audit flagged and the code did not need, recorded so nobody pays to find out twice:
 
 - **`width`/`height` on every image.** The wrappers already carry `aspect-ratio` in `app.css` —
   `.hero-visual`, `.why-visual`, `.family-visual`, `.team-member__photo`, `.article-card__image`,
   `.article__hero` — so the space is reserved before the image arrives. The two rules without a ratio,
-  `.block-image img` and `.text-image__media img`, belong to blocks **no seeded page uses at all**. The
-  finding came from reading the markup and not the stylesheet.
+  `.block-image img` and `.text-image__media img`, belong to blocks no **indexed** page uses. The one
+  page known to use an image block is `home-preview` — imported rather than seeded, and noindex — so a
+  layout shift there costs no ranking. The finding came from reading the markup and not the stylesheet. Revisit both this and the
+  next point if that page's design is ever promoted to the real home page.
 - **An eager-loading escape hatch for `ImageBlock`.** Same reason: it would let a page opt out of lazy
-  loading for its largest image, and no page has one.
+  loading for its largest image, and the only page where that image is above the fold is not indexed.
 - **A single-`<h1>` guard.** Two hero sections on one page would produce two, and nothing prevents it — but
   no page has two, and multiple `h1`s have not been a ranking problem for years. The cost of the guard is
   making every hero ask whether it is the first one.
 - **Editorial internal links.** Real finding: `/how-it-works`, `/why-agent-finder`, `/faqs` and `/contact`
   have no internal links in their body at all, so nothing but the header and footer passes any authority to
   them. It is not fixable as metadata, and it is somebody's decision rather than a defect: section text
-  cannot hold markup (`SaveSectionsRequest::sanitise()` strips tags from every string), so a link means a
+  cannot hold markup (`ValidatesSectionTree::sanitiseTree()` strips tags from every string), so a link means a
   button or a call-to-action block — which is exactly what was deliberately removed when every page was cut
   to one section.
 ### The SEO screen
@@ -600,9 +636,77 @@ The enquiry form posts to `/enquiries` and is CSRF-protected — which is why e2
 `global-setup.mjs` instead of through it.
 
 `/api/suburbs` proxies Google Places (New) so **the API key never reaches the browser**. Two modes:
-`?q=` for predictions, `?place_id=` for the picked suburb. A Google failure degrades to an
+`?q=` for predictions, `?place_id=` for the picked address. A Google failure degrades to an
 empty-but-successful payload, never an error — the field falls back to free text, so an outage
 upstream can slow the form down but can never block it.
+
+**It looks up street addresses, not suburbs**, despite the address it answers on. Agent Finder's first
+question was a suburb until the client asked for the property's own address; the route and controller
+kept their names because renaming a public endpoint buys a reader nothing. The details call builds a
+`street` line from the unit, number and road, and still returns the suburb, so a picked address fills
+the `suburb` column the inbox list and search read. The required answer is therefore
+`details.location.street`, **not** `suburb`: a typed address with no pick has no suburb to give, and
+requiring one would turn a Google outage back into a closed form. Enquiries from before the change
+have a suburb and no street, and `FindMyAgentOptions::place()` shows them as they were. The cache keys
+were renamed with it — cached suburb results carry no street and would have been served as addresses.
+
+**The `finder-start` block is the other half of that change**: a "suburb or postcode" box and a Start
+Here button, which opens Agent Finder through the ordinary `open-finder` action with the box's location
+as its argument. `ActionButton` calls the same handler with a click event, which is why `AgentFinder.jsx`
+keeps the argument only when it looks like a location. The box is the same `AddressAutocomplete` as
+Step 1 with `kind="suburb"`, and the proxy answers that kind with localities **and postcodes**
+(`kind=suburb` on `/api/suburbs`, cached separately from addresses).
+
+It is a **fallback, never an answer**: the address wins whenever it resolved a suburb, because it is the
+more precise of the two. When it did not, a suggestion **picked** in the box fills suburb, state and
+postcode, and so reaches the `suburb` column the inbox list and search read. Text typed but not picked
+never does, because it may be a postcode; it travels as `details.location.area` exactly as typed, which
+the inbox shows only when nothing better exists. Pressing Enter submits without the field blurring, so
+the block reads the input itself instead of waiting for the blur fallback. It is optional on purpose; a
+box that refused to open the form when left empty would be a dead end in front of a question that asks
+anyway.
+
+Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has no CA bundle configured
+(`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
+like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
+
+`home-preview` is where that box is first used — the client's redesigned hero, built entirely out of
+section, row, column and blocks. It is **data, not code**: there is no seed file for it, and each site
+gets it by importing `tests/fixtures/pages/home-preview.page.json` (or a fresh download) — see "Moving a
+page between sites". `HomePreviewPageTest` imports that fixture the same way and pins that it is
+**noindex, out of the sitemap, and in neither menu nor footer**, and that no seed file has crept back;
+`e2e/global-setup.mjs` imports and publishes it for the browser suite. `hero-preview` is the precedent
+for an unlinked review page. The headline needed one thing the heading block lacked, a highlight in mid-sentence, so
+headings carry an optional `headingAfter`, rendered after the highlighted words. It is a multi-line box
+because headings are `white-space: pre-line`, and a line break typed there is the only way an editor can
+choose where a heading breaks. Headings also carry a `size` (standard or large). **Large borrows the
+site's existing scale rather than inventing one**: an h1 takes the hero headline's 38–52px and an h2 the
+website section titles' 32–48px (`h2`, `.section-head__title`). The mockup was drawn at 56px and 46px;
+matching it exactly would have made this the one page on the site with its own type sizes. The rule under
+the hero is a `divider` block — a thin line at the section's content width, which a section's own
+background could not draw.
+
+**A block's own `margin: 0` must come before the `.u-space-*` rules in `app.css`, never after.** Same
+specificity, so whichever is later wins, and the Checklist, Benefits list and Steps strip all had their
+reset below the utilities — their Space above and Space below settings had never done anything on any
+page. The symptom is a spacing control that saves, reloads and changes nothing. Found by measuring this
+page against its mockup; the resets now sit together, directly above the utilities.
+
+One trap from the same page: **two navy sections stacked show a hairline seam** between them, a sliver
+of the light page background, whenever the first ends on a fractional pixel — and a section's height is
+set by its content, so that is most of the time. It looks exactly like a deliberate full-width rule, which
+is how it was first mistaken for one. `.section-block--text-light + .section-block--text-light` overlaps
+any two dark sections by a pixel, whichever dark backgrounds they are.
+
+Sections have two backgrounds beyond flat navy, both measured off the client's mockup rather than chosen:
+**Navy gradient** (135°, `#1A2846` to `#2D4A7D`) and **Deep navy** (`#0F1A30`). The mockup's networks
+band is also why there is a **Slim** section height (32px, 24px on a phone): Compact's 72px was the
+smallest before, twice what the band carries. The mockup's finer
+details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo — are scoped to the
+gradient background, not to dark sections generally, so choosing it brings the look and no existing navy
+section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white on that blue is 4.0:1,
+which passes only as large text, and the button keeps the site's standard 16px semibold. `#3570B5`
+(5.1:1) is the nearest blue that passes at that size.
 
 ## Dashboard
 
@@ -637,8 +741,8 @@ middleware, the `Gate` definitions in `AppServiceProvider`, and the sidebar's sh
 
 Client administrators create, edit, publish and unpublish content, and reach `/cms/seo` — its own
 `seo.manage` ability, since the report and the two fields it patches are things they already write in
-the builder. Super administrators additionally delete content, restore archived pages, manage accounts
-and reach settings.
+the builder. Super administrators additionally delete content, restore archived pages, import page
+files (`pages.import`), manage accounts and reach settings.
 Deleting anything is therefore a super-admin route — the scope never gives client users a
 delete, only disable and archive.
 

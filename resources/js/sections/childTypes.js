@@ -12,6 +12,8 @@ const BLOCK_TYPES = [
     'rich-text',
     'image',
     'button',
+    'finder-start',
+    'divider',
     'steps-strip',
     'avatar-row',
     'rating-stars',

@@ -14,6 +14,8 @@ import HeadingBlock from './HeadingBlock';
 import RichTextBlock from './RichTextBlock';
 import ImageBlock from './ImageBlock';
 import ButtonBlock from './ButtonBlock';
+import FinderStartBlock from './FinderStartBlock';
+import DividerBlock from './DividerBlock';
 import StepsStripBlock from './StepsStripBlock';
 import AvatarRowBlock from './AvatarRowBlock';
 import RatingStarsBlock from './RatingStarsBlock';
@@ -50,6 +52,8 @@ export const SECTIONS = {
     'rich-text': RichTextBlock,
     image: ImageBlock,
     button: ButtonBlock,
+    'finder-start': FinderStartBlock,
+    divider: DividerBlock,
     'steps-strip': StepsStripBlock,
     'avatar-row': AvatarRowBlock,
     'rating-stars': RatingStarsBlock,
@@ -87,6 +91,8 @@ export const SECTION_LABELS = {
     'rich-text': 'Rich text',
     image: 'Image',
     button: 'Button',
+    'finder-start': 'Agent Finder start box',
+    divider: 'Divider',
     'steps-strip': 'Steps strip',
     'avatar-row': 'Avatar row',
     'rating-stars': 'Star rating',

@@ -145,7 +145,8 @@ can look at it, change your mind, and publish it only when you mean to.
 ### From the list, without opening the builder
 
 The three-dots button at the end of each row of the pages list opens a menu: **Edit page**,
-**Preview**, **View history**, **Duplicate**, **Publish changes**, **Unpublish** and **Archive page**.
+**Preview**, **View history**, **Duplicate**, **Download as file**, **Publish changes**, **Unpublish** and
+**Archive page**.
 
 - **Unpublish** takes the page off the public website. Nothing is lost.
 - **Archive page** puts it out of the way. It comes back from the **Archived** filter, though bringing
@@ -177,6 +178,16 @@ newsletters and search results keep working. If the page was never published the
 preserve, so nothing is kept.
 
 The home page cannot be renamed.
+
+### Moving a page to another copy of the site
+
+A page built on one copy of the site — a test site, say — can be moved to another without rebuilding it.
+On the site that has the page: **Pages**, the three-dots button on its row, **Download as file**.
+
+Bringing that file into the other site is not something every account can do, so pass it to whoever
+looks after the site. It arrives there **as a draft**, so nothing goes live until it is published.
+
+Pictures do not travel inside the file. Send any the page uses along with it.
 
 ---
 

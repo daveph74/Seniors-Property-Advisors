@@ -1,0 +1,190 @@
+{
+    "format": "spa-page",
+    "version": 1,
+    "slug": "home-preview",
+    "title": "Home preview",
+    "navLabel": "Home preview",
+    "seo": {
+        "title": "Sell with confidence",
+        "description": "Preview of the redesigned home page: we source the best local agents, help you avoid wasted costs and get the best price for your home.",
+        "noindex": true
+    },
+    "sections": [
+        {
+            "id": "section-hp-hero",
+            "type": "section",
+            "label": "Hero",
+            "active": true,
+            "anchor": null,
+            "data": {
+                "width": "standard",
+                "contentAlign": "left",
+                "height": "compact",
+                "spacing": "medium",
+                "background": "navy-gradient",
+                "textTheme": "light"
+            },
+            "children": [
+                {
+                    "id": "row-hp-hero",
+                    "type": "row",
+                    "label": "Row",
+                    "active": true,
+                    "anchor": null,
+                    "data": {},
+                    "children": [
+                        {
+                            "id": "column-hp-copy",
+                            "type": "column",
+                            "label": "Column 1",
+                            "active": true,
+                            "anchor": null,
+                            "data": {
+                                "alignAcross": "fill",
+                                "alignDown": "top"
+                            },
+                            "children": [
+                                {
+                                    "id": "heading-hp-headline",
+                                    "type": "heading",
+                                    "label": "Heading",
+                                    "active": true,
+                                    "anchor": null,
+                                    "data": {
+                                        "heading": "We help you sell\nfor the",
+                                        "headingEm": "highest\nprice,",
+                                        "headingAfter": "with\nminimum stress",
+                                        "level": "h2",
+                                        "align": "left",
+                                        "spaceAbove": "none",
+                                        "spaceBelow": "none",
+                                        "size": "large"
+                                    }
+                                },
+                                {
+                                    "id": "checklist-hp-promises",
+                                    "type": "checklist",
+                                    "label": "Checklist",
+                                    "active": true,
+                                    "anchor": null,
+                                    "data": {
+                                        "checks": [
+                                            "We source the best local agents",
+                                            "We help you eliminate wasted costs",
+                                            "We help you get the best price"
+                                        ],
+                                        "spaceAbove": "small",
+                                        "spaceBelow": "none"
+                                    }
+                                },
+                                {
+                                    "id": "finder-start-hp-box",
+                                    "type": "finder-start",
+                                    "label": "Agent Finder start box",
+                                    "active": true,
+                                    "anchor": null,
+                                    "data": {
+                                        "prompt": "Your suburb or postcode",
+                                        "buttonLabel": "Start Here",
+                                        "note": "A quick two-minute form. No obligation, and a real advisor calls you back.",
+                                        "spaceAbove": "small",
+                                        "spaceBelow": "none"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "id": "column-hp-photo",
+                            "type": "column",
+                            "label": "Column 2",
+                            "active": true,
+                            "anchor": null,
+                            "data": {
+                                "alignAcross": "fill",
+                                "alignDown": "top"
+                            },
+                            "children": [
+                                {
+                                    "id": "image-hp-photo",
+                                    "type": "image",
+                                    "label": "Image",
+                                    "active": true,
+                                    "anchor": null,
+                                    "data": {
+                                        "src": "/media/2026/08/advisor-meeting.jpg",
+                                        "alt": "An advisor showing a couple a tablet",
+                                        "caption": "",
+                                        "spaceAbove": "none",
+                                        "spaceBelow": "none"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "divider-hp-rule",
+                    "type": "divider",
+                    "label": "Divider",
+                    "active": true,
+                    "anchor": null,
+                    "data": {
+                        "spaceAbove": "large",
+                        "spaceBelow": "none"
+                    }
+                },
+                {
+                    "id": "heading-hp-free",
+                    "type": "heading",
+                    "label": "Heading",
+                    "active": true,
+                    "anchor": null,
+                    "data": {
+                        "heading": "A",
+                        "headingEm": "FREE",
+                        "headingAfter": "service to the Seniors\ncommunity Australia wide",
+                        "level": "h2",
+                        "align": "center",
+                        "spaceAbove": "medium",
+                        "spaceBelow": "none",
+                        "size": "large"
+                    }
+                }
+            ]
+        },
+        {
+            "id": "section-hp-networks",
+            "type": "section",
+            "label": "Networks",
+            "active": true,
+            "anchor": null,
+            "data": {
+                "width": "standard",
+                "contentAlign": "left",
+                "height": "slim",
+                "spacing": "medium",
+                "background": "navy-deep",
+                "textTheme": "light"
+            },
+            "children": [
+                {
+                    "id": "heading-hp-networks",
+                    "type": "heading",
+                    "label": "Heading",
+                    "active": true,
+                    "anchor": null,
+                    "data": {
+                        "heading": "We match you with agents from Australia's leading networks",
+                        "headingEm": "",
+                        "headingAfter": "",
+                        "level": "h4",
+                        "align": "left",
+                        "spaceAbove": "none",
+                        "spaceBelow": "none",
+                        "size": "standard"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -13,13 +13,17 @@ import { expect, test } from '../fixtures.js';
  */
 test.use({ storageState: { cookies: [], origins: [] } });
 
-const answer = async (page, { consent = true, email = 'e2e@example.invalid' } = {}) => {
-    await page.getByRole('button', { name: /find my agent/i }).first().click();
+const answer = async (page, { consent = true, email = 'e2e@example.invalid', open } = {}) => {
+    if (open) {
+        await open();
+    } else {
+        await page.getByRole('button', { name: /find my agent/i }).first().click();
+    }
 
     const modal = page.locator('.modal-back.open');
     await expect(modal).toBeVisible();
 
-    await page.fill('#fma-suburb', 'Mosman');
+    await page.fill('#fma-address', '12 Smith Street, Mosman NSW');
     await modal.locator('.opt', { hasText: 'House' }).first().click();
     await page.getByRole('button', { name: /continue/i }).click();
 
@@ -90,4 +94,26 @@ test('it will not send without consent, and says so on the step that asks', asyn
     await expect(modal.locator('#fma-consent-error')).toBeVisible();
     await expect(modal.locator('.step-count')).toHaveText('Step 2 of 3');
     await expect(modal.locator('.success')).toHaveCount(0);
+});
+
+test('the start box opens the form and carries what was typed into the enquiry', async ({ page }) => {
+    const problems = [];
+    page.on('pageerror', (error) => problems.push(error.message));
+
+    await page.goto('/home-preview', { waitUntil: 'domcontentloaded' });
+
+    const box = page.locator('.block-finder-start');
+    await box.getByLabel('Your suburb or postcode').fill('2088');
+
+    const sent = page.waitForRequest((request) => request.method() === 'POST' && request.url().endsWith('/enquiries'));
+
+    const modal = await answer(page, {
+        email: 'start-box@example.invalid',
+        open: () => box.getByRole('button', { name: 'Start Here' }).click(),
+    });
+
+    expect((await sent).postDataJSON().details.location.area).toBe('2088');
+    await expect(modal.locator('.success')).toBeVisible();
+
+    expect(problems, 'the start box and the wizard must raise no errors').toEqual([]);
 });
