@@ -600,9 +600,19 @@ The enquiry form posts to `/enquiries` and is CSRF-protected — which is why e2
 `global-setup.mjs` instead of through it.
 
 `/api/suburbs` proxies Google Places (New) so **the API key never reaches the browser**. Two modes:
-`?q=` for predictions, `?place_id=` for the picked suburb. A Google failure degrades to an
+`?q=` for predictions, `?place_id=` for the picked address. A Google failure degrades to an
 empty-but-successful payload, never an error — the field falls back to free text, so an outage
 upstream can slow the form down but can never block it.
+
+**It looks up street addresses, not suburbs**, despite the address it answers on. Agent Finder's first
+question was a suburb until the client asked for the property's own address; the route and controller
+kept their names because renaming a public endpoint buys a reader nothing. The details call builds a
+`street` line from the unit, number and road, and still returns the suburb, so a picked address fills
+the `suburb` column the inbox list and search read. The required answer is therefore
+`details.location.street`, **not** `suburb`: a typed address with no pick has no suburb to give, and
+requiring one would turn a Google outage back into a closed form. Enquiries from before the change
+have a suburb and no street, and `FindMyAgentOptions::place()` shows them as they were. The cache keys
+were renamed with it — cached suburb results carry no street and would have been served as addresses.
 
 ## Dashboard
 

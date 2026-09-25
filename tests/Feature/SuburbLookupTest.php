@@ -53,7 +53,7 @@ class SuburbLookupTest extends TestCase
             ]);
     }
 
-    public function test_it_restricts_the_lookup_to_australian_localities(): void
+    public function test_it_restricts_the_lookup_to_australian_street_addresses(): void
     {
         Http::fake([
             'places.googleapis.com/*' => Http::response($this->autocompletePayload()),
@@ -63,7 +63,7 @@ class SuburbLookupTest extends TestCase
 
         Http::assertSent(function ($request) {
             return $request['includedRegionCodes'] === ['au']
-                && $request['includedPrimaryTypes'] === ['locality', 'sublocality']
+                && $request['includedPrimaryTypes'] === ['street_address', 'premise', 'subpremise']
                 && $request['sessionToken'] === 'abc-123'
                 && $request->hasHeader('X-Goog-Api-Key', 'test-key');
         });
@@ -122,6 +122,30 @@ class SuburbLookupTest extends TestCase
             ->assertJsonPath('place.postcode', '2088')
             ->assertJsonPath('place.lat', -33.8269)
             ->assertJsonPath('place.lng', 151.2437);
+    }
+
+    public function test_it_resolves_the_street_line_of_an_address(): void
+    {
+        Http::fake([
+            'places.googleapis.com/v1/places/*' => Http::response([
+                'formattedAddress' => '3/12 Smith St, Mosman NSW 2088, Australia',
+                'location' => ['latitude' => -33.8269, 'longitude' => 151.2437],
+                'addressComponents' => [
+                    ['types' => ['subpremise'], 'longText' => '3', 'shortText' => '3'],
+                    ['types' => ['street_number'], 'longText' => '12', 'shortText' => '12'],
+                    ['types' => ['route'], 'longText' => 'Smith Street', 'shortText' => 'Smith St'],
+                    ['types' => ['locality', 'political'], 'longText' => 'Mosman', 'shortText' => 'Mosman'],
+                    ['types' => ['administrative_area_level_1'], 'longText' => 'New South Wales', 'shortText' => 'NSW'],
+                    ['types' => ['postal_code'], 'longText' => '2088', 'shortText' => '2088'],
+                ],
+            ]),
+        ]);
+
+        $this->getJson('/api/suburbs?place_id=place-smith')
+            ->assertOk()
+            ->assertJsonPath('place.street', '3/12 Smith Street')
+            ->assertJsonPath('place.suburb', 'Mosman')
+            ->assertJsonPath('place.postcode', '2088');
     }
 
     public function test_a_locality_without_a_postcode_still_resolves(): void

@@ -349,7 +349,7 @@ class OwaspTest extends TestCase
             'name' => 'Flood', 'email' => 'flood@example.com', 'phone' => '0400 000 000', 'consent' => true,
             'details' => [
                 'property_type' => 'house', 'timeline' => 'within_3_months', 'best_time' => 'morning',
-                'location' => ['suburb' => 'Mosman'],
+                'location' => ['street' => '12 Smith Street'],
             ],
         ])->assertStatus(429);
     }

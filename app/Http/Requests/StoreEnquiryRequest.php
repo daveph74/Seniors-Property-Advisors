@@ -54,7 +54,8 @@ class StoreEnquiryRequest extends FormRequest
             'details.timeline' => ['required', Rule::in(array_keys(FindMyAgentOptions::TIMELINES))],
             'details.best_time' => ['required', Rule::in(array_keys(FindMyAgentOptions::BEST_TIMES))],
             'details.location' => ['required', 'array'],
-            'details.location.suburb' => ['required', 'string', 'max:120'],
+            'details.location.street' => ['required', 'string', 'max:200'],
+            'details.location.suburb' => ['nullable', 'string', 'max:120'],
             'details.location.state' => ['nullable', 'string', 'max:40'],
             'details.location.postcode' => ['nullable', 'string', 'max:12'],
             'details.location.place_id' => ['nullable', 'string', 'max:300'],
@@ -77,7 +78,7 @@ class StoreEnquiryRequest extends FormRequest
             'details.timeline.in' => 'Choose one of the timings listed.',
             'details.best_time.required' => 'Choose the time of day that suits you best.',
             'details.best_time.in' => 'Choose one of the times listed.',
-            'details.location.suburb.required' => 'Enter the suburb your property is in.',
+            'details.location.street.required' => 'Enter the street address of your property.',
         ];
     }
 
@@ -108,7 +109,7 @@ class StoreEnquiryRequest extends FormRequest
         if (is_array($details['location'] ?? null)) {
             $details['location'] = Text::cleanAll(
                 $details['location'],
-                ['suburb', 'state', 'postcode', 'place_id', 'description'],
+                ['street', 'suburb', 'state', 'postcode', 'place_id', 'description'],
             );
         }
 
@@ -124,9 +125,10 @@ class StoreEnquiryRequest extends FormRequest
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
-            /* The wizard asks for the suburb as its own question and resolves it against a lookup, so
-               the answer is copied into the column the list, the detail header and the search already
-               read. The whole resolved place stays in `details`. */
+            /* The wizard asks for the street address and resolves its suburb against a lookup, so the
+               suburb is copied into the column the list, the detail header and the search already
+               read. An address typed without picking a suggestion has no suburb to copy. The whole
+               resolved place stays in `details`. */
             'suburb' => $data['suburb'] ?? $location['suburb'] ?? null,
             'message' => $data['message'] ?? null,
             /* Derived from an answer rather than assumed: the rule above is what makes it true. */

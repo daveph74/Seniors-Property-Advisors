@@ -4,14 +4,14 @@ const DEBOUNCE_MS = 250;
 const MIN_CHARS = 2;
 
 /**
- * Suburb combobox backed by Google Places, proxied through /api/suburbs so the
- * API key stays server-side.
+ * Street address combobox backed by Google Places, proxied through /api/suburbs
+ * so the API key stays server-side.
  *
  * Degrades to a plain text field: if the lookup returns nothing or fails, the
  * typed value is still captured on blur as free text, so the form is always
  * completable.
  */
-export default function SuburbAutocomplete({
+export default function AddressAutocomplete({
     id,
     value,
     onChange,
@@ -22,10 +22,10 @@ export default function SuburbAutocomplete({
     describedBy,
     inputRef,
 }) {
-    const listId = `${useId()}-suburbs`;
+    const listId = `${useId()}-addresses`;
     // Seeded from the current selection: step 1 unmounts when the wizard
-    // advances, so pressing Back must show the suburb again, not a blank field.
-    const [query, setQuery] = useState(() => value?.description ?? value?.suburb ?? '');
+    // advances, so pressing Back must show the address again, not a blank field.
+    const [query, setQuery] = useState(() => value?.description ?? value?.street ?? '');
     const [suggestions, setSuggestions] = useState([]);
     const [openList, setOpenList] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
@@ -133,7 +133,7 @@ export default function SuburbAutocomplete({
         // Optimistic: record the pick immediately, enrich once details land.
         onChange({
             placeId: suggestion.id,
-            suburb: suggestion.label,
+            street: suggestion.label,
             description: suggestion.description ?? suggestion.label,
         });
 
@@ -146,7 +146,8 @@ export default function SuburbAutocomplete({
             if (place) {
                 onChange({
                     placeId: place.place_id,
-                    suburb: place.suburb ?? suggestion.label,
+                    street: place.street ?? suggestion.label,
+                    suburb: place.suburb ?? null,
                     state: place.state ?? null,
                     postcode: place.postcode ?? null,
                     lat: place.lat ?? null,
@@ -155,7 +156,7 @@ export default function SuburbAutocomplete({
                 });
             }
         } catch {
-            // Keep the optimistic value — the suburb name is the part that matters.
+            // Keep the optimistic value — the street line is the part that matters.
         } finally {
             sessionRef.current = null; // Next keystroke starts a fresh billing session.
         }
@@ -205,15 +206,15 @@ export default function SuburbAutocomplete({
     // silently discarding it.
     const handleBlur = () => {
         const trimmed = query.trim();
-        if (!value && trimmed) onChange({ suburb: trimmed, freeText: true });
+        if (!value && trimmed) onChange({ street: trimmed, freeText: true });
     };
 
     const showList = openList && (suggestions.length > 0 || (searched && !loading));
 
     let status = '';
-    if (loading) status = 'Searching suburbs…';
-    else if (searched && suggestions.length) status = `${suggestions.length} suburbs found`;
-    else if (searched) status = 'No matching suburbs';
+    if (loading) status = 'Searching addresses…';
+    else if (searched && suggestions.length) status = `${suggestions.length} addresses found`;
+    else if (searched) status = 'No matching addresses';
 
     return (
         <div className="combo" ref={fieldRef}>
@@ -266,7 +267,7 @@ export default function SuburbAutocomplete({
                         ))
                     ) : (
                         <li className="combo-empty">
-                            No matching suburbs — you can type it in yourself.
+                            No matching address – you can type it in yourself.
                         </li>
                     )}
                 </ul>

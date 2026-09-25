@@ -19,7 +19,7 @@ const answer = async (page, { consent = true, email = 'e2e@example.invalid' } = 
     const modal = page.locator('.modal-back.open');
     await expect(modal).toBeVisible();
 
-    await page.fill('#fma-suburb', 'Mosman');
+    await page.fill('#fma-address', '12 Smith Street, Mosman NSW');
     await modal.locator('.opt', { hasText: 'House' }).first().click();
     await page.getByRole('button', { name: /continue/i }).click();
 

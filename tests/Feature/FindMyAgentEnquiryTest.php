@@ -24,10 +24,11 @@ class FindMyAgentEnquiryTest extends TestCase
                 'best_time' => 'morning',
                 'location' => [
                     'place_id' => 'ChIJexample',
+                    'street' => '12 Smith Street',
                     'suburb' => 'Mosman',
                     'state' => 'NSW',
                     'postcode' => '2088',
-                    'description' => 'Mosman NSW 2088',
+                    'description' => '12 Smith Street, Mosman NSW, Australia',
                     'lat' => -33.8269,
                     'lng' => 151.2437,
                     'free_text' => false,
@@ -96,7 +97,7 @@ class FindMyAgentEnquiryTest extends TestCase
         $this->send();
 
         $this->assertSame([
-            ['label' => 'Suburb', 'value' => 'Mosman NSW 2088'],
+            ['label' => 'Property address', 'value' => '12 Smith Street, Mosman NSW 2088'],
             ['label' => 'Property type', 'value' => 'House'],
             ['label' => 'Looking to sell', 'value' => 'Now'],
             ['label' => 'Best time to call', 'value' => 'Morning'],
@@ -150,14 +151,40 @@ class FindMyAgentEnquiryTest extends TestCase
         $this->assertSame(1, Enquiry::count());
     }
 
-    public function test_a_suburb_nobody_could_look_up_is_still_accepted(): void
+    public function test_an_address_nobody_could_look_up_is_still_accepted(): void
     {
-        /* The lookup degrades to free text when Google is unreachable, so a typed suburb has to be
+        /* The lookup degrades to free text when Google is unreachable, so a typed address has to be
            enough — an outage upstream must not close the form. */
-        $this->send(details: ['location' => ['suburb' => 'Little Hampton', 'free_text' => true]])
+        $this->send(details: ['location' => ['street' => '4 Main Road, Little Hampton VIC', 'free_text' => true]])
             ->assertRedirect()->assertSessionHasNoErrors();
 
-        $this->assertSame('Little Hampton', Enquiry::sole()->suburb);
+        $enquiry = Enquiry::sole();
+
+        $this->assertNull($enquiry->suburb);
+        $this->assertSame(
+            ['label' => 'Property address', 'value' => '4 Main Road, Little Hampton VIC'],
+            $enquiry->answers()[0],
+        );
+    }
+
+    public function test_a_suburb_alone_is_no_longer_an_answer(): void
+    {
+        $this->send(details: ['location' => ['suburb' => 'Mosman', 'state' => 'NSW']])
+            ->assertSessionHasErrors('details.location.street');
+
+        $this->assertSame(0, Enquiry::count());
+    }
+
+    public function test_an_enquiry_from_before_the_address_still_reads(): void
+    {
+        $enquiry = Enquiry::factory()->findMyAgent([
+            'location' => ['suburb' => 'Mosman', 'state' => 'NSW', 'postcode' => '2088'],
+        ])->create();
+
+        $this->assertSame(
+            ['label' => 'Property address', 'value' => 'Mosman NSW 2088'],
+            $enquiry->answers()[0],
+        );
     }
 
     public function test_only_the_answers_that_were_asked_for_are_kept(): void
