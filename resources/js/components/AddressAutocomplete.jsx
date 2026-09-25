@@ -4,8 +4,18 @@ const DEBOUNCE_MS = 250;
 const MIN_CHARS = 2;
 
 /**
- * Street address combobox backed by Google Places, proxied through /api/suburbs
- * so the API key stays server-side.
+ * Per kind: the key the typed or picked line is kept under, and the words the
+ * list uses. An address answer's line is its street; a suburb answer's is the suburb.
+ */
+const KINDS = {
+    address: { line: 'street', searching: 'Searching addresses…', found: 'addresses found', none: 'No matching address' },
+    suburb: { line: 'suburb', searching: 'Searching suburbs…', found: 'suburbs found', none: 'No matching suburb' },
+};
+
+/**
+ * Combobox backed by Google Places, proxied through /api/suburbs so the API key
+ * stays server-side. `kind` picks street addresses (Agent Finder's first
+ * question) or suburbs and postcodes (the start box).
  *
  * Degrades to a plain text field: if the lookup returns nothing or fails, the
  * typed value is still captured on blur as free text, so the form is always
@@ -16,16 +26,19 @@ export default function AddressAutocomplete({
     value,
     onChange,
     placeholder,
+    kind = 'address',
+    required = true,
     active = true,
     disabled = false,
     invalid = false,
     describedBy,
     inputRef,
 }) {
-    const listId = `${useId()}-addresses`;
+    const words = KINDS[kind] ?? KINDS.address;
+    const listId = `${useId()}-${kind}`;
     // Seeded from the current selection: step 1 unmounts when the wizard
-    // advances, so pressing Back must show the address again, not a blank field.
-    const [query, setQuery] = useState(() => value?.description ?? value?.street ?? '');
+    // advances, so pressing Back must show the answer again, not a blank field.
+    const [query, setQuery] = useState(() => value?.description ?? value?.[words.line] ?? '');
     const [suggestions, setSuggestions] = useState([]);
     const [openList, setOpenList] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
@@ -91,7 +104,7 @@ export default function AddressAutocomplete({
             if (!sessionRef.current) newSession();
 
             try {
-                const params = new URLSearchParams({ q: trimmed, session: sessionRef.current });
+                const params = new URLSearchParams({ q: trimmed, session: sessionRef.current, kind });
                 const res = await fetch(`/api/suburbs?${params}`, {
                     signal: controller.signal,
                     headers: { Accept: 'application/json' },
@@ -133,7 +146,7 @@ export default function AddressAutocomplete({
         // Optimistic: record the pick immediately, enrich once details land.
         onChange({
             placeId: suggestion.id,
-            street: suggestion.label,
+            [words.line]: suggestion.label,
             description: suggestion.description ?? suggestion.label,
         });
 
@@ -146,7 +159,7 @@ export default function AddressAutocomplete({
             if (place) {
                 onChange({
                     placeId: place.place_id,
-                    street: place.street ?? suggestion.label,
+                    street: kind === 'address' ? place.street ?? suggestion.label : null,
                     suburb: place.suburb ?? null,
                     state: place.state ?? null,
                     postcode: place.postcode ?? null,
@@ -156,7 +169,7 @@ export default function AddressAutocomplete({
                 });
             }
         } catch {
-            // Keep the optimistic value — the street line is the part that matters.
+            // Keep the optimistic value — the picked line is the part that matters.
         } finally {
             sessionRef.current = null; // Next keystroke starts a fresh billing session.
         }
@@ -206,15 +219,15 @@ export default function AddressAutocomplete({
     // silently discarding it.
     const handleBlur = () => {
         const trimmed = query.trim();
-        if (!value && trimmed) onChange({ street: trimmed, freeText: true });
+        if (!value && trimmed) onChange({ [words.line]: trimmed, freeText: true });
     };
 
     const showList = openList && (suggestions.length > 0 || (searched && !loading));
 
     let status = '';
-    if (loading) status = 'Searching addresses…';
-    else if (searched && suggestions.length) status = `${suggestions.length} addresses found`;
-    else if (searched) status = 'No matching addresses';
+    if (loading) status = words.searching;
+    else if (searched && suggestions.length) status = `${suggestions.length} ${words.found}`;
+    else if (searched) status = words.none;
 
     return (
         <div className="combo" ref={fieldRef}>
@@ -228,7 +241,7 @@ export default function AddressAutocomplete({
                 aria-controls={listId}
                 aria-autocomplete="list"
                 aria-activedescendant={activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
-                aria-required="true"
+                aria-required={required ? 'true' : undefined}
                 aria-invalid={invalid ? 'true' : undefined}
                 aria-describedby={describedBy}
                 placeholder={placeholder}
@@ -267,7 +280,7 @@ export default function AddressAutocomplete({
                         ))
                     ) : (
                         <li className="combo-empty">
-                            No matching address – you can type it in yourself.
+                            {words.none} – you can type it in yourself.
                         </li>
                     )}
                 </ul>

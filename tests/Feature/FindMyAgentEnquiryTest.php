@@ -177,6 +177,22 @@ class FindMyAgentEnquiryTest extends TestCase
         );
     }
 
+    public function test_a_suburb_picked_in_the_start_box_reaches_the_inbox_when_the_address_had_none(): void
+    {
+        $this->send(details: ['location' => [
+            'street' => '4 Main Road', 'free_text' => true,
+            'area' => 'Mosman NSW, Australia', 'suburb' => 'Mosman', 'state' => 'NSW', 'postcode' => '2088',
+        ]]);
+
+        $enquiry = Enquiry::sole();
+
+        $this->assertSame('Mosman', $enquiry->suburb);
+        $this->assertSame(
+            ['label' => 'Property address', 'value' => '4 Main Road, Mosman NSW 2088'],
+            $enquiry->answers()[0],
+        );
+    }
+
     public function test_a_resolved_suburb_is_never_overruled_by_the_start_box(): void
     {
         $this->send(details: ['location' => [

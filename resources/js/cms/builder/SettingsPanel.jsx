@@ -454,6 +454,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                 <select className="cms-select" value={data.height || 'comfortable'} onChange={(e) => patch('height', e.target.value)}>
                                     <option value="comfortable">Comfortable</option>
                                     <option value="compact">Compact</option>
+                                    <option value="slim">Slim</option>
                                     <option value="tall">Tall</option>
                                 </select>
                             </div>

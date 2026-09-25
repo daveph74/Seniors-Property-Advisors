@@ -161,7 +161,7 @@
             "data": {
                 "width": "standard",
                 "contentAlign": "left",
-                "height": "compact",
+                "height": "slim",
                 "spacing": "medium",
                 "background": "navy-deep",
                 "textTheme": "light"

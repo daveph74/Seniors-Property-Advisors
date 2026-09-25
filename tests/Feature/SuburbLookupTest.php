@@ -69,6 +69,30 @@ class SuburbLookupTest extends TestCase
         });
     }
 
+    public function test_the_start_box_looks_up_suburbs_and_postcodes(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->autocompletePayload())]);
+
+        $this->getJson('/api/suburbs?q=2088&kind=suburb')->assertOk();
+
+        Http::assertSent(fn ($request) => $request['includedPrimaryTypes'] === ['locality', 'sublocality', 'postal_code']);
+    }
+
+    public function test_an_address_and_a_suburb_lookup_never_share_an_answer(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->autocompletePayload())]);
+
+        $this->getJson('/api/suburbs?q=mosm')->assertOk();
+        $this->getJson('/api/suburbs?q=mosm&kind=suburb')->assertOk();
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_a_kind_it_does_not_know_is_refused(): void
+    {
+        $this->getJson('/api/suburbs?q=mosm&kind=everything')->assertUnprocessable();
+    }
+
     public function test_it_caches_repeated_queries(): void
     {
         Http::fake([

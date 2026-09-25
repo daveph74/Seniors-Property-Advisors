@@ -1169,6 +1169,7 @@ label.fma-consent a{ color: var(--navy); text-decoration: underline; text-underl
 .section-block__inner--loose{ --item-gap: 32px; }
 
 .section-block--compact{ padding: 72px 0; }
+.section-block--slim{ padding: 32px 0; }
 .section-block--tall{ padding: 168px 0; }
 
 .section-block--bg-wash{ background: var(--blue-wash); }
@@ -1242,8 +1243,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 .block-button--center{ justify-content: center; }
 .block-button--right{ justify-content: flex-end; }
 
-h1.block-heading--large{ font-size: clamp(38px, 3.6vw, 56px); line-height: 1.08; }
-h2.block-heading--large{ font-size: clamp(30px, 3vw, 46px); line-height: 1.1; }
+h1.block-heading--large{ font-size: clamp(38px, 4vw, 52px); line-height: 1.08; }
+h2.block-heading--large{ font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; }
 
 .block-steps-strip{ margin-top: 0; }
 .block-checklist, .block-benefit-list{ margin: 0; }
@@ -1310,6 +1311,8 @@ h2.block-heading--large{ font-size: clamp(30px, 3vw, 46px); line-height: 1.1; }
   background: var(--blue-wash); border: 1px solid var(--line);
 }
 .block-finder-start__form{ display: flex; gap: 12px; }
+.block-finder-start__form .combo{ flex: 1; min-width: 0; }
+.block-finder-start__form .combo input{ width: 100%; }
 .block-finder-start__form input{
   flex: 1; min-width: 0; height: 56px; padding: 0 18px;
   border: 1px solid var(--line); border-radius: var(--btn-radius); background: var(--white);
@@ -1334,8 +1337,8 @@ h2.block-heading--large{ font-size: clamp(30px, 3vw, 46px); line-height: 1.1; }
 }
 .section-block--bg-navy-gradient .block-finder-start{ background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.24); }
 .section-block--bg-navy-gradient .block-finder-start__note{ color: #C6D6EC; }
-.section-block--bg-navy-gradient .block-finder-start .btn.primary{ background: #3D7FD6; font-size: 19px; font-weight: 700; }
-.section-block--bg-navy-gradient .block-finder-start .btn.primary:hover{ background: #3570B5; }
+.section-block--bg-navy-gradient .block-finder-start .btn.primary{ background: #3570B5; }
+.section-block--bg-navy-gradient .block-finder-start .btn.primary:hover{ background: #2C5F9E; }
 
 @media (max-width: 640px){
   .block-finder-start__form{ flex-direction: column; }
@@ -1379,6 +1382,7 @@ h2.block-heading--large{ font-size: clamp(30px, 3vw, 46px); line-height: 1.1; }
 
 @media (max-width: 640px){
   .section-block--compact{ padding: 48px 0; }
+  .section-block--slim{ padding: 24px 0; }
   .section-block--tall{ padding: 112px 0; }
 }
 

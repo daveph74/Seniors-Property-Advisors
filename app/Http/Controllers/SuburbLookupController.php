@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
  *
  * Two modes:
  *   ?q=12 smith    → street address predictions for the autocomplete list
+ *                    (with &kind=suburb, suburb and postcode predictions instead)
  *   ?place_id=…    → resolved detail for the address the visitor picked
  *
  * Google failures always degrade to an empty-but-successful payload. The field
@@ -27,12 +28,22 @@ class SuburbLookupController extends Controller
 
     private const DETAILS_URL = 'https://places.googleapis.com/v1/places/';
 
+    /**
+     * What each kind of box looks up. An address is Agent Finder's first question; a suburb is the
+     * start box, and `postal_code` is in it because the box invites a postcode as readily as a name.
+     */
+    private const KINDS = [
+        'address' => ['street_address', 'premise', 'subpremise'],
+        'suburb' => ['locality', 'sublocality', 'postal_code'],
+    ];
+
     public function __invoke(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'q' => ['required_without:place_id', 'string', 'min:2', 'max:100'],
             'place_id' => ['required_without:q', 'string', 'max:255'],
             'session' => ['nullable', 'string', 'max:64'],
+            'kind' => ['nullable', 'string', 'in:'.implode(',', array_keys(self::KINDS))],
         ]);
 
         $key = config('services.google.places_key');
@@ -48,17 +59,19 @@ class SuburbLookupController extends Controller
             : response()->json(['suggestions' => $this->suggestions(
                 $validated['q'],
                 $key,
-                $validated['session'] ?? null
+                $validated['session'] ?? null,
+                $validated['kind'] ?? 'address',
             )]);
     }
 
     /**
-     * Address predictions, cached for a day — addresses don't move, and an
-     * autocomplete endpoint bills per keystroke without a cache in front.
+     * Predictions, cached for a day — places don't move, and an autocomplete endpoint bills per
+     * keystroke without a cache in front. The kind is in the key, or "mosman" typed into the start
+     * box would be answered with the addresses somebody looked up in Step 1.
      */
-    private function suggestions(string $query, string $key, ?string $sessionToken): array
+    private function suggestions(string $query, string $key, ?string $sessionToken, string $kind): array
     {
-        $cacheKey = 'places:address:autocomplete:'.md5(mb_strtolower(trim($query)));
+        $cacheKey = "places:{$kind}:autocomplete:".md5(mb_strtolower(trim($query)));
         $cached = Cache::get($cacheKey);
 
         if ($cached !== null) {
@@ -71,7 +84,7 @@ class SuburbLookupController extends Controller
                 'X-Goog-FieldMask' => 'suggestions.placePrediction.placeId,suggestions.placePrediction.text,suggestions.placePrediction.structuredFormat',
             ])->timeout(4)->connectTimeout(2)->post(self::AUTOCOMPLETE_URL, array_filter([
                 'input' => $query,
-                'includedPrimaryTypes' => ['street_address', 'premise', 'subpremise'],
+                'includedPrimaryTypes' => self::KINDS[$kind],
                 'includedRegionCodes' => ['au'],
                 'sessionToken' => $sessionToken,
             ])),

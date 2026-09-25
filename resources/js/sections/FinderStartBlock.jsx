@@ -1,13 +1,16 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
+import AddressAutocomplete from '../components/AddressAutocomplete';
 import { spacingClasses } from './spacing';
 
 export default function FinderStartBlock({ data, anchor, actions = {} }) {
     const inputId = `${useId()}-area`;
-    const [area, setArea] = useState('');
+    const inputRef = useRef(null);
+    const [location, setLocation] = useState(null);
 
     const start = (e) => {
         e.preventDefault();
-        actions['open-finder']?.(area.trim());
+        const typed = inputRef.current?.value.trim();
+        actions['open-finder']?.(location ?? (typed ? { suburb: typed, freeText: true } : null));
     };
 
     return (
@@ -16,13 +19,14 @@ export default function FinderStartBlock({ data, anchor, actions = {} }) {
                 <label className="sr-only" htmlFor={inputId}>
                     {data.prompt || 'Your suburb or postcode'}
                 </label>
-                <input
+                <AddressAutocomplete
                     id={inputId}
-                    type="text"
-                    autoComplete="postal-code"
+                    kind="suburb"
+                    required={false}
+                    value={location}
+                    onChange={setLocation}
                     placeholder={data.prompt}
-                    value={area}
-                    onChange={(e) => setArea(e.target.value)}
+                    inputRef={inputRef}
                 />
                 <button type="submit" className="btn primary">
                     {data.buttonLabel || 'Start Here'}

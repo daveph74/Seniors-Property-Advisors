@@ -646,12 +646,22 @@ have a suburb and no street, and `FindMyAgentOptions::place()` shows them as the
 were renamed with it — cached suburb results carry no street and would have been served as addresses.
 
 **The `finder-start` block is the other half of that change**: a "suburb or postcode" box and a Start
-Here button, which opens Agent Finder through the ordinary `open-finder` action with what was typed as
-its argument. `ActionButton` calls the same handler with a click event, which is why `AgentFinder.jsx`
-keeps the argument only when it is a string. What was typed travels as `details.location.area`, stored
-exactly as typed and never looked up — it may be a postcode, and there is no lookup that answers both.
-It is a **fallback, never an answer**: the inbox shows it only when the address resolved no suburb of its
-own, because the picked address is the more precise of the two. It is optional on purpose; a box that
+Here button, which opens Agent Finder through the ordinary `open-finder` action with the box's location
+as its argument. `ActionButton` calls the same handler with a click event, which is why `AgentFinder.jsx`
+keeps the argument only when it looks like a location. The box is the same `AddressAutocomplete` as
+Step 1 with `kind="suburb"`, and the proxy answers that kind with localities **and postcodes**
+(`kind=suburb` on `/api/suburbs`, cached separately from addresses).
+
+It is a **fallback, never an answer**: the address wins whenever it resolved a suburb, because it is the
+more precise of the two. When it did not, a suggestion **picked** in the box fills suburb, state and
+postcode, and so reaches the `suburb` column the inbox list and search read. Text typed but not picked
+never does, because it may be a postcode; it travels as `details.location.area` exactly as typed, which
+the inbox shows only when nothing better exists. Pressing Enter submits without the field blurring, so
+the block reads the input itself instead of waiting for the blur fallback.
+
+Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has no CA bundle configured
+(`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
+like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause. It is optional on purpose; a box that
 refused to open the form when left empty would be a dead end in front of a question that asks anyway.
 
 `home-preview` is where that box is first used — the client's redesigned hero, built entirely out of
@@ -663,9 +673,10 @@ page between sites". `HomePreviewPageTest` imports that fixture the same way and
 for an unlinked review page. The headline needed one thing the heading block lacked, a highlight in mid-sentence, so
 headings carry an optional `headingAfter`, rendered after the highlighted words. It is a multi-line box
 because headings are `white-space: pre-line`, and a line break typed there is the only way an editor can
-choose where a heading breaks. Headings also carry a `size` (standard or large): the mockup's headline
-and its "A FREE service" line are 56px and 46px, against 46px and 30px for the standard h1 and h2, and
-at those sizes the line spacing is part of what makes the page read as the mockup does. The rule under
+choose where a heading breaks. Headings also carry a `size` (standard or large). **Large borrows the
+site's existing scale rather than inventing one**: an h1 takes the hero headline's 38–52px and an h2 the
+website section titles' 32–48px (`h2`, `.section-head__title`). The mockup was drawn at 56px and 46px;
+matching it exactly would have made this the one page on the site with its own type sizes. The rule under
 the hero is a `divider` block — a thin line at the section's content width, which a section's own
 background could not draw.
 
@@ -682,11 +693,14 @@ is how it was first mistaken for one. `.section-block--text-light + .section-blo
 any two dark sections by a pixel, whichever dark backgrounds they are.
 
 Sections have two backgrounds beyond flat navy, both measured off the client's mockup rather than chosen:
-**Navy gradient** (135°, `#1A2846` to `#2D4A7D`) and **Deep navy** (`#0F1A30`). The mockup's finer
-details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo, the brighter Start
-Here button — are scoped to the gradient background, not to dark sections generally, so choosing it
-brings the look and no existing navy section changes. That button is `#3D7FD6` at 19px bold: white on
-that blue is 4.0:1, which passes only as large text, so the size is what makes the colour allowed.
+**Navy gradient** (135°, `#1A2846` to `#2D4A7D`) and **Deep navy** (`#0F1A30`). The mockup's networks
+band is also why there is a **Slim** section height (32px, 24px on a phone): Compact's 72px was the
+smallest before, twice what the band carries. The mockup's finer
+details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo — are scoped to the
+gradient background, not to dark sections generally, so choosing it brings the look and no existing navy
+section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white on that blue is 4.0:1,
+which passes only as large text, and the button keeps the site's standard 16px semibold. `#3570B5`
+(5.1:1) is the nearest blue that passes at that size.
 
 ## Dashboard
 
