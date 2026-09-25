@@ -58,7 +58,8 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
     Route::post('/pages', [CmsPageController::class, 'store'])->name('pages.store');
-    Route::post('/pages/import', [CmsPageController::class, 'import'])->middleware('throttle:cms-write')->name('pages.import');
+    Route::post('/pages/import', [CmsPageController::class, 'import'])
+        ->middleware(['permit:pages.import', 'throttle:cms-write'])->name('pages.import');
     Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
     Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->middleware('throttle:cms-write')->name('pages.draft');
     Route::patch('/pages/{page}/details', [CmsPageController::class, 'saveDetails'])->name('pages.details');

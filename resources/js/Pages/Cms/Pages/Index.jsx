@@ -19,7 +19,8 @@ export default function PagesIndex({ pages = [], layouts = [] }) {
     const [createOpen, setCreateOpen] = useState(false);
     const [importOpen, setImportOpen] = useState(false);
     const [confirm, setConfirm] = useState(null);
-    const { imported } = usePage().props;
+    const { imported, auth } = usePage().props;
+    const canImport = auth?.can?.['pages.import'] === true;
     const missing = imported?.missingMedia ?? [];
 
     useEffect(() => {
@@ -69,9 +70,11 @@ export default function PagesIndex({ pages = [], layouts = [] }) {
                         <button type="button" className={`cms-segmented__btn ${view === 'list' ? 'cms-segmented__btn--active' : ''}`} onClick={() => setView('list')}>List</button>
                         <button type="button" className={`cms-segmented__btn ${view === 'tree' ? 'cms-segmented__btn--active' : ''}`} onClick={() => setView('tree')}>Site tree</button>
                     </div>
-                    <button type="button" className="cms-btn" onClick={() => setImportOpen(true)}>
-                        Import page
-                    </button>
+                    {canImport && (
+                        <button type="button" className="cms-btn" onClick={() => setImportOpen(true)}>
+                            Import page
+                        </button>
+                    )}
                     <button type="button" className="cms-btn cms-btn--primary" onClick={() => setCreateOpen(true)}>
                         <PlusIcon size={15} />
                         New page
@@ -178,7 +181,7 @@ export default function PagesIndex({ pages = [], layouts = [] }) {
             )}
 
             <CreatePageModal open={createOpen} onClose={() => setCreateOpen(false)} pages={pages} layouts={layouts} />
-            <ImportPageModal open={importOpen} onClose={() => setImportOpen(false)} />
+            {canImport && <ImportPageModal open={importOpen} onClose={() => setImportOpen(false)} />}
             <ConfirmModal
                 open={confirm !== null}
                 onClose={() => setConfirm(null)}

@@ -19,6 +19,9 @@ class Permissions
         'content.delete' => [User::SUPER_ADMIN],
         'media.upload_svg' => [User::SUPER_ADMIN],
         'content.restore' => [User::SUPER_ADMIN],
+        /* An uploaded page file is a whole section tree arriving from outside this site, so bringing
+           one in is a super administrator's call. Downloading a page stays with `content.manage`. */
+        'pages.import' => [User::SUPER_ADMIN],
         'users.manage' => [User::SUPER_ADMIN],
         /* A client administrator already writes every one of these fields in the page builder, so
            a screen that gathers them up widens nobody's reach. It is its own ability rather than

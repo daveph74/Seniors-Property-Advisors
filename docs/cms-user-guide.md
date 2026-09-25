@@ -182,16 +182,12 @@ The home page cannot be renamed.
 ### Moving a page to another copy of the site
 
 A page built on one copy of the site — a test site, say — can be moved to another without rebuilding it.
+On the site that has the page: **Pages**, the three-dots button on its row, **Download as file**.
 
-1. On the site that has the page: **Pages**, the three-dots button on its row, **Download as file**.
-2. On the site that should have it: **Pages** → **Import page**, choose the file, **Import as a draft**.
+Bringing that file into the other site is not something every account can do, so pass it to whoever
+looks after the site. It arrives there **as a draft**, so nothing goes live until it is published.
 
-The page arrives **as a draft**, at the same web address, so nothing goes live until you publish it
-there. If a page at that address already exists, the import is refused and nothing is changed — rename
-the existing page first if the new one should take its place.
-
-Pictures do not travel inside the file. If the page uses any that this site does not have yet, the
-pages list names them after the import: upload them in **Media**, then choose them again in the builder.
+Pictures do not travel inside the file. Send any the page uses along with it.
 
 ---
 

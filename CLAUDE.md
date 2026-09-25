@@ -170,6 +170,11 @@ What the file deliberately leaves out is the design, and each omission closes a 
   and the Pages list names the ones this site's library lacks, in a banner that stays put, not a toast
   that is gone in under three seconds.
 
+**Importing is super administrator only** (`pages.import`); downloading stays with `content.manage`. A
+file is a whole section tree arriving from outside the site, which is a bigger decision than editing
+one already here. The Import button is hidden, not merely refused, for everyone else, so the user guide
+tells a client administrator to pass the file on rather than describing a button they cannot see.
+
 **An address that already exists is refused**, archived pages included, and nothing is created: an
 upload can never overwrite a page somebody edited. The tree goes through `ValidatesSectionTree` — the
 same rules, messages and tag-stripping as a draft save, extracted from `SaveSectionsRequest` so there
@@ -657,12 +662,13 @@ more precise of the two. When it did not, a suggestion **picked** in the box fil
 postcode, and so reaches the `suburb` column the inbox list and search read. Text typed but not picked
 never does, because it may be a postcode; it travels as `details.location.area` exactly as typed, which
 the inbox shows only when nothing better exists. Pressing Enter submits without the field blurring, so
-the block reads the input itself instead of waiting for the blur fallback.
+the block reads the input itself instead of waiting for the blur fallback. It is optional on purpose; a
+box that refused to open the form when left empty would be a dead end in front of a question that asks
+anyway.
 
 Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has no CA bundle configured
 (`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
-like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause. It is optional on purpose; a box that
-refused to open the form when left empty would be a dead end in front of a question that asks anyway.
+like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
 
 `home-preview` is where that box is first used — the client's redesigned hero, built entirely out of
 section, row, column and blocks. It is **data, not code**: there is no seed file for it, and each site
@@ -735,8 +741,8 @@ middleware, the `Gate` definitions in `AppServiceProvider`, and the sidebar's sh
 
 Client administrators create, edit, publish and unpublish content, and reach `/cms/seo` — its own
 `seo.manage` ability, since the report and the two fields it patches are things they already write in
-the builder. Super administrators additionally delete content, restore archived pages, manage accounts
-and reach settings.
+the builder. Super administrators additionally delete content, restore archived pages, import page
+files (`pages.import`), manage accounts and reach settings.
 Deleting anything is therefore a super-admin route — the scope never gives client users a
 delete, only disable and archive.
 

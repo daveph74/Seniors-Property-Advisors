@@ -194,13 +194,19 @@ class PageTransferTest extends TestCase
         $this->upload($document)->assertSessionHas('imported', fn (array $imported) => $imported['missingMedia'] === ['missing-photo.jpg']);
     }
 
-    public function test_a_client_administrator_can_move_pages_too(): void
+    public function test_a_client_administrator_can_download_a_page_but_not_import_one(): void
     {
         $this->actingAs($this->clientAdmin());
 
         $home = Page::where('slug', 'home')->firstOrFail();
         $this->get("/cms/pages/{$home->cms_id}/export")->assertOk();
-        $this->upload($this->document())->assertSessionHasNoErrors();
+
+        $this->upload($this->document())->assertForbidden();
+        $this->assertNull(Page::where('slug', 'moved-page')->first());
+
+        $this->get('/cms/pages')->assertInertia(
+            fn ($page) => $this->assertFalse($page->toArray()['props']['auth']['can']['pages.import']),
+        );
     }
 
     public function test_nobody_signed_out_can_do_either(): void
