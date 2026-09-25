@@ -21,7 +21,9 @@ const TEMPLATES = {
     heading: {
         heading: '',
         headingEm: '',
+        headingAfter: '',
         level: 'h2',
+        size: 'standard',
         align: 'left',
         spaceAbove: 'none',
         spaceBelow: 'none',
@@ -46,6 +48,17 @@ const TEMPLATES = {
         arrow: true,
         variant: 'primary',
         align: 'left',
+        spaceAbove: 'none',
+        spaceBelow: 'none',
+    },
+    divider: {
+        spaceAbove: 'none',
+        spaceBelow: 'none',
+    },
+    'finder-start': {
+        prompt: 'Your suburb or postcode',
+        buttonLabel: 'Start Here',
+        note: '',
         spaceAbove: 'none',
         spaceBelow: 'none',
     },

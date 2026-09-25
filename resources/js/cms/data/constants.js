@@ -86,6 +86,8 @@ export const COMPONENT_LIBRARY = [
         { type: 'heading', label: 'Heading', d: 'M5 5v14M19 5v14M5 12h14' },
         { type: 'rich-text', label: 'Rich text', d: 'M4 6h16M4 11h16M4 16h9' },
         { type: 'button', label: 'Button', d: 'M4 8h16v8H4zM9 12h6' },
+        { type: 'finder-start', label: 'Agent Finder start box', d: 'M3 8h12v8H3zM15 8h6v8h-6z' },
+        { type: 'divider', label: 'Divider', d: 'M3 12h18' },
     ] },
     { name: 'Media', items: [
         { type: 'image', label: 'Image', d: 'M3 5h18v14H3zM8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M21 16l-5-5-9 8' },

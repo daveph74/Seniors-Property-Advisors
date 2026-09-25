@@ -70,7 +70,8 @@ class FindMyAgentOptions
     /**
      * "12 Smith Street, Mosman NSW 2088" from whichever parts the lookup returned. A typed address
      * has only its street line, and an enquiry from before the form asked for an address has only
-     * its suburb.
+     * its suburb. The suburb or postcode typed into a start box stands in when the address resolved
+     * no suburb of its own, and never overrules one that did.
      */
     private static function place(?array $location): ?string
     {
@@ -84,7 +85,7 @@ class FindMyAgentOptions
             $location['postcode'] ?? null,
         ], 'filled'));
 
-        $lines = array_filter([$location['street'] ?? null, $locality], 'filled');
+        $lines = array_filter([$location['street'] ?? null, $locality ?: ($location['area'] ?? null)], 'filled');
 
         return $lines === [] ? null : implode(', ', $lines);
     }

@@ -58,6 +58,7 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
     Route::post('/pages', [CmsPageController::class, 'store'])->name('pages.store');
+    Route::post('/pages/import', [CmsPageController::class, 'import'])->middleware('throttle:cms-write')->name('pages.import');
     Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
     Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->middleware('throttle:cms-write')->name('pages.draft');
     Route::patch('/pages/{page}/details', [CmsPageController::class, 'saveDetails'])->name('pages.details');
@@ -79,6 +80,7 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::post('/pages/{page}/unarchive', [CmsPageController::class, 'unarchive'])
         ->middleware('permit:content.restore')->name('pages.unarchive');
     Route::post('/pages/{page}/duplicate', [CmsPageController::class, 'duplicate'])->middleware('throttle:cms-write')->name('pages.duplicate');
+    Route::get('/pages/{page}/export', [CmsPageController::class, 'export'])->name('pages.export');
 
     Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
         ->whereNumber('reusable')->name('reusable.show');

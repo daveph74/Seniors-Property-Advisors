@@ -55,6 +55,7 @@ class StoreEnquiryRequest extends FormRequest
             'details.best_time' => ['required', Rule::in(array_keys(FindMyAgentOptions::BEST_TIMES))],
             'details.location' => ['required', 'array'],
             'details.location.street' => ['required', 'string', 'max:200'],
+            'details.location.area' => ['nullable', 'string', 'max:120'],
             'details.location.suburb' => ['nullable', 'string', 'max:120'],
             'details.location.state' => ['nullable', 'string', 'max:40'],
             'details.location.postcode' => ['nullable', 'string', 'max:12'],
@@ -109,7 +110,7 @@ class StoreEnquiryRequest extends FormRequest
         if (is_array($details['location'] ?? null)) {
             $details['location'] = Text::cleanAll(
                 $details['location'],
-                ['street', 'suburb', 'state', 'postcode', 'place_id', 'description'],
+                ['street', 'area', 'suburb', 'state', 'postcode', 'place_id', 'description'],
             );
         }
 

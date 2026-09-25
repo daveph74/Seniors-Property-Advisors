@@ -74,6 +74,8 @@ class HandleInertiaRequests extends Middleware
             ],
             /* So a form knows its enquiry arrived after the redirect back. */
             'enquiry' => fn () => $request->session()->get('enquiry'),
+            /* So the Pages list can say what an import brought and what it could not. */
+            'imported' => fn () => $request->session()->get('imported'),
             /* The header's bell, and only where there is a header to put it in — the public site
                shares this middleware, and two counts per page view is a bill nobody asked for. */
             'notifications' => fn () => $request->routeIs('cms.*') ? Notifications::for() : null,

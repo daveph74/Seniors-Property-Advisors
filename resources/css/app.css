@@ -1174,6 +1174,8 @@ label.fma-consent a{ color: var(--navy); text-decoration: underline; text-underl
 .section-block--bg-wash{ background: var(--blue-wash); }
 .section-block--bg-wash-2{ background: var(--blue-wash-2); }
 .section-block--bg-navy{ background: var(--navy); }
+.section-block--bg-navy-gradient{ background: linear-gradient(135deg, #1A2846 0%, #2D4A7D 100%); }
+.section-block--bg-navy-deep{ background: #0F1A30; }
 
 .section-block--text-light{ color: #DDE6F4; }
 .section-block--text-light .block-heading{ color: var(--white); }
@@ -1240,15 +1242,19 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 .block-button--center{ justify-content: center; }
 .block-button--right{ justify-content: flex-end; }
 
+h1.block-heading--large{ font-size: clamp(38px, 3.6vw, 56px); line-height: 1.08; }
+h2.block-heading--large{ font-size: clamp(30px, 3vw, 46px); line-height: 1.1; }
+
+.block-steps-strip{ margin-top: 0; }
+.block-checklist, .block-benefit-list{ margin: 0; }
+.block-divider{ margin: 0; border: 0; border-top: 1px solid var(--line); }
+
 .u-space-above-small{ margin-top: 12px; }
 .u-space-above-medium{ margin-top: 24px; }
 .u-space-above-large{ margin-top: 48px; }
 .u-space-below-small{ margin-bottom: 12px; }
 .u-space-below-medium{ margin-bottom: 24px; }
 .u-space-below-large{ margin-bottom: 48px; }
-
-.block-steps-strip{ margin-top: 0; }
-.block-checklist{ margin: 0; }
 
 .block-avatar-row--center{ justify-content: center; }
 .block-avatar-row--right{ justify-content: flex-end; }
@@ -1262,7 +1268,7 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 .section-block--text-light .block-rating small{ color: #B6C2DB; }
 .section-block--text-light .block-checklist li{ color: #DDE6F4; }
 
-.block-benefit-list{ list-style: none; padding: 0; margin: 0; }
+.block-benefit-list{ list-style: none; padding: 0; }
 .block-benefit-list li{
   display: flex; align-items: flex-start; gap: 18px;
   padding: 22px 0;
@@ -1294,6 +1300,46 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 
 .section-block--text-light .block-trust-marks{ color: rgba(255,255,255,0.55); }
 .section-block--text-light .block-trust-marks span::before{ background: var(--blue); opacity: 0.5; }
+
+.section-block--text-light .block-divider{ border-top-color: rgba(255,255,255,0.18); }
+
+.section-block--text-light + .section-block--text-light{ margin-top: -1px; }
+
+.block-finder-start{
+  max-width: 480px; padding: 20px; border-radius: var(--radius-sm);
+  background: var(--blue-wash); border: 1px solid var(--line);
+}
+.block-finder-start__form{ display: flex; gap: 12px; }
+.block-finder-start__form input{
+  flex: 1; min-width: 0; height: 56px; padding: 0 18px;
+  border: 1px solid var(--line); border-radius: var(--btn-radius); background: var(--white);
+  font: inherit; font-size: 17px; color: var(--text);
+}
+.block-finder-start__form input:focus-visible{ outline: 3px solid var(--blue); outline-offset: 2px; }
+.block-finder-start__form .btn{ height: 56px; padding: 0 26px; white-space: nowrap; }
+.block-finder-start__note{ margin: 14px 0 0; font-size: 13px; color: var(--text-mid); }
+
+.section-block--text-light .block-finder-start{ background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); }
+.section-block--text-light .block-finder-start__form input{ border-color: transparent; }
+.section-block--text-light .block-finder-start .btn.primary{ background: #3570B5; box-shadow: none; }
+.section-block--text-light .block-finder-start .btn.primary:hover{ background: #2C5F9E; }
+.section-block--text-light .block-finder-start__note{ color: #C3D3E8; }
+
+.section-block--bg-navy-gradient .block-heading em{ color: #79B3F2; }
+.section-block--bg-navy-gradient .block-checklist li{ color: var(--white); }
+.section-block--bg-navy-gradient .block-checklist .c{ background: #79B3F2; color: var(--navy); }
+.section-block--bg-navy-gradient .block-image img{
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 24px 60px rgba(4,10,28,0.5);
+}
+.section-block--bg-navy-gradient .block-finder-start{ background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.24); }
+.section-block--bg-navy-gradient .block-finder-start__note{ color: #C6D6EC; }
+.section-block--bg-navy-gradient .block-finder-start .btn.primary{ background: #3D7FD6; font-size: 19px; font-weight: 700; }
+.section-block--bg-navy-gradient .block-finder-start .btn.primary:hover{ background: #3570B5; }
+
+@media (max-width: 640px){
+  .block-finder-start__form{ flex-direction: column; }
+}
 
 .block-stat-stamp{
   background: var(--blue); color: var(--navy);

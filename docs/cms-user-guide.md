@@ -145,7 +145,8 @@ can look at it, change your mind, and publish it only when you mean to.
 ### From the list, without opening the builder
 
 The three-dots button at the end of each row of the pages list opens a menu: **Edit page**,
-**Preview**, **View history**, **Duplicate**, **Publish changes**, **Unpublish** and **Archive page**.
+**Preview**, **View history**, **Duplicate**, **Download as file**, **Publish changes**, **Unpublish** and
+**Archive page**.
 
 - **Unpublish** takes the page off the public website. Nothing is lost.
 - **Archive page** puts it out of the way. It comes back from the **Archived** filter, though bringing
@@ -177,6 +178,20 @@ newsletters and search results keep working. If the page was never published the
 preserve, so nothing is kept.
 
 The home page cannot be renamed.
+
+### Moving a page to another copy of the site
+
+A page built on one copy of the site — a test site, say — can be moved to another without rebuilding it.
+
+1. On the site that has the page: **Pages**, the three-dots button on its row, **Download as file**.
+2. On the site that should have it: **Pages** → **Import page**, choose the file, **Import as a draft**.
+
+The page arrives **as a draft**, at the same web address, so nothing goes live until you publish it
+there. If a page at that address already exists, the import is refused and nothing is changed — rename
+the existing page first if the new one should take its place.
+
+Pictures do not travel inside the file. If the page uses any that this site does not have yet, the
+pages list names them after the import: upload them in **Media**, then choose them again in the builder.
 
 ---
 

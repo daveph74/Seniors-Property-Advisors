@@ -9,6 +9,8 @@ const BACKGROUNDS = [
     { value: 'wash-2', colour: '#F5FAFD' },
     { value: 'wash', colour: '#EAF2FB' },
     { value: 'navy', colour: '#0D223F', dark: true },
+    { value: 'navy-gradient', colour: 'linear-gradient(135deg, #1A2846, #2D4A7D)', dark: true },
+    { value: 'navy-deep', colour: '#0F1A30', dark: true },
 ];
 
 const SPACE_STEPS = [['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']];
@@ -251,10 +253,35 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
+                        {has('size') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Text size</label>
+                                <div className="cms-align-row">
+                                    {[['standard', 'Standard'], ['large', 'Large']].map(([value, text]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            className={`cms-align-btn ${(data.size || 'standard') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patch('size', value)}
+                                        >
+                                            {text}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {hasHeadingEm && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Highlighted heading</label>
                                 <input className="cms-input" value={data.headingEm || ''} onChange={(e) => patch('headingEm', e.target.value)} />
+                            </div>
+                        )}
+
+                        {has('headingAfter') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Text after the highlight</label>
+                                <textarea className="cms-textarea" rows={2} value={data.headingAfter || ''} onChange={(e) => patch('headingAfter', e.target.value)} />
                             </div>
                         )}
 

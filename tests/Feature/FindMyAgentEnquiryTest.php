@@ -167,6 +167,31 @@ class FindMyAgentEnquiryTest extends TestCase
         );
     }
 
+    public function test_what_was_typed_in_a_start_box_stands_in_for_a_suburb_nobody_resolved(): void
+    {
+        $this->send(details: ['location' => ['street' => '4 Main Road', 'area' => '3437', 'free_text' => true]]);
+
+        $this->assertSame(
+            ['label' => 'Property address', 'value' => '4 Main Road, 3437'],
+            Enquiry::sole()->answers()[0],
+        );
+    }
+
+    public function test_a_resolved_suburb_is_never_overruled_by_the_start_box(): void
+    {
+        $this->send(details: ['location' => [
+            'street' => '12 Smith Street', 'suburb' => 'Mosman', 'state' => 'NSW', 'postcode' => '2088', 'area' => 'Manly',
+        ]]);
+
+        $enquiry = Enquiry::sole();
+
+        $this->assertSame('Manly', $enquiry->details['location']['area']);
+        $this->assertSame(
+            ['label' => 'Property address', 'value' => '12 Smith Street, Mosman NSW 2088'],
+            $enquiry->answers()[0],
+        );
+    }
+
     public function test_a_suburb_alone_is_no_longer_an_answer(): void
     {
         $this->send(details: ['location' => ['suburb' => 'Mosman', 'state' => 'NSW']])

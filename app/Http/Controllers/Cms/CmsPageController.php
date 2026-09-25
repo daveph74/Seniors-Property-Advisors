@@ -11,8 +11,10 @@ use App\Content\Site;
 use App\Content\StarterLayouts;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreatePageRequest;
+use App\Http\Requests\ImportPageRequest;
 use App\Http\Requests\SavePageDetailsRequest;
 use App\Http\Requests\SaveSectionsRequest;
+use App\Models\Media;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -154,6 +156,39 @@ class CmsPageController extends Controller
         abort_if($copy === null, 404);
 
         return back();
+    }
+
+    public function export(string $page): JsonResponse
+    {
+        $document = $this->store->transferable($this->resolveSlug($page));
+
+        abort_if($document === null, 404);
+
+        $filename = str_replace('/', '-', $document['slug']).'.page.json';
+
+        return response()
+            ->json($document, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
+
+    /**
+     * Back to the list rather than into the builder: what the import needs to say — which images this
+     * site does not have — has to stay on screen long enough to be read and acted on.
+     */
+    public function import(ImportPageRequest $request): RedirectResponse
+    {
+        $document = $request->document();
+        $page = $this->store->import($document, $this->author());
+
+        $wanted = PageContentStore::mediaKeysIn($document['sections']);
+        $held = Media::whereIn('key', $wanted)->pluck('key')->all();
+
+        return back()->with('imported', [
+            'id' => $page['id'],
+            'title' => $page['title'],
+            'url' => '/'.$page['slug'],
+            'missingMedia' => array_values(array_map('basename', array_diff($wanted, $held))),
+        ]);
     }
 
     public function preview(string $page): Response

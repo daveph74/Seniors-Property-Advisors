@@ -148,7 +148,7 @@ const VALIDATORS = {
     },
 };
 
-export default function FindMyAgentModal({ open, onClose, site = {} }) {
+export default function FindMyAgentModal({ open, onClose, site = {}, area = null }) {
     const [step, setStep] = useState(1);
     const [form, setForm] = useState(EMPTY);
     const [errors, setErrors] = useState({});
@@ -233,6 +233,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
             location: {
                 place_id: form.location?.placeId ?? null,
                 street: form.location?.street ?? null,
+                area,
                 suburb: form.location?.suburb ?? null,
                 state: form.location?.state ?? null,
                 postcode: form.location?.postcode ?? null,

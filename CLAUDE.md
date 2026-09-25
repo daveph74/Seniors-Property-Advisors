@@ -132,7 +132,7 @@ that already has the row, and `/cms/navigation` is where a running site is edite
 
 Adding a block type touches `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js`
 and the React registry — never the database. Adding a `data` key touches nothing.
-Note that `SaveSectionsRequest::sanitise()` strips tags from every string in the tree,
+Note that `ValidatesSectionTree::sanitiseTree()` strips tags from every string in the tree,
 so no `data` key can hold markup.
 
 `php artisan content:import [--force]` migrates a legacy `storage/app/content/` overlay
@@ -151,6 +151,30 @@ test asserts that. Publishing an unchanged tree records no revision.
 Reusable sections are **independent copies**, stored whole in `reusable_sections` with
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
+
+### Moving a page between sites
+
+A page travels as a **file, not a seed**: **Download as file** on the Pages list (`GET
+/cms/pages/{page}/export`) and **Import page** (`POST /cms/pages/import`). That is how a page built
+locally reaches a server that already has content, and it is why the code push and the content are
+separate — a seed file ships with every deploy, and only loads on a fresh install anyway, where
+`updateOrCreate` would overwrite whatever an editor has done since.
+
+What the file deliberately leaves out is the design, and each omission closes a way to go wrong:
+
+- **No `cms_id`** — the receiving site assigns its own. `content:import` trusts the file's and can
+  collide; this path cannot.
+- **No status** — an import is always a **draft**, so uploading a file never publishes anything.
+- **No revisions or audit names** — history belongs to the site where it happened.
+- **No image bytes** — only their `/media/…` addresses. `PageContentStore::mediaKeysIn()` finds them,
+  and the Pages list names the ones this site's library lacks, in a banner that stays put, not a toast
+  that is gone in under three seconds.
+
+**An address that already exists is refused**, archived pages included, and nothing is created: an
+upload can never overwrite a page somebody edited. The tree goes through `ValidatesSectionTree` — the
+same rules, messages and tag-stripping as a draft save, extracted from `SaveSectionsRequest` so there
+is one opinion about what a legal page is rather than two, where the looser would be the way round the
+stricter. Seed files (`published` rather than `sections`) import too.
 
 ## Testimonials
 
@@ -494,22 +518,29 @@ placeholder anywhere fails it, and *finishing* one of the three fails it too, wi
 which is the most useful moment to be asked. Still outstanding, and not inventable here: the ABN, the
 complaint response timeframe, who handles complaints, and an effective date.
 
+One trap: it scans the stored tree **keys included, and ignoring case**, so a block whose data key is
+called `placeholder` lists every page it sits on as unfinished. The symptom is a finished page appearing
+in that list with no bracketed text anywhere on it. Name the key something else — the start box's is
+`prompt` for exactly this reason.
+
 Four things an audit flagged and the code did not need, recorded so nobody pays to find out twice:
 
 - **`width`/`height` on every image.** The wrappers already carry `aspect-ratio` in `app.css` —
   `.hero-visual`, `.why-visual`, `.family-visual`, `.team-member__photo`, `.article-card__image`,
   `.article__hero` — so the space is reserved before the image arrives. The two rules without a ratio,
-  `.block-image img` and `.text-image__media img`, belong to blocks **no seeded page uses at all**. The
-  finding came from reading the markup and not the stylesheet.
+  `.block-image img` and `.text-image__media img`, belong to blocks no **indexed** page uses. The one
+  page known to use an image block is `home-preview` — imported rather than seeded, and noindex — so a
+  layout shift there costs no ranking. The finding came from reading the markup and not the stylesheet. Revisit both this and the
+  next point if that page's design is ever promoted to the real home page.
 - **An eager-loading escape hatch for `ImageBlock`.** Same reason: it would let a page opt out of lazy
-  loading for its largest image, and no page has one.
+  loading for its largest image, and the only page where that image is above the fold is not indexed.
 - **A single-`<h1>` guard.** Two hero sections on one page would produce two, and nothing prevents it — but
   no page has two, and multiple `h1`s have not been a ranking problem for years. The cost of the guard is
   making every hero ask whether it is the first one.
 - **Editorial internal links.** Real finding: `/how-it-works`, `/why-agent-finder`, `/faqs` and `/contact`
   have no internal links in their body at all, so nothing but the header and footer passes any authority to
   them. It is not fixable as metadata, and it is somebody's decision rather than a defect: section text
-  cannot hold markup (`SaveSectionsRequest::sanitise()` strips tags from every string), so a link means a
+  cannot hold markup (`ValidatesSectionTree::sanitiseTree()` strips tags from every string), so a link means a
   button or a call-to-action block — which is exactly what was deliberately removed when every page was cut
   to one section.
 ### The SEO screen
@@ -613,6 +644,49 @@ the `suburb` column the inbox list and search read. The required answer is there
 requiring one would turn a Google outage back into a closed form. Enquiries from before the change
 have a suburb and no street, and `FindMyAgentOptions::place()` shows them as they were. The cache keys
 were renamed with it — cached suburb results carry no street and would have been served as addresses.
+
+**The `finder-start` block is the other half of that change**: a "suburb or postcode" box and a Start
+Here button, which opens Agent Finder through the ordinary `open-finder` action with what was typed as
+its argument. `ActionButton` calls the same handler with a click event, which is why `AgentFinder.jsx`
+keeps the argument only when it is a string. What was typed travels as `details.location.area`, stored
+exactly as typed and never looked up — it may be a postcode, and there is no lookup that answers both.
+It is a **fallback, never an answer**: the inbox shows it only when the address resolved no suburb of its
+own, because the picked address is the more precise of the two. It is optional on purpose; a box that
+refused to open the form when left empty would be a dead end in front of a question that asks anyway.
+
+`home-preview` is where that box is first used — the client's redesigned hero, built entirely out of
+section, row, column and blocks. It is **data, not code**: there is no seed file for it, and each site
+gets it by importing `tests/fixtures/pages/home-preview.page.json` (or a fresh download) — see "Moving a
+page between sites". `HomePreviewPageTest` imports that fixture the same way and pins that it is
+**noindex, out of the sitemap, and in neither menu nor footer**, and that no seed file has crept back;
+`e2e/global-setup.mjs` imports and publishes it for the browser suite. `hero-preview` is the precedent
+for an unlinked review page. The headline needed one thing the heading block lacked, a highlight in mid-sentence, so
+headings carry an optional `headingAfter`, rendered after the highlighted words. It is a multi-line box
+because headings are `white-space: pre-line`, and a line break typed there is the only way an editor can
+choose where a heading breaks. Headings also carry a `size` (standard or large): the mockup's headline
+and its "A FREE service" line are 56px and 46px, against 46px and 30px for the standard h1 and h2, and
+at those sizes the line spacing is part of what makes the page read as the mockup does. The rule under
+the hero is a `divider` block — a thin line at the section's content width, which a section's own
+background could not draw.
+
+**A block's own `margin: 0` must come before the `.u-space-*` rules in `app.css`, never after.** Same
+specificity, so whichever is later wins, and the Checklist, Benefits list and Steps strip all had their
+reset below the utilities — their Space above and Space below settings had never done anything on any
+page. The symptom is a spacing control that saves, reloads and changes nothing. Found by measuring this
+page against its mockup; the resets now sit together, directly above the utilities.
+
+One trap from the same page: **two navy sections stacked show a hairline seam** between them, a sliver
+of the light page background, whenever the first ends on a fractional pixel — and a section's height is
+set by its content, so that is most of the time. It looks exactly like a deliberate full-width rule, which
+is how it was first mistaken for one. `.section-block--text-light + .section-block--text-light` overlaps
+any two dark sections by a pixel, whichever dark backgrounds they are.
+
+Sections have two backgrounds beyond flat navy, both measured off the client's mockup rather than chosen:
+**Navy gradient** (135°, `#1A2846` to `#2D4A7D`) and **Deep navy** (`#0F1A30`). The mockup's finer
+details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo, the brighter Start
+Here button — are scoped to the gradient background, not to dark sections generally, so choosing it
+brings the look and no existing navy section changes. That button is `#3D7FD6` at 19px bold: white on
+that blue is 4.0:1, which passes only as large text, so the size is what makes the colour allowed.
 
 ## Dashboard
 
