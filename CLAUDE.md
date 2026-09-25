@@ -621,6 +621,16 @@ what the wholesale write it replaced would have erased.
 Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
 there; a value stored twice is a value that disagrees with itself.
 
+**The site has its own favicon, and Settings can replace it.** `public/favicon.svg` is the brand
+pentagon, copied from `BrandMark.jsx`'s glyph (its two coloured layers only). `favicon.ico` (16, 32 and
+48px) and `apple-touch-icon.png` (180px, on white, because iOS fills transparency with black) are
+rendered from it in Chromium — GD cannot draw SVG — so change the SVG and re-render both, never edit the
+PNGs. `app.blade.php` links the three by default, and a favicon chosen in `/cms/settings` takes the
+`rel="icon"` place instead. For a long time there was no favicon at all, and it went unnoticed because
+nothing failed: `favicon.ico` was a **0-byte file**, and `SettingsTest` pinned "no icon link until one
+is chosen". The symptom was only the browser's blank-page icon in every tab. `SettingsTest` now checks
+the files are real images.
+
 `security:check [--production]` is the deployment list — the session cookie, debug mode, the proxy in
 front, where media is really stored, and whether anything from a developer's machine came along — as a
 command rather than a paragraph, because nothing reads a security review
