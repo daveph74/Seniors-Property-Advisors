@@ -525,8 +525,7 @@ complaint response timeframe, who handles complaints, and an effective date.
 
 One trap: it scans the stored tree **keys included, and ignoring case**, so a block whose data key is
 called `placeholder` lists every page it sits on as unfinished. The symptom is a finished page appearing
-in that list with no bracketed text anywhere on it. Name the key something else — the start box's is
-`prompt` for exactly this reason.
+in that list with no bracketed text anywhere on it. Name the key something else.
 
 Four things an audit flagged and the code did not need, recorded so nobody pays to find out twice:
 
@@ -660,27 +659,22 @@ requiring one would turn a Google outage back into a closed form. Enquiries from
 have a suburb and no street, and `FindMyAgentOptions::place()` shows them as they were. The cache keys
 were renamed with it — cached suburb results carry no street and would have been served as addresses.
 
-**The `finder-start` block is the other half of that change**: a "suburb or postcode" box and a Start
-Here button, which opens Agent Finder through the ordinary `open-finder` action with the box's location
-as its argument. `ActionButton` calls the same handler with a click event, which is why `AgentFinder.jsx`
-keeps the argument only when it looks like a location. The box is the same `AddressAutocomplete` as
-Step 1 with `kind="suburb"`, and the proxy answers that kind with localities **and postcodes**
-(`kind=suburb` on `/api/suburbs`, cached separately from addresses).
-
-It is a **fallback, never an answer**: the address wins whenever it resolved a suburb, because it is the
-more precise of the two. When it did not, a suggestion **picked** in the box fills suburb, state and
-postcode, and so reaches the `suburb` column the inbox list and search read. Text typed but not picked
-never does, because it may be a postcode; it travels as `details.location.area` exactly as typed, which
-the inbox shows only when nothing better exists. Pressing Enter submits without the field blurring, so
-the block reads the input itself instead of waiting for the blur fallback. It is optional on purpose; a
-box that refused to open the form when left empty would be a dead end in front of a question that asks
-anyway.
+**The `finder-start` block is a Start Here button and an optional note**, opening Agent Finder
+through the ordinary `open-finder` action. The button is drawn the way the header draws Find My
+Agent — the large primary button with the arrow chip — so the hero's call to action and the header's
+read as one thing. It carried a "suburb or postcode" box once, framed with the button in a bordered
+panel and handed to the form as a fallback locality; the box was removed — Step 1 asks for the
+address anyway, so the form lost nothing — and the panel went with it, because with only a button
+inside it framed nothing and read as a box around a box. Two remnants are deliberate: enquiries sent
+while it existed carry `details.location.area`, which `StoreEnquiryRequest` still accepts and the inbox
+still shows when nothing better exists, and `/api/suburbs` still answers `kind=suburb` (localities and
+postcodes, cached apart from addresses), though nothing on the site asks for it now.
 
 Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has no CA bundle configured
 (`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
 like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
 
-`home-preview` is where that box is first used — the client's redesigned hero, built entirely out of
+`home-preview` is where that block is first used — the client's redesigned hero, built entirely out of
 section, row, column and blocks. It is **data, not code**: there is no seed file for it, and each site
 gets it by importing `tests/fixtures/pages/home-preview.page.json` (or a fresh download) — see "Moving a
 page between sites". `HomePreviewPageTest` imports that fixture the same way and pins that it is
@@ -715,8 +709,8 @@ smallest before, twice what the band carries. The mockup's finer
 details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo — are scoped to the
 gradient background, not to dark sections generally, so choosing it brings the look and no existing navy
 section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white on that blue is 4.0:1,
-which passes only as large text, and the button keeps the site's standard 16px semibold. `#3570B5`
-(5.1:1) is the nearest blue that passes at that size.
+which passes only as large text, and the button is the home hero's large one — 17px semibold, still
+short of large text. `#3570B5` (5.1:1) is the nearest blue that passes at that size.
 
 ## Dashboard
 
@@ -1197,6 +1191,13 @@ prunes and they should not accumulate in the bucket used for development. `globa
 That ordering is the point: `MediaSeeder` swallows a storage failure with a warning, so without the
 preflight a missing container let the run continue and failed several tests as though their screens
 were broken. The suite has always needed `docker compose up -d`; now it says so and stops.
+
+**That stop leaves a trap for the next run.** Global setup empties `database/e2e.sqlite` before
+`media:init`, and Playwright waits for the web server to answer before it runs global setup at all —
+so after an aborted run every request is a 500 for want of a `sessions` table, and the next run fails
+with `Timed out waiting 60000ms from config.webServer` while the server log shows `/` answering every
+few seconds. `APP_ENV=e2e php artisan migrate --force` once gets it going; global setup rebuilds it
+properly from there.
 
 **Two concurrent runs corrupt each other, and not via the port.** The port clash is the visible half
 — `webServer` is `reuseExistingServer: false` deliberately, so the second run refuses to start. The
