@@ -96,14 +96,14 @@ test('it will not send without consent, and says so on the step that asks', asyn
     await expect(modal.locator('.success')).toHaveCount(0);
 });
 
-test('the start box opens the form and carries what was typed into the enquiry', async ({ page }) => {
+test('the start box opens the form', async ({ page }) => {
     const problems = [];
     page.on('pageerror', (error) => problems.push(error.message));
 
     await page.goto('/home-preview', { waitUntil: 'domcontentloaded' });
 
     const box = page.locator('.block-finder-start');
-    await box.getByLabel('Your suburb or postcode').fill('2088');
+    await expect(box.locator('input')).toHaveCount(0);
 
     const sent = page.waitForRequest((request) => request.method() === 'POST' && request.url().endsWith('/enquiries'));
 
@@ -112,7 +112,7 @@ test('the start box opens the form and carries what was typed into the enquiry',
         open: () => box.getByRole('button', { name: 'Start Here' }).click(),
     });
 
-    expect((await sent).postDataJSON().details.location.area).toBe('2088');
+    expect((await sent).postDataJSON().details.location.street).toBeTruthy();
     await expect(modal.locator('.success')).toBeVisible();
 
     expect(problems, 'the start box and the wizard must raise no errors').toEqual([]);

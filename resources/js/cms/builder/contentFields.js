@@ -90,9 +90,8 @@ const CONTENT_SCHEMAS = {
         IMG('image.src', 'Background photograph', 'image.alt'),
     ],
     'finder-start': [
-        TEXT('prompt', 'Box prompt'),
         TEXT('buttonLabel', 'Button label'),
-        AREA('note', 'Note under the box'),
+        AREA('note', 'Note under the button'),
     ],
     'info-card': [
         PICK('cardStyle', 'Card style', ['rating', 'saving']),
