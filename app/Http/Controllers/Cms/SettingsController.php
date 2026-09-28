@@ -7,13 +7,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveSettingsRequest;
 use App\Models\Activity;
 use App\Models\Page;
-use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Site settings — the defaults and switches set once, behind `settings.manage`.
+ * Site settings — the switches set once, behind `settings.manage`.
+ *
+ * The SEO defaults used to be a tab here and now live on `/cms/seo`, beside the report that shows
+ * which addresses inherit them. They were not copied: this screen no longer sends them, and its
+ * save merges, so the two screens cannot overwrite each other.
  *
  * The screen this replaces was a four-tab form with every value hardcoded and a Save button that
  * only raised a toast. Its General tab also invented a business: an ABN, a Hawthorn address, a
@@ -34,11 +37,6 @@ class SettingsController extends Controller
             'settings' => [
                 'name' => $site['name'] ?? '',
                 'favicon' => $site['favicon'] ?? '',
-                'seo' => [
-                    'titleFormat' => $site['seo']['titleFormat'] ?? '',
-                    'description' => $site['seo']['description'] ?? '',
-                    'image' => $site['seo']['image'] ?? '',
-                ],
                 'social' => [
                     'facebook' => $site['social']['facebook'] ?? '',
                     'linkedin' => $site['social']['linkedin'] ?? '',
@@ -67,7 +65,9 @@ class SettingsController extends Controller
         $before = Site::all();
         $after = $request->settings();
 
-        Setting::updateOrCreate(['key' => Site::KEY], ['value' => $after]);
+        /* Merged, not replaced. This row has two writers — the SEO defaults live on `/cms/seo`
+           under `seo.manage` — and a wholesale write from either would erase the other's half. */
+        Site::merge($after);
 
         $this->record($before, $after);
 
@@ -84,7 +84,6 @@ class SettingsController extends Controller
         $areas = array_keys(array_filter([
             'Website name' => ($before['name'] ?? null) !== $after['name'],
             'Favicon' => ($before['favicon'] ?? null) !== $after['favicon'],
-            'SEO defaults' => ($before['seo'] ?? null) !== $after['seo'],
             'Social links' => ($before['social'] ?? null) !== $after['social'],
             'Tracking' => ($before['tracking'] ?? null) !== $after['tracking'],
             'Legal' => ($before['legal'] ?? null) !== $after['legal'],

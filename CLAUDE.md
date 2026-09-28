@@ -12,6 +12,22 @@ Section storage is JSON-snapshot based, not normalised rows.
 - Prefer minimal, targeted diffs over structural rewrites.
 - Separate data resolution from presentation in components.
 - Specs live in docs/specs/. Implement the referenced workstream only.
+- `docs/cms-user-guide.md` is the only document here written for the people who *use* the CMS, and
+  it quotes the screens word for word — a renamed button or a reworded hint makes it wrong in the
+  one place a reader cannot check against the code. Changing screen wording updates it, same rule
+  as this file. It states behaviour a reader must know and nothing else: no paths, no class names.
+  **The markdown is the source; `docs/cms-user-guide.html` is built from it** by `docs:guide` and is
+  what staff are actually given — so edit the markdown and rebuild, never the page. The two are held
+  together by `UserGuideTest`, because the drift would otherwise be silent and in the worst
+  direction: the copy nobody reads being the corrected one. `App\Docs\UserGuide` renders both that
+  file and `/cms/help`, which serves the same page inside the admin; one renderer, or the served page
+  and the file become two designs.
+- **The guide is written for a client administrator and stops there.** It does not describe Users and
+  roles, Settings or Recently deleted, and does not name the roles at all — where a control is visible
+  but refused it says so without saying who may. It also **names no accounts**: who currently holds a
+  role is the Users screen's business, a list of colleagues is wrong the first time somebody leaves,
+  and the built file is handed out as a file. `HelpController` reads nothing from the database for
+  that reason, and a test pins it.
 - **This file is part of the change, not a write-up of it.** Anything that adds, removes or alters a
   functionality updates `CLAUDE.md` in the *same* commit — no follow-up pass, no separate docs
   commit. A change that lands without it is incomplete.
@@ -36,7 +52,7 @@ it against the code before repeating it — that is the failure mode this reposi
 
 ## Commands
 
-- `composer dev` — server, queue, Vite and Reverb together, so the CMS updates live without a second
+- `composer dev` — the server and Vite together, so assets rebuild without a second
   terminal. `concurrently --kill-others` means one process failing stops the rest, which is why
   **`pail` is not in there**: it needs `pcntl`, XAMPP on Windows has no such extension, so it exited
   immediately and took the whole stack down with it — the symptom is `composer dev` returning code 1
@@ -49,13 +65,15 @@ it against the code before repeating it — that is the failure mode this reposi
   shows the browser doing it, `e2e:ui` is the interactive runner, `e2e:report` opens the last report.
   Run from the project root: from inside `e2e/` Playwright finds no config and fails everything
 - `./vendor/bin/pint` — PHP formatting
+- `php artisan docs:guide` — rebuilds `docs/cms-user-guide.html` from the markdown guide. `--check`
+  reports whether it is stale and writes nothing, which is what `UserGuideTest` runs
 
 **Deploying is not one of these commands.** `composer dev` is a laptop convenience with no production
-equivalent — a server has a release step and three processes something else keeps alive. That is
+equivalent — a server has a release step and two processes something else keeps alive. That is
 "Running it in production", further down, and it is the section to read before a first deploy: every
 mistake it lists fails silently rather than loudly.
 
-Run by hand, never scheduled or called from a migration: `content:import [--force]`,
+Run by hand, never scheduled or called from a migration: `content:import [--force]`, `seo:apply [--force]`,
 `content:purge-deleted [--days=90] [--force]`, `enquiries:purge [--months=24] [--force]`,
 `enquiries:erase {email} [--force]`, `activity:prune [--months=24] [--force]`, `media:init`,
 `media:optimise [--dry-run]`, `pages:scaffold`, `security:check [--production]`, `cms:user`. Each says
@@ -114,7 +132,7 @@ that already has the row, and `/cms/navigation` is where a running site is edite
 
 Adding a block type touches `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js`
 and the React registry — never the database. Adding a `data` key touches nothing.
-Note that `SaveSectionsRequest::sanitise()` strips tags from every string in the tree,
+Note that `ValidatesSectionTree::sanitiseTree()` strips tags from every string in the tree,
 so no `data` key can hold markup.
 
 `php artisan content:import [--force]` migrates a legacy `storage/app/content/` overlay
@@ -133,6 +151,35 @@ test asserts that. Publishing an unchanged tree records no revision.
 Reusable sections are **independent copies**, stored whole in `reusable_sections` with
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
+
+### Moving a page between sites
+
+A page travels as a **file, not a seed**: **Download as file** on the Pages list (`GET
+/cms/pages/{page}/export`) and **Import page** (`POST /cms/pages/import`). That is how a page built
+locally reaches a server that already has content, and it is why the code push and the content are
+separate — a seed file ships with every deploy, and only loads on a fresh install anyway, where
+`updateOrCreate` would overwrite whatever an editor has done since.
+
+What the file deliberately leaves out is the design, and each omission closes a way to go wrong:
+
+- **No `cms_id`** — the receiving site assigns its own. `content:import` trusts the file's and can
+  collide; this path cannot.
+- **No status** — an import is always a **draft**, so uploading a file never publishes anything.
+- **No revisions or audit names** — history belongs to the site where it happened.
+- **No image bytes** — only their `/media/…` addresses. `PageContentStore::mediaKeysIn()` finds them,
+  and the Pages list names the ones this site's library lacks, in a banner that stays put, not a toast
+  that is gone in under three seconds.
+
+**Importing is super administrator only** (`pages.import`); downloading stays with `content.manage`. A
+file is a whole section tree arriving from outside the site, which is a bigger decision than editing
+one already here. The Import button is hidden, not merely refused, for everyone else, so the user guide
+tells a client administrator to pass the file on rather than describing a button they cannot see.
+
+**An address that already exists is refused**, archived pages included, and nothing is created: an
+upload can never overwrite a page somebody edited. The tree goes through `ValidatesSectionTree` — the
+same rules, messages and tag-stripping as a draft save, extracted from `SaveSectionsRequest` so there
+is one opinion about what a legal page is rather than two, where the looser would be the way round the
+stricter. Seed files (`published` rather than `sections`) import too.
 
 ## Testimonials
 
@@ -320,6 +367,47 @@ controllers check it before they 404. Three details, all easy to lose:
 
 ## SEO and crawlers
 
+### The page itself is server-rendered
+
+`resources/js/ssr.jsx` and a node process render the public site, so the delivered document carries the
+heading, the copy and the links. It did not, for a long time, and the reason it went unnoticed is worth
+keeping: the head tags and JSON-LD **were** always server-rendered, so sharing cards worked perfectly
+while the `<body>` was an empty div and a JSON blob. Google runs JavaScript and indexed the site anyway;
+Bing, LinkedIn, Slack and every AI crawler read what arrives, and what arrived was nothing. Measured on
+`/how-it-works`: 8KB with no `<h1>` and no links, against 38KB with both.
+
+Three things hold it together, and each is a way it would otherwise not work at all:
+
+- **`app.jsx` hydrates when the server sent HTML and mounts fresh when it did not.**
+  `createRoot().render()` on server-rendered nodes throws that HTML away and redraws — SSR would still
+  "work" and buy nothing, which is the version of this that nobody notices. The other branch is equally
+  load-bearing: the admin is never server-rendered, so it arrives as an empty div where `hydrateRoot`
+  would warn.
+- **The admin is excluded, by `HandleInertiaRequests::$withoutSsr`.** Nothing crawls it — `robots.txt`
+  refuses it and it is behind sign-in — so rendering it twice would buy a slower response and pull the
+  editor into a process with no browser to offer them.
+- **`ssr.jsx` globs `./Pages/*.jsx`, one level, eagerly.** SSR needs an eager glob, and one level happens
+  to be exactly the two pages a visitor can reach, because `Login` lives under `Pages/Auth/` and the
+  admin under `Pages/Cms/`. A full glob would execute every admin module in node at boot — TipTap
+  reaching for `document` would kill the renderer before it served one request. `SsrScopeTest` asserts
+  the glob and the exclusion list still agree.
+
+The hydration contract that keeps it honest: **nothing may touch `window`, `document` or
+`localStorage` while rendering** — effects and handlers only — and a breakpoint is a CSS class, never a
+measured width. A section that formats a date or reads `innerWidth` during render produces a body that
+differs from what hydration wants, and React recovers by redrawing: the visible symptom is a flash, the
+crawled symptom is wrong content.
+
+Two local traps. **`public/hot` diverts SSR to Vite**, so with `composer dev` running the production path
+is never exercised — if you are checking whether SSR works, that file must be out of the way, and a test
+about SSR has to point Vite at a hot file that does not exist or it passes or fails on whether somebody
+had a dev server open.
+And **Inertia memoises the render per request scope**, so a test or a script making two page visits in
+one PHP process gets the first page's HTML twice; it looks exactly like the renderer serving one page for
+every address.
+
+### The head, and the sitemap
+
 `app/Content/Seo.php` works out the head once, on the server, and `resources/views/app.blade.php`
 prints it — including the JSON-LD (Article, Organization). Two things it exists to get right:
 **`og:image` has to be absolute**, and content stores media as `/media/…`, which is correct for an
@@ -327,21 +415,221 @@ prints it — including the JSON-LD (Article, Organization). Two things it exist
 that has not fetched the image yet renders the small card, so the first person to share a link gets
 the worse preview. The media table already knows both.
 
-`/sitemap.xml` and `/robots.txt` are routes, not files. The sitemap filters on `status` and the
-page's own noindex flag and nothing else — advertising a noindexed page asks a crawler to fetch
-something it is then told to forget. It is **deliberately uncached**: two queries over a few dozen
-rows against five ways to serve a stale sitemap.
+`/sitemap.xml` and `/robots.txt` are routes, not files. The list of addresses lives in
+`SeoReport::sitemapUrls()` rather than in the controller, and that placement is the design: `/cms/seo`
+reports *why* an address is missing from the sitemap, and a report explaining a list has to be reading
+the very list it explains. A shared predicate would have left two call sites free to drift; membership
+of one produced list cannot. `SitemapController` is four lines over it now, and it is **deliberately
+uncached** — two queries over a few dozen rows against five ways to serve a stale sitemap.
+
+It filters on `status` and the page's own noindex flag and nothing else — advertising a noindexed page
+asks a crawler to fetch something it is then told to forget. `robots.txt` also disallows
+`/blog/articles`, the load-more endpoint, which answers with article content and no page around it.
+
+**`lastmod` is a page's last publish, never its last save.** A page has a draft, so `updated_at` moves
+when somebody saves work no reader can see, and reporting that asks every crawler to re-fetch a page
+that did not move. An article has no draft — editing a published one changes it live — so `updated_at`
+is the honest answer there. A page with no `published_at` gets **no lastmod at all**: falling back to
+`updated_at` was written first and put the draft-save time back for precisely the pages the rule
+protects, and several seeded pages are in that state. Absent means "unknown", which is true and valid;
+a wrong date is neither.
+
+### What the metadata has to fit inside
+
+Every published address carries its own title and description, and two numbers are enforced by
+`SeoContentTest` rather than left to judgement: a description of **155 characters** and a rendered title
+of **61**, the latter including the ` | Seniors Property Advisors` the site format appends. Neither is the
+stored limit — `seo.description` allows 320 — because the question is not what may be saved but what a
+search result shows before it cuts. Eleven descriptions were over the line when this was written, all of
+them perfectly valid and all of them truncated mid-sentence in the one place a reader decides whether to
+click.
+
+Three more rules that file pins, each of which had gone wrong:
+
+- **No address may inherit the site-wide description.** It exists as a fallback and was `null`, so a page
+  whose own description was ever cleared shipped no description and no `og:description` at all. It has a
+  value now, and a page relying on it is a finding rather than a pass — a sentence shared by twelve
+  addresses tells a reader nothing about which one to open.
+- **The three articles carry their own.** They had none, so each fell back to the site's — three results,
+  one sentence. An article's `summary` is not reusable for this: it is a card blurb, written for a listing
+  where the title sits directly above it.
+- **The seed files and the database must agree.** Both were written, because `resources/content/pages/*.json`
+  is the source of truth for a fresh install and the database is what serves. Applied through
+  `PageContentStore::saveDetails()`, which merges the `seo` key and leaves the section tree alone — not
+  through `ContentSeeder`, which is `updateOrCreate` over whole pages and would overwrite an editor's work.
+### Getting metadata onto a site that already has content
+
+`php artisan seo:apply` writes the titles and descriptions from `resources/content/pages/*.json` onto
+pages that already exist, reporting unless given `--force`. It exists because the obvious way is
+destructive: those files are the source of truth for a *fresh* install, and `db:seed` runs
+`updateOrCreate` across the **whole page** — sections included — so on a live site it would replace
+every page with the repository's version and silently undo months of editing.
+
+So the command writes **two fields and nothing else**, through `PageContentStore::saveDetails()`, which
+merges. A seed file that does not mention a sharing image is not an instruction to remove one — an image
+and a canonical are per-page choices an editor made in the builder, and `ApplySeoMetadataTest` asserts
+they survive. A page in the repository the site has never had is reported and stepped over rather than
+created; creating one is `pages:scaffold`'s job.
+
+The practical consequence is worth stating plainly, because it is the thing that looks like a failed
+deploy: **releasing this changes nothing a reader sees.** The release step has no `db:seed`, correctly, so
+the live titles and descriptions stay as they were until somebody runs `seo:apply --force`.
+### The head, and what is deliberately not in it
+
+Added because the data was already there and the tag was not: `og:site_name` and `og:locale` (`en_AU` —
+Facebook assumes American otherwise), `og:image:alt` from the media row, `article:published_time` and
+`article:modified_time` on articles, and **a `robots` tag on every page** rather than only on a hidden
+one, because an indexable page still has a preference worth stating: `max-image-preview:large` is what
+earns a full-width thumbnail in mobile results instead of a postage stamp.
+
+That last one broke something invisible, which is the part worth remembering. Both public controllers
+asked `isset($head['robots'])` to mean "is this page hidden from search", which was true only while a
+robots tag existed for no other reason. Every page sends one now, so that reading would have silently
+stopped **every page emitting any structured data at all** — a change no existing test would have
+noticed. `Seo::isHidden()` is the question actually being asked, in one place.
+
+Left out on purpose, all of it cargo cult for this site: `twitter:site` and `twitter:creator` (there is no
+X account, and X falls back to the Open Graph tags anyway), `theme-color`, `rel=prev/next` (Google dropped
+it in 2019 and there are no paginated addresses), `speakable` (news publishers only), a standalone
+`WebPage` node, and font preconnect — DM Sans is bundled, so preconnecting to Google Fonts on a public
+page would make it slower.
+
+**`ProfessionalService`, not `LocalBusiness`.** Both are narrower than `Organization` and both take an
+address, but `LocalBusiness` claims a place a customer can walk into, and a 1300 number with a serviced
+office on level 14 is not that. `areaServed: Australia` says the true thing instead. The organisation node
+carries an `@id`, and an article's `publisher` points at it rather than restating the name — two nodes
+describing one business are two businesses as far as a search engine is concerned. The email is read out of
+the footer's own contact column, so it cannot disagree with what a reader sees. **The ABN is deliberately
+absent**: the one in the footer is a placeholder, and an identifier invented for a search engine is worse
+than none.
+
+**No `aggregateRating`, and there is a test whose whole job is to keep it that way.** The `testimonials`
+table has a `rating` column, so this is the obvious place to add stars — and it is a trap twice over:
+Google does not show review rich results sourced from an organisation's own first-party testimonials, and
+marking up your own quote slider is the pattern that earns a manual action. The absence was already
+correct; now the next person to have the idea finds out from a red test instead of from Search Console.
+### Unfinished content, and four checks that were not worth making
+
+`PublishedContentTest` fails when a published page carries text a reader would see as unfinished —
+"TO BE CONFIRMED", "[X business days]", "PLACEHOLDER" and the rest. It exists because three pages already
+do: `privacy-policy`, `terms-and-conditions` and `complaints`, the last of which says **in its own words**
+that its timeframes are placeholders and must not be published, and is published. Nothing in the
+application had an opinion: a placeholder validates, saves, publishes and is served exactly like a finished
+sentence.
+
+It **pins the exact set** rather than failing or skipping. A permanently red suite teaches people to ignore
+it, and a skip would break this file's own rule that a standing skip is a standing question — so a new
+placeholder anywhere fails it, and *finishing* one of the three fails it too, with the list to shorten,
+which is the most useful moment to be asked. Still outstanding, and not inventable here: the ABN, the
+complaint response timeframe, who handles complaints, and an effective date.
+
+One trap: it scans the stored tree **keys included, and ignoring case**, so a block whose data key is
+called `placeholder` lists every page it sits on as unfinished. The symptom is a finished page appearing
+in that list with no bracketed text anywhere on it. Name the key something else — the start box's is
+`prompt` for exactly this reason.
+
+Four things an audit flagged and the code did not need, recorded so nobody pays to find out twice:
+
+- **`width`/`height` on every image.** The wrappers already carry `aspect-ratio` in `app.css` —
+  `.hero-visual`, `.why-visual`, `.family-visual`, `.team-member__photo`, `.article-card__image`,
+  `.article__hero` — so the space is reserved before the image arrives. The two rules without a ratio,
+  `.block-image img` and `.text-image__media img`, belong to blocks no **indexed** page uses. The one
+  page known to use an image block is `home-preview` — imported rather than seeded, and noindex — so a
+  layout shift there costs no ranking. The finding came from reading the markup and not the stylesheet. Revisit both this and the
+  next point if that page's design is ever promoted to the real home page.
+- **An eager-loading escape hatch for `ImageBlock`.** Same reason: it would let a page opt out of lazy
+  loading for its largest image, and the only page where that image is above the fold is not indexed.
+- **A single-`<h1>` guard.** Two hero sections on one page would produce two, and nothing prevents it — but
+  no page has two, and multiple `h1`s have not been a ranking problem for years. The cost of the guard is
+  making every hero ask whether it is the first one.
+- **Editorial internal links.** Real finding: `/how-it-works`, `/why-agent-finder`, `/faqs` and `/contact`
+  have no internal links in their body at all, so nothing but the header and footer passes any authority to
+  them. It is not fixable as metadata, and it is somebody's decision rather than a defect: section text
+  cannot hold markup (`ValidatesSectionTree::sanitiseTree()` strips tags from every string), so a link means a
+  button or a call-to-action block — which is exactly what was deliberately removed when every page was cut
+  to one section.
+### The SEO screen
+
+`/cms/seo` is two tabs over one ability, `seo.manage` — super **and** client administrator, because a
+client admin already writes every one of these fields in the page builder, so gathering them onto one
+screen widens nobody's reach.
+
+**Overview** is a row per publicly addressable URL — pages, articles, and trashed articles too, since
+an address a search engine still holds is exactly what somebody comes here to explain. **A deleted row
+is reported and never editable**: it has no edit link, its address is plain text rather than a button,
+and the server refuses the patch anyway (`findOrFail` excludes trashed). All three, because two of them
+were not enough — the row was clickable, the editor opened, and its save answered 404 while the panel
+sat there looking busy. Restoring is the Deleted content screen's job, behind a different ability. What it reports
+is what a crawler *receives*, not what the column holds: every row goes through `Seo::head()`, the same
+function `app.blade.php` prints from. That works only because `head()` never reads the request — the
+callers pass the URL — so the report hands it each row's **public** address. Get that wrong and every
+row claims the admin screen is its canonical, which is the kind of report somebody acts on before
+noticing. `descriptionInherited` is called out separately from "has a description": twelve addresses
+sharing one site default is a finding, not a pass.
+
+**Defaults** is the title pattern, default description and default sharing image — which used to be a
+tab on `/cms/settings` and **moved rather than being copied**. Settings is `settings.manage`, so
+leaving them there kept them from the person most likely to want them, and dragging Settings' gate down
+would have handed out the GA4 ids and the legal wording with it.
+
+That move gave the `site` settings row **two writers**, which this file used to describe as the thing
+that must never happen. It is safe now for one reason: both go through `Site::merge()`, so a save says
+which top-level keys it changes instead of asserting the whole row. `/cms/settings` replaced it
+wholesale before, and a save from the SEO screen — which has no analytics ids to send — would have
+cleared them, failing silently until a monthly report came back empty. `SeoEditingTest` pins both
+directions.
+
+Two fields are editable from a row, description and hide-from-search, through `PATCH /cms/seo/{kind}/{id}`
+with `sometimes` on both — so a toggle patches one field alone, the rule the testimonials screen
+already pays for. **The canonical and the search title are deliberately not offered here**: a canonical
+typed into a list row is an address de-indexed by a fat finger, and it stays in the builder's SEO panel
+where there is room to explain it. `SeoFieldRules` holds the limits for all four requests that write
+these values, because a description that saves from the builder and is refused here reads as one of the
+two screens being broken.
+
+Two traps in its own table markup. `--seo` is the grid modifier and **the head row wears it too**, so
+`.cms-table__row--seo` first() resolves to the header — which fails as "the row does not contain that
+text" and reads as a broken save; a data row is the one that also has `.cms-table__row`. And the screen
+carries **two segmented strips** — the Overview/Defaults tabs and the filter row — plus a sidebar with
+its own "Pages" link, so every locator has to name the strip it means or Playwright reports a
+strict-mode violation rather than clicking the wrong thing.
+
+Two smaller things worth knowing. A page row's link is built from **`cms_id`, not `id`** — the same trap
+the search palette pays for, since `CmsPageController::edit` resolves through `findByCmsId` — and
+`SeoReportTest` follows the link rather than matching its shape, which is the only reason that is
+caught. And filtering and search run **in PHP, not SQL**: the title after the site format, an inherited
+description and sitemap membership are not columns, so `Like` cannot see them and a search pushed down
+to the database would find fewer rows than the eye can see on screen. The row set is capped at
+`SeoReport::CEILING`, with a `truncated` prop so the screen says so rather than quietly slowing down
+every month.
+
+There is **no CSV export**. One was built and removed: Google reads the XML, and a spreadsheet was a
+workflow nobody had asked for, carrying formula-injection escaping and an export-versus-screen filter
+mismatch to keep in step for it.
 
 ## Site settings and global content
 
 Two `settings` rows, and the split is a permissions boundary rather than a filing choice. `globals`
 is wording a **client administrator** edits at `/cms/global-content` — footer blurb, announcement
 bar, phone. `app/Content/Site.php` is the row behind `/cms/settings`, **super administrator only**
-(`settings.manage`) — SEO defaults, the GA4/GTM ids, the switches set once. One row edited by two
-screens under two permissions is how a save from one silently reverts the other.
+(`settings.manage`) — the GA4/GTM ids, the legal wording, the switches set once.
+
+The SEO defaults are the exception and they live on `/cms/seo` under `seo.manage`, so this row has two
+writers. That is only safe because both go through `Site::merge()`; see "The SEO screen" above for
+what the wholesale write it replaced would have erased.
 
 Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
 there; a value stored twice is a value that disagrees with itself.
+
+**The site has its own favicon, and Settings can replace it.** `public/favicon.svg` is the brand
+pentagon, copied from `BrandMark.jsx`'s glyph (its two coloured layers only). `favicon.ico` (16, 32 and
+48px) and `apple-touch-icon.png` (180px, on white, because iOS fills transparency with black) are
+rendered from it in Chromium — GD cannot draw SVG — so change the SVG and re-render both, never edit the
+PNGs. `app.blade.php` links the three by default, and a favicon chosen in `/cms/settings` takes the
+`rel="icon"` place instead. For a long time there was no favicon at all, and it went unnoticed because
+nothing failed: `favicon.ico` was a **0-byte file**, and `SettingsTest` pinned "no icon link until one
+is chosen". The symptom was only the browser's blank-page icon in every tab. `SettingsTest` now checks
+the files are real images.
 
 `security:check [--production]` is the deployment list — the session cookie, debug mode, the proxy in
 front, where media is really stored, and whether anything from a developer's machine came along — as a
@@ -358,9 +646,77 @@ The enquiry form posts to `/enquiries` and is CSRF-protected — which is why e2
 `global-setup.mjs` instead of through it.
 
 `/api/suburbs` proxies Google Places (New) so **the API key never reaches the browser**. Two modes:
-`?q=` for predictions, `?place_id=` for the picked suburb. A Google failure degrades to an
+`?q=` for predictions, `?place_id=` for the picked address. A Google failure degrades to an
 empty-but-successful payload, never an error — the field falls back to free text, so an outage
 upstream can slow the form down but can never block it.
+
+**It looks up street addresses, not suburbs**, despite the address it answers on. Agent Finder's first
+question was a suburb until the client asked for the property's own address; the route and controller
+kept their names because renaming a public endpoint buys a reader nothing. The details call builds a
+`street` line from the unit, number and road, and still returns the suburb, so a picked address fills
+the `suburb` column the inbox list and search read. The required answer is therefore
+`details.location.street`, **not** `suburb`: a typed address with no pick has no suburb to give, and
+requiring one would turn a Google outage back into a closed form. Enquiries from before the change
+have a suburb and no street, and `FindMyAgentOptions::place()` shows them as they were. The cache keys
+were renamed with it — cached suburb results carry no street and would have been served as addresses.
+
+**The `finder-start` block is the other half of that change**: a "suburb or postcode" box and a Start
+Here button, which opens Agent Finder through the ordinary `open-finder` action with the box's location
+as its argument. `ActionButton` calls the same handler with a click event, which is why `AgentFinder.jsx`
+keeps the argument only when it looks like a location. The box is the same `AddressAutocomplete` as
+Step 1 with `kind="suburb"`, and the proxy answers that kind with localities **and postcodes**
+(`kind=suburb` on `/api/suburbs`, cached separately from addresses).
+
+It is a **fallback, never an answer**: the address wins whenever it resolved a suburb, because it is the
+more precise of the two. When it did not, a suggestion **picked** in the box fills suburb, state and
+postcode, and so reaches the `suburb` column the inbox list and search read. Text typed but not picked
+never does, because it may be a postcode; it travels as `details.location.area` exactly as typed, which
+the inbox shows only when nothing better exists. Pressing Enter submits without the field blurring, so
+the block reads the input itself instead of waiting for the blur fallback. It is optional on purpose; a
+box that refused to open the form when left empty would be a dead end in front of a question that asks
+anyway.
+
+Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has no CA bundle configured
+(`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
+like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
+
+`home-preview` is where that box is first used — the client's redesigned hero, built entirely out of
+section, row, column and blocks. It is **data, not code**: there is no seed file for it, and each site
+gets it by importing `tests/fixtures/pages/home-preview.page.json` (or a fresh download) — see "Moving a
+page between sites". `HomePreviewPageTest` imports that fixture the same way and pins that it is
+**noindex, out of the sitemap, and in neither menu nor footer**, and that no seed file has crept back;
+`e2e/global-setup.mjs` imports and publishes it for the browser suite. `hero-preview` is the precedent
+for an unlinked review page. The headline needed one thing the heading block lacked, a highlight in mid-sentence, so
+headings carry an optional `headingAfter`, rendered after the highlighted words. It is a multi-line box
+because headings are `white-space: pre-line`, and a line break typed there is the only way an editor can
+choose where a heading breaks. Headings also carry a `size` (standard or large). **Large borrows the
+site's existing scale rather than inventing one**: an h1 takes the hero headline's 38–52px and an h2 the
+website section titles' 32–48px (`h2`, `.section-head__title`). The mockup was drawn at 56px and 46px;
+matching it exactly would have made this the one page on the site with its own type sizes. The rule under
+the hero is a `divider` block — a thin line at the section's content width, which a section's own
+background could not draw.
+
+**A block's own `margin: 0` must come before the `.u-space-*` rules in `app.css`, never after.** Same
+specificity, so whichever is later wins, and the Checklist, Benefits list and Steps strip all had their
+reset below the utilities — their Space above and Space below settings had never done anything on any
+page. The symptom is a spacing control that saves, reloads and changes nothing. Found by measuring this
+page against its mockup; the resets now sit together, directly above the utilities.
+
+One trap from the same page: **two navy sections stacked show a hairline seam** between them, a sliver
+of the light page background, whenever the first ends on a fractional pixel — and a section's height is
+set by its content, so that is most of the time. It looks exactly like a deliberate full-width rule, which
+is how it was first mistaken for one. `.section-block--text-light + .section-block--text-light` overlaps
+any two dark sections by a pixel, whichever dark backgrounds they are.
+
+Sections have two backgrounds beyond flat navy, both measured off the client's mockup rather than chosen:
+**Navy gradient** (135°, `#1A2846` to `#2D4A7D`) and **Deep navy** (`#0F1A30`). The mockup's networks
+band is also why there is a **Slim** section height (32px, 24px on a phone): Compact's 72px was the
+smallest before, twice what the band carries. The mockup's finer
+details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo — are scoped to the
+gradient background, not to dark sections generally, so choosing it brings the look and no existing navy
+section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white on that blue is 4.0:1,
+which passes only as large text, and the button keeps the site's standard 16px semibold. `#3570B5`
+(5.1:1) is the nearest blue that passes at that size.
 
 ## Dashboard
 
@@ -393,8 +749,10 @@ figures, which is worse than an empty dashboard because it reads as fact.
 middleware, the `Gate` definitions in `AppServiceProvider`, and the sidebar's shared
 `auth.modules` prop all read from it. Nothing else should hard-code a role name.
 
-Client administrators create, edit, publish and unpublish content. Super administrators
-additionally delete content, restore archived pages, manage accounts and reach settings.
+Client administrators create, edit, publish and unpublish content, and reach `/cms/seo` — its own
+`seo.manage` ability, since the report and the two fields it patches are things they already write in
+the builder. Super administrators additionally delete content, restore archived pages, import page
+files (`pages.import`), manage accounts and reach settings.
 Deleting anything is therefore a super-admin route — the scope never gives client users a
 delete, only disable and archive.
 
@@ -605,49 +963,22 @@ reads as one you could type into; the e2e suite asserts **zero** inputs in that 
 Notes are optional there, so `snippet()` falls back to the picked answers rather than leaving a row as a
 name and a time among rows that all carry a sentence.
 
-### An open inbox hears about an arrival
+### The inbox updates when somebody looks at it
 
-The screens are server-rendered, so a tab somebody left open used to keep showing what it fetched when
-they opened it. Laravel Reverb closes that: `EnquiryReceived` is broadcast on a private `cms` channel
-and any open CMS screen refreshes itself.
+The screens are server-rendered and there is no socket, so a tab left open keeps showing what it
+fetched when it was opened. Reloading is what refreshes it, and that is the whole of the behaviour.
 
-**The message carries nothing.** Not the name, not the suburb, not the first line — `broadcastWith()`
-returns an empty array, on purpose. A payload would put somebody's account of their own circumstances
-into a queue record and a socket frame, delivered to every signed-in browser whether or not anyone is
-looking at the inbox; the search palette already refuses to index that message for the same reason. So
-the event is a nudge, and the browser refetches through `/cms/enquiries` — authorised, filtered and
-paged exactly as when somebody presses reload. One path to the data, and nothing to keep in step with
-the shape of the props.
+**Laravel Reverb used to close that gap and was removed deliberately** — the event, the private
+channel, the Echo client and the Reverb and queue processes with it. It cost two long-lived processes,
+a `connect-src` permission and 40KB of Pusher client, to save somebody pressing reload on a site whose
+inbox measures in enquiries a week — and every one of its failure modes was silent: a socket blocked by
+the policy, a subscription never authorised, a queue nobody was draining. If it comes back, the pieces
+it needed are in this file's history — but the question to answer first is what a live inbox is worth
+against two more things a server has to keep alive.
 
-Four things that follow, each of which was a way for this to fail quietly:
-
-- **`connect-src` has to name the socket**, as `ws://` or `wss://` — naming the `http://` origin it
-  upgrades from does not permit it. Blocked, the only symptom is an inbox that has gone back to
-  updating on reload. `OwaspTest` pins both the permission and its absence where no key is configured,
-  and `security:check` fails a production environment still on `ws://`, since a plain socket on an
-  HTTPS page is blocked as mixed content.
-- **Echo must build its own client.** Handing it a pre-made Pusher instance keeps Pusher's defaults,
-  which authorise a private channel at `/pusher/auth` — an address this application answers with a 405
-  from the catch-all page route. The socket connects, the subscription is never authorised, and nothing
-  is ever delivered, with no error worth reading anywhere in the sequence.
-- **The dispatch cannot be allowed to cost an enquiry.** It is queued, so an unreachable Reverb is a
-  failed job; and it is wrapped, because on a `sync` queue the broadcast happens inside the request
-  that just saved somebody's enquiry and would otherwise answer them with a 500 after keeping it.
-- **The rule about who may listen lives in `app/Broadcasting/CmsChannel.php`, not in a closure.**
-  Testing it through `/broadcasting/auth` proved nothing: under the `null` broadcaster this suite runs
-  with, the endpoint answers without consulting the callback, so every channel refused every caller and
-  the denial tests passed vacuously. The rule mirrors `Permit` — an active account with
-  `content.manage` — because a socket outliving a deactivation is a way back into the screens the
-  account was locked out of.
-
-The list holds still while an enquiry is open: rows behind a modal are what somebody is about to click,
-and re-ordering them under a dialog is how the wrong person's message gets opened. The bell still moves,
-so nothing is hidden — only deferred until the modal closes, which visits the list anyway.
-
-Running it needs `php artisan reverb:start` **and** a queue worker. Without either, the CMS behaves
-exactly as it did before any of this: the inbox updates when somebody looks at it. `.env.e2e` sets
-`BROADCAST_CONNECTION=null` deliberately — the browser suite runs a synchronous queue, so a broadcast
-would happen inside the request and the run would depend on a socket server being up to pass.
+Nothing is queued now, which is why there is no worker in `composer dev` and none in the process table
+under "Running it in production". An enquiry is saved in the request that brings it, full stop. The
+first mailable to land here changes that, and the worker comes back in the same commit.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. There is no
@@ -750,21 +1081,22 @@ npm ci && npm run build
 rm -f public/hot
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
-php artisan queue:restart
+php artisan inertia:stop-ssr || true
 php artisan security:check --production
 ```
 
-And three processes, each under a supervisor that restarts them on failure and on boot — systemd or
+And two processes, each under a supervisor that restarts them on failure and on boot — systemd or
 supervisord on Linux, a service wrapper on Windows:
 
 | what | how | what happens without it |
 |---|---|---|
 | the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
-| the queue | `php artisan queue:work --tries=3 --max-time=3600` | enquiries still arrive and are still kept; nothing tells an open CMS screen about them |
-| the socket | `php artisan reverb:start --host=0.0.0.0 --port=8080`, behind the proxy that terminates TLS | the same: the inbox updates when somebody looks at it |
+| the renderer | `php artisan inertia:start-ssr` — a unit file is in `deploy/seniors-ssr.service` | the site still works, and serves a body with no heading and no links — see below, because this is the quietest failure here |
 
-Neither of the last two can lose an enquiry — the notice is queued and the dispatch is wrapped, so a
-dead worker or an unreachable socket is a failed job, never a visitor's error page.
+**There is no queue worker, because nothing is queued** — see "The inbox updates when somebody looks at
+it". An enquiry is written in the request that carries it, so no background process can lose one. The
+first mailable or deferred job to land here brings the worker and `queue:restart` back with it, in the
+same commit.
 
 **Docker is not part of any of this.** `docker-compose.yml` runs `floci`, an S3-compatible emulator on
 `:4566`, and it exists for a developer's machine and the browser suite — it is never deployed. A server
@@ -787,17 +1119,58 @@ staging box takes when somebody runs floci on the server to make uploads work.
 unset is what selects AWS. A non-AWS provider is still supported — an endpoint on a real host and port
 passes.
 
+### The first deploy, in order
+
+The release step above assumes a server that has already run one. The first one has an order, and two of
+these steps are safe to do and unsafe to skip:
+
+1. **Copy `.env.production.example`, not `.env.example`** — the second carries the storage emulator's
+   endpoint and dummy credentials, and a server that keeps them stores uploads in a container's volume
+   while looking perfectly well.
+2. `php artisan key:generate`, then fill in the database, the `AWS_*` values and `TRUSTED_PROXIES`.
+3. `php artisan migrate --force`, then `php artisan db:seed --force` — **on an empty database only.**
+   `UserSeeder` and `SampleContentSeeder` refuse to run in production, so this installs the client's pages
+   and settings and nothing else. On a site that already has content this is the wrong command; see
+   `seo:apply` for changing metadata on a live site.
+4. `php artisan cms:user you@example.com --name="Your Name" --role=super_admin` — it prints a password.
+5. `php artisan media:init` against the real bucket, which applies the CORS rules a presigned upload needs.
+6. The release step, then `php artisan security:check --production` until it is silent.
+7. **Server-side rendering is off in the template on purpose, and is the last thing to turn on.** Install
+   `deploy/seniors-ssr.service`, `systemctl enable --now`, set `INERTIA_SSR_ENABLED=true`, re-run
+   `config:cache`, and then prove it rather than believing it:
+
+   ```sh
+   curl -s https://your-domain/how-it-works | grep -c '<h1'
+   ```
+
+   One means it is working. Zero means it fell back — and the page still looks perfect in a browser, which
+   is the whole reason this is the step people think they have done.
+
+Leaving it off is a supported state, not a broken one: `security:check` passes, and everything else on the
+site — the metadata, the structured data, the sitemap — is unaffected. What is lost is only that anything
+which does not run JavaScript reads a blank page.
 The rest, each of which fails quietly rather than loudly (no count, because this list grows):
 
 - **`public/hot` must not exist on the server.** It is how a developer's machine says "assets are
   coming from Vite"; copied to a server, every page asks a dev server that is not there and renders
   blank, with the reason only in the browser console. Hence the `rm -f` above, and
   `security:check` fails on it — reading the hot file Laravel itself would use, not a fixed path.
-- **`REVERB_SCHEME=https`**, with the proxy exposing the socket as `wss://`. A plain `ws://` socket on
-  an HTTPS page is refused as mixed content and the CMS silently stops updating. `security:check
-  --production` fails on this, which is the only reason anybody would notice.
-- **`php artisan queue:restart` after every release**, or workers go on running the code they were
-  started with.
+- **`php artisan inertia:stop-ssr` after every release.** The renderer holds the bundle it
+  started with, so without this readers are served last week's pages by a process nobody restarted. The
+  gap before the supervisor brings it back renders in the browser, which is what the site did before SSR
+  existed, so there is no outage in it. **`|| true` is not decoration**: the command exits 1 when there
+  is no renderer to stop, which is the normal state of a first deploy and of any server running with SSR
+  off — and a release script with `set -e` would abort there, having already built and migrated. Found by
+  checking the exit code rather than the message; the first measurement said 0 because the pipe to `tail`
+  was reporting its own success.
+- **The renderer fails silently and looks fine.** A missing bundle, a dead process, or
+  `INERTIA_SSR_ENABLED` never reaching the server's `.env` all end the same way: Inertia answers `null`,
+  the browser draws the page, every screen looks right, and the delivered HTML quietly goes back to
+  having no heading and no links. `security:check --production` fails on a missing bundle — note the
+  bundle is **gitignored**, so a release that copies only tracked files loses it — `app/Listeners/RecordSsrFailure.php`
+  logs every failed render with the component and the browser API that caused it, and
+  `php artisan inertia:check-ssr` answers by hand. Three defences for one fault, because nothing else
+  would ever tell you.
 - **`SESSION_SECURE_COOKIE=true`** and a deliberate `SESSION_LIFETIME`, neither of which belongs in a
   local `.env` — see `.env.production.example`, and `security:check` again.
 - **`AWS_BUCKET` and the credentials must be filled**, and `AWS_ENDPOINT` left unset. Blank credentials
@@ -805,9 +1178,6 @@ The rest, each of which fails quietly rather than loudly (no count, because this
 - **`TRUSTED_PROXIES` must name the proxy**, or every rate limit keyed on a visitor collapses onto one
   bucket and HSTS is never sent. `CACHE_STORE=file` too, on a single server: the limiter counts in the
   cache, and counting in SQLite takes a database-wide write lock on every throttled request.
-
-Rotating the socket credentials needs no rebuild: the browser is told what to connect to by the server
-that drew the page, not by a value baked into the assets — see `app/Cms/Realtime.php`.
 
 ## Browser tests
 
@@ -877,9 +1247,14 @@ Three things about the builder are worth knowing before touching those tests:
   exact text for that reason; substring matching silently picks the wrong field.
 - **Only the Content accordion is open on arrival.** The Layout, Style, Responsive and Advanced
   inputs do not exist in the DOM until their heading is clicked.
-- **Toolbar buttons are dispatched, not clicked.** The canvas fades in, re-measures its height and
-  is drawn under a CSS `scale()`, so a real click is delivered to whatever occupies the coordinates
-  and Playwright's stability check never settles.
+- **Nothing in the canvas is clicked — blocks included.** The canvas fades in, re-measures its
+  height and is drawn under a CSS `scale()`, so a real click is delivered to whatever occupies the
+  coordinates and Playwright's stability check never settles. `toolbar`, `selectBlock` and
+  `selectLastBlock` all dispatch. The three specs that still called `.cms-block').last().click()`
+  passed for as long as the fixture pages were tall enough for the geometry to agree: trimming
+  Contact to a single section made one of them select nothing, and it surfaced two steps later as
+  "the selected block's toolbar has no Delete button" — which reads as a broken builder rather than
+  a missed click.
 
 **Dropping a block inside another goes through `support/dragShim.js`.** The canvas uses the native
 HTML5 drag API, which Playwright cannot drive; the shim dispatches the events itself. It works

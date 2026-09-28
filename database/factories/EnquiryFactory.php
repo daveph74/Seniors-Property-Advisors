@@ -48,10 +48,11 @@ class EnquiryFactory extends Factory
                 'best_time' => array_key_first(FindMyAgentOptions::BEST_TIMES),
                 'location' => [
                     'place_id' => 'ChIJ_fma_example',
+                    'street' => '12 Smith Street',
                     'suburb' => 'Mosman',
                     'state' => 'NSW',
                     'postcode' => '2088',
-                    'description' => 'Mosman NSW 2088',
+                    'description' => '12 Smith Street, Mosman NSW 2088',
                     'free_text' => false,
                 ],
             ], $details),

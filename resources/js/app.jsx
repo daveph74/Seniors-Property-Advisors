@@ -1,5 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 
 createInertiaApp({
     /*
@@ -13,7 +13,21 @@ createInertiaApp({
 
         return pages[`./Pages/${name}.jsx`]();
     },
+    /*
+     * Two roots, and the branch is load-bearing in both directions. The public site arrives
+     * server-rendered, and `createRoot().render()` on those nodes throws that HTML away and
+     * redraws from scratch — SSR would still "work" and buy nothing, which is the version of this
+     * bug nobody notices. The admin and `/login` are never server-rendered (see
+     * `HandleInertiaRequests::$withoutSsr`), and neither is any page served while the SSR process
+     * is down, so those arrive as an empty div where `hydrateRoot` would warn.
+     */
     setup({ el, App, props }) {
+        if (el.hasChildNodes()) {
+            hydrateRoot(el, <App {...props} />);
+
+            return;
+        }
+
         createRoot(el).render(<App {...props} />);
     },
 });

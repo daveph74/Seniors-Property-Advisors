@@ -289,7 +289,7 @@ Recorded so a later reviewer knows it was checked, not skipped.
 - **Article HTML** is purified on the way in against a tight allowlist with schemes limited to
   http/https/mailto/tel, which is what makes the single `dangerouslySetInnerHTML` in
   `Pages/Article.jsx:98` safe.
-- **Section trees** run every string through `strip_tags` (`SaveSectionsRequest::sanitise`).
+- **Section trees** run every string through `strip_tags` (`ValidatesSectionTree::sanitiseTree`).
 - **Mass assignment**: no model uses `$guarded = []`; no `env()` call outside `config/`.
 - **The permission middleware** checks `is_active` as well as the ability, so disabling an account
   takes effect on the next request rather than the next login.

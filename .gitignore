@@ -30,3 +30,5 @@ Homestead.yaml
 Thumbs.db
 
 /public/sample-portraits
+
+/bootstrap/ssr

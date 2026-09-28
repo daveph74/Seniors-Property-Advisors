@@ -82,6 +82,15 @@ export default function globalSetup() {
         ']);',
     ].join(''));
 
+    /* The home-preview page is data rather than code, so it is imported here the way a server gets it,
+       and published so the public start-box test has an address to visit. */
+    artisan('tinker', '--execute', [
+        '$d = json_decode(file_get_contents(base_path("tests/fixtures/pages/home-preview.page.json")), true);',
+        '$store = app(App\\Content\\PageContentStore::class);',
+        '$store->import($d, "Playwright");',
+        '$store->publish($d["slug"], "Playwright");',
+    ].join(' '));
+
     /* And one from the other form, so the source tabs and the read-only answers list have something
        to show. A distinct name because the tests find their row by it. */
     artisan('tinker', '--execute', [

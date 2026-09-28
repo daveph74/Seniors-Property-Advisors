@@ -1,5 +1,5 @@
-const BACKGROUNDS = { white: '', wash: 'section-block--bg-wash', 'wash-2': 'section-block--bg-wash-2', navy: 'section-block--bg-navy' };
-const HEIGHTS = { comfortable: '', compact: 'section-block--compact', tall: 'section-block--tall' };
+const BACKGROUNDS = { white: '', wash: 'section-block--bg-wash', 'wash-2': 'section-block--bg-wash-2', navy: 'section-block--bg-navy', 'navy-gradient': 'section-block--bg-navy-gradient', 'navy-deep': 'section-block--bg-navy-deep' };
+const HEIGHTS = { comfortable: '', compact: 'section-block--compact', slim: 'section-block--slim', tall: 'section-block--tall' };
 const ALIGN = { left: '', center: 'section-block__inner--center', right: 'section-block__inner--right' };
 const SPACING = { medium: '', small: 'section-block__inner--tight', large: 'section-block__inner--loose' };
 

@@ -146,7 +146,7 @@ test('a wizard enquiry shows what they picked, and none of it can be typed into'
     const answers = modal.locator('.cms-enquiry-detail__answer');
     await expect(answers).toHaveCount(4);
     await expect(answers.filter({ hasText: 'Property type' })).toContainText('House');
-    await expect(answers.filter({ hasText: 'Suburb' })).toContainText('Mosman NSW 2088');
+    await expect(answers.filter({ hasText: 'Property address' })).toContainText('12 Smith Street, Mosman NSW 2088');
 
     /* The same guard as above, with the answers present: they are printed, never offered. */
     const editable = await modal.locator('input:not([type=hidden]), textarea').count();

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { WarningIcon } from '../../../cms/components/icons';
@@ -13,7 +13,6 @@ import { WarningIcon } from '../../../cms/components/icons';
 
 const TABS = [
     { id: 'general', label: 'General' },
-    { id: 'seo', label: 'SEO defaults' },
     { id: 'tracking', label: 'Tracking' },
     { id: 'legal', label: 'Legal' },
 ];
@@ -66,6 +65,14 @@ export default function SettingsIndex({ settings, pages = [] }) {
                             {t.label}
                         </button>
                     ))}
+
+                    {/* The SEO defaults were a tab here and are now on their own screen, beside the
+                        report that shows which addresses inherit them. Somebody who knew where they
+                        were will look here first, so this says where they went rather than leaving
+                        them to conclude the fields were removed. */}
+                    <Link href="/cms/seo" className="cms-settings-nav__aside">
+                        SEO defaults moved to SEO →
+                    </Link>
                 </nav>
 
                 <div className="cms-settings-content">
@@ -128,59 +135,6 @@ export default function SettingsIndex({ settings, pages = [] }) {
                                 The phone number, address and copyright line are edited under Global
                                 content, so they are not repeated here.
                             </div>
-                        </section>
-                    )}
-
-                    {tab === 'seo' && (
-                        <section className="cms-settings-section">
-                            <h2 className="cms-settings-section__title">Default SEO</h2>
-                            <p className="cms-settings-section__lead">
-                                Used for any page or article that has none of its own. A page&rsquo;s
-                                own settings always win.
-                            </p>
-
-                            <Field
-                                label="Title pattern"
-                                hint="{title} is the page's own title and {site} is the website name. Skipped when the title already contains the name, so the home page is not doubled up."
-                                error={errors['seo.titleFormat']}
-                            >
-                                <input
-                                    className="cms-input"
-                                    style={{ maxWidth: 360 }}
-                                    value={data.seo.titleFormat}
-                                    onChange={(e) => set('seo', 'titleFormat', e.target.value)}
-                                />
-                            </Field>
-
-                            <Field
-                                label="Default description"
-                                hint="Shown under the title in search results and when a link is shared."
-                                error={errors['seo.description']}
-                            >
-                                <textarea
-                                    className="cms-textarea"
-                                    rows={3}
-                                    maxLength={320}
-                                    value={data.seo.description}
-                                    onChange={(e) => set('seo', 'description', e.target.value)}
-                                />
-                            </Field>
-                            <div className="cms-hint" style={{ marginTop: -8, marginBottom: 14 }}>
-                                {(data.seo.description || '').length} of 320 characters
-                            </div>
-
-                            <Field
-                                label="Default sharing image"
-                                hint="Used when a page has no image of its own. 1200 × 630 works best. Upload it in Media first."
-                                error={errors['seo.image']}
-                            >
-                                <input
-                                    className="cms-input"
-                                    placeholder="/media/2026/08/share.jpg"
-                                    value={data.seo.image}
-                                    onChange={(e) => set('seo', 'image', e.target.value)}
-                                />
-                            </Field>
                         </section>
                     )}
 

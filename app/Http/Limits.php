@@ -57,10 +57,6 @@ class Limits
            breach corpus rejects a choice, and throttles that outbound call at the same time. */
         RateLimiter::for('password', fn (Request $r) => Limit::perHour(config('limits.password.hour'))->by($who($r)));
 
-        /* Authorising a private channel touches the session and the database, and a socket that keeps
-           dropping asks in bursts. */
-        RateLimiter::for('broadcasting', fn (Request $r) => Limit::perMinute(config('limits.broadcasting.minute'))->by($who($r)));
-
         /* --------------------------------------------------------------------- public */
 
         /* The sign-in form. The real defence is the per-email counter in `LoginRequest`; this bounds

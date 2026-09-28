@@ -14,7 +14,7 @@ test rather than only by convention.
 
 Criterion 14 turned out to be the opposite of the worry once recorded here. "Content editing does
 not allow users to break the approved website layout" is enforced in four server-side layers — the
-type allowlist, the nesting rules, `SaveSectionsRequest::checkTree()` and `sanitise()` — with about
+type allowlist, the nesting rules, `ValidatesSectionTree::checkSectionTree()` and `sanitiseTree()` — with about
 twenty negative tests already behind it. What makes it a guarantee is that all four run on the
 server: a hand-crafted POST is refused on the same rules as a bad drag.
 
@@ -51,6 +51,10 @@ it is a permissions decision.
 lists them, one opens in a modal, and `status` carries new / in progress / dealt with — so an
 enquiry is no longer invisible. But it still arrives silently, and §12 leaves notification routing
 with the development team, so somebody has to be watching the screen. That is the remaining half.
+
+The socket that used to nudge an open inbox has been removed, so "watching the screen" now means
+reloading it. That makes this gap wider rather than different: the answer was always an email, and a
+live-updating screen was only ever a consolation for not having one.
 
 **Look for a fourth write-only control.** Three editable fields turned out to save and never
 render: the media caption, the contact form's confirmation message, and `enquiries.handled_at`,

@@ -20,7 +20,6 @@ return [
     'cms_upload' => ['minute' => 180],
     'cms_search' => ['minute' => 180],
     'password' => ['hour' => 10],
-    'broadcasting' => ['minute' => 60],
 
     /* Visitors. Keyed on the address, which only means anything once TRUSTED_PROXIES is set. */
     'sign_in' => ['minute' => 10, 'hour' => 60],

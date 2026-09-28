@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
-import { router } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
+import { router, usePage } from '@inertiajs/react';
 import CmsLayout from '../../../cms/layout/CmsLayout';
 import { Badge, SearchInput, DropdownMenu, MenuItem, MenuSeparator } from '../../../cms/components/ui';
 import CreatePageModal from '../../../cms/components/CreatePageModal';
+import ImportPageModal from '../../../cms/components/ImportPageModal';
 import ConfirmModal from '../../../cms/components/ConfirmModal';
 import { useCmsToast } from '../../../cms/ToastContext';
 import { STATUS_LABEL, STATUS_TONE } from '../../../cms/data/constants';
@@ -16,7 +17,15 @@ export default function PagesIndex({ pages = [], layouts = [] }) {
     const [statusFilter, setStatusFilter] = useState('all');
     const [menuFor, setMenuFor] = useState(null);
     const [createOpen, setCreateOpen] = useState(false);
+    const [importOpen, setImportOpen] = useState(false);
     const [confirm, setConfirm] = useState(null);
+    const { imported, auth } = usePage().props;
+    const canImport = auth?.can?.['pages.import'] === true;
+    const missing = imported?.missingMedia ?? [];
+
+    useEffect(() => {
+        if (imported && missing.length === 0) flash(`${imported.title} imported as a draft`);
+    }, [imported]);
 
     const filtered = useMemo(() => pages.filter((p) => {
         const q = search.trim().toLowerCase();
@@ -61,12 +70,28 @@ export default function PagesIndex({ pages = [], layouts = [] }) {
                         <button type="button" className={`cms-segmented__btn ${view === 'list' ? 'cms-segmented__btn--active' : ''}`} onClick={() => setView('list')}>List</button>
                         <button type="button" className={`cms-segmented__btn ${view === 'tree' ? 'cms-segmented__btn--active' : ''}`} onClick={() => setView('tree')}>Site tree</button>
                     </div>
+                    {canImport && (
+                        <button type="button" className="cms-btn" onClick={() => setImportOpen(true)}>
+                            Import page
+                        </button>
+                    )}
                     <button type="button" className="cms-btn cms-btn--primary" onClick={() => setCreateOpen(true)}>
                         <PlusIcon size={15} />
                         New page
                     </button>
                 </div>
             </div>
+
+            {missing.length > 0 && (
+                <div className="cms-impact-banner">
+                    <div className="cms-impact-banner__text">
+                        <b>{imported.title}</b> was imported as a draft, but {missing.length === 1 ? 'one image it uses isn’t' : `${missing.length} images it uses aren’t`} in
+                        this site’s media library yet: {missing.join(', ')}. Upload {missing.length === 1 ? 'it' : 'them'} in Media,
+                        then choose {missing.length === 1 ? 'it' : 'them'} again in the builder.{' '}
+                        <a href={`/cms/pages/${imported.id}/edit`}>Open in builder</a>
+                    </div>
+                </div>
+            )}
 
             {view === 'list' ? (
                 <div className="cms-table">
@@ -95,6 +120,7 @@ export default function PagesIndex({ pages = [], layouts = [] }) {
                                     <MenuItem onClick={() => { setMenuFor(null); window.open(`/cms/pages/${p.id}/preview`, 'spa-preview'); }}>Preview</MenuItem>
                                     <MenuItem onClick={() => { setMenuFor(null); router.visit(`/cms/pages/${p.id}/edit?history=1`); }}>View history</MenuItem>
                                     <MenuItem onClick={() => act(p, 'duplicate', `${p.title} duplicated`)}>Duplicate</MenuItem>
+                                    <MenuItem onClick={() => { setMenuFor(null); window.location.assign(`/cms/pages/${p.id}/export`); }}>Download as file</MenuItem>
                                     <MenuSeparator />
                                     {p.status !== 'archived' && p.status !== 'published' && (
                                         <MenuItem onClick={() => act(p, 'publish-now', `${p.title} is now live`)}>Publish</MenuItem>
@@ -155,6 +181,7 @@ export default function PagesIndex({ pages = [], layouts = [] }) {
             )}
 
             <CreatePageModal open={createOpen} onClose={() => setCreateOpen(false)} pages={pages} layouts={layouts} />
+            {canImport && <ImportPageModal open={importOpen} onClose={() => setImportOpen(false)} />}
             <ConfirmModal
                 open={confirm !== null}
                 onClose={() => setConfirm(null)}

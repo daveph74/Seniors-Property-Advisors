@@ -32,7 +32,7 @@ test.describe('Pages · Blocks', () => {
         /* A type added to the server without a library entry would go untested here and nobody
            would notice, so the count is pinned. `column` is deliberately absent from the library:
            columns only ever arrive with a row. */
-        expect(ITEMS.length, ITEMS.map((i) => i.type).join(', ')).toBe(33);
+        expect(ITEMS.length, ITEMS.map((i) => i.type).join(', ')).toBe(35);
         expect(ITEMS.filter((i) => i.type === 'column')).toHaveLength(0);
     });
 
@@ -176,7 +176,7 @@ test.describe('Pages · Blocks', () => {
                     await B.saveAndReload(page);
                     await (await heading.count() > 0
                         ? B.selectBlock(page, marker)
-                        : B.canvas(page).locator('.cms-block').last().click());
+                        : B.selectLastBlock(page));
 
                     for (const [f, expected] of flipped) {
                         await expect(

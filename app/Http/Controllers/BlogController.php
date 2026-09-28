@@ -37,14 +37,18 @@ class BlogController extends Controller
         $defaults = Site::seoDefaults();
         $seo = $this->sharing($post, $defaults['image']);
         $article = $post->toArticle();
-        $head = Seo::head($seo, $post->title, 'article', $defaults);
+        $head = Seo::head($seo, $post->title, 'article', $defaults) + array_filter([
+            /* What a preview reads to say how fresh a piece is. Only an article has them. */
+            'publishedTime' => $article['publishedAt'] ?? null,
+            'modifiedTime' => $article['updatedAt'] ?? null,
+        ]);
 
         return Inertia::render('Article', [
             'article' => $article,
             'seo' => $seo,
             /* No structured data on anything hidden from search: marking up a page as an article
                while asking not to be listed sends a crawler two different instructions. */
-            'head' => $head + (isset($head['robots'])
+            'head' => $head + (Seo::isHidden($head)
                 ? []
                 : ['schema' => Seo::articleSchema($head, $article, $defaults['name'])]),
             'related' => $this->library->related($post),

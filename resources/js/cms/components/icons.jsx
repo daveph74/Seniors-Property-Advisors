@@ -133,6 +133,17 @@ export function SearchIcon(props) {
     );
 }
 
+export function SeoIcon(props) {
+    return (
+        <Svg {...props}>
+            <path d="M5 3h9l5 5v6" />
+            <path d="M14 3v5h5" />
+            <circle cx="11" cy="16" r="4" />
+            <path d="m14 19 3 3" />
+        </Svg>
+    );
+}
+
 export function BellIcon(props) {
     return (
         <Svg strokeWidth={1.7} {...props}>
@@ -150,10 +161,27 @@ export function EyeIcon(props) {
     );
 }
 
+export function HelpIcon(props) {
+    return (
+        <Svg strokeWidth={1.7} {...props}>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.6 9.4a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.5M12 17h.01" />
+        </Svg>
+    );
+}
+
 export function ExternalLinkIcon(props) {
     return (
         <Svg strokeWidth={1.7} {...props}>
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3" />
+        </Svg>
+    );
+}
+
+export function DownloadIcon(props) {
+    return (
+        <Svg strokeWidth={1.7} {...props}>
+            <path d="M12 3v12M7 11l5 5 5-5M4 20h16" />
         </Svg>
     );
 }

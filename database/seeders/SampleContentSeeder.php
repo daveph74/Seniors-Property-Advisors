@@ -102,6 +102,16 @@ class SampleContentSeeder extends Seeder
             ],
         ];
 
+        /* Their own search descriptions. A summary is a card blurb, written for a listing where the
+           title sits right above it; a search result has neither that title nor that context. And an
+           article with none of its own inherits the site's, so all three would have shared one
+           sentence in every result they appeared in. */
+        $descriptions = [
+            'when-to-start-planning-a-downsize' => 'When should you start planning a downsize? Six to twelve months is comfortable — here is what that timeline looks like, and what to do first.',
+            'what-the-age-pension-means-when-you-sell' => 'Your home is exempt from the age pension assets test; the money you get for it is not. What changes when you sell, and what does not.',
+            'five-questions-to-ask-before-signing-with-an-agent' => 'Five questions that tell you more than any appraisal: street-level sales, the list-to-sold gap, what commission covers, and who runs the campaign.',
+        ];
+
         foreach ($articles as [$categorySlug, $slug, $title, $summary, $author, $daysAgo, $body]) {
             $post = BlogPost::updateOrCreate(
                 ['slug' => $slug],
@@ -115,6 +125,7 @@ class SampleContentSeeder extends Seeder
                     'status' => 'published',
                     'published_at' => now()->subDays($daysAgo),
                     'last_updated_by' => 'Sample data',
+                    'seo' => ['description' => $descriptions[$slug]],
                 ],
             );
 

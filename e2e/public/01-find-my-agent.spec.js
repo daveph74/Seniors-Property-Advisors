@@ -13,25 +13,30 @@ import { expect, test } from '../fixtures.js';
  */
 test.use({ storageState: { cookies: [], origins: [] } });
 
-const answer = async (page, { consent = true, email = 'e2e@example.invalid' } = {}) => {
-    await page.getByRole('button', { name: /find my agent/i }).first().click();
+const answer = async (page, { consent = true, email = 'e2e@example.invalid', open } = {}) => {
+    if (open) {
+        await open();
+    } else {
+        await page.getByRole('button', { name: /find my agent/i }).first().click();
+    }
 
     const modal = page.locator('.modal-back.open');
     await expect(modal).toBeVisible();
 
-    await page.fill('#fma-suburb', 'Mosman');
+    await page.fill('#fma-address', '12 Smith Street, Mosman NSW');
     await modal.locator('.opt', { hasText: 'House' }).first().click();
     await page.getByRole('button', { name: /continue/i }).click();
 
-    await modal.locator('.opt', { hasText: 'Within 3 months' }).first().click();
-    await page.fill('#fma-notes', 'Sent by the end-to-end suite.');
-    await page.getByRole('button', { name: /continue/i }).click();
-
-    /* Reaching step 3 at all is the assertion the ReferenceError would have failed. */
-    await expect(modal.locator('#fma-name')).toBeVisible();
+    await expect(modal.locator('.step-count')).toHaveText('Step 2 of 3');
+    await expect(modal.getByLabel('First Name')).toBeVisible();
+    await expect(modal.getByLabel('Surname')).toBeVisible();
     await expect(modal.locator('.opt')).toHaveCount(3);
 
-    await page.fill('#fma-name', 'Playwright Sender');
+    await page.getByRole('button', { name: /continue/i }).click();
+    await expect(modal.locator('#fma-firstName-error')).toBeVisible();
+    await expect(modal.locator('#fma-surname-error')).toBeVisible();
+    await modal.getByLabel('First Name').fill('Playwright');
+    await modal.getByLabel('Surname').fill('Sender');
     await page.fill('#fma-phone', '0412 345 678');
     await page.fill('#fma-email', email);
     await modal.locator('.opt', { hasText: 'Morning' }).first().click();
@@ -40,6 +45,23 @@ const answer = async (page, { consent = true, email = 'e2e@example.invalid' } = 
         await page.check('#fma-consent');
     }
 
+    await page.getByRole('button', { name: /continue/i }).click();
+    if (!consent) return modal;
+
+    await expect(modal.locator('.step-count')).toHaveText('Step 3 of 3');
+    await expect(modal.locator('#modal-title')).toHaveText('When are you hoping to sell?');
+    await page.getByRole('button', { name: /submit/i }).click();
+    await expect(modal.locator('#fma-timeline-error')).toBeVisible();
+    await modal.locator('.opt', { hasText: 'Now' }).first().click();
+    await page.fill('#fma-notes', 'Sent by the end-to-end suite.');
+
+    await page.getByRole('button', { name: /back/i }).click();
+    await expect(modal.getByLabel('First Name')).toHaveValue('Playwright');
+    await expect(modal.getByLabel('Surname')).toHaveValue('Sender');
+    await expect(modal.locator('#fma-consent')).toBeChecked();
+    await page.getByRole('button', { name: /continue/i }).click();
+    await expect(modal.getByRole('radio', { name: /Now/ })).toHaveAttribute('aria-checked', 'true');
+    await expect(modal.locator('#fma-notes')).toHaveValue('Sent by the end-to-end suite.');
     await page.getByRole('button', { name: /submit/i }).click();
 
     return modal;
@@ -70,6 +92,28 @@ test('it will not send without consent, and says so on the step that asks', asyn
     const modal = await answer(page, { consent: false, email: 'no-consent@example.invalid' });
 
     await expect(modal.locator('#fma-consent-error')).toBeVisible();
-    await expect(modal.locator('.step-count')).toHaveText('Step 3 of 3');
+    await expect(modal.locator('.step-count')).toHaveText('Step 2 of 3');
     await expect(modal.locator('.success')).toHaveCount(0);
+});
+
+test('the start box opens the form and carries what was typed into the enquiry', async ({ page }) => {
+    const problems = [];
+    page.on('pageerror', (error) => problems.push(error.message));
+
+    await page.goto('/home-preview', { waitUntil: 'domcontentloaded' });
+
+    const box = page.locator('.block-finder-start');
+    await box.getByLabel('Your suburb or postcode').fill('2088');
+
+    const sent = page.waitForRequest((request) => request.method() === 'POST' && request.url().endsWith('/enquiries'));
+
+    const modal = await answer(page, {
+        email: 'start-box@example.invalid',
+        open: () => box.getByRole('button', { name: 'Start Here' }).click(),
+    });
+
+    expect((await sent).postDataJSON().details.location.area).toBe('2088');
+    await expect(modal.locator('.success')).toBeVisible();
+
+    expect(problems, 'the start box and the wizard must raise no errors').toEqual([]);
 });

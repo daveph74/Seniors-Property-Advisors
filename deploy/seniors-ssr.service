@@ -1,0 +1,38 @@
+# The renderer that makes the public site readable without JavaScript.
+#
+# Copy to /etc/systemd/system/, adjust User and WorkingDirectory, then:
+#     sudo systemctl daemon-reload
+#     sudo systemctl enable --now seniors-ssr
+#     php artisan inertia:check-ssr
+#
+# Without this under a supervisor, the first crash or reboot ends server-side rendering permanently
+# and silently: every page falls back to drawing itself in the browser, the site looks perfect, and
+# the delivered HTML goes back to having no heading and no links.
+
+[Unit]
+Description=Seniors Property Advisors — Inertia SSR renderer
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/seniors-property-advisors
+ExecStart=/usr/bin/php artisan inertia:start-ssr
+
+# It holds the bundle it started with, so a release has to restart it — `inertia:stop-ssr` in the
+# release step asks it to exit, and this brings it back against the new bootstrap/ssr/ssr.js.
+Restart=always
+RestartSec=2
+
+# It listens on loopback only and answers nothing but a render request, so it needs no more than this.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+StandardOutput=append:/var/log/seniors-ssr.log
+StandardError=append:/var/log/seniors-ssr.log
+
+[Install]
+WantedBy=multi-user.target

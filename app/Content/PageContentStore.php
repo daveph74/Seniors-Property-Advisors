@@ -26,6 +26,8 @@ class PageContentStore
         'rich-text',
         'image',
         'button',
+        'finder-start',
+        'divider',
         'steps-strip',
         'avatar-row',
         'rating-stars',
@@ -64,6 +66,8 @@ class PageContentStore
     ];
 
     public const MAX_ROW_DEPTH = 2;
+
+    public const TRANSFER_FORMAT = 'spa-page';
 
     public const RESERVED_SLUGS = [
         'cms', 'build', 'storage', 'up', 'api', 'login', 'logout', 'register', 'home',
@@ -220,9 +224,14 @@ class PageContentStore
         return $document['draft'] ?? $document['published'] ?? [];
     }
 
+    /**
+     * A null `$title` means "not sent, leave it alone", which is what lets the SEO overview patch a
+     * description without also restating a title it read some minutes ago. The seo array is merged
+     * rather than replaced for the same reason: a caller sends the fields it changed.
+     */
     public function saveDetails(
         string $slug,
-        string $title,
+        ?string $title,
         array $seo,
         string $by,
         ?string $navLabel = null,
@@ -235,7 +244,6 @@ class PageContentStore
         }
 
         $changes = [
-            'title' => $title,
             /* Null and empty are dropped, but `false` is kept: switching "hide from search engines"
                off writes false, and discarding it would merge the old true straight back in. */
             'seo' => array_filter(
@@ -244,6 +252,10 @@ class PageContentStore
             ),
             'last_updated_by' => $by,
         ];
+
+        if ($title !== null) {
+            $changes['title'] = $title;
+        }
 
         if ($navLabel !== null) {
             $changes['nav_label'] = $navLabel === '' ? null : $navLabel;
@@ -377,6 +389,55 @@ class PageContentStore
         return ['id' => $copy->cms_id, 'title' => $copy->title];
     }
 
+    /**
+     * A page as a file another site can import. What it leaves out is the design: the `cms_id` is the
+     * receiving site's to assign, a status would let an upload publish, and revisions belong to the
+     * site where they happened. Images travel as their addresses only — see `mediaKeysIn()`.
+     */
+    public function transferable(string $slug): ?array
+    {
+        $page = $this->page($slug);
+
+        if ($page === null) {
+            return null;
+        }
+
+        return [
+            'format' => self::TRANSFER_FORMAT,
+            'version' => 1,
+            'slug' => $page->slug,
+            'title' => $page->title,
+            'navLabel' => $page->nav_label,
+            'seo' => $page->seo ?? [],
+            'sections' => $page->draft ?? $page->published ?? [],
+        ];
+    }
+
+    /** Always a draft, at exactly the address the file names — the request has already refused a taken one. */
+    public function import(array $document, string $by): array
+    {
+        $page = $this->insert(
+            $document['slug'],
+            $document['title'],
+            [
+                'seo' => $document['seo'] ?? [],
+                'draft' => $document['sections'],
+                'nav_label' => $document['navLabel'] ?? null,
+            ],
+            $by,
+        );
+
+        return ['id' => $page->cms_id, 'slug' => $page->slug, 'title' => $page->title];
+    }
+
+    /** Every `/media/{key}` a tree points at, whether in an image field or anywhere else. */
+    public static function mediaKeysIn(array $tree): array
+    {
+        preg_match_all('#/media/([0-9]{4}/[0-9]{2}/[A-Za-z0-9._-]+)#', json_encode($tree, JSON_UNESCAPED_SLASHES) ?: '', $found);
+
+        return array_values(array_unique($found[1]));
+    }
+
     public function restore(string $slug, int $n, string $by): bool
     {
         $page = $this->page($slug);
@@ -437,6 +498,7 @@ class PageContentStore
             'url' => '/'.$slug,
             'title' => $title,
             'status' => 'draft',
+            'nav_label' => $content['nav_label'] ?? null,
             'seo' => $content['seo'],
             'draft' => $content['draft'],
             'published' => [],

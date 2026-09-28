@@ -11,10 +11,12 @@ use App\Http\Controllers\Cms\DeletedContentController;
 use App\Http\Controllers\Cms\EnquiryController as CmsEnquiryController;
 use App\Http\Controllers\Cms\FaqController;
 use App\Http\Controllers\Cms\GlobalContentController;
+use App\Http\Controllers\Cms\HelpController;
 use App\Http\Controllers\Cms\MediaController;
 use App\Http\Controllers\Cms\NavigationController;
 use App\Http\Controllers\Cms\ReusableSectionController;
 use App\Http\Controllers\Cms\SearchController;
+use App\Http\Controllers\Cms\SeoController;
 use App\Http\Controllers\Cms\SettingsController;
 use App\Http\Controllers\Cms\TestimonialController;
 use App\Http\Controllers\Cms\UserController;
@@ -47,11 +49,17 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    /* The staff guide. Answers with a whole HTML document rather than an Inertia payload, which is
+       why the sidebar reaches it with a plain anchor. Both roles: everybody who signs in needs it. */
+    Route::get('/help', HelpController::class)->name('help');
+
     /* Throttled like any other endpoint that runs a query per keystroke. */
     Route::get('/search', SearchController::class)->middleware('throttle:cms-search')->name('search');
 
     Route::get('/pages', [CmsPageController::class, 'index'])->name('pages.index');
     Route::post('/pages', [CmsPageController::class, 'store'])->name('pages.store');
+    Route::post('/pages/import', [CmsPageController::class, 'import'])
+        ->middleware(['permit:pages.import', 'throttle:cms-write'])->name('pages.import');
     Route::get('/pages/{page}/edit', [CmsPageController::class, 'edit'])->name('pages.edit');
     Route::post('/pages/{page}/draft', [CmsPageController::class, 'saveDraft'])->middleware('throttle:cms-write')->name('pages.draft');
     Route::patch('/pages/{page}/details', [CmsPageController::class, 'saveDetails'])->name('pages.details');
@@ -73,6 +81,7 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::post('/pages/{page}/unarchive', [CmsPageController::class, 'unarchive'])
         ->middleware('permit:content.restore')->name('pages.unarchive');
     Route::post('/pages/{page}/duplicate', [CmsPageController::class, 'duplicate'])->middleware('throttle:cms-write')->name('pages.duplicate');
+    Route::get('/pages/{page}/export', [CmsPageController::class, 'export'])->name('pages.export');
 
     Route::get('/reusable-sections/{reusable}', [ReusableSectionController::class, 'show'])
         ->whereNumber('reusable')->name('reusable.show');
@@ -128,6 +137,17 @@ Route::prefix('cms')->name('cms.')->middleware(['permit:content.manage', 'auth.s
     Route::delete('/enquiries/{enquiry}', [CmsEnquiryController::class, 'destroy'])
         ->whereNumber('enquiry')->middleware('permit:content.delete')->name('enquiries.destroy');
 
+    /* Its own ability rather than `settings.manage`: the report is over fields a client
+       administrator already edits in the builder, and the defaults moved here from Settings so they
+       would sit beside the thing that shows what they do. */
+    Route::middleware('permit:seo.manage')->group(function () {
+        Route::get('/seo', [SeoController::class, 'index'])->name('seo.index');
+        Route::put('/seo/defaults', [SeoController::class, 'updateDefaults'])
+            ->middleware('throttle:cms-write')->name('seo.defaults');
+        Route::patch('/seo/{kind}/{id}', [SeoController::class, 'updateFields'])
+            ->whereIn('kind', ['page', 'article'])->whereNumber('id')
+            ->middleware('throttle:cms-write')->name('seo.fields');
+    });
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::get('/deleted', [DeletedContentController::class, 'index'])
         ->middleware('permit:content.restore')->name('deleted.index');

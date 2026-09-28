@@ -83,7 +83,7 @@ function ArticleForm({ article, categories = [], defaultAuthor, auth }) {
     const status = article?.status ?? 'draft';
 
     return (
-        <div className="cms-page" style={{ maxWidth: 1120 }}>
+        <div className="cms-page">
             <div className="cms-toolbar">
                 <Link href="/cms/blog" className="cms-btn cms-btn--sm">&larr; All articles</Link>
 

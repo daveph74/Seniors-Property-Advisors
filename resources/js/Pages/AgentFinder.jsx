@@ -8,7 +8,13 @@ import SiteFooter from '../sections/SiteFooter';
 
 export default function AgentFinder({ title, seo = {}, head = {}, sections = [], globals = {}, site = {}, library = {}, preview = null }) {
     const [modalOpen, setModalOpen] = useState(false);
-    const actions = { 'open-finder': () => setModalOpen(true) };
+    const [start, setStart] = useState(null);
+    const actions = {
+        'open-finder': (from) => {
+            setStart(from && typeof from === 'object' && ('suburb' in from || 'postcode' in from) ? from : null);
+            setModalOpen(true);
+        },
+    };
 
     return (
         <>
@@ -30,7 +36,7 @@ export default function AgentFinder({ title, seo = {}, head = {}, sections = [],
 
             <SiteFooter globals={globals} site={site} />
 
-            <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} site={site} />
+            <FindMyAgentModal open={modalOpen} onClose={() => setModalOpen(false)} site={site} start={start} />
         </>
     );
 }

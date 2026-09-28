@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Vite;
+use Inertia\Ssr\BundleDetector;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -93,6 +94,16 @@ class SecurityCheckCommand extends Command
                 'optional',
             ],
             [
+                'The public site is server-rendered',
+                ! config('inertia.ssr.enabled')
+                    || app(BundleDetector::class)->detect() !== null,
+                'INERTIA_SSR_ENABLED is on but there is no bundle in bootstrap/ssr, so `npm run build` '
+                    .'did not build it — or the release copied only tracked files, and it is gitignored. '
+                    .'Nothing breaks, which is the problem: every page falls back to rendering in the '
+                    .'browser, so the delivered HTML goes back to having no heading and no links and the '
+                    .'site quietly stops being readable by anything that does not run JavaScript.',
+            ],
+            [
                 'No development build marker is present',
                 ! file_exists(app(Vite::class)->hotFile()),
                 'public/hot is how a developer\'s machine says "assets are coming from Vite". On a '
@@ -112,20 +123,6 @@ class SecurityCheckCommand extends Command
                 'Without AWS_BUCKET and credentials every upload fails at the browser, and nothing in the '
                     .'log says so: the disk is deliberately configured not to throw, so a missing bucket '
                     .'looks exactly like a working one until somebody tries to add a picture.',
-            ],
-            [
-                'The inbox socket is encrypted',
-                config('broadcasting.default') !== 'reverb'
-                    || config('broadcasting.connections.reverb.options.scheme') === 'https',
-                'REVERB_SCHEME=https once the site is served over HTTPS. A ws:// socket on an https page '
-                    .'is blocked by the browser as mixed content, so the CMS silently stops updating.',
-            ],
-            [
-                'Something is draining the queue',
-                config('queue.default') !== 'sync' || config('broadcasting.default') === 'null',
-                'Optional. The arrival notice is a queued job, so with no worker the CMS updates only '
-                    .'when somebody looks — which is how it behaved before the socket existed.',
-                'optional',
             ],
         ];
 

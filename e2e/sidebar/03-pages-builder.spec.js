@@ -66,12 +66,14 @@ test.describe('Pages · Builder', () => {
      * this works on the whole listing rather than assuming row 1 sits beside row 0.
      */
     test('a block moves up and down from the Layers panel', async ({ page }) => {
+        /* The fixture page holds one section, so this adds the second block rather than skipping.
+           A conditional skip here answered nothing and reported it as a pass. */
+        await B.addBlock(page, 'Heading');
+
         await page.getByRole('button', { name: 'Layers' }).click();
 
         const labels = () => page.locator('.cms-layer-row__label').allInnerTexts();
         const before = await labels();
-
-        test.skip(before.length < 2, 'needs two blocks to reorder');
 
         const second = page.locator('.cms-layer-row').nth(1);
         await second.getByTitle('Move up').click();
@@ -84,13 +86,23 @@ test.describe('Pages · Builder', () => {
         await page.locator('.cms-layer-row').nth(0).getByTitle('Move down').click();
 
         await expect.poll(async () => (await labels()).join('|')).toBe(before.join('|'));
+
+        await B.selectLastBlock(page);
+        await B.deleteSelected(page);
     });
 
     test('the first block cannot be moved above itself', async ({ page }) => {
+        /* Two blocks, or the first row is also the last and both assertions pass on one disabled
+           button — true, and about nothing. */
+        await B.addBlock(page, 'Heading');
+
         await page.getByRole('button', { name: 'Layers' }).click();
 
+        await expect(page.locator('.cms-layer-row')).not.toHaveCount(1);
         await expect(page.locator('.cms-layer-row').first().getByTitle('Move up')).toBeDisabled();
         await expect(page.locator('.cms-layer-row').last().getByTitle('Move down')).toBeDisabled();
+
+        await B.deleteSelected(page);
     });
 
     /* The exact widths belong to the application, not to this test — what matters is that each
@@ -123,7 +135,7 @@ test.describe('Pages · Builder', () => {
         await expect(page.getByText(/hidden on this page/)).toBeVisible();
 
         await B.deleteSelected(page);
-        await B.canvas(page).locator('.cms-block').last().click();
+        await B.selectLastBlock(page);
         await B.deleteSelected(page);
         await B.saveDraft(page);
     });
@@ -209,7 +221,7 @@ test.describe('Pages · Builder', () => {
         await page.getByRole('button', { name: 'Layers' }).click();
         await expect(page.locator('.cms-layer-row__label', { hasText: label })).toBeVisible();
 
-        await B.canvas(page).locator('.cms-block').last().click();
+        await B.selectLastBlock(page);
         await B.deleteSelected(page);
         await B.saveDraft(page);
     });
@@ -228,7 +240,7 @@ test.describe('Pages · Builder', () => {
         await modal.getByRole('button', { name: 'Publish now' }).click();
         await expect(page.getByText(/is now live/)).toBeVisible();
 
-        await B.canvas(page).locator('.cms-block').last().click();
+        await B.selectLastBlock(page);
         await B.deleteSelected(page);
         await B.saveDraft(page);
         await page.getByRole('button', { name: 'Publish', exact: true }).click();

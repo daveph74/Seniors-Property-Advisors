@@ -15,11 +15,6 @@ class SaveSettingsRequest extends FormRequest
         $this->merge([
             'name' => Text::clean($this->input('name')),
             'favicon' => Text::clean($this->input('favicon')),
-            'seo' => [
-                'titleFormat' => Text::clean($this->input('seo.titleFormat')),
-                'description' => Text::clean($this->input('seo.description')),
-                'image' => Text::clean($this->input('seo.image')),
-            ],
             'social' => [
                 'facebook' => Text::clean($this->input('social.facebook')),
                 'linkedin' => Text::clean($this->input('social.linkedin')),
@@ -42,10 +37,6 @@ class SaveSettingsRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:120'],
             'favicon' => ['nullable', 'string', 'max:300', 'regex:#^/#'],
-
-            'seo.titleFormat' => ['nullable', 'string', 'max:120'],
-            'seo.description' => ['nullable', 'string', 'max:320'],
-            'seo.image' => ['nullable', 'string', 'max:400', 'regex:#^/#'],
 
             /* A full profile address, so the footer link cannot be a relative path into this site.
                Stored as typed otherwise — shortening or rewriting somebody's URL is not our business. */
@@ -73,14 +64,17 @@ class SaveSettingsRequest extends FormRequest
             'tracking.ga4.regex' => 'A Google Analytics 4 id looks like G-XXXXXXXXXX.',
             'tracking.gtm.regex' => 'A Google Tag Manager id looks like GTM-XXXXXXX.',
             'favicon.regex' => 'Choose an image from the media library.',
-            'seo.image.regex' => 'Choose an image from the media library.',
             'legal.privacyPage.exists' => 'Choose a page that is on the website. A draft would be a dead link.',
             'social.facebook.url' => 'Enter the full web address, starting with https://.',
             'social.linkedin.url' => 'Enter the full web address, starting with https://.',
         ];
     }
 
-    /** The stored shape, which is also what `Site` reads. */
+    /**
+     * The keys this screen owns, and only those — `Site::merge()` leaves the rest of the row
+     * alone. The SEO defaults are edited on `/cms/seo` under a different ability, so a writer here
+     * that returned the whole row would be returning its own idea of a half it cannot see.
+     */
     public function settings(): array
     {
         $valid = $this->validated();
@@ -88,11 +82,6 @@ class SaveSettingsRequest extends FormRequest
         return [
             'name' => $valid['name'],
             'favicon' => $valid['favicon'] ?: null,
-            'seo' => [
-                'titleFormat' => $valid['seo']['titleFormat'] ?: null,
-                'description' => $valid['seo']['description'] ?: null,
-                'image' => $valid['seo']['image'] ?: null,
-            ],
             'social' => [
                 'facebook' => $valid['social']['facebook'] ?: null,
                 'linkedin' => $valid['social']['linkedin'] ?: null,

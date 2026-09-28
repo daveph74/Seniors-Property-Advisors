@@ -49,12 +49,12 @@ Four layers enforce it:
 |---|---|---|
 | Type allowlist | 30 named block types. No raw-HTML block exists, and none can be added through the CMS — adding one is a code change. | `PageContentStore::BLOCK_TYPES` |
 | Nesting rules | A section takes blocks or a row; a row takes only columns; a column takes blocks or a row. Rows nest at most `MAX_ROW_DEPTH = 2`. | `PageContentStore::CHILD_TYPES` |
-| Tree validation | Walks the submitted tree and rejects unknown types, illegal children, children on a leaf, and over-depth rows. | `SaveSectionsRequest::checkTree()` |
-| Markup stripping | `strip_tags` over every string in the tree, so no `data` key can carry markup into a rendered page. | `SaveSectionsRequest::sanitise()` |
+| Tree validation | Walks the submitted tree and rejects unknown types, illegal children, children on a leaf, and over-depth rows. | `ValidatesSectionTree::checkSectionTree()` |
+| Markup stripping | `strip_tags` over every string in the tree, so no `data` key can carry markup into a rendered page. | `ValidatesSectionTree::sanitiseTree()` |
 
 **What makes this a guarantee rather than a convention is that all four run on the server.** The
 builder's own restrictions are a convenience; a hand-crafted POST is refused on exactly the same
-rules as a bad drag. `SaveSectionsRequest` is the single door, and both CMS controllers go through
+rules as a bad drag. `ValidatesSectionTree` is the single set of rules — draft saves and page imports both use it — and both CMS controllers go through
 `PageContentStore`.
 
 Proven in `tests/Feature/CmsBuilderTest.php`:

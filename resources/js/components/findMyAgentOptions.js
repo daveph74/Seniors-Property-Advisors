@@ -16,7 +16,7 @@ export const PROPERTY_TYPES = [
 ];
 
 export const TIMELINES = [
-    { value: 'within_3_months', label: 'Within 3 months' },
+    { value: 'within_3_months', label: 'Now' },
     { value: 'in_3_6_months', label: 'In 3 – 6 months' },
     { value: 'in_6_12_months', label: 'In 6 – 12 months' },
     { value: 'just_exploring', label: 'Just exploring' },
