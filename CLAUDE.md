@@ -991,6 +991,13 @@ key and resolving a label is that wording can move without data moving. "Wizard"
 and test names as a description of its shape, four steps held together by React state, not as its name.
 The reference a sender quotes was already `AF-2026-00042`.
 
+**The wizard has no consent checkbox.** It had one on step 2 and the client asked for it to go, so
+sending *is* the consent: a note under the Submit button says so, with the privacy link, and
+`payload()` sends `consent: true`. The server still refuses an enquiry without `consent`, and
+`FindMyAgentEnquiryTest::test_nothing_is_stored_without_consent` still pins that — the rule moved from
+a box to a sentence, not out of the request. The contact form section keeps its own checkbox and its
+editable wording.
+
 ### Which form it came from
 
 Two forms write this table: the contact form section, and Agent Finder. `source` says which
