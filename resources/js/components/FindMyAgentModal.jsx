@@ -91,7 +91,6 @@ const EMPTY = {
     phone: '',
     email: '',
     bestTime: null,
-    consent: false,
 };
 
 /**
@@ -102,7 +101,6 @@ const SERVER_FIELDS = {
     name: 'firstName',
     email: 'email',
     phone: 'phone',
-    consent: 'consent',
     message: 'notes',
     'details.property_type': 'propertyType',
     'details.timeline': 'timeline',
@@ -141,7 +139,6 @@ const VALIDATORS = {
             return null;
         },
         bestTime: (v) => (v === null ? 'Choose the time of day that suits you best.' : null),
-        consent: (v) => (v ? null : 'Tick the box to say we may contact you about selling.'),
     },
     3: {
         timeline: (v) => (v === null ? 'Choose when you are hoping to sell.' : null),
@@ -224,7 +221,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
         email: form.email,
         phone: form.phone,
         message: form.notes,
-        consent: form.consent,
+        consent: true,
         page: typeof window === 'undefined' ? null : window.location.pathname,
         details: {
             property_type: form.propertyType,
@@ -530,45 +527,6 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                             )}
                         </div>
 
-                        {/* The contact form asks for this and so does the server. A form whose whole
-                            purpose is an unsolicited phone call is the last place to assume it. */}
-                        <div className={`field top-gap-sm${errors.consent ? ' has-error' : ''}`}>
-                            <label className="fma-consent" htmlFor="fma-consent">
-                                <input
-                                    id="fma-consent"
-                                    type="checkbox"
-                                    aria-required="true"
-                                    aria-invalid={errors.consent ? 'true' : undefined}
-                                    aria-describedby={errFor('consent')}
-                                    ref={(el) => (fieldRefs.current.consent = el)}
-                                    checked={form.consent}
-                                    onChange={(e) => set('consent')(e.target.checked)}
-                                />
-                                <span>
-                                    You may contact me about selling my property.
-                                    {/* Shown rather than described: agreeing to how your details are
-                                        handled without being able to read it is not agreeing. */}
-                                    {site.privacyUrl ? (
-                                        <>
-                                            {' '}
-                                            {/* A new tab, because this one is holding three steps of
-                                                answers that leaving the page would throw away. */}
-                                            <a
-                                                href={site.privacyUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Read our privacy policy
-                                            </a>
-                                            .
-                                        </>
-                                    ) : null}
-                                </span>
-                            </label>
-                            {errors.consent && (
-                                <ErrorMessage id="fma-consent-error">{errors.consent}</ErrorMessage>
-                            )}
-                        </div>
                     </div>
                 )}
 
@@ -665,6 +623,21 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                         {step !== 4 && !sending && <span className="arr">→</span>}
                     </button>
                 </div>
+
+                {step === 3 && (
+                    <p className="fma-consent-note">
+                        By sending this you agree that we may contact you about selling your property.
+                        {site.privacyUrl ? (
+                            <>
+                                {' '}
+                                <a href={site.privacyUrl} target="_blank" rel="noopener noreferrer">
+                                    Read our privacy policy
+                                </a>
+                                .
+                            </>
+                        ) : null}
+                    </p>
+                )}
             </div>
         </div>
     );
