@@ -1,4 +1,4 @@
-const STEPS = ['small', 'medium', 'large'];
+const STEPS = ['small', 'medium', 'large', 'xlarge'];
 
 export function spacingClasses(data = {}) {
     return [

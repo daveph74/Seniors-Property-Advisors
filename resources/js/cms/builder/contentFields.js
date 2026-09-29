@@ -2,6 +2,11 @@ import { TEXT, AREA, PICK, PICKFROM, PICKMANY, FLAGON, NUM, IMG, ACTIONS } from 
 
 const GROUP = (title, fields) => ({ group: true, title, fields });
 
+export const IMAGE_POSITIONS = [
+    ['center', 'Centre'], ['top', 'Top'], ['bottom', 'Bottom'], ['left', 'Left'], ['right', 'Right'],
+    ['top-left', 'Top left'], ['top-right', 'Top right'], ['bottom-left', 'Bottom left'], ['bottom-right', 'Bottom right'],
+];
+
 const HEAD = [
     TEXT('eyebrow', 'Pre-heading'),
     AREA('heading', 'Heading'),
@@ -44,6 +49,31 @@ const CONTENT_SCHEMAS = {
     'hero-full': [
         ...HEAD,
         IMG('image.src', 'Background image', 'image.alt'),
+    ],
+    banner: [
+        TEXT('eyebrow', 'Pre-heading'),
+        AREA('heading', 'Heading'),
+        TEXT('headingEm', 'Highlighted heading'),
+        FLAGON('emOnNewLine', 'Highlighted heading starts a new line'),
+        AREA('headingAfter', 'Text after the highlight'),
+        FLAGON('afterOnNewLine', 'Text after the highlight starts a new line'),
+        AREA('lead', 'Intro text'),
+        IMG('image.src', 'Background image', 'image.alt'),
+        GROUP('Look', [
+            PICK('height', 'Section height', [['compact', 'Compact'], ['comfortable', 'Comfortable'], ['tall', 'Tall'], ['full', 'Full screen']]),
+            PICK('titleSize', 'Title size', [['standard', 'Standard'], ['large', 'Large'], ['hero', 'Hero']]),
+            PICK('textSize', 'Text size', [['standard', 'Standard'], ['large', 'Large']]),
+            PICK('overlay', 'Overlay', [
+                ['none', 'None'], ['navy', 'Navy'], ['navy-strong', 'Navy, strong'],
+                ['navy-left', 'Navy, fading from the left'], ['navy-bottom', 'Navy, fading from the bottom'],
+                ['white', 'White'], ['white-strong', 'White, strong'], ['white-left', 'White, fading from the left'],
+            ]),
+            PICK('imagePosition', 'Image position', IMAGE_POSITIONS),
+            PICK('align', 'Text alignment', [['left', 'Left'], ['center', 'Centre']]),
+            PICK('copyWidth', 'Copy width', [['narrow', 'Narrow'], ['standard', 'Standard'], ['wide', 'Wide']]),
+            PICK('animation', 'Animation', [['none', 'None'], ['fade-up', 'Fade up'], ['fade-in', 'Fade in'], ['fade-left', 'Fade left'], ['fade-right', 'Fade right'], ['zoom-in', 'Zoom in']]),
+            PICK('animationDelay', 'Delay', [['0', 'No delay'], ['100', '100 ms'], ['200', '200 ms'], ['300', '300 ms']]),
+        ]),
     ],
     'trust-cards': [
         ...HEAD,

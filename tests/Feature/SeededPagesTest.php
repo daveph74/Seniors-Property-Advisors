@@ -127,7 +127,7 @@ class SeededPagesTest extends TestCase
                     continue;
                 }
 
-                if (in_array($block['type'] ?? null, ['hero', 'hero-full'], true)) {
+                if (in_array($block['type'] ?? null, ['hero', 'hero-full', 'banner'], true)) {
                     return true;
                 }
 

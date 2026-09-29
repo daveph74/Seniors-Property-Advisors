@@ -169,4 +169,25 @@ class SsrScopeTest extends TestCase
 
         Http::assertNothingSent();
     }
+
+    /**
+     * A section's entrance animation hides it until it scrolls into view — but only under `html.js`,
+     * which this head script sets before the body paints. Without it a crawler, a reader with
+     * JavaScript off, or a renderer whose observer never fires would receive a page at opacity zero.
+     * It runs on public pages alone, and only with the nonce the policy declares for this response.
+     */
+    public function test_the_public_document_marks_javascript_with_a_nonced_head_script(): void
+    {
+        $response = $this->get('/how-it-works')->assertOk();
+
+        preg_match("/script-src [^;]*'nonce-([A-Za-z0-9+\/=]+)'/", $response->headers->get('Content-Security-Policy'), $found);
+
+        $this->assertNotEmpty($found);
+        $this->assertStringContainsString(
+            '<script nonce="'.$found[1].'">document.documentElement.classList.add(\'js\')</script>',
+            $response->getContent(),
+        );
+
+        $this->get('/cms/pages')->assertOk()->assertDontSee("classList.add('js')", false);
+    }
 }

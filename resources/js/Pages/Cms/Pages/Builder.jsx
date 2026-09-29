@@ -5,6 +5,7 @@ import { ToastProvider, useCmsToast } from '../../../cms/ToastContext';
 import { defaultSectionData } from '../../../sections/defaults';
 import { canContain, isContainerType, MAX_ROW_DEPTH } from '../../../sections/childTypes';
 import { SECTION_LABELS } from '../../../sections/registry';
+import { ownerOfTheH1 } from '../../../sections/headingLevel';
 import SiteHeader from '../../../sections/SiteHeader';
 import SiteFooter from '../../../sections/SiteFooter';
 import BlockRenderer from '../../../cms/builder/BlockRenderer';
@@ -64,7 +65,7 @@ const isBlank = (v) => (Array.isArray(v) ? v.length === 0 : !v);
 let uid = 0;
 function nextId(type) {
     uid += 1;
-    return `${type}-${uid}`;
+    return `${type}-${Date.now().toString(36)}${uid.toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
 function firstError(errors, fallback) {
@@ -98,12 +99,19 @@ function reid(b) {
     };
 }
 
-function hydrate(list) {
-    return list.map((b) => ({
-        ...b,
-        data: { ...b.data },
-        ...(Array.isArray(b.children) ? { children: hydrate(b.children) } : {}),
-    }));
+function hydrate(list, seen = new Set()) {
+    return list.map((b) => {
+        const id = seen.has(b.id) ? nextId(b.type) : b.id;
+
+        seen.add(id);
+
+        return {
+            ...b,
+            id,
+            data: { ...b.data },
+            ...(Array.isArray(b.children) ? { children: hydrate(b.children, seen) } : {}),
+        };
+    });
 }
 
 function serialise(b) {
@@ -172,6 +180,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     const {
         blocks, commit: setBlocks, undo, redo, canUndo, canRedo,
     } = useTreeHistory(() => hydrate(contentBacked ? sections : []), selectionRef, setSelectedId);
+    const h1Owner = useMemo(() => ownerOfTheH1(blocks), [blocks]);
     const [device, setDevice] = useState('desktop');
     const [canvasHeight, setCanvasHeight] = useState(600);
     const [canvasReady, setCanvasReady] = useState(false);
@@ -805,7 +814,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             {CONTENT_KEY[b.type] && isBlank(b.data[CONTENT_KEY[b.type]]) ? (
                 <div className="cms-block-placeholder">{SECTION_LABELS[b.type]} — no content yet</div>
             ) : (
-                <BlockRenderer block={b} library={library}>
+                <BlockRenderer block={b} library={library} headingLevel={b.id === h1Owner ? 1 : 2}>
                     {isContainerType(b.type)
                         ? renderChildren(b, b.type === 'row' ? parentDepth + 1 : parentDepth)
                         : null}

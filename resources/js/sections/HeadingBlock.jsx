@@ -17,8 +17,8 @@ export default function HeadingBlock({ data, anchor }) {
     return (
         <Tag id={anchor} className={`block-heading ${data.size === 'large' ? 'block-heading--large' : ''} ${ALIGN[data.align] || ''} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
             {data.heading}
-            {data.headingEm ? <> <em>{data.headingEm}</em></> : null}
-            {data.headingAfter ? <> {data.headingAfter}</> : null}
+            {data.headingEm ? <>{data.emOnNewLine ? <br /> : ' '}<em>{data.headingEm}</em></> : null}
+            {data.headingAfter ? <>{data.afterOnNewLine ? <br /> : ' '}{data.headingAfter}</> : null}
         </Tag>
     );
 }

@@ -93,6 +93,17 @@
          at the save and again in `Site::tracking()`, because this prints inside a <script> where
          Blade's escaping would not help. --}}
     @if (! request()->is('cms', 'cms/*', 'login'))
+        {{-- A section's entrance animation hides it only under `html.js`, so a document that never
+             runs this — a crawler, a reader with JavaScript off — is delivered fully visible. In the
+             head so it lands before the body paints; from app.jsx it would arrive after first paint
+             and flash. --}}
+        <script nonce="{{ Illuminate\Support\Facades\Vite::cspNonce() }}">document.documentElement.classList.add('js')</script>
+    @elseif (request()->is('cms/pages/*/preview'))
+        {{-- The preview is a reader's view served from inside the admin, so it gets the animations
+             the public page has — without this an editor could never judge one before publishing. --}}
+        <script nonce="{{ Illuminate\Support\Facades\Vite::cspNonce() }}">document.documentElement.classList.add('js')</script>
+    @endif
+    @if (! request()->is('cms', 'cms/*', 'login'))
         @php($tracking = App\Content\Site::tracking())
         {{-- The nonce is what lets these two run under the policy while everything else inline
              stays blocked. `SecurityHeaders` mints it and Vite prints the same one on its tags. --}}

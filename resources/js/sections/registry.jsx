@@ -1,5 +1,6 @@
 import HeroSection from './HeroSection';
 import HeroFullSection from './HeroFullSection';
+import BannerSection from './BannerSection';
 import TrustCardsSection from './TrustCardsSection';
 import ProcessStepsSection from './ProcessStepsSection';
 import WhyListSection from './WhyListSection';
@@ -41,6 +42,7 @@ export const SECTIONS = {
     column: ColumnContainer,
     hero: HeroSection,
     'hero-full': HeroFullSection,
+    banner: BannerSection,
     'trust-cards': TrustCardsSection,
     'process-steps': ProcessStepsSection,
     'why-list': WhyListSection,
@@ -80,6 +82,7 @@ export const SECTION_LABELS = {
     column: 'Column',
     hero: 'Hero banner',
     'hero-full': 'Hero banner (full bleed)',
+    banner: 'Banner',
     'trust-cards': 'Trust cards',
     'process-steps': 'Process steps',
     'why-list': 'Why list',
