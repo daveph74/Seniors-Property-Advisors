@@ -84,7 +84,6 @@
                                     "active": true,
                                     "anchor": null,
                                     "data": {
-                                        "prompt": "Your suburb or postcode",
                                         "buttonLabel": "Start Here",
                                         "note": "A quick two-minute form. No obligation, and a real advisor calls you back.",
                                         "spaceAbove": "small",

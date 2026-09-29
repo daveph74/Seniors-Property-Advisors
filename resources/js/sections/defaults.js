@@ -56,7 +56,6 @@ const TEMPLATES = {
         spaceBelow: 'none',
     },
     'finder-start': {
-        prompt: 'Your suburb or postcode',
         buttonLabel: 'Start Here',
         note: '',
         spaceAbove: 'none',

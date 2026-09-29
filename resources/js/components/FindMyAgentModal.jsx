@@ -148,7 +148,7 @@ const VALIDATORS = {
     },
 };
 
-export default function FindMyAgentModal({ open, onClose, site = {}, start = null }) {
+export default function FindMyAgentModal({ open, onClose, site = {} }) {
     const [step, setStep] = useState(1);
     const [form, setForm] = useState(EMPTY);
     const [errors, setErrors] = useState({});
@@ -218,15 +218,6 @@ export default function FindMyAgentModal({ open, onClose, site = {}, start = nul
      * and the notes stay in `message` on their own — they are the only words here that are the
      * sender's, and the CMS shows them as such.
      */
-    /*
-     * Where the suburb, state and postcode come from. The address wins whenever it resolved a suburb;
-     * otherwise a suburb *picked* in the start box fills them. A typed-but-unpicked start box never
-     * does — it may be a postcode — and stays in `area` as the visitor wrote it.
-     */
-    const picked = start && start.placeId && !start.freeText ? start : null;
-    const locality = form.location?.suburb ? form.location : picked ?? form.location;
-    const area = start ? start.description ?? start.suburb ?? start.postcode ?? null : null;
-
     const payload = () => ({
         source: 'find_my_agent',
         name: `${form.firstName.trim()} ${form.surname.trim()}`,
@@ -242,10 +233,9 @@ export default function FindMyAgentModal({ open, onClose, site = {}, start = nul
             location: {
                 place_id: form.location?.placeId ?? null,
                 street: form.location?.street ?? null,
-                area,
-                suburb: locality?.suburb ?? null,
-                state: locality?.state ?? null,
-                postcode: locality?.postcode ?? null,
+                suburb: form.location?.suburb ?? null,
+                state: form.location?.state ?? null,
+                postcode: form.location?.postcode ?? null,
                 description: form.location?.description ?? null,
                 lat: form.location?.lat ?? null,
                 lng: form.location?.lng ?? null,
