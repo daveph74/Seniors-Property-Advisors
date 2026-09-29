@@ -37,19 +37,75 @@ trait ValidatesSectionTree
     protected function checkSectionTree(Validator $validator, array $items, string $root): void
     {
         $this->checkTier($validator, $items, $root, $root, PageContentStore::SECTION_TYPES);
+        $this->checkIdsAreUnique($validator, $items, $root);
+    }
+
+    private function checkIdsAreUnique(Validator $validator, array $items, string $root): void
+    {
+        $seen = [];
+
+        $walk = function (array $tree) use (&$walk, &$seen): void {
+            foreach ($tree as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+
+                $id = $item['id'] ?? null;
+
+                if (is_string($id)) {
+                    $seen[$id] = ($seen[$id] ?? 0) + 1;
+                }
+
+                $walk(is_array($item['children'] ?? null) ? $item['children'] : []);
+            }
+        };
+
+        $walk($items);
+
+        foreach ($seen as $id => $count) {
+            if ($count > 1) {
+                $validator->errors()->add($root, "Two blocks share the id \"{$id}\". Reload the builder and save again.");
+
+                return;
+            }
+        }
     }
 
     protected function sanitiseTree(array $value): array
     {
         foreach ($value as $key => $item) {
             if (is_array($item)) {
-                $value[$key] = $this->sanitiseTree($item);
+                $value[$key] = $this->isBlock($item) ? $this->sanitiseBlock($item) : $this->sanitiseTree($item);
             } elseif (is_string($item)) {
                 $value[$key] = strip_tags($item);
             }
         }
 
         return $value;
+    }
+
+    private function isBlock(array $node): bool
+    {
+        return is_string($node['type'] ?? null) && is_array($node['data'] ?? null);
+    }
+
+    private function sanitiseBlock(array $block): array
+    {
+        $html = [];
+
+        foreach (PageContentStore::HTML_FIELDS[$block['type']] ?? [] as $field) {
+            if (is_string($block['data'][$field] ?? null)) {
+                $html[$field] = $block['data'][$field];
+            }
+        }
+
+        $block = $this->sanitiseTree($block);
+
+        foreach ($html as $field => $raw) {
+            $block['data'][$field] = str_contains($raw, '<') ? Html::cleanInline($raw) : $raw;
+        }
+
+        return $block;
     }
 
     private function checkTier(Validator $validator, array $items, string $root, string $path, array $allowed, int $depth = 0): void

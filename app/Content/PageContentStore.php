@@ -15,6 +15,7 @@ class PageContentStore
     public const BLOCK_TYPES = [
         'hero',
         'hero-full',
+        'banner',
         'trust-cards',
         'process-steps',
         'why-list',
@@ -52,6 +53,10 @@ class PageContentStore
         'section',
         'row',
         'column',
+    ];
+
+    public const HTML_FIELDS = [
+        'rich-text' => ['body'],
     ];
 
     public const SECTION_TYPES = [

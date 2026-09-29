@@ -1,4 +1,5 @@
 import ActionButton from './ActionButton';
+import { useHeadingLevel } from './headingLevel';
 
 /**
  * Full-bleed hero: the photograph runs edge to edge and the copy sits over the darkened
@@ -10,6 +11,7 @@ import ActionButton from './ActionButton';
  */
 export default function HeroFullSection({ data, actions, anchor }) {
     const { image = {} } = data;
+    const Title = useHeadingLevel() === 1 ? 'h1' : 'h2';
 
     return (
         <section className="hero-full" id={anchor}>
@@ -24,9 +26,9 @@ export default function HeroFullSection({ data, actions, anchor }) {
                 <div className="hero-full-copy">
                     {data.eyebrow ? <span className="eyebrow-rule">{data.eyebrow}</span> : null}
 
-                    <h1>
+                    <Title className="hero-full__title">
                         {data.heading} {data.headingEm ? <em>{data.headingEm}</em> : null}
-                    </h1>
+                    </Title>
 
                     <p>{data.lead}</p>
 

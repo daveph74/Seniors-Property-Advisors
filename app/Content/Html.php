@@ -21,13 +21,29 @@ class Html
         .'a[href|title|target|rel],img[src|alt|width|height],'
         .'table,thead,tbody,tfoot,tr,th[colspan|rowspan],td[colspan|rowspan],code,pre';
 
+    /**
+     * What a Rich text block in the page builder may carry: paragraphs, bold, italic, lists and
+     * links. No headings, images or tables — the builder has a block for each of those — so an
+     * image tag of any origin is removed outright rather than judged.
+     */
+    private const INLINE_ALLOWED = 'p,br,strong,b,em,i,u,ul,ol,li,a[href|title|target|rel]';
+
     public static function clean(?string $html): string
     {
         if ($html === null || trim($html) === '') {
             return '';
         }
 
-        return trim(self::purifier()->purify($html));
+        return trim(self::purifier(self::ALLOWED)->purify($html));
+    }
+
+    public static function cleanInline(?string $html): string
+    {
+        if ($html === null || trim($html) === '') {
+            return '';
+        }
+
+        return trim(self::purifier(self::INLINE_ALLOWED)->purify($html));
     }
 
     /**
@@ -95,17 +111,17 @@ class Html
         return Str::limit(html_entity_decode($text, ENT_QUOTES | ENT_HTML5), $characters);
     }
 
-    private static function purifier(): HTMLPurifier
+    private static function purifier(string $allowed): HTMLPurifier
     {
-        static $purifier = null;
+        static $purifiers = [];
 
-        if ($purifier !== null) {
-            return $purifier;
+        if (isset($purifiers[$allowed])) {
+            return $purifiers[$allowed];
         }
 
         $config = HTMLPurifier_Config::createDefault();
 
-        $config->set('HTML.Allowed', self::ALLOWED);
+        $config->set('HTML.Allowed', $allowed);
         $config->set('AutoFormat.RemoveEmpty', true);
         $config->set('AutoFormat.AutoParagraph', false);
         $config->set('HTML.Nofollow', false);
@@ -150,6 +166,6 @@ class Html
         $config->set('Cache.SerializerPath', is_writable($cache) ? $cache : null);
         $config->set('Cache.DefinitionImpl', is_writable($cache) ? 'Serializer' : null);
 
-        return $purifier = new HTMLPurifier($config);
+        return $purifiers[$allowed] = new HTMLPurifier($config);
     }
 }

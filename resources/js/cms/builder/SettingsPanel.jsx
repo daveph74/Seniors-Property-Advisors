@@ -1,8 +1,12 @@
+import { lazy, Suspense } from 'react';
 import { Toggle, AccordionSection } from '../components/ui';
 import RepeaterEditor from './RepeaterEditor';
 import ImageField from './ImageField';
 import { repeatersFor, readPath } from './repeaters';
-import { contentFieldsFor } from './contentFields';
+import { contentFieldsFor, IMAGE_POSITIONS } from './contentFields';
+import { toEditorHtml } from './richTextBody';
+
+const InlineRichTextEditor = lazy(() => import('../components/InlineRichTextEditor'));
 
 const BACKGROUNDS = [
     { value: 'white', colour: '#FFFFFF' },
@@ -13,7 +17,7 @@ const BACKGROUNDS = [
     { value: 'navy-deep', colour: '#0F1A30', dark: true },
 ];
 
-const SPACE_STEPS = [['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']];
+const SPACE_STEPS = [['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large'], ['xlarge', 'Extra large']];
 
 const FIELDS = {
     'rating-stars': [['stars', 'Stars'], ['ratingLabel', 'Headline'], ['note', 'Sub-note']],
@@ -278,11 +282,28 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
+                        {type === 'heading' && (
+                            <div className="cms-toggle-row">
+                                <span className="cms-toggle-row__label">Highlighted heading starts a new line</span>
+                                <Toggle on={!!data.emOnNewLine} onChange={(v) => patch('emOnNewLine', v)} />
+                            </div>
+                        )}
+
                         {has('headingAfter') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Text after the highlight</label>
                                 <textarea className="cms-textarea" rows={2} value={data.headingAfter || ''} onChange={(e) => patch('headingAfter', e.target.value)} />
                             </div>
+                        )}
+
+                        {type === 'heading' && (
+                            <>
+                                <div className="cms-toggle-row">
+                                    <span className="cms-toggle-row__label">Text after the highlight starts a new line</span>
+                                    <Toggle on={!!data.afterOnNewLine} onChange={(v) => patch('afterOnNewLine', v)} />
+                                </div>
+                                <div className="cms-hint">Use these to choose where the heading breaks — a line break typed at the very start or end of a box is removed when the page saves.</div>
+                            </>
                         )}
 
                         {hasSubhead && (
@@ -299,7 +320,17 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
-                        {hasBody && (
+                        {hasBody && type === 'rich-text' && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Text</label>
+                                <Suspense fallback={<div className="cms-rt"><div className="cms-rt__surface cms-rt__surface--inline">Loading the editor…</div></div>}>
+                                    <InlineRichTextEditor value={toEditorHtml(data.body)} onChange={(html) => patch('body', html)} />
+                                </Suspense>
+                                <div className="cms-hint">Select some words, then use the buttons above to make them bold, a list or a link.</div>
+                            </div>
+                        )}
+
+                        {hasBody && type !== 'rich-text' && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Supporting text</label>
                                 <textarea className="cms-textarea" rows={4} value={data.body || ''} onChange={(e) => patch('body', e.target.value)} />
@@ -456,7 +487,22 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     <option value="compact">Compact</option>
                                     <option value="slim">Slim</option>
                                     <option value="tall">Tall</option>
+                                    <option value="full">Full screen</option>
                                 </select>
+                            </div>
+                        )}
+
+                        {type === 'row' && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Gap between columns</label>
+                                <select className="cms-select" value={data.gap || 'medium'} onChange={(e) => patch('gap', e.target.value)}>
+                                    <option value="none">None</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                    <option value="xlarge">Extra large</option>
+                                </select>
+                                <div className="cms-hint">Also the space between them when they stack on a phone.</div>
                             </div>
                         )}
 
@@ -485,7 +531,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
-                        {has('spaceAbove') && (
+                        {(has('spaceAbove') || type === 'row') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Space above</label>
                                 <select className="cms-select" value={data.spaceAbove || 'none'} onChange={(e) => patch('spaceAbove', e.target.value)}>
@@ -496,7 +542,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
-                        {has('spaceBelow') && (
+                        {(has('spaceBelow') || type === 'row') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Space below</label>
                                 <select className="cms-select" value={data.spaceBelow || 'none'} onChange={(e) => patch('spaceBelow', e.target.value)}>
@@ -544,6 +590,79 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                 </div>
                             </>
                         ) : null}
+
+                        {type === 'section' && (
+                            <>
+                                <ImageField
+                                    label="Background image"
+                                    value={(data.backgroundImage || {}).src || ''}
+                                    alt={(data.backgroundImage || {}).alt || ''}
+                                    onChange={(v) => patch('backgroundImage.src', v)}
+                                    onAltChange={(v) => patch('backgroundImage.alt', v)}
+                                    hint="Sits over the background colour, which shows until the picture loads."
+                                />
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Image position</label>
+                                    <select className="cms-select" value={data.backgroundPosition || 'center'} onChange={(e) => patch('backgroundPosition', e.target.value)}>
+                                        {IMAGE_POSITIONS.map(([value, text]) => (
+                                            <option key={value} value={value}>{text}</option>
+                                        ))}
+                                    </select>
+                                    <div className="cms-hint">Which part of the picture stays in view when it is cropped.</div>
+                                </div>
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Overlay</label>
+                                    <select
+                                        className="cms-select"
+                                        value={data.overlay || 'navy'}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            patch('overlay', value, 'overlay');
+
+                                            if (value.startsWith('navy')) patch('textTheme', 'light', 'overlay');
+                                            if (value.startsWith('white')) patch('textTheme', 'dark', 'overlay');
+                                        }}
+                                    >
+                                        <option value="none">None</option>
+                                        <option value="navy">Navy</option>
+                                        <option value="navy-strong">Navy, strong</option>
+                                        <option value="navy-left">Navy, fading from the left</option>
+                                        <option value="navy-bottom">Navy, fading from the bottom</option>
+                                        <option value="white">White</option>
+                                        <option value="white-strong">White, strong</option>
+                                        <option value="white-left">White, fading from the left</option>
+                                    </select>
+                                    <div className="cms-hint">Tints the background image so text stays readable. A fading overlay keeps the photo clear on one side and puts the text on the other.</div>
+                                </div>
+                            </>
+                        )}
+
+                        {type === 'column' && (
+                            <>
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Animation</label>
+                                    <select className="cms-select" value={data.animation || 'none'} onChange={(e) => patch('animation', e.target.value)}>
+                                        <option value="none">None</option>
+                                        <option value="fade-up">Fade up</option>
+                                        <option value="fade-in">Fade in</option>
+                                        <option value="fade-left">Fade left</option>
+                                        <option value="fade-right">Fade right</option>
+                                        <option value="zoom-in">Zoom in</option>
+                                    </select>
+                                </div>
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Delay</label>
+                                    <select className="cms-select" value={data.animationDelay || '0'} onChange={(e) => patch('animationDelay', e.target.value)}>
+                                        <option value="0">No delay</option>
+                                        <option value="100">100 ms</option>
+                                        <option value="200">200 ms</option>
+                                        <option value="300">300 ms</option>
+                                    </select>
+                                    <div className="cms-hint">Plays once as the column scrolls into view. Give each column of a row its own delay to bring them in one after another. Readers who have asked their device for less motion see the column without it.</div>
+                                </div>
+                            </>
+                        )}
 
                         {has('textTheme') && (
                             <div className="cms-field">

@@ -1,8 +1,10 @@
 import ActionButton from './ActionButton';
 import { ShieldIcon, StarIcon } from '../components/icons';
+import { useHeadingLevel } from './headingLevel';
 
 export default function HeroSection({ data, actions, anchor }) {
     const { image = {}, rating = {}, ratingCard = {}, savingCard = {} } = data;
+    const Title = useHeadingLevel() === 1 ? 'h1' : 'h2';
 
     return (
         <section className="hero" id={anchor}>
@@ -15,9 +17,9 @@ export default function HeroSection({ data, actions, anchor }) {
                             </span>
                             {data.eyebrow}
                         </span>
-                        <h1 className="headline">
+                        <Title className="headline">
                             {data.heading} <em>{data.headingEm}</em>
-                        </h1>
+                        </Title>
                         <p className="subhead">{data.subhead}</p>
                         <p className="lead">{data.lead}</p>
                         <div className="hero-ctas">

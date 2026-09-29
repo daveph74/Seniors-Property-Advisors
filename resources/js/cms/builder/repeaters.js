@@ -58,6 +58,9 @@ const SCHEMAS = {
     'hero-full': {
         ctas: { title: 'Buttons', fields: CTA_BUTTON_FIELDS },
     },
+    banner: {
+        ctas: { title: 'Buttons', fields: CTA_BUTTON_FIELDS },
+    },
     'trust-cards': {
         items: {
             title: 'Cards',

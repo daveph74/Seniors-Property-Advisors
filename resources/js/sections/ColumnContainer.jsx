@@ -1,3 +1,5 @@
+import useReveal from './useReveal';
+
 const ACROSS = {
     fill: '',
     left: 'column-container--across-left',
@@ -12,15 +14,18 @@ const DOWN = {
     spread: 'column-container--down-spread',
 };
 
-export default function ColumnContainer({ data = {}, anchor, children }) {
+export default function ColumnContainer({ data = {}, anchor, editing = false, children }) {
+    const reveal = useReveal(data.animation, data.animationDelay, editing);
+
     const classes = [
         'column-container',
         ACROSS[data.alignAcross] || '',
         DOWN[data.alignDown] || '',
+        reveal.classes,
     ].filter(Boolean).join(' ');
 
     return (
-        <div className={classes} id={anchor}>
+        <div ref={reveal.ref} className={classes} id={anchor} data-animate={reveal.animation || undefined}>
             {children}
         </div>
     );
