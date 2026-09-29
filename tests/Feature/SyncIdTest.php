@@ -13,8 +13,9 @@ class SyncIdTest extends TestCase
         parent::setUp();
 
         config([
-            'services.syncid.url' => 'https://api.syncid.com.au/leads',
+            'services.syncid.url' => 'https://spa.syncid.com.au/api/website-lead',
             'services.syncid.key' => 'test-key',
+            'services.syncid.office_id' => 1,
         ]);
     }
 
@@ -35,23 +36,24 @@ class SyncIdTest extends TestCase
     public function test_a_contact_form_enquiry_is_forwarded_to_syncid(): void
     {
         Http::fake([
-            'api.syncid.com.au/*' => Http::response(['id' => 'lead-1'], 201),
+            'spa.syncid.com.au/*' => Http::response(['message' => 'Lead accepted for processing'], 202),
         ]);
 
         $this->sendContact()->assertRedirect();
 
         Http::assertSent(function ($request) {
-            return $request->url() === 'https://api.syncid.com.au/leads'
-                && $request->hasHeader('Authorization', 'Bearer test-key')
-                && $request['name'] === 'Janet Reid'
+            return $request->url() === 'https://spa.syncid.com.au/api/website-lead'
+                && $request->hasHeader('X-Api-Key', 'test-key')
+                && $request['office_id'] === 1
+                && $request['first_name'] === 'Janet'
+                && $request['last_name'] === 'Reid'
                 && $request['email'] === 'janet@example.com'
                 && $request['phone'] === '0400 000 000'
                 && $request['suburb'] === 'Glen Iris'
                 && $request['message'] === 'We are thinking about downsizing next year.'
                 && $request['source'] === 'Contact form'
-                && $request['page'] === '/landing-page'
-                && $request['consented'] === true
-                && str_starts_with($request['reference'], 'AF-');
+                && $request['campaign'] === 'landing-page'
+                && str_starts_with($request['external_id'], 'AF-');
         });
     }
 
@@ -91,7 +93,7 @@ class SyncIdTest extends TestCase
     public function test_a_syncid_failure_does_not_stop_the_enquiry_being_kept(): void
     {
         Http::fake([
-            'api.syncid.com.au/*' => Http::response(['error' => 'Unavailable'], 503),
+            'spa.syncid.com.au/*' => Http::response(['error' => 'Unauthorized'], 401),
         ]);
 
         $this->sendContact()->assertRedirect();

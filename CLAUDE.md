@@ -939,14 +939,17 @@ in step, and it leads straight back to a row this CMS can open.
 
 Every **contact-form** enquiry is forwarded to SyncID immediately after it is saved locally — Agent Finder
 is not, because the field mappings for its answers belong to a separate conversation with SyncID support.
-`app/Integrations/SyncId.php` POSTs JSON to `SYNCID_API_URL` with an optional `SYNCID_API_KEY` bearer
-token; blank URL means nothing is sent, which is how local development and tests stay quiet. A failure is
-logged and the visitor still sees the confirmation — the local row is the record of truth, and the
-migration comment that mentioned replay was written for exactly this shape.
+`app/Integrations/SyncId.php` POSTs to `SYNCID_API_URL` — the SPA's `/api/website-lead` webhook, not the
+site root — with `X-Api-Key: SYNCID_API_KEY` and `SYNCID_OFFICE_ID`. Blank URL means nothing is sent.
+A failure is logged at `error` level and the visitor still sees the confirmation — the local row is the
+record of truth, and the migration comment that mentioned replay was written for exactly this shape.
 
-The payload is name, email, phone, suburb, message, a resolved source label, `page_slug`, the derived
-reference and `consented`. SyncID has no public API documentation; the URL and any field-name adjustments
-come from their support team, not from guessing at `api.syncid.com.au`.
+Two traps from the first deploy: posting to `https://spa.syncid.com.au/` hits the login app and answers
+419 CSRF, which `LOG_LEVEL=error` never recorded because the code logged it as a warning; and Bearer auth
+is wrong — the webhook reads `X-Api-Key` against the office's `website_lead_api_key` attribute. The
+name is split into `first_name` / `last_name`, `page_slug` becomes `campaign`, and the derived reference
+is `external_id`. SyncID returns 202 and queues the lead — a worker on `leads` must be running or the
+webhook accepts and nothing appears in the CRM.
 
 ### The inbox separates them with tabs, not badges
 

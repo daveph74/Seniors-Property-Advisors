@@ -21,6 +21,7 @@ return [
     'syncid' => [
         'url' => env('SYNCID_API_URL'),
         'key' => env('SYNCID_API_KEY'),
+        'office_id' => env('SYNCID_OFFICE_ID'),
         'timeout' => env('SYNCID_API_TIMEOUT', 10),
     ],
 
