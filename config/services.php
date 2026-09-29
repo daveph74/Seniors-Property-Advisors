@@ -18,6 +18,12 @@ return [
         'places_key' => env('GOOGLE_PLACES_API_KEY'),
     ],
 
+    'syncid' => [
+        'url' => env('SYNCID_API_URL'),
+        'key' => env('SYNCID_API_KEY'),
+        'timeout' => env('SYNCID_API_TIMEOUT', 10),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
