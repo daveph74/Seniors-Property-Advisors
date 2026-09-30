@@ -1306,7 +1306,7 @@ h2.block-heading{ font-family: var(--font-display); font-weight: 700; font-size:
 h3.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.28; color: var(--navy); }
 h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.35; color: var(--navy); }
 
-.block-text p{ margin: 0 0 14px; color: var(--text-mid); font-size: 18px; line-height: 1.6; white-space: pre-line; }
+.block-text p{ margin: 0 0 14px; color: var(--text-mid); font-size: 15.6px; line-height: 23.4px; white-space: pre-line; }
 .block-text p:last-child{ margin-bottom: 0; }
 .block-text--center{ text-align: center; }
 .block-text--right{ text-align: right; }
