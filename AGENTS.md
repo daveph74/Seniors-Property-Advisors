@@ -52,8 +52,9 @@ it against the code before repeating it — that is the failure mode this reposi
 
 ## Commands
 
-- `composer dev` — the server and Vite together, so assets rebuild without a second
-  terminal. `concurrently --kill-others` means one process failing stops the rest, which is why
+- `composer dev` — the server, Vite and a queue listener together, so assets rebuild and enquiry
+  notification emails send without a second terminal. `queue:listen` rather than `queue:work` because
+  it reloads the code on every job, and it needs no `pcntl`. `concurrently --kill-others` means one process failing stops the rest, which is why
   **`pail` is not in there**: it needs `pcntl`, XAMPP on Windows has no such extension, so it exited
   immediately and took the whole stack down with it — the symptom is `composer dev` returning code 1
   seconds after starting, naming the concurrently line rather than the command that actually failed.
@@ -69,7 +70,7 @@ it against the code before repeating it — that is the failure mode this reposi
   reports whether it is stale and writes nothing, which is what `UserGuideTest` runs
 
 **Deploying is not one of these commands.** `composer dev` is a laptop convenience with no production
-equivalent — a server has a release step and two processes something else keeps alive. That is
+equivalent — a server has a release step and three processes something else keeps alive. That is
 "Running it in production", further down, and it is the section to read before a first deploy: every
 mistake it lists fails silently rather than loudly.
 
@@ -601,6 +602,13 @@ what the wholesale write it replaced would have erased.
 Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
 there; a value stored twice is a value that disagrees with itself.
 
+**Who is emailed about an enquiry is a setting, not configuration** — the Notifications tab, stored as
+`notifications.enquiryRecipients` on the `site` row, typed one address per line and capped at five.
+Not `.env`, because changing who hears about a new enquiry is the client's decision and should not
+need a deploy. `Site::enquiryRecipients()` re-checks every address on the way out, the same second
+guard `tracking()` gives the analytics ids, so a row edited by hand cannot hand the mailer garbage.
+The mail server itself stays in `.env` (`MAIL_*`); an empty list means nothing is sent.
+
 `security:check [--production]` is the deployment list — the session cookie, debug mode, the proxy in
 front, where media is really stored, and whether anything from a developer's machine came along — as a
 command rather than a paragraph, because nothing reads a security review
@@ -893,14 +901,27 @@ the policy, a subscription never authorised, a queue nobody was draining. If it 
 it needed are in this file's history — but the question to answer first is what a live inbox is worth
 against two more things a server has to keep alive.
 
-Nothing is queued now, which is why there is no worker in `composer dev` and none in the process table
-under "Running it in production". An enquiry is saved in the request that brings it, full stop. The
-first mailable to land here changes that, and the worker comes back in the same commit.
+An enquiry is still saved in the request that brings it, so no background process can lose one. What
+is queued is the email about it — see below — which is why a worker is back in `composer dev` and in
+the process table under "Running it in production".
+
+### The team is emailed about every enquiry
+
+`EnquiryController::store` saves the row, forwards it to SyncID, then calls
+`NotifyEnquiryRecipients::for()`, which queues one job when Settings lists anybody and logs
+`no_recipients` when it does not. The job mails `EnquiryReceived` — the same fields the inbox modal
+shows, Agent Finder's answers included, a link to `/cms/enquiries?open={id}`, and **the sender as
+reply-to**, so answering the email answers them. Contact form and Agent Finder both, because both
+come through this one controller.
+
+**Queued, and fail-open like SyncID.** A slow mail server must not hold up the visitor's confirmation,
+and a failed send is logged at `error` and dropped — the row in the CMS is the record of truth, and
+the job catches everything so a mail outage cannot retry itself into a flood. The symptom of a dead
+worker is enquiries arriving in the CMS with nobody emailed, and rows piling up in `jobs`.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
-a reference that was the same five digits for everybody, while storing nothing at all. There is no
-`app/Mail` in this repository — nobody internal is notified of a new enquiry either, which is arguably the
-more urgent half. Wizard submissions are also deliberately **not** written to the activity log:
+a reference that was the same five digits for everybody, while storing nothing at all. Only the team is
+emailed; the sender is not. Wizard submissions are also deliberately **not** written to the activity log:
 `Activity::labelFor()` falls through to `name`, and that log has no delete path, which is exactly what
 `OwaspTest`'s a09 test protects against.
 
@@ -999,21 +1020,24 @@ rm -f public/hot
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 php artisan inertia:stop-ssr || true
+php artisan queue:restart
 php artisan security:check --production
 ```
 
-And two processes, each under a supervisor that restarts them on failure and on boot — systemd or
+And three processes, each under a supervisor that restarts them on failure and on boot — systemd or
 supervisord on Linux, a service wrapper on Windows:
 
 | what | how | what happens without it |
 |---|---|---|
 | the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
 | the renderer | `php artisan inertia:start-ssr` — a unit file is in `deploy/seniors-ssr.service` | the site still works, and serves a body with no heading and no links — see below, because this is the quietest failure here |
+| the queue worker | `php artisan queue:work` — a unit file is in `deploy/seniors-queue.service` | enquiries still save and reach SyncID, but nobody is emailed about them; the jobs wait in the `jobs` table |
 
-**There is no queue worker, because nothing is queued** — see "The inbox updates when somebody looks at
-it". An enquiry is written in the request that carries it, so no background process can lose one. The
-first mailable or deferred job to land here brings the worker and `queue:restart` back with it, in the
-same commit.
+**The worker exists for the enquiry notification emails and nothing else** — see "The team is emailed
+about every enquiry". An enquiry is written in the request that carries it, so a dead worker loses an
+email, never an enquiry. `queue:restart` in the release step is not optional: a worker holds the code it
+booted with and would keep sending last week's email. And `MAIL_MAILER` must be a real transport —
+`log` is the local default, and with it every notification is "sent" into `laravel.log`.
 
 **Docker is not part of any of this.** `docker-compose.yml` runs `floci`, an S3-compatible emulator on
 `:4566`, and it exists for a developer's machine and the browser suite — it is never deployed. A server

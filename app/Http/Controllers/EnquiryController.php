@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEnquiryRequest;
 use App\Integrations\SyncId;
+use App\Jobs\NotifyEnquiryRecipients;
 use App\Models\Enquiry;
 use Illuminate\Http\RedirectResponse;
 
@@ -20,6 +21,8 @@ class EnquiryController extends Controller
         $enquiry = Enquiry::create($request->toEnquiry());
 
         app(SyncId::class)->forward($enquiry);
+
+        NotifyEnquiryRecipients::for($enquiry);
 
         /*
          * The confirmation wording is the editor's, so the page shows that — this only says something

@@ -337,6 +337,48 @@ class SettingsTest extends TestCase
         });
     }
 
+    public function test_enquiry_notification_emails_are_typed_one_per_line(): void
+    {
+        $this->save(['notifications' => [
+            'enquiryRecipients' => "Advisor@Example.com\n\n  office@example.com \nadvisor@example.com",
+        ]])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(
+            ['advisor@example.com', 'office@example.com'],
+            $this->site()['notifications']['enquiryRecipients'],
+        );
+
+        $this->get('/cms/settings')->assertOk()->assertInertia(function ($page) {
+            $this->assertSame(
+                "advisor@example.com\noffice@example.com",
+                $page->toArray()['props']['settings']['notifications']['enquiryRecipients'],
+            );
+        });
+    }
+
+    public function test_a_line_that_is_not_an_email_is_refused(): void
+    {
+        $this->save(['notifications' => ['enquiryRecipients' => "advisor@example.com\nnot an email"]])
+            ->assertSessionHasErrors('notifications.enquiryRecipients.1');
+    }
+
+    public function test_enquiry_notifications_are_capped(): void
+    {
+        $six = implode("\n", array_map(fn ($i) => "person{$i}@example.com", range(1, 6)));
+
+        $this->save(['notifications' => ['enquiryRecipients' => $six]])
+            ->assertSessionHasErrors('notifications.enquiryRecipients');
+    }
+
+    public function test_saving_notifications_leaves_the_seo_defaults_alone(): void
+    {
+        $before = $this->site()['seo'];
+
+        $this->save(['notifications' => ['enquiryRecipients' => 'advisor@example.com']])->assertRedirect();
+
+        $this->assertSame($before, $this->site()['seo']);
+    }
+
     public function test_the_website_needs_a_name(): void
     {
         $this->save(['name' => ''])->assertSessionHasErrors('name');

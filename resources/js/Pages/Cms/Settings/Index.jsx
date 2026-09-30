@@ -15,7 +15,10 @@ const TABS = [
     { id: 'general', label: 'General' },
     { id: 'tracking', label: 'Tracking' },
     { id: 'legal', label: 'Legal' },
+    { id: 'notifications', label: 'Notifications' },
 ];
+
+const RECIPIENTS = 'notifications.enquiryRecipients';
 
 function Field({ label, hint, error, children }) {
     return (
@@ -225,6 +228,30 @@ export default function SettingsIndex({ settings, pages = [] }) {
                                 dead link at the moment somebody is asked to agree to it — publish
                                 the privacy policy first and it will appear here.
                             </div>
+                        </section>
+                    )}
+
+                    {tab === 'notifications' && (
+                        <section className="cms-settings-section">
+                            <h2 className="cms-settings-section__title">Notifications</h2>
+                            <p className="cms-settings-section__lead">
+                                Who is emailed when somebody sends an enquiry.
+                            </p>
+
+                            <Field
+                                label="Enquiry notification emails"
+                                hint="One address per line, up to five. Every enquiry from the contact form and Agent Finder is emailed to each of them. Leave blank and no emails are sent — enquiries still arrive in Enquiries."
+                                error={errors[RECIPIENTS] || Object.entries(errors).find(([key]) => key.startsWith(`${RECIPIENTS}.`))?.[1]}
+                            >
+                                <textarea
+                                    className="cms-textarea"
+                                    rows={5}
+                                    style={{ maxWidth: 420 }}
+                                    placeholder={'advisor@example.com\noffice@example.com'}
+                                    value={data.notifications.enquiryRecipients}
+                                    onChange={(e) => set('notifications', 'enquiryRecipients', e.target.value)}
+                                />
+                            </Field>
                         </section>
                     )}
 

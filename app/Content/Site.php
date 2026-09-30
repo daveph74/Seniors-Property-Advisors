@@ -82,6 +82,24 @@ class Site
         ];
     }
 
+    /**
+     * Who is emailed when either public form saves an enquiry. Re-checked here for the same reason
+     * as `tracking()`: a row edited by hand should not be able to hand the mailer a bad address.
+     *
+     * @return list<string>
+     */
+    public static function enquiryRecipients(): array
+    {
+        $listed = self::all()['notifications']['enquiryRecipients'] ?? [];
+
+        $valid = array_filter(
+            array_map(fn ($email) => trim((string) $email), is_array($listed) ? $listed : []),
+            fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) !== false,
+        );
+
+        return array_values(array_unique(array_map('mb_strtolower', $valid)));
+    }
+
     /** The two id formats, used to validate on the way in and again on the way out. */
     public const GA4 = '/^G-[A-Z0-9]{4,20}$/';
 

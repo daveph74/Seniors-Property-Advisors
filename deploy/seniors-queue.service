@@ -1,0 +1,35 @@
+# The worker that sends enquiry notification emails.
+#
+# Copy to /etc/systemd/system/, adjust User and WorkingDirectory, then:
+#     sudo systemctl daemon-reload
+#     sudo systemctl enable --now seniors-queue
+#
+# Without this running, enquiries are still saved and still reach SyncID, but the emails listed in
+# Settings → Notifications wait in the jobs table and nobody is told anything arrived.
+
+[Unit]
+Description=Seniors Property Advisors — queue worker
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/seniors-property-advisors
+ExecStart=/usr/bin/php artisan queue:work --tries=3 --max-time=3600
+
+# It holds the code it started with, so a release has to restart it — `queue:restart` in the release
+# step asks it to exit after the current job, and this brings it back on the new code.
+Restart=always
+RestartSec=2
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+StandardOutput=append:/var/log/seniors-queue.log
+StandardError=append:/var/log/seniors-queue.log
+
+[Install]
+WantedBy=multi-user.target
