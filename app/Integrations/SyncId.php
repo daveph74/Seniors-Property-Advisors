@@ -11,21 +11,38 @@ class SyncId
 {
     public function forward(Enquiry $enquiry): void
     {
+        $reference = $enquiry->reference();
+
         if ($enquiry->source !== Enquiry::CONTACT_FORM) {
+            Log::info('SyncID skipped an enquiry', [
+                'enquiry_id' => $enquiry->id,
+                'external_id' => $reference,
+                'source' => $enquiry->source,
+                'reason' => 'not_contact_form',
+            ]);
+
             return;
         }
 
         $url = config('services.syncid.url');
 
         if (! is_string($url) || $url === '') {
+            Log::warning('SyncID skipped an enquiry', [
+                'enquiry_id' => $enquiry->id,
+                'external_id' => $reference,
+                'reason' => 'url_not_configured',
+            ]);
+
             return;
         }
 
         $officeId = config('services.syncid.office_id');
 
         if (! is_numeric($officeId)) {
-            Log::error('SyncID is configured without an office id', [
+            Log::error('SyncID skipped an enquiry', [
                 'enquiry_id' => $enquiry->id,
+                'external_id' => $reference,
+                'reason' => 'office_id_not_configured',
             ]);
 
             return;
@@ -41,11 +58,21 @@ class SyncId
             $request = $request->withHeaders(['X-Api-Key' => $key]);
         }
 
+        Log::info('SyncID sending an enquiry', [
+            'enquiry_id' => $enquiry->id,
+            'external_id' => $reference,
+            'url' => $url,
+            'office_id' => (int) $officeId,
+            'has_api_key' => is_string($key) && $key !== '',
+        ]);
+
         try {
             $response = $request->post($url, $this->payload($enquiry, (int) $officeId));
         } catch (ConnectionException $e) {
             Log::error('SyncID could not receive an enquiry', [
                 'enquiry_id' => $enquiry->id,
+                'external_id' => $reference,
+                'url' => $url,
                 'message' => $e->getMessage(),
             ]);
 
@@ -53,11 +80,19 @@ class SyncId
         }
 
         if ($response->successful()) {
+            Log::info('SyncID accepted an enquiry', [
+                'enquiry_id' => $enquiry->id,
+                'external_id' => $reference,
+                'status' => $response->status(),
+            ]);
+
             return;
         }
 
         Log::error('SyncID rejected an enquiry', [
             'enquiry_id' => $enquiry->id,
+            'external_id' => $reference,
+            'url' => $url,
             'status' => $response->status(),
             'body' => $response->body(),
         ]);

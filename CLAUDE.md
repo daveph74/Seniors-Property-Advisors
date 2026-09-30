@@ -1085,8 +1085,10 @@ Every **contact-form** enquiry is forwarded to SyncID immediately after it is sa
 is not, because the field mappings for its answers belong to a separate conversation with SyncID support.
 `app/Integrations/SyncId.php` POSTs to `SYNCID_API_URL` — the SPA's `/api/website-lead` webhook, not the
 site root — with `X-Api-Key: SYNCID_API_KEY` and `SYNCID_OFFICE_ID`. Blank URL means nothing is sent.
-A failure is logged at `error` level and the visitor still sees the confirmation — the local row is the
-record of truth, and the migration comment that mentioned replay was written for exactly this shape.
+Every path writes to `storage/logs/laravel.log` with `enquiry_id` and `external_id` so a missing CRM row
+can be traced: skips log `reason` (`not_contact_form`, `url_not_configured`, `office_id_not_configured`),
+the POST logs `url` and `has_api_key`, acceptance logs HTTP `status`, and failures log at `error`. The
+visitor still sees the confirmation — the local row is the record of truth.
 
 Two traps from the first deploy: posting to `https://spa.syncid.com.au/` hits the login app and answers
 419 CSRF, which `LOG_LEVEL=error` never recorded because the code logged it as a warning; and Bearer auth
