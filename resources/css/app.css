@@ -583,7 +583,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   white-space: pre-line;
 }
 .banner--title-standard .banner__title{ font-size: clamp(24px, 2.3vw, 30px); line-height: 1.22; }
-.banner--title-large .banner__title{ font-size: clamp(32px, 3.4vw, 48px); }
+.banner--title-large .banner__title{ font-size: 65px; line-height: 65px; }
 .banner--title-hero .banner__title{ font-size: clamp(40px, 4.6vw, 60px); line-height: 1.08; }
 .banner__title em{ font-style: italic; }
 .banner__lead{ font-size: 18px; line-height: 1.6; max-width: 500px; margin: 0 0 36px; white-space: pre-line; }
@@ -1139,7 +1139,7 @@ footer{
   .hero-full .hero-ctas .btn{ flex: 1 1 auto; justify-content: center; }
   .banner--full{ min-height: auto; }
   .banner--title-hero .banner__title{ font-size: 38px; }
-  .banner--title-large .banner__title{ font-size: 32px; }
+  .banner--title-large .banner__title{ font-size: 38px; line-height: 38px; }
   .banner .hero-ctas .btn{ flex: 1 1 auto; justify-content: center; }
   .hero-steps, .block-steps-strip{ flex-direction: column; gap: 0; padding: 8px 20px;}
   .hero-steps .hs-item, .block-steps-strip .hs-item{ justify-content: flex-start; padding: 14px 0;}
