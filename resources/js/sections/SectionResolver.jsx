@@ -20,6 +20,11 @@ export default function SectionResolver({ sections = [], actions = {}, library =
             ? <SectionResolver sections={section.children} actions={actions} library={library} site={site} depth={depth + 1} h1Owner={topHeading} />
             : null;
 
+        const hidden = section.data?.hidden || {};
+        const hideOn = BREAKPOINTS.filter((bp) => hidden[bp]);
+        const hideClasses = hideOn.map((bp) => `u-hide-${bp}`).join(' ');
+        const selfHiding = section.type === 'row' || section.type === 'column';
+
         const rendered = (
             <HeadingLevel.Provider value={section.id === topHeading ? 1 : 2}>
                 <CustomStyled id={section.id} type={section.type} data={section.data || {}}>
@@ -28,7 +33,8 @@ export default function SectionResolver({ sections = [], actions = {}, library =
                             data={section.data || {}}
                             anchor={section.anchor}
                             blockId={section.id}
-                            childBlocks={Array.isArray(section.children) ? section.children : []}
+                            hideClasses={selfHiding ? hideClasses : ''}
+                            childBlocks={Array.isArray(section.children) ? section.children.filter((c) => c.active !== false) : []}
                             actions={actions}
                             library={library}
                             site={site}
@@ -40,15 +46,12 @@ export default function SectionResolver({ sections = [], actions = {}, library =
             </HeadingLevel.Provider>
         );
 
-        const hidden = section.data?.hidden || {};
-        const hideOn = BREAKPOINTS.filter((bp) => hidden[bp]);
-
-        if (hideOn.length === 0) {
+        if (hideOn.length === 0 || selfHiding) {
             return <Fragment key={section.id}>{rendered}</Fragment>;
         }
 
         return (
-            <div key={section.id} className={`u-hide-wrap ${hideOn.map((bp) => `u-hide-${bp}`).join(' ')}`}>
+            <div key={section.id} className={`u-hide-wrap ${hideClasses}`}>
                 {rendered}
             </div>
         );

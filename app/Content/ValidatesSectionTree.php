@@ -43,7 +43,7 @@ trait ValidatesSectionTree
     }
 
     /**
-     * @return array<string, string> block id => stored custom CSS, for the trees this save may replace
+     * @return list<string> every custom CSS value already stored where this save may land
      */
     protected function storedCustomCss(): array
     {
@@ -85,7 +85,7 @@ trait ValidatesSectionTree
                     if (! $this->mayWriteCustomCss()) {
                         $stored ??= $this->storedCustomCss();
 
-                        if (($stored[$item['id'] ?? ''] ?? null) !== Css::clean($css)) {
+                        if (! in_array(Css::clean($css), $stored, true)) {
                             $validator->errors()->add($root, 'Only a super administrator can add or change custom CSS.');
 
                             return;
@@ -101,7 +101,7 @@ trait ValidatesSectionTree
     }
 
     /**
-     * @return array<string, string>
+     * @return list<string>
      */
     protected function customCssIn(array $tree): array
     {
@@ -113,10 +113,11 @@ trait ValidatesSectionTree
                     continue;
                 }
 
-                $css = Css::clean($item['data']['customCss'] ?? null);
+                $raw = $item['data']['customCss'] ?? null;
+                $css = is_string($raw) ? Css::clean($raw) : null;
 
-                if ($css !== null && is_string($item['id'] ?? null)) {
-                    $found[$item['id']] = $css;
+                if ($css !== null) {
+                    $found[] = $css;
                 }
 
                 $walk(is_array($item['children'] ?? null) ? $item['children'] : []);

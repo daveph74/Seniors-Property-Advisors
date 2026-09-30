@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Content\PageContentStore;
 use App\Content\ValidatesSectionTree;
+use App\Models\ReusableSection;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -34,20 +35,25 @@ class SaveSectionsRequest extends FormRequest
 
     protected function storedCustomCss(): array
     {
-        $cmsId = $this->route('page');
+        $found = [];
 
-        if ($cmsId === null) {
-            return [];
+        foreach (ReusableSection::query()->pluck('block') as $block) {
+            $found = [...$found, ...$this->customCssIn([$block])];
         }
 
-        $slug = app(PageContentStore::class)->findByCmsId((int) $cmsId);
+        $cmsId = $this->route('page');
+        $slug = is_scalar($cmsId) ? app(PageContentStore::class)->findByCmsId((string) $cmsId) : null;
 
         if ($slug === null) {
-            return [];
+            return array_values(array_unique($found));
         }
 
         $document = app(PageContentStore::class)->document($slug);
 
-        return $this->customCssIn($document['published'] ?? []) + $this->customCssIn($document['draft'] ?? []);
+        return array_values(array_unique([
+            ...$found,
+            ...$this->customCssIn($document['draft'] ?? []),
+            ...$this->customCssIn($document['published'] ?? []),
+        ]));
     }
 }

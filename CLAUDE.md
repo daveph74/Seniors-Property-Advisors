@@ -733,7 +733,13 @@ sixteen components would have been sixteen chances to differ. Rows and columns a
 column is the row's grid item and carries the width and order classes, so a wrapper would break the grid
 — they draw the layers inside themselves and take the classes on their own root, with padding and the
 brand radius when a backdrop is set. The text theme recolours through `:is()` selectors at a specificity
-that beats a section's own colour rules, which is what keeps a navy why-list legible on a pale wash.
+that beats a section's own colour rules, which is what keeps a navy why-list legible on a pale wash — and
+**excludes the interiors of white cards** (`.testimonial`, `.faq`, `.article-card`, `.card` and the rest),
+because the same specificity had turned quotes, answers and card titles white on their white cards. An
+image chosen with no swatch implies the theme from its overlay (navy tints → light text), or dark-text
+sections sat transparent over a navy tint. Custom CSS is scoped to the block's own root **or**, when a
+backdrop wrapper is present, to the root inside it, and the `<style>` sits *before* the wrapper so a
+`display:` rule cannot make the stylesheet itself visible.
 Excluded on purpose: **Section** (already had it), **Hero, full bleed** and **Banner** (photo-behind-copy
 with their own controls), **CTA** (its own background field and photograph), and plain blocks.
 
@@ -815,21 +821,25 @@ fallbacks**, not beside the utilities — same specificity, so a base `.section-
 48px written later would have beaten a tablet override to Tall. Content and Style are deliberately
 one value for every screen; only the `hidden` map and row `stack` were per-device before this.
 
-**A row is a 60-track grid, and a column's width is a span of it.** Rows used to be `grid-auto-columns:
-1fr`, which could only make equal columns. Sixty divides by every column count up to six and by every
-fraction offered (quarter 15, third 20, half 30, two-thirds 40, three-quarters 45, full 60), so a column's
-`data.width` becomes a `col-w-*` class and the columns left on "Equal share" split what remains through
-`--auto-span`, which `RowContainer` computes from a `childBlocks` prop every Section now receives and only
-rows read (`autoColumnSpan`). Without that share the sized column pushed its neighbour onto a second line,
-which is how the first version was found wrong. **The gutter is not the grid's `gap`.** Grid gap sits
-between every track, and 59 gaps of 32px is wider than any row: the first release of this made a single
-column 1888px wide inside a 1176px row, and the symptom was a heading or an image running past its section
-the moment it was dropped in. So the row has `column-gap: 0`, each column carries half the gutter as
-`margin-inline`, and the row pulls the outer halves back with a negative margin, which is why column edges
-still meet the section's content edges. A row with its own backdrop drops the negative margin and pads
-instead, or its colour would bleed past the content edge. The classes are `col-w-*` rather than
-`column-container--*` because the grid item differs: on the site it is the column (or the `display:
-contents` hide wrapper's child), in the canvas it is `.cms-col-cell`, and both carry the same names.
+**A row is a 12-track grid with the ordinary grid `gap`, and a column's width is a span of it.** Rows used
+to be `grid-auto-columns: 1fr`, which could only make equal columns. Twelve divides by one, two, three, four
+and six columns and by every fraction offered (quarter 3, third 4, half 6, two-thirds 8, three-quarters 9,
+full 12), so a column's `data.width` becomes a `col-w-*` class and the columns left on "Equal share" split
+what remains through `--auto-span`, which `RowContainer` computes from a `childBlocks` prop every Section
+receives and only rows read (`autoColumnSpan`, over the **active** children only, or a switched-off column
+left a hole). Five equal columns are the one shape twelve cannot make, so a row of five unsized columns gets
+`row-container--five` and its own five tracks; five columns with a fraction among them fall back to twelve
+and come out uneven, accepted. **Why twelve and not more:** grid gap sits between every *track*, so the
+track count bounds the gutter — a 60-track version of this put 59 gaps of 32px into a 1176px row and a
+single column came out 1888px wide, then a "fix" with negative margins overhung the section by 4px on
+every Extra-large-gap row and by the whole gutter in a Full-width section. With twelve tracks a fraction is
+`k` tracks plus `k-1` gaps, which is exactly what two halves plus one gap add up to, so edges meet the
+section's content edges by construction and no margin trickery is needed. The classes are `col-w-*` rather
+than `column-container--*` because the grid item differs: on the site it is the column, in the canvas it is
+`.cms-col-cell`, and both carry the same names. **A row or column carries its own `u-hide-*` classes**
+rather than being wrapped in the `display: contents` hide wrapper the other blocks get: every row rule is a
+child selector, and with a wrapper in between a column hidden on one screen collapsed to a single track on
+the others — invisible in the canvas, which styles the cell directly.
 Per-screen widths ride the `responsive` map like the other Layout keys, and **a set width beats
 stacking**: the stacking rule is `.row-container:not(--no-stack) > *{ grid-column: 1 / -1 }` and the
 `.row-container > .col-w-X--tablet` rules sit after it at equal specificity, which is what lets a tablet

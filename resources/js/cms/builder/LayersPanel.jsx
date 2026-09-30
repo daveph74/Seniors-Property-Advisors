@@ -35,11 +35,11 @@ function LayerRow({ block, index, total, depth, device, selectedId, onSelect, on
                     <ChevronDownSmallIcon />
                 </button>
             </div>
-            {children.map((c, j) => (
+            {(shown ? shown.map((id) => children.find((c) => c.id === id)) : children).map((c, j) => (
                 <LayerRow
                     key={c.id}
                     block={c}
-                    index={shown ? shown.indexOf(c.id) : j}
+                    index={j}
                     total={children.length}
                     depth={depth + 1}
                     device={device}

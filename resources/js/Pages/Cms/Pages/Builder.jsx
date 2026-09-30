@@ -510,6 +510,12 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     const moveTo = (id, at) => {
         const loc = locate(blocks, id);
 
+        if (loc?.block.type === 'column' && at.anchorId === id) {
+            endDrag();
+
+            return;
+        }
+
         if (loc?.block.type === 'column' && device !== 'desktop' && at.parentId === loc.parentId) {
             const row = locate(blocks, loc.parentId)?.block;
             const others = orderedColumnIds(row, device).filter((x) => x !== id);
@@ -535,19 +541,29 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             if (dest.depth + rowHeight(loc.block) > MAX_ROW_DEPTH) return prev;
 
             const column = loc.block.type === 'column';
+            const sameList = (loc.parentId ?? null) === (at.parentId ?? null);
+
+            if (column && !sameList && (locate(prev, at.parentId)?.block.children || []).length >= 6) {
+                flash('A row holds up to six columns.');
+
+                return prev;
+            }
+
+            const moved = column && !sameList
+                ? { ...loc.block, data: BREAKPOINTS.reduce((d, bp) => writePath(d, `responsive.${bp}.order`, undefined), loc.block.data || {}) }
+                : loc.block;
             const removed = withList(prev, loc.parentId, (list) => {
                 const rest = list.filter((b) => b.id !== id);
 
                 return column ? renumberColumnOrders(rest) : rest;
             });
-            const sameList = (loc.parentId ?? null) === (at.parentId ?? null);
             const target = sameList && at.index > loc.index ? at.index - 1 : at.index;
 
             if (sameList && target === loc.index) return prev;
 
             return withList(removed, at.parentId, (list) => {
                 const next = list.slice();
-                next.splice(Math.max(0, Math.min(next.length, target)), 0, loc.block);
+                next.splice(Math.max(0, Math.min(next.length, target)), 0, moved);
 
                 return column ? renumberColumnOrders(next) : next;
             });
@@ -699,7 +715,8 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
         e.stopPropagation();
 
         const rect = e.currentTarget.getBoundingClientRect();
-        const sideBySide = parentType === 'row' && device === 'desktop';
+        const rowRect = parentType === 'row' ? e.currentTarget.closest('.row-container')?.getBoundingClientRect() : null;
+        const sideBySide = parentType === 'row' && rowRect && rect.width < rowRect.width * 0.9;
         const before = sideBySide
             ? e.clientX < rect.left + rect.width / 2
             : e.clientY < rect.top + rect.height / 2;
@@ -707,7 +724,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
         const side = before ? 'before' : 'after';
 
         if (!isDropAt(parentId, idx) || dropAt.anchorId !== anchorId || dropAt.side !== side) {
-            setDropAt({ parentId, index: idx, anchorId, side });
+            setDropAt({ parentId, index: idx, anchorId, side, stacked: parentType === 'row' && !sideBySide });
         }
     };
 
@@ -927,11 +944,11 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                     {children.map((c, j) => (
                         <div className={`cms-col-cell ${breakpointClasses(c.data || {}, 'order', (v) => `column-container--order-${v}`)} ${columnWidthClasses(c.data || {})}`.replace(/ +/g, ' ').trim()} key={c.id}>
                             {dropAt?.parentId === b.id && dropAt.anchorId === c.id && dropAt.side === 'before'
-                                ? <div className={`cms-drop-line--v cms-drop-line--before ${device === 'desktop' ? '' : 'cms-drop-line--stacked'}`} />
+                                ? <div className={`cms-drop-line--v cms-drop-line--before ${dropAt.stacked ? 'cms-drop-line--stacked' : ''}`} />
                                 : null}
                             {renderBlock(c, j, b.id, 'row', depth)}
                             {dropAt?.parentId === b.id && dropAt.anchorId === c.id && dropAt.side === 'after'
-                                ? <div className={`cms-drop-line--v cms-drop-line--after ${device === 'desktop' ? '' : 'cms-drop-line--stacked'}`} />
+                                ? <div className={`cms-drop-line--v cms-drop-line--after ${dropAt.stacked ? 'cms-drop-line--stacked' : ''}`} />
                                 : null}
                         </div>
                     ))}

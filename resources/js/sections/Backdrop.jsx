@@ -22,10 +22,14 @@ export function hasBackdrop(data = {}) {
 export function backdropClasses(data = {}) {
     if (! hasBackdrop(data)) return '';
 
+    const overlay = OVERLAYS.includes(data.overlay) ? data.overlay : 'navy';
+    const impliedTheme = backdropImage(data) && overlay !== 'none' ? (overlay.startsWith('white') ? 'dark' : 'light') : '';
+    const theme = data.textTheme === 'light' || data.textTheme === 'dark' ? data.textTheme : impliedTheme;
+
     return [
         'backdrop',
         BACKDROP_COLOURS.includes(data.background) ? `backdrop--bg-${data.background}` : '',
-        data.textTheme === 'light' || data.textTheme === 'dark' ? `backdrop--text-${data.textTheme}` : '',
+        theme ? `backdrop--text-${theme}` : '',
         backdropImage(data) ? 'backdrop--has-image' : '',
     ].filter(Boolean).join(' ');
 }

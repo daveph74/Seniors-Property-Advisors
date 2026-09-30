@@ -44,6 +44,10 @@ class Css
             }
         }
 
+        if (preg_match('/\\\\[0-9a-f]/i', $css) === 1) {
+            $problems[] = 'backslash escapes';
+        }
+
         return $problems;
     }
 

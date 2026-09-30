@@ -186,6 +186,8 @@ class OwaspTest extends TestCase
             ->assertSessionHasErrors('sections');
         $this->post("/cms/pages/{$page->cms_id}/draft", $block('width: expression(alert(1))'))
             ->assertSessionHasErrors('sections');
+        $this->post("/cms/pages/{$page->cms_id}/draft", $block('@\\69mport url(/x.css);'))
+            ->assertSessionHasErrors('sections');
 
         $clean = "color: red;\nh2 { letter-spacing: 0.02em; }";
 

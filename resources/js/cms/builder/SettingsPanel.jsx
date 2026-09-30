@@ -522,7 +522,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                         {type === 'column' && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Column width</label>
-                                <select className="cms-select" value={layoutValue('width', 'auto')} onChange={(e) => patchLayout('width', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('width', 'auto')} onChange={(e) => (device !== 'desktop' && e.target.value === 'auto' ? patch(`responsive.${device}.width`, undefined) : patchLayout('width', e.target.value))}>
                                     <option value="auto">Equal share</option>
                                     <option value="quarter">A quarter</option>
                                     <option value="third">A third</option>

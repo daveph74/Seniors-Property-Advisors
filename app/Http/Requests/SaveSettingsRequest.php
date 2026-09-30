@@ -30,7 +30,7 @@ class SaveSettingsRequest extends FormRequest
                 'disclaimer' => Text::clean($this->input('legal.disclaimer')),
                 'privacyPage' => $this->input('legal.privacyPage') ?: null,
             ],
-            'customCss' => Css::clean($this->input('customCss')),
+            'customCss' => is_string($this->input('customCss')) ? Css::clean($this->input('customCss')) : null,
         ]);
     }
 

@@ -115,7 +115,7 @@
             <script nonce="{{ Illuminate\Support\Facades\Vite::cspNonce() }}">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $tracking['ga4'] }}');</script>
         @endisset
     @endif
-    @if (! request()->is('cms', 'cms/*', 'login') || request()->is('cms/pages/*/preview'))
+    @if (! request()->is('cms', 'cms/*', 'login') || request()->is('cms/pages/*/preview', 'cms/pages/*/preview/*', 'cms/blog/*/preview'))
         {{-- Raw on purpose: entities are not decoded inside <style>, so an escaped ">" would break a
              selector. `Site::customCss()` has already refused anything that could close the tag. --}}
         @if (filled($customCss = App\Content\Site::customCss()))

@@ -98,6 +98,10 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
         const forwardKeys = (event) => {
             if (!(event.ctrlKey || event.metaKey || event.key === 'Escape')) return;
 
+            const target = event.target;
+
+            if (target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+
             const copy = new KeyboardEvent('keydown', {
                 key: event.key,
                 code: event.code,

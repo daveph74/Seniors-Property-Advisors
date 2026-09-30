@@ -21,17 +21,21 @@ const ORDERS = ['1', '2', '3', '4', '5', '6'];
 
 export const COLUMN_WIDTHS = ['quarter', 'third', 'half', 'two-thirds', 'three-quarters', 'full'];
 
-const SPANS = { quarter: 15, third: 20, half: 30, 'two-thirds': 40, 'three-quarters': 45, full: 60 };
+const SPANS = { quarter: 3, third: 4, half: 6, 'two-thirds': 8, 'three-quarters': 9, full: 12 };
 
 export function autoColumnSpan(columns = []) {
     const widths = columns.map((c) => c?.data?.width).filter((w) => COLUMN_WIDTHS.includes(w));
     const autos = columns.length - widths.length;
 
-    if (autos <= 0) return 60;
+    if (autos <= 0) return 12;
 
-    const left = 60 - widths.reduce((sum, w) => sum + SPANS[w], 0);
+    const left = 12 - widths.reduce((sum, w) => sum + SPANS[w], 0);
 
-    return left < 5 * autos ? 60 : Math.floor(left / autos);
+    return left < autos ? 12 : Math.floor(left / autos);
+}
+
+export function isFiveEqual(columns = []) {
+    return columns.length === 5 && ! columns.some((c) => COLUMN_WIDTHS.includes(c?.data?.width));
 }
 
 export function columnWidthClasses(data = {}) {
@@ -41,11 +45,12 @@ export function columnWidthClasses(data = {}) {
     ].filter(Boolean).join(' ');
 }
 
-export default function ColumnContainer({ data = {}, anchor, blockId, editing = false, children }) {
+export default function ColumnContainer({ data = {}, anchor, blockId, hideClasses = '', editing = false, children }) {
     const reveal = useReveal(data.animation, data.animationDelay, editing);
 
     const classes = [
         'column-container',
+        hideClasses,
         ACROSS[data.alignAcross] || '',
         DOWN[data.alignDown] || '',
         reveal.classes,
