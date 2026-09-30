@@ -363,6 +363,23 @@ class SectionFieldsTest extends TestCase
         $this->assertArrayNotHasKey('order', $columns[0]['data']);
     }
 
+    public function test_a_column_persists_its_width_and_a_tablet_width(): void
+    {
+        $section = $this->block('section', ['width' => 'standard']);
+        $section[0]['children'] = $this->block('row', ['gap' => 'medium']);
+        $section[0]['children'][0]['children'] = $this->block('column', [
+            'width' => 'two-thirds',
+            'responsive' => ['tablet' => ['width' => 'half']],
+        ]);
+
+        $this->publish($section);
+
+        $column = (new PageContentStore)->document('home')['published'][0]['children'][0]['children'][0]['data'];
+
+        $this->assertSame('two-thirds', $column['width']);
+        $this->assertSame('half', $column['responsive']['tablet']['width']);
+    }
+
     public function test_a_column_persists_its_animation_and_delay(): void
     {
         $section = $this->block('section', ['width' => 'standard']);

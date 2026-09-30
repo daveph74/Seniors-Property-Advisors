@@ -20,6 +20,7 @@ import PageSettingsPanel from '../../../cms/builder/PageSettingsPanel';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
 import { writePath } from '../../../cms/builder/repeaters';
 import { overrideOf, breakpointClasses, orderedColumnIds, BREAKPOINTS } from '../../../sections/responsive';
+import { columnWidthClasses } from '../../../sections/ColumnContainer';
 import { relative } from '../../../cms/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
@@ -923,7 +924,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             return (
                 <>
                     {children.map((c, j) => (
-                        <div className={`cms-col-cell ${breakpointClasses(c.data || {}, 'order', (v) => `column-container--order-${v}`)}`.trim()} key={c.id}>
+                        <div className={`cms-col-cell ${breakpointClasses(c.data || {}, 'order', (v) => `column-container--order-${v}`)} ${columnWidthClasses(c.data || {})}`.replace(/ +/g, ' ').trim()} key={c.id}>
                             {dropAt?.parentId === b.id && dropAt.anchorId === c.id && dropAt.side === 'before'
                                 ? <div className={`cms-drop-line--v cms-drop-line--before ${device === 'desktop' ? '' : 'cms-drop-line--stacked'}`} />
                                 : null}
@@ -1157,6 +1158,12 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                         className="cms-canvas-outer"
                         ref={canvasOuter}
                         onDragOver={(e) => {
+                            if (!canContain(null, 0, dragType)) {
+                                if (dropAt !== null) setDropAt(null);
+
+                                return;
+                            }
+
                             e.preventDefault();
                             if (!isDropAt(null, blocks.length)) setDropAt({ parentId: null, index: blocks.length });
                         }}
@@ -1185,7 +1192,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                                 {blocks.length === 0 ? (
                                     <div
                                         className={`cms-nest-drop cms-nest-drop--page ${isDropAt(null, 0) ? 'cms-nest-drop--active' : ''}`}
-                                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isDropAt(null, 0)) setDropAt({ parentId: null, index: 0 }); }}
+                                        onDragOver={(e) => { if (!canContain(null, 0, dragType)) return; e.preventDefault(); e.stopPropagation(); if (!isDropAt(null, 0)) setDropAt({ parentId: null, index: 0 }); }}
                                         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId: null, index: 0 }); }}
                                     >
                                         <PlusIcon size={16} stroke="currentColor" />
@@ -1210,7 +1217,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
 
                             <div
                                 className={`cms-canvas-drop-end ${isDropAt(null, blocks.length) ? 'cms-canvas-drop-end--active' : ''}`}
-                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isDropAt(null, blocks.length)) setDropAt({ parentId: null, index: blocks.length }); }}
+                                onDragOver={(e) => { if (!canContain(null, 0, dragType)) return; e.preventDefault(); e.stopPropagation(); if (!isDropAt(null, blocks.length)) setDropAt({ parentId: null, index: blocks.length }); }}
                                 onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId: null, index: blocks.length }); }}
                             >
                                 Drop a component here to add it to the end of the page
@@ -1223,7 +1230,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                     {drawer ? (
                         <button
                             type="button"
-                            className="cms-builder-scrim"
+                            className={`cms-builder-scrim ${dragType ? 'cms-builder-scrim--dragging' : ''}`.trim()}
                             aria-label="Close the panel"
                             onClick={() => setDrawer(null)}
                         />

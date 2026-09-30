@@ -800,6 +800,23 @@ fallbacks**, not beside the utilities — same specificity, so a base `.section-
 48px written later would have beaten a tablet override to Tall. Content and Style are deliberately
 one value for every screen; only the `hidden` map and row `stack` were per-device before this.
 
+**A row is a 60-track grid, and a column's width is a span of it.** Rows used to be `grid-auto-columns:
+1fr`, which could only make equal columns. Sixty divides by every column count up to six and by every
+fraction offered (quarter 15, third 20, half 30, two-thirds 40, three-quarters 45, full 60), so a column's
+`data.width` becomes a `col-w-*` class and the columns left on "Equal share" split what remains through
+`--auto-span`, which `RowContainer` computes from a `childBlocks` prop every Section now receives and only
+rows read (`autoColumnSpan`). Without that share the sized column pushed its neighbour onto a second line,
+which is how the first version was found wrong. The classes are `col-w-*` rather than
+`column-container--*` because the grid item differs: on the site it is the column (or the `display:
+contents` hide wrapper's child), in the canvas it is `.cms-col-cell`, and both carry the same names.
+Per-screen widths ride the `responsive` map like the other Layout keys, and **a set width beats
+stacking**: the stacking rule is `.row-container:not(--no-stack) > *{ grid-column: 1 / -1 }` and the
+`.row-container > .col-w-X--tablet` rules sit after it at equal specificity, which is what lets a tablet
+keep 2 + 1 while a phone stacks. A nested row's stacking rule has one more class and wins; per-screen
+widths inside a nested row are therefore not honoured, deliberately, until somebody needs them. Text
+alignment on the seven aligned blocks goes through `alignClasses()` and the same map, so a heading can be
+centred on a phone only.
+
 **Column order is per screen too, and it is CSS `order`, not a second tree.** The report that followed the
 Layout work was "I moved the image column first on Tablet and Desktop moved too" — a column's position
 *is* the tree, and the tree is one thing for every screen. So a column carries
@@ -817,7 +834,10 @@ order and stacked, so a tree index pointed at the wrong cell and the left/right 
 decided before/after while the editor moved up and down. **Hovering somewhere the dragged thing is not
 allowed clears the target** rather than leaving the last valid one live — `preventDefault()` only when
 allowed, and `performDrop` refuses with no target — or the drop landed wherever the marker had last been,
-possibly off screen. And **any change to a row's column list renumbers its orders** (`renumberColumnOrders`
+possibly off screen. The page-level zones (the canvas surround, the empty-page zone and the drop-end
+strip) check `canContain(null, 0, dragType)` the same way: they used to set an "end of page" target for
+anything at all, so a row dragged anywhere lit the bottom marker and then refused on drop. A browser test
+dragging a row over a top-level block is what caught it. And **any change to a row's column list renumbers its orders** (`renumberColumnOrders`
 on add, remove, duplicate and a cross-row move): a column with no order is `order: 0` in CSS and first on
 the live site while the panel calls it last.
 
@@ -1347,6 +1367,14 @@ line: `php artisan serve` forwards a whitelist of variables to the server it sta
 `--env`, so `serve --env=e2e` quietly runs the site against the developer's own database. That is
 how three test enquiries once landed in `database/database.sqlite`.
 
+**`.env.e2e` turns server-side rendering off**, because the suite starts no renderer and Inertia's
+default is on: every public page then paid a failed connection to port 13714 before falling back to the
+browser — a few seconds each, logged as "The server-side render failed" — and the security spec's
+23-screen walk ran out of its 45-second budget on whichever admin screen came after the public ones.
+The symptom was `page.goto: net::ERR_ABORTED; maybe frame was detached?` on a screen that had nothing
+wrong with it. SSR is `SsrScopeTest`'s business, in PHP, where it points Vite at a hot file that does
+not exist and never at a live process.
+
 Its **bucket** is its own too — `spa-media-e2e`, because the upload test generates objects nothing
 prunes and they should not accumulate in the bucket used for development. `global-setup.mjs` runs
 `media:init` **before** the seed, which creates it and applies the CORS rules a presigned PUT needs.
@@ -1418,6 +1446,11 @@ Three things about the builder are worth knowing before touching those tests:
   Contact to a single section made one of them select nothing, and it surfaced two steps later as
   "the selected block's toolbar has no Delete button" — which reads as a broken builder rather than
   a missed click.
+
+**A drag between blocks in the canvas is `dragBlock`, and it pauses between `dragstart` and `dragover`.**
+The drop rules read the dragged type from React state, which a real browser has rendered long before its
+stream of dragover events starts; fired back to back the first dragover sees nothing being dragged, refuses,
+and the drop lands nowhere. That cost an afternoon of "the drag does nothing" against code that worked.
 
 **Dropping a block inside another goes through `support/dragShim.js`.** The canvas uses the native
 HTML5 drag API, which Playwright cannot drive; the shim dispatches the events itself. It works

@@ -1394,6 +1394,7 @@
     display: block; position: absolute; inset: 0; z-index: 29;
     border: 0; padding: 0; background: rgba(12,27,49,0.35);
   }
+  .cms-builder-scrim--dragging{ pointer-events: none; }
   .cms-canvas-outer{ padding: 16px 16px 80px; }
 }
 

@@ -129,7 +129,11 @@ pages arranged the way the website nests them.
    accordion has an **Animation** with a **Delay**, which plays once as a reader scrolls to it — set a
    different delay on each column of a row to bring them in one after another. A row's **Layout**
    accordion has a **Gap between columns**, which is also the space between them once they stack on a
-   phone, and **Space above** and **Space below** for the room around the row itself. Under Website sections, **Banner, full bleed** is a photo running edge to edge with words over
+   phone, and **Space above** and **Space below** for the room around the row itself. A column's
+   **Layout** accordion has a **Column width** — Equal share, A quarter, A third, Half, Two thirds, Three
+   quarters or Full width. Columns left on Equal share split whatever the sized ones leave, and on Tablet
+   or Mobile a set width holds instead of stacking, so give every column in the row one to keep them side
+   by side there. A block's **Alignment** follows the screen the same way the Layout accordion does. Under Website sections, **Banner, full bleed** is a photo running edge to edge with words over
    it, and its **Look** group lets you set the **Section height**, **Title size**, **Text size**,
    **Overlay**, **Image position**, **Text alignment**, **Copy width**, and an **Animation** with a
    **Delay**.

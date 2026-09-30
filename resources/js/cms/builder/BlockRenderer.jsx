@@ -8,7 +8,7 @@ export default function BlockRenderer({ block, library = {}, headingLevel = 2, c
 
     return (
         <HeadingLevel.Provider value={headingLevel}>
-            <Section data={block.data || {}} anchor={block.anchor} actions={{}} library={library} editing>
+            <Section data={block.data || {}} anchor={block.anchor} childBlocks={Array.isArray(block.children) ? block.children : []} actions={{}} library={library} editing>
                 {children}
             </Section>
         </HeadingLevel.Provider>

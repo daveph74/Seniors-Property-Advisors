@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures.js';
 import * as B from '../support/builder.js';
-import { dragLibraryItem } from '../support/dragShim.js';
+import { dragLibraryItem, dragBlock } from '../support/dragShim.js';
 import { uniqueValue } from '../support/unique.js';
 
 /** The builder as a tool, rather than as a way of editing one block. */
@@ -516,6 +516,226 @@ test.describe('Pages · Builder', () => {
            absence of the nesting is the test's. */
         await expect(B.canvas(page).locator('.cms-nest-drop')).toHaveCount(0);
         await expect(B.canvas(page).locator('.cms-block')).toHaveCount(before - 3);
+        await B.saveDraft(page);
+    });
+
+    /* A section with a two-column row, selected through Layers so the row itself is what the
+       panel edits. Returns the row as it appears in the canvas. */
+    const addTwoColumnSection = async (page) => {
+        await addSection(page);
+        await selectLastRow(page);
+        await B.input(page, 'Columns').fill('2');
+
+        const row = B.canvas(page).locator('.row-container').last();
+
+        await expect(row.locator(':scope > .cms-col-cell')).toHaveCount(2);
+
+        return row;
+    };
+
+    const selectCell = async (page, row, index) => {
+        await row.locator(':scope > .cms-col-cell').nth(index).locator(':scope > .cms-block').dispatchEvent('click');
+        await expect(page.locator('.cms-accordion__head', { hasText: 'Style' })).toBeVisible();
+    };
+
+    test('a Layout change on Mobile leaves Desktop alone', async ({ page }) => {
+        await addSection(page);
+        await selectLastSection(page);
+        await B.openTab(page, 'Layout');
+
+        await B.device(page, 'Mobile');
+        await B.input(page, 'Section height').selectOption('compact');
+        await expect(B.layoutHint(page, 'Section height')).toContainText('Set for Mobile');
+        await expect(B.canvas(page).locator('.section-block--compact--mobile')).toHaveCount(1);
+
+        await B.device(page, 'Desktop');
+        await expect(B.input(page, 'Section height')).toHaveValue('comfortable');
+        await expect(B.layoutHint(page, 'Section height')).toHaveCount(0);
+
+        await B.saveAndReload(page);
+        await selectLastSection(page);
+        await B.openTab(page, 'Layout');
+        await expect(B.input(page, 'Section height')).toHaveValue('comfortable');
+        await B.device(page, 'Mobile');
+        await expect(B.input(page, 'Section height')).toHaveValue('compact');
+
+        await B.device(page, 'Desktop');
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a column width is a share of the row, and a tablet width holds instead of stacking', async ({ page }) => {
+        const row = await addTwoColumnSection(page);
+        const cells = row.locator(':scope > .cms-col-cell');
+
+        await selectCell(page, row, 0);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Column width').selectOption('two-thirds');
+
+        await expect(cells.nth(0)).toHaveClass(/col-w-two-thirds/);
+        const [wide, narrow] = [await cells.nth(0).boundingBox(), await cells.nth(1).boundingBox()];
+        expect(wide.width).toBeGreaterThan(narrow.width * 1.8);
+        expect(Math.round(wide.y)).toBe(Math.round(narrow.y));
+
+        await B.device(page, 'Tablet');
+        await B.input(page, 'Column width').selectOption('half');
+        await selectCell(page, row, 1);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Column width').selectOption('half');
+        await expect(B.layoutHint(page, 'Column width')).toContainText('Set for Tablet');
+
+        const [a, b] = [await cells.nth(0).boundingBox(), await cells.nth(1).boundingBox()];
+        expect(Math.round(a.y)).toBe(Math.round(b.y));
+
+        await B.saveAndReload(page);
+        await B.device(page, 'Tablet');
+        const after = B.canvas(page).locator('.row-container').last();
+        await selectCell(page, after, 1);
+        await B.openTab(page, 'Layout');
+        await expect(B.input(page, 'Column width')).toHaveValue('half');
+        await B.device(page, 'Desktop');
+        await expect(B.input(page, 'Column width')).toHaveValue('auto');
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a column position chosen on Tablet does not move Desktop', async ({ page }) => {
+        const row = await addTwoColumnSection(page);
+
+        await B.device(page, 'Tablet');
+        await selectCell(page, row, 1);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Position in row').selectOption('1');
+
+        await expect(B.layoutHint(page, 'Position in row')).toContainText('Set for Tablet');
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([1, 0]);
+
+        await page.getByRole('button', { name: 'Layers' }).click();
+        await expect(page.locator('.cms-layer-row--active').getByTitle('Move up')).toBeDisabled();
+
+        await B.device(page, 'Desktop');
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([0, 1]);
+        await expect(B.input(page, 'Position in row')).toHaveValue('2');
+
+        await B.device(page, 'Tablet');
+        await B.layoutHint(page, 'Position in row').getByRole('button').click();
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([0, 1]);
+
+        await B.device(page, 'Desktop');
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a column dragged within its row on Tablet reorders that screen only', async ({ page }) => {
+        const row = await addTwoColumnSection(page);
+        const cells = '.row-container @last > .cms-col-cell';
+
+        await B.device(page, 'Tablet');
+
+        const marker = await dragBlock(page, `${cells}:nth-child(2) > .cms-block`, `${cells}:nth-child(1) > .cms-block`, { edge: 'before' });
+
+        expect(marker).toBe(true);
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([1, 0]);
+
+        await B.device(page, 'Desktop');
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([0, 1]);
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('undo inside a rich text block stays inside it', async ({ page }) => {
+        const first = uniqueValue('First');
+        const second = uniqueValue('Second');
+
+        await B.addBlock(page, 'Rich text');
+        let surface = B.field(page, 'Text').locator('.cms-rt__surface[contenteditable="true"]');
+        await surface.click();
+        await page.keyboard.type(first);
+
+        await B.addBlock(page, 'Rich text');
+        surface = B.field(page, 'Text').locator('.cms-rt__surface[contenteditable="true"]');
+        await surface.click();
+        await page.keyboard.type(second);
+        await page.keyboard.press('Control+z');
+
+        await expect(B.canvas(page).locator('.block-text', { hasText: first })).toHaveCount(1);
+        await expect(B.canvas(page).locator('.block-text', { hasText: second })).toHaveCount(0);
+        await expect(surface).not.toContainText(first);
+
+        await B.deleteSelected(page);
+        await B.selectBlock(page, first);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('the keyboard undoes from inside the canvas too', async ({ page }) => {
+        const before = await B.canvas(page).locator('.cms-block').count();
+
+        await B.addBlock(page, 'Heading');
+        await B.canvas(page).locator('.cms-block').last().click();
+        await B.canvas(page).locator('body').press('Control+z');
+
+        await expect(B.canvas(page).locator('.cms-block')).toHaveCount(before);
+        await B.saveDraft(page);
+    });
+
+    test('a Row from the library arrives inside a section', async ({ page }) => {
+        const top = B.canvas(page).locator('.cms-canvas-page > .cms-block');
+        const before = await top.count();
+
+        await page.locator('.cms-component-card[title="Row"]').click();
+
+        await expect(top).toHaveCount(before + 1);
+        await expect(top.last().locator(':scope > .section-block')).toHaveCount(1);
+        await expect(page.locator('.cms-builder-right__type')).toHaveText('row');
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('hovering somewhere a block is not allowed shows no marker and drops nothing', async ({ page }) => {
+        await addSection(page);
+
+        /* A row may not sit at page level, and nothing above a top-level block can take it either, so
+           dragging the new section's row over the first block on the page has nowhere valid to land. */
+        const top = B.canvas(page).locator('.cms-canvas-page > .cms-block');
+        const before = await top.count();
+        const marker = await dragBlock(page, '.cms-canvas-page > .cms-block @last .cms-block', '.cms-canvas-page > .cms-block', { edge: 'before' });
+
+        expect(marker).toBe(false);
+        await expect(top).toHaveCount(before);
+        await expect(top.last().locator('.row-container')).toHaveCount(1);
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a heading centred on Mobile stays left on Desktop', async ({ page }) => {
+        const marker = uniqueValue('Centred');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+
+        await B.device(page, 'Mobile');
+        await B.field(page, 'Alignment').getByRole('button', { name: 'Centre' }).click();
+        await expect(B.layoutHint(page, 'Alignment')).toContainText('Set for Mobile');
+        await expect(B.canvas(page).locator('.block-heading--center--mobile')).toHaveCount(1);
+
+        await B.device(page, 'Desktop');
+        await expect(B.field(page, 'Alignment').locator('.cms-align-btn--active')).toHaveText('Left');
+
+        await B.saveAndReload(page);
+        await B.selectBlock(page, marker);
+        await expect(B.canvas(page).locator('.block-heading--center--mobile')).toHaveCount(1);
+
+        await B.deleteSelected(page);
         await B.saveDraft(page);
     });
 });

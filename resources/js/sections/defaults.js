@@ -16,6 +16,7 @@ const TEMPLATES = {
         spaceBelow: 'none',
     },
     column: {
+        width: 'auto',
         alignAcross: 'fill',
         alignDown: 'top',
         animation: 'none',

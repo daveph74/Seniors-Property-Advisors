@@ -23,6 +23,7 @@ export default function SectionResolver({ sections = [], actions = {}, library =
                 <Section
                     data={section.data || {}}
                     anchor={section.anchor}
+                    childBlocks={Array.isArray(section.children) ? section.children : []}
                     actions={actions}
                     library={library}
                     site={site}

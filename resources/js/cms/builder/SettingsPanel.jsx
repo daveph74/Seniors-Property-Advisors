@@ -437,13 +437,15 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         <button
                                             key={value}
                                             type="button"
-                                            className={`cms-align-btn ${(data.align || 'left') === value ? 'cms-align-btn--active' : ''}`}
-                                            onClick={() => patch('align', value)}
+                                            className={`cms-align-btn ${layoutValue('align', 'left') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patchLayout('align', value)}
                                         >
                                             {text}
                                         </button>
                                     ))}
                                 </div>
+                                {device !== 'desktop' && <div className="cms-hint">Editing the {DEVICE_LABEL[device]} alignment.</div>}
+                                {layoutSource('align')}
                             </div>
                         )}
 
@@ -496,7 +498,23 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                 {device === 'mobile' && 'Editing the Mobile layout. Nothing else changes.'}
                             </div>
                         </div>
-                        {has('width') && (
+                        {type === 'column' && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Column width</label>
+                                <select className="cms-select" value={layoutValue('width', 'auto')} onChange={(e) => patchLayout('width', e.target.value)}>
+                                    <option value="auto">Equal share</option>
+                                    <option value="quarter">A quarter</option>
+                                    <option value="third">A third</option>
+                                    <option value="half">Half</option>
+                                    <option value="two-thirds">Two thirds</option>
+                                    <option value="three-quarters">Three quarters</option>
+                                    <option value="full">Full width</option>
+                                </select>
+                                <div className="cms-hint">Equal share splits what the sized columns leave. On Tablet and Mobile a set width holds instead of stacking, so give every column in the row one to keep them side by side.</div>
+                                {layoutSource('width')}
+                            </div>
+                        )}
+                        {type === 'section' && has('width') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Section width</label>
                                 <select className="cms-select" value={layoutValue('width', 'standard')} onChange={(e) => patchLayout('width', e.target.value)}>

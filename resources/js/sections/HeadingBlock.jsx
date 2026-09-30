@@ -1,8 +1,7 @@
-import { spacingClasses } from './spacing';
+import { spacingClasses, alignClasses } from './spacing';
 import { useHeadingLevel } from './headingLevel';
 
 const LEVELS = { h2: 'h2', h3: 'h3', h4: 'h4' };
-const ALIGN = { left: '', center: 'block-heading--center', right: 'block-heading--right' };
 
 export default function HeadingBlock({ data, anchor }) {
     /* The resolver nominates one heading on the page to be its h1. On a page written out of blocks
@@ -15,7 +14,7 @@ export default function HeadingBlock({ data, anchor }) {
     const Tag = leadsPage ? 'h1' : (LEVELS[data.level] || 'h2');
 
     return (
-        <Tag id={anchor} className={`block-heading ${data.size === 'large' ? 'block-heading--large' : ''} ${ALIGN[data.align] || ''} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
+        <Tag id={anchor} className={`block-heading ${data.size === 'large' ? 'block-heading--large' : ''} ${alignClasses(data, 'block-heading')} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
             {data.heading}
             {data.headingEm ? <>{data.emOnNewLine ? <br /> : ' '}<em>{data.headingEm}</em></> : null}
             {data.headingAfter ? <>{data.afterOnNewLine ? <br /> : ' '}{data.headingAfter}</> : null}

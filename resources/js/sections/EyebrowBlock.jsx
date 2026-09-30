@@ -1,12 +1,11 @@
-import { spacingClasses } from './spacing';
+import { spacingClasses, alignClasses } from './spacing';
 
-const ALIGN = { left: '', center: 'block-eyebrow--center', right: 'block-eyebrow--right' };
 
 export default function EyebrowBlock({ data, anchor }) {
     if (!data.eyebrow) return null;
 
     return (
-        <div id={anchor} className={`eyebrow-line block-eyebrow ${ALIGN[data.align] || ''} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
+        <div id={anchor} className={`eyebrow-line block-eyebrow ${alignClasses(data, 'block-eyebrow')} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
             {data.eyebrow}
         </div>
     );

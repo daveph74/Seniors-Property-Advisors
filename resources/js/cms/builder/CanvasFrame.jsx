@@ -89,6 +89,12 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
 
         const blockSubmit = (event) => event.preventDefault();
 
+        const refuseFiles = (event) => {
+            if (event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files')) {
+                event.preventDefault();
+            }
+        };
+
         const forwardKeys = (event) => {
             if (!(event.ctrlKey || event.metaKey || event.key === 'Escape')) return;
 
@@ -111,7 +117,16 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
         const attach = () => {
             const doc = iframe.contentDocument;
 
-            if (! doc) return;
+            if (! doc) {
+                if (! recovering) {
+                    recovering = true;
+                    iframe.src = 'about:blank';
+                }
+
+                return;
+            }
+
+            if (doc.documentElement.classList.contains('cms-portal')) return;
 
             if (iframe.contentWindow?.location.href !== 'about:blank') {
                 if (recovering) return;
@@ -156,6 +171,8 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
             doc.addEventListener('auxclick', stayPut, true);
             doc.addEventListener('submit', blockSubmit, true);
             doc.addEventListener('keydown', forwardKeys);
+            doc.addEventListener('dragover', refuseFiles);
+            doc.addEventListener('drop', refuseFiles);
 
             whenStyled(links).then(() => {
                 if (cancelled) return;
