@@ -680,6 +680,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                     </>
                 </AccordionSection>
 
+                {(has('background') || backdrop || type === 'section' || type === 'column' || has('textTheme')) && (
                 <AccordionSection id="style" title={PANELS[2][1]} open={openPanels.has('style')} onToggle={onTogglePanel}>
                     <>
                         {(has('background') || backdrop) ? (
@@ -803,6 +804,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                         <div className="cms-panel-note">Style options are limited to the Seniors Property Advisors brand kit so pages stay consistent.</div>
                     </>
                 </AccordionSection>
+                )}
 
                 <AccordionSection id="responsive" title={PANELS[3][1]} open={openPanels.has('responsive')} onToggle={onTogglePanel}>
                     <>

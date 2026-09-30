@@ -918,6 +918,11 @@ section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white 
 which passes only as large text, and the button is the home hero's large one — 17px semibold, still
 short of large text. `#3570B5` (5.1:1) is the nearest blue that passes at that size.
 
+**The Style accordion is shown only when it has a control in it.** Blocks with no background, backdrop or
+text theme — a heading, a button — used to open it onto nothing but the brand-kit note, which read as a
+control that did nothing. The gate mirrors the fields inside it, so adding a style control to a block type
+means adding it to the gate too or the accordion stays hidden.
+
 ## Custom CSS and heading looks
 
 **Custom CSS is a super administrator's ability (`styles.custom`), and the server compares rather than

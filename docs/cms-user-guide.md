@@ -115,7 +115,8 @@ pages arranged the way the website nests them.
    - **The canvas** in the middle — the page itself. Click a block to select it.
    - **The settings panel** on the right — every setting for whatever you have selected, in
      accordions: Content is already open, and Layout, Style, Responsive and Advanced open when you
-     click their heading.
+     click their heading. Style appears only for components that have style choices — sections, rows,
+     columns and the Website sections — so a plain heading or button shows the other four.
 3. Click the text you want to change, and edit it in the panel on the right. A **Heading** block has two
    switches for choosing where it wraps: **Highlighted heading starts a new line** and **Text after the
    highlight starts a new line**, and a **Look like** row — Automatic, H1, H2 or H3 — that changes only
