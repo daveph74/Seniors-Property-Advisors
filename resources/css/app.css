@@ -542,7 +542,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 
 .hero-full .hero-full__title{
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 400;
   font-size: clamp(40px, 4.6vw, 60px);
   line-height: 1.08;
   letter-spacing: -0.015em;
