@@ -346,7 +346,7 @@ class OwaspTest extends TestCase
            be a public write path this test does not know exists. */
         $this->post('/enquiries', [
             'source' => Enquiry::FIND_MY_AGENT,
-            'name' => 'Flood', 'email' => 'flood@example.com', 'phone' => '0400 000 000', 'consent' => true,
+            'name' => 'Flood', 'email' => 'flood@example.com', 'phone' => '0400 000 000',
             'details' => [
                 'property_type' => 'house', 'timeline' => 'within_3_months', 'best_time' => 'morning',
                 'location' => ['street' => '12 Smith Street'],

@@ -13,7 +13,7 @@ import { expect, test } from '../fixtures.js';
  */
 test.use({ storageState: { cookies: [], origins: [] } });
 
-const answer = async (page, { consent = true, email = 'e2e@example.invalid', open } = {}) => {
+const answer = async (page, { email = 'e2e@example.invalid', open } = {}) => {
     if (open) {
         await open();
     } else {
@@ -31,6 +31,7 @@ const answer = async (page, { consent = true, email = 'e2e@example.invalid', ope
     await expect(modal.getByLabel('First Name')).toBeVisible();
     await expect(modal.getByLabel('Surname')).toBeVisible();
     await expect(modal.locator('.opt')).toHaveCount(3);
+    await expect(modal.locator('input[type="checkbox"]')).toHaveCount(0);
 
     await page.getByRole('button', { name: /continue/i }).click();
     await expect(modal.locator('#fma-firstName-error')).toBeVisible();
@@ -41,12 +42,7 @@ const answer = async (page, { consent = true, email = 'e2e@example.invalid', ope
     await page.fill('#fma-email', email);
     await modal.locator('.opt', { hasText: 'Morning' }).first().click();
 
-    if (consent) {
-        await page.check('#fma-consent');
-    }
-
     await page.getByRole('button', { name: /continue/i }).click();
-    if (!consent) return modal;
 
     await expect(modal.locator('.step-count')).toHaveText('Step 3 of 3');
     await expect(modal.locator('#modal-title')).toHaveText('When are you hoping to sell?');
@@ -58,7 +54,6 @@ const answer = async (page, { consent = true, email = 'e2e@example.invalid', ope
     await page.getByRole('button', { name: /back/i }).click();
     await expect(modal.getByLabel('First Name')).toHaveValue('Playwright');
     await expect(modal.getByLabel('Surname')).toHaveValue('Sender');
-    await expect(modal.locator('#fma-consent')).toBeChecked();
     await page.getByRole('button', { name: /continue/i }).click();
     await expect(modal.getByRole('radio', { name: /Now/ })).toHaveAttribute('aria-checked', 'true');
     await expect(modal.locator('#fma-notes')).toHaveValue('Sent by the end-to-end suite.');
@@ -84,16 +79,6 @@ test('every step renders, and a finished form comes back with a real reference',
     await expect(modal.locator('.success')).not.toContainText(/email/i);
 
     expect(problems, 'the wizard must raise no errors on any step').toEqual([]);
-});
-
-test('it will not send without consent, and says so on the step that asks', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-
-    const modal = await answer(page, { consent: false, email: 'no-consent@example.invalid' });
-
-    await expect(modal.locator('#fma-consent-error')).toBeVisible();
-    await expect(modal.locator('.step-count')).toHaveText('Step 2 of 3');
-    await expect(modal.locator('.success')).toHaveCount(0);
 });
 
 test('the start box opens the form', async ({ page }) => {

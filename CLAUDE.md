@@ -910,6 +910,14 @@ the wizard's extra rules on when the payload says so. A second endpoint would be
 `OwaspTest` does not know exists — so its rate-limit test now sends the seventh request as a wizard
 payload, which is the whole payoff of the decision.
 
+**Only the contact form asks for consent.** Agent Finder had a "You may contact me about selling my
+property" tick box until the client asked for it to go. The request now `exclude`s `consent` for a
+wizard payload, so those rows store `consented` as false: nobody was asked, so nobody ticked. The
+privacy policy link that sat in the box's sentence stays as a line of its own on step 2, because the
+form still collects a name, a phone number and a home address. If `accepted` is ever put back for both
+forms without the box, the symptom is a Submit button that does nothing: the modal has no field to hang
+a `consent` error on, so the refusal is shown nowhere.
+
 **`details` holds what they picked; `message` stays what they wrote.** The wizard asks four questions
 with fixed answers, and they live in a JSON column as **keys, never wording** — the labels are resolved
 for the screen by `app/Enquiries/FindMyAgentOptions.php`, so re-labelling an answer never rewrites a row.
