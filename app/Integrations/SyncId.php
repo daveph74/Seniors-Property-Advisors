@@ -5,6 +5,7 @@ namespace App\Integrations;
 use App\Enquiries\FindMyAgentOptions;
 use App\Models\Enquiry;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -40,15 +41,8 @@ class SyncId
             return;
         }
 
-        $request = Http::timeout((int) config('services.syncid.timeout', 10))
-            ->acceptJson()
-            ->asJson();
-
+        $request = $this->request();
         $key = config('services.syncid.key');
-
-        if (is_string($key) && $key !== '') {
-            $request = $request->withHeaders(['X-Api-Key' => $key]);
-        }
 
         Log::info('SyncID sending an enquiry', [
             'enquiry_id' => $enquiry->id,
@@ -92,6 +86,19 @@ class SyncId
             'status' => $response->status(),
             'body' => $response->body(),
         ]);
+    }
+
+    public function request(): PendingRequest
+    {
+        $request = Http::timeout((int) config('services.syncid.timeout', 10))
+            ->acceptJson()
+            ->asJson();
+
+        $key = config('services.syncid.key');
+
+        return is_string($key) && $key !== ''
+            ? $request->withHeaders(['X-Api-Key' => $key])
+            : $request;
     }
 
     /** @return array<string, mixed> */

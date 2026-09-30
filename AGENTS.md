@@ -77,7 +77,7 @@ mistake it lists fails silently rather than loudly.
 Run by hand, never scheduled or called from a migration: `content:import [--force]`, `seo:apply [--force]`,
 `content:purge-deleted [--days=90] [--force]`, `enquiries:purge [--months=24] [--force]`,
 `enquiries:erase {email} [--force]`, `activity:prune [--months=24] [--force]`, `media:init`,
-`media:optimise [--dry-run]`, `pages:scaffold`, `security:check [--production]`, `cms:user`. Each says
+`media:optimise [--dry-run]`, `pages:scaffold`, `security:check [--production]`, `enquiries:check-delivery [--send]`, `cms:user`. Each says
 why under its own heading below; the pattern they share is that all of them either destroy something
 or touch the environment, and both are somebody's decision rather than a side effect of deploying.
 
@@ -918,6 +918,14 @@ come through this one controller.
 and a failed send is logged at `error` and dropped — the row in the CMS is the record of truth, and
 the job catches everything so a mail outage cannot retry itself into a flood. The symptom of a dead
 worker is enquiries arriving in the CMS with nobody emailed, and rows piling up in `jobs`.
+
+**`php artisan enquiries:check-delivery` is where to start when either delivery goes quiet.** Both fail
+open, so the only symptom on a server is an empty CRM or inbox. It prints the configuration the running
+application really has — warning when config is cached, since an edited `.env` then does nothing — and
+names what is wrong: a blank or site-root SyncID URL, a missing key, no recipients, a `log` mailer, jobs
+waiting with no worker. `--send` posts SyncID's own documented minimal lead (`office_id`, `first_name`,
+`email`) through the same client `forward()` uses and sends one real email synchronously, printing the
+status, body or exception. It creates a real test lead in SyncID, which is why it needs the flag.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. Only the team is
