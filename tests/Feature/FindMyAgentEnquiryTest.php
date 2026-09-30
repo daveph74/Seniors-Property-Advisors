@@ -16,7 +16,6 @@ class FindMyAgentEnquiryTest extends TestCase
             'email' => 'jane@example.com',
             'phone' => '0412 345 678',
             'message' => 'Mum’s place needs work before we list it.',
-            'consent' => true,
             'page' => '/',
             'details' => array_replace([
                 'property_type' => 'house',
@@ -47,7 +46,7 @@ class FindMyAgentEnquiryTest extends TestCase
 
         $this->assertSame(Enquiry::FIND_MY_AGENT, $enquiry->source);
         $this->assertSame('Jane Wilson', $enquiry->name);
-        $this->assertTrue($enquiry->consented);
+        $this->assertFalse($enquiry->consented);
         $this->assertSame(Enquiry::NEW, $enquiry->status);
         /* Copied out of the answer so the list, the detail header and the search all keep working
            without knowing this form exists. */
@@ -132,11 +131,11 @@ class FindMyAgentEnquiryTest extends TestCase
         $this->assertSame(0, Enquiry::count());
     }
 
-    public function test_nothing_is_stored_without_consent(): void
+    public function test_no_consent_box_is_asked_of_it_and_none_is_recorded(): void
     {
-        $this->send(['consent' => false])->assertSessionHasErrors('consent');
+        $this->send(['consent' => true])->assertRedirect()->assertSessionHasNoErrors();
 
-        $this->assertSame(0, Enquiry::count());
+        $this->assertFalse(Enquiry::sole()->consented);
     }
 
     public function test_a_phone_number_is_required_here_and_not_on_the_contact_form(): void

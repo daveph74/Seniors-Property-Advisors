@@ -6,6 +6,7 @@ use App\Auth\Permissions;
 use App\Cms\Like;
 use App\Cms\Listing;
 use App\Content\ImageOptimiser;
+use App\Content\MediaStorage;
 use App\Content\Site;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
@@ -15,7 +16,6 @@ use App\Models\Testimonial;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Rhukster\DomSanitizer\DOMSanitizer;
@@ -140,8 +140,12 @@ class MediaController extends Controller
 
         $key = now()->format('Y/m').'/'.Str::lower((string) Str::ulid()).'.'.$extension;
 
+        if ($denied = $this->denyUnlessObjectStorage()) {
+            return $denied;
+        }
+
         try {
-            $signed = Storage::disk('s3')->temporaryUploadUrl($key, now()->addMinutes(10));
+            $signed = MediaStorage::disk()->temporaryUploadUrl($key, now()->addMinutes(10));
         } catch (Throwable $e) {
             return response()->json([
                 'message' => 'Storage is unavailable. Is it running?',
@@ -158,8 +162,12 @@ class MediaController extends Controller
 
     public function store(Request $request)
     {
+        if ($denied = $this->denyUnlessObjectStorage()) {
+            return $denied;
+        }
+
         $key = (string) $request->input('key');
-        $disk = Storage::disk('s3');
+        $disk = MediaStorage::disk();
 
         if (! $this->isOurKey($key) || ! $disk->exists($key)) {
             return response()->json(['message' => 'That upload did not arrive. Try again.'], 422);
@@ -256,7 +264,7 @@ class MediaController extends Controller
             'size' => $size,
             'width' => $width,
             'height' => $height,
-            'disk' => 's3',
+            'disk' => MediaStorage::DISK,
         ]);
 
         return response()->json($this->item($media), 201);
@@ -271,7 +279,7 @@ class MediaController extends Controller
             return null;
         }
 
-        Storage::disk('s3')->put(self::THUMBS.$key, $thumb['bytes']);
+        MediaStorage::disk()->put(self::THUMBS.$key, $thumb['bytes']);
 
         return self::THUMBS.$key;
     }
@@ -350,12 +358,12 @@ class MediaController extends Controller
             ? Media::where('thumb_key', $key)->first()
             : Media::where('key', $key)->first();
 
-        if ($media === null) {
+        if ($media === null || $media->disk !== MediaStorage::DISK) {
             abort(404);
         }
 
         try {
-            $disk = Storage::disk($media->disk);
+            $disk = MediaStorage::disk();
             $stream = $disk->exists($key) ? $disk->readStream($key) : null;
         } catch (Throwable $e) {
             abort(503, 'Storage is unavailable.');
@@ -409,13 +417,26 @@ class MediaController extends Controller
 
     private function erase(Media $medium): void
     {
-        try {
-            Storage::disk($medium->disk)->delete(array_filter([$medium->key, $medium->thumb_key]));
-        } catch (Throwable $e) {
-            report($e);
+        if ($medium->disk === MediaStorage::DISK) {
+            try {
+                MediaStorage::disk()->delete(array_filter([$medium->key, $medium->thumb_key]));
+            } catch (Throwable $e) {
+                report($e);
+            }
         }
 
         $medium->delete();
+    }
+
+    private function denyUnlessObjectStorage()
+    {
+        if (! app()->environment('production') || MediaStorage::productionReady()) {
+            return null;
+        }
+
+        return response()->json([
+            'message' => 'Image storage is not configured for this server.',
+        ], 503);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEnquiryRequest;
+use App\Integrations\SyncId;
 use App\Models\Enquiry;
 use Illuminate\Http\RedirectResponse;
 
@@ -17,6 +18,8 @@ class EnquiryController extends Controller
     public function store(StoreEnquiryRequest $request): RedirectResponse
     {
         $enquiry = Enquiry::create($request->toEnquiry());
+
+        app(SyncId::class)->forward($enquiry);
 
         /*
          * The confirmation wording is the editor's, so the page shows that — this only says something

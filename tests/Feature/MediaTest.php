@@ -246,6 +246,29 @@ class MediaTest extends TestCase
         $this->assertSame(480, getimagesizefromstring($small)[1]);
     }
 
+    public function test_saving_always_marks_the_s3_disk(): void
+    {
+        $media = $this->record(['disk' => 'local']);
+
+        $this->assertSame('s3', $media->fresh()->disk);
+    }
+
+    public function test_the_public_route_does_not_serve_a_non_s3_row(): void
+    {
+        Storage::fake('s3');
+        Storage::disk('s3')->put('2026/08/local-only.png', $this->image(100, 100));
+
+        $media = Media::withoutEvents(fn () => Media::create([
+            'key' => '2026/08/local-only.png',
+            'name' => 'local-only.png',
+            'mime' => 'image/png',
+            'size' => 100,
+            'disk' => 'local',
+        ]));
+
+        $this->get($media->url())->assertNotFound();
+    }
+
     public function test_a_small_copy_is_served_with_its_own_length(): void
     {
         Storage::fake('s3');
@@ -508,13 +531,19 @@ class MediaTest extends TestCase
         $this->get($media->url())->assertNotFound();
     }
 
-    public function test_it_reports_storage_being_down_rather_than_crashing(): void
+    public function test_a_row_not_on_the_s3_disk_is_not_found(): void
     {
         Storage::fake('s3');
 
-        $media = $this->record(['disk' => 'unreachable']);
+        $media = Media::withoutEvents(fn () => Media::create([
+            'key' => '2026/07/abc123.png',
+            'name' => 'photo.png',
+            'mime' => 'image/png',
+            'size' => 2048,
+            'disk' => 'unreachable',
+        ]));
 
-        $this->get($media->url())->assertStatus(503);
+        $this->get($media->url())->assertNotFound();
     }
 
     public function test_deleting_removes_the_object_and_the_row(): void

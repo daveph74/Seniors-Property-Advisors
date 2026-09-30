@@ -34,7 +34,7 @@ class StoreEnquiryRequest extends FormRequest
             'phone' => [$this->fromWizard() ? 'required' : 'nullable', 'string', 'max:40'],
             'suburb' => ['nullable', 'string', 'max:120'],
             'message' => ['nullable', 'string', 'max:4000'],
-            'consent' => ['accepted'],
+            'consent' => [$this->fromWizard() ? 'exclude' : 'accepted'],
             'page' => ['nullable', 'string', 'max:190'],
             /* A label, and only ever one this application knows. Nothing security-relevant reads it. */
             'source' => ['nullable', Rule::in(array_keys(Enquiry::SOURCES))],
@@ -133,7 +133,7 @@ class StoreEnquiryRequest extends FormRequest
             'suburb' => $data['suburb'] ?? $location['suburb'] ?? null,
             'message' => $data['message'] ?? null,
             /* Derived from an answer rather than assumed: the rule above is what makes it true. */
-            'consented' => (bool) $data['consent'],
+            'consented' => (bool) ($data['consent'] ?? false),
             'page_slug' => $data['page'] ?? null,
             'source' => $data['source'] ?? Enquiry::CONTACT_FORM,
             /* Null, never an empty array — a contact-form enquiry has no answers, and `[]` would make

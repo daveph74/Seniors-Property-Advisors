@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Content\MediaStorage;
+use App\Models\Media;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Vite;
 use Inertia\Ssr\BundleDetector;
@@ -112,17 +114,17 @@ class SecurityCheckCommand extends Command
             ],
             [
                 'Media storage is real object storage',
-                ! self::looksLocal((string) config('filesystems.disks.s3.endpoint')),
+                ! MediaStorage::looksLocal((string) config('filesystems.disks.s3.endpoint')),
                 'AWS_ENDPOINT names a local S3 emulator — floci, from docker-compose.yml, which is a '
                     .'developer convenience and is never deployed. Uploads would live in its volume: no '
                     .'versioning, no backup, and gone with the container. Leave AWS_ENDPOINT unset for AWS.',
             ],
             [
-                'The media bucket is configured',
-                filled(config('filesystems.disks.s3.bucket')) && filled(config('filesystems.disks.s3.key')),
-                'Without AWS_BUCKET and credentials every upload fails at the browser, and nothing in the '
-                    .'log says so: the disk is deliberately configured not to throw, so a missing bucket '
-                    .'looks exactly like a working one until somebody tries to add a picture.',
+                'The media library uses object storage only',
+                MediaStorage::productionReady() && ! Media::where('disk', '!=', MediaStorage::DISK)->exists(),
+                'Every library file must live on the s3 disk — never local or public. Without AWS_BUCKET '
+                    .'and a real endpoint, uploads must be refused rather than land on disk. Rows marked '
+                    .'with another disk are not served.',
             ],
         ];
 
@@ -165,26 +167,5 @@ class SecurityCheckCommand extends Command
         $this->info('Every deployment setting checks out.');
 
         return self::SUCCESS;
-    }
-
-    /**
-     * An endpoint on this machine, or on the emulator's port anywhere.
-     *
-     * The port is part of it on purpose: floci reached over a real hostname is still floci, which is
-     * the shape a staging box ends up in when `.env.example` is copied instead of
-     * `.env.production.example`. An unset endpoint is the correct production value and passes.
-     */
-    private static function looksLocal(string $endpoint): bool
-    {
-        if ($endpoint === '') {
-            return false;
-        }
-
-        $host = strtolower((string) (parse_url($endpoint, PHP_URL_HOST) ?: $endpoint));
-
-        return in_array($host, ['localhost', '127.0.0.1', '::1', '0.0.0.0', 'host.docker.internal'], true)
-            || str_ends_with($host, '.local')
-            || str_ends_with($host, '.localhost')
-            || parse_url($endpoint, PHP_URL_PORT) === 4566;
     }
 }

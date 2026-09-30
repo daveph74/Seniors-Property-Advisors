@@ -365,7 +365,7 @@ class OwaspTest extends TestCase
            be a public write path this test does not know exists. */
         $this->post('/enquiries', [
             'source' => Enquiry::FIND_MY_AGENT,
-            'name' => 'Flood', 'email' => 'flood@example.com', 'phone' => '0400 000 000', 'consent' => true,
+            'name' => 'Flood', 'email' => 'flood@example.com', 'phone' => '0400 000 000',
             'details' => [
                 'property_type' => 'house', 'timeline' => 'within_3_months', 'best_time' => 'morning',
                 'location' => ['street' => '12 Smith Street'],
@@ -614,6 +614,13 @@ class OwaspTest extends TestCase
                the local emulator, so without this line the check would fail here for a reason that has
                nothing to do with what this test is about. */
             'filesystems.disks.s3.endpoint' => null,
+        ]);
+
+        $this->artisan('security:check --production')->assertSuccessful();
+
+        config([
+            'filesystems.disks.s3.key' => null,
+            'filesystems.disks.s3.secret' => null,
         ]);
 
         $this->artisan('security:check --production')->assertSuccessful();

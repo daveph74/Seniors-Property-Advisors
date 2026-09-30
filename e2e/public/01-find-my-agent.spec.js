@@ -31,6 +31,7 @@ const answer = async (page, { email = 'e2e@example.invalid', open } = {}) => {
     await expect(modal.getByLabel('First Name')).toBeVisible();
     await expect(modal.getByLabel('Surname')).toBeVisible();
     await expect(modal.locator('.opt')).toHaveCount(3);
+    await expect(modal.locator('input[type="checkbox"]')).toHaveCount(0);
 
     await page.getByRole('button', { name: /continue/i }).click();
     await expect(modal.locator('#fma-firstName-error')).toBeVisible();
@@ -78,16 +79,6 @@ test('every step renders, and a finished form comes back with a real reference',
     await expect(modal.locator('.success')).not.toContainText(/email/i);
 
     expect(problems, 'the wizard must raise no errors on any step').toEqual([]);
-});
-
-test('the submit step says that sending is the consent', async ({ page }) => {
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-
-    const modal = await answer(page, { email: 'consent-note@example.invalid' });
-
-    await expect(modal.locator('.step-count')).toHaveText('Step 3 of 3');
-    await expect(modal.locator('.fma-consent-note')).toContainText('agree that we may contact you');
-    await expect(modal.locator('#fma-consent')).toHaveCount(0);
 });
 
 test('the start box opens the form', async ({ page }) => {

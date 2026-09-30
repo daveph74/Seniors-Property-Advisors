@@ -29,7 +29,7 @@ Section storage is JSON-snapshot based, not normalised rows.
   and the built file is handed out as a file. `HelpController` reads nothing from the database for
   that reason, and a test pins it.
 - **This file is part of the change, not a write-up of it.** Anything that adds, removes or alters a
-  functionality updates `CLAUDE.md` in the *same* commit — no follow-up pass, no separate docs
+  functionality updates `AGENTS.md` in the *same* commit — no follow-up pass, no separate docs
   commit. A change that lands without it is incomplete.
 
 ### What that means in practice
@@ -132,14 +132,8 @@ that already has the row, and `/cms/navigation` is where a running site is edite
 
 Adding a block type touches `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js`
 and the React registry — never the database. Adding a `data` key touches nothing.
-`ValidatesSectionTree::sanitiseTree()` strips tags from every string in the tree **except the keys named
-in `PageContentStore::HTML_FIELDS`** — today only a `rich-text` block's `body` — which go through
-`Html::cleanInline()` instead: paragraphs, bold, italic, lists and links, and nothing else. The
-contract, held in PHP, the renderer and the builder's editor helper alike, is that **a body is HTML if
-and only if it contains `<`**: every seeded body is plain text and keeps splitting on blank lines, and
-a plain body is stored byte for byte rather than entity-encoded by a purifier it never needed. Adding
-an HTML key means adding it to that constant and a case to `RichTextBodyTest`; `OwaspTest`'s a03 pins
-that everything else in the tree is still stripped whole.
+Note that `SaveSectionsRequest::sanitise()` strips tags from every string in the tree,
+so no `data` key can hold markup.
 
 `php artisan content:import [--force]` migrates a legacy `storage/app/content/` overlay
 into the database. Run it manually; never from a migration.
@@ -157,35 +151,6 @@ test asserts that. Publishing an unchanged tree records no revision.
 Reusable sections are **independent copies**, stored whole in `reusable_sections` with
 their root type in its own column (drop legality is checked before the subtree loads).
 Inserting one re-ids the subtree via `reid()`. There is no linking between copies.
-
-### Moving a page between sites
-
-A page travels as a **file, not a seed**: **Download as file** on the Pages list (`GET
-/cms/pages/{page}/export`) and **Import page** (`POST /cms/pages/import`). That is how a page built
-locally reaches a server that already has content, and it is why the code push and the content are
-separate — a seed file ships with every deploy, and only loads on a fresh install anyway, where
-`updateOrCreate` would overwrite whatever an editor has done since.
-
-What the file deliberately leaves out is the design, and each omission closes a way to go wrong:
-
-- **No `cms_id`** — the receiving site assigns its own. `content:import` trusts the file's and can
-  collide; this path cannot.
-- **No status** — an import is always a **draft**, so uploading a file never publishes anything.
-- **No revisions or audit names** — history belongs to the site where it happened.
-- **No image bytes** — only their `/media/…` addresses. `PageContentStore::mediaKeysIn()` finds them,
-  and the Pages list names the ones this site's library lacks, in a banner that stays put, not a toast
-  that is gone in under three seconds.
-
-**Importing is super administrator only** (`pages.import`); downloading stays with `content.manage`. A
-file is a whole section tree arriving from outside the site, which is a bigger decision than editing
-one already here. The Import button is hidden, not merely refused, for everyone else, so the user guide
-tells a client administrator to pass the file on rather than describing a button they cannot see.
-
-**An address that already exists is refused**, archived pages included, and nothing is created: an
-upload can never overwrite a page somebody edited. The tree goes through `ValidatesSectionTree` — the
-same rules, messages and tag-stripping as a draft save, extracted from `SaveSectionsRequest` so there
-is one opinion about what a legal page is rather than two, where the looser would be the way round the
-stricter. Seed files (`published` rather than `sections`) import too.
 
 ## Testimonials
 
@@ -264,24 +229,15 @@ Image fields are skipped there and the picker has one real test in `03-pages-bui
 
 Section trees have no server-side backstop for this, deliberately: the schema saying which keys hold an
 image is in `contentFields.js` and nowhere in PHP, so one would mean the schema in two languages or
-guessing by file extension. The one HTML field in a tree is the exception by construction: the Rich text
-block's purifier allows no `img` at all, so an image of any origin pasted there is removed rather than
-judged.
+guessing by file extension.
 
 Two traps: `DisableExternalResources` must not become `DisableExternal`, which takes links with it, and
 `URI.Host` has to be set from `app.url` or HTMLPurifier calls this site's own absolute address external
 and strips an image the form request just allowed.
 
 The editor is TipTap (MIT). CKEditor and TinyMCE were rejected: both are GPL-or-paid, and GPL
-copyleft would reach this application. It lands in its own Vite chunk (~140KB gzipped) because Inertia
-splits every page, so only the article editor pays for it. The builder's Rich text block uses a second,
-smaller TipTap configuration — `InlineRichTextEditor`, bold, italic, lists and links — which
-`SettingsPanel` loads with `React.lazy` the first time such a block is selected; a static import there
-would pull TipTap into the builder chunk for everybody editing a heading. One trap from that file: the
-effect that writes an incoming value back into the editor has to check `editor.isDestroyed` first. In
-the builder the panel re-renders constantly, TipTap replaces the instance under it, and calling
-`getHTML()` on the old one throws `Cannot read properties of null (reading 'cached')` — the symptom is
-the whole builder going blank the moment a saved Rich text block is selected.
+copyleft would reach this application. It lazy-loads as its own Vite chunk (~140KB gzipped),
+so only the article editor pays for it.
 
 The listing at `/blog` is an ordinary CMS page holding a `blog-list` section, so its heading
 and intro stay editable. Only `/blog/{article}` is a route, which is why `articles` is a
@@ -422,26 +378,6 @@ measured width. A section that formats a date or reads `innerWidth` during rende
 differs from what hydration wants, and React recovers by redrawing: the visible symptom is a flash, the
 crawled symptom is wrong content.
 
-Entrance animations — on **columns** and banners, not sections; a section fading as one slab was
-tried first and reads as the page stalling, where columns staggered by their own delays read as the
-page arriving — live inside that contract, and three things make them safe. **The hidden
-state is scoped to `html.js`**, a class set by a nonced inline script in the head of `app.blade.php` on
-public routes only, so a crawler, a reader with JavaScript off, or a browser whose observer never fires
-is delivered the section fully visible — the version of this that goes wrong is a whole site at
-`opacity: 0` to everything that does not scroll. The class is set from the head rather than `app.jsx`
-because that runs after first paint and would show the section and then hide it. **The observer is
-effect-only**: `useReveal()` — and the classes are
-`.reveal`, `.reveal--fade-up`, `.reveal--delay-100` and `.reveal.is-in-view`, shared by
-`ColumnContainer` and `BannerSection` — renders the same classes on the server and the client and adds
-`is-in-view` from an `IntersectionObserver` inside `useEffect`.
-And **the canvas never animates**:
-`BlockRenderer` passes `editing`, which disables it, and the iframe document carries no `html.js`
-either. The preview route is under `/cms` but is a reader's view, so `app.blade.php` gives it the class
-too — an editor has to be able to judge an animation before publishing it — while the rest of the admin
-still gets none. `SsrScopeTest` pins the head script and its nonce on a public page and its absence
-on an admin screen; the e2e "reveals itself" test drives the preview. The `aos` package was not used: it touches
-`document` at import, which the SSR renderer's eager glob would execute at boot.
-
 Two local traps. **`public/hot` diverts SSR to Vite**, so with `composer dev` running the production path
 is never exercised — if you are checking whether SSR works, that file must be out of the way, and a test
 about SSR has to point Vite at a hot file that does not exist or it passes or fails on whether somebody
@@ -567,32 +503,24 @@ placeholder anywhere fails it, and *finishing* one of the three fails it too, wi
 which is the most useful moment to be asked. Still outstanding, and not inventable here: the ABN, the
 complaint response timeframe, who handles complaints, and an effective date.
 
-One trap: it scans the stored tree **keys included, and ignoring case**, so a block whose data key is
-called `placeholder` lists every page it sits on as unfinished. The symptom is a finished page appearing
-in that list with no bracketed text anywhere on it. Name the key something else.
-
 Four things an audit flagged and the code did not need, recorded so nobody pays to find out twice:
 
 - **`width`/`height` on every image.** The wrappers already carry `aspect-ratio` in `app.css` —
   `.hero-visual`, `.why-visual`, `.family-visual`, `.team-member__photo`, `.article-card__image`,
   `.article__hero` — so the space is reserved before the image arrives. The two rules without a ratio,
-  `.block-image img` and `.text-image__media img`, belong to blocks no **indexed** page uses. The one
-  page known to use an image block is `home-preview` — imported rather than seeded, and noindex — so a
-  layout shift there costs no ranking. The finding came from reading the markup and not the stylesheet. Revisit both this and the
-  next point if that page's design is ever promoted to the real home page.
+  `.block-image img` and `.text-image__media img`, belong to blocks **no seeded page uses at all**. The
+  finding came from reading the markup and not the stylesheet.
 - **An eager-loading escape hatch for `ImageBlock`.** Same reason: it would let a page opt out of lazy
-  loading for its largest image, and the only page where that image is above the fold is not indexed.
-- **A single-`<h1>` guard** — this one *was* worth making, once the home page had two full-bleed heroes and
-  two h1s. `ownerOfTheH1` walks the whole tree in reading order and nominates the first hero or the first
-  block with a heading; both hero components read `useHeadingLevel()` and render `h2` unless nominated, so
-  their CSS is keyed on `.hero-full__title` and `.headline` rather than the tag. The builder canvas has to
-  nominate the same way — `Builder.jsx` passes `headingLevel` through `BlockRenderer` — or every hero in
-  the canvas turns into an h2 the moment the components start reading a context nobody provides.
+  loading for its largest image, and no page has one.
+- **A single-`<h1>` guard.** Two hero sections on one page would produce two, and nothing prevents it — but
+  no page has two, and multiple `h1`s have not been a ranking problem for years. The cost of the guard is
+  making every hero ask whether it is the first one.
 - **Editorial internal links.** Real finding: `/how-it-works`, `/why-agent-finder`, `/faqs` and `/contact`
   have no internal links in their body at all, so nothing but the header and footer passes any authority to
-  them. It is not fixable as metadata, and it is somebody's decision rather than a defect: a Rich text
-  block can carry a link now, so an internal link is an editor's job in the builder rather than a code
-  change — and nobody has written one yet.
+  them. It is not fixable as metadata, and it is somebody's decision rather than a defect: section text
+  cannot hold markup (`SaveSectionsRequest::sanitise()` strips tags from every string), so a link means a
+  button or a call-to-action block — which is exactly what was deliberately removed when every page was cut
+  to one section.
 ### The SEO screen
 
 `/cms/seo` is two tabs over one ability, `seo.manage` — super **and** client administrator, because a
@@ -666,16 +594,6 @@ what the wholesale write it replaced would have erased.
 Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
 there; a value stored twice is a value that disagrees with itself.
 
-**The site has its own favicon, and Settings can replace it.** `public/favicon.svg` is the brand
-pentagon, copied from `BrandMark.jsx`'s glyph (its two coloured layers only). `favicon.ico` (16, 32 and
-48px) and `apple-touch-icon.png` (180px, on white, because iOS fills transparency with black) are
-rendered from it in Chromium — GD cannot draw SVG — so change the SVG and re-render both, never edit the
-PNGs. `app.blade.php` links the three by default, and a favicon chosen in `/cms/settings` takes the
-`rel="icon"` place instead. For a long time there was no favicon at all, and it went unnoticed because
-nothing failed: `favicon.ico` was a **0-byte file**, and `SettingsTest` pinned "no icon link until one
-is chosen". The symptom was only the browser's blank-page icon in every tab. `SettingsTest` now checks
-the files are real images.
-
 `security:check [--production]` is the deployment list — the session cookie, debug mode, the proxy in
 front, where media is really stored, and whether anything from a developer's machine came along — as a
 command rather than a paragraph, because nothing reads a security review
@@ -691,161 +609,9 @@ The enquiry form posts to `/enquiries` and is CSRF-protected — which is why e2
 `global-setup.mjs` instead of through it.
 
 `/api/suburbs` proxies Google Places (New) so **the API key never reaches the browser**. Two modes:
-`?q=` for predictions, `?place_id=` for the picked address. A Google failure degrades to an
+`?q=` for predictions, `?place_id=` for the picked suburb. A Google failure degrades to an
 empty-but-successful payload, never an error — the field falls back to free text, so an outage
 upstream can slow the form down but can never block it.
-
-**It looks up street addresses, not suburbs**, despite the address it answers on. Agent Finder's first
-question was a suburb until the client asked for the property's own address; the route and controller
-kept their names because renaming a public endpoint buys a reader nothing. The details call builds a
-`street` line from the unit, number and road, and still returns the suburb, so a picked address fills
-the `suburb` column the inbox list and search read. The required answer is therefore
-`details.location.street`, **not** `suburb`: a typed address with no pick has no suburb to give, and
-requiring one would turn a Google outage back into a closed form. Enquiries from before the change
-have a suburb and no street, and `FindMyAgentOptions::place()` shows them as they were. The cache keys
-were renamed with it — cached suburb results carry no street and would have been served as addresses.
-
-**The `finder-start` block is a Start Here button and an optional note**, opening Agent Finder
-through the ordinary `open-finder` action. The button is drawn the way the header draws Find My
-Agent — the large primary button with the arrow chip — so the hero's call to action and the header's
-read as one thing. It carried a "suburb or postcode" box once, framed with the button in a bordered
-panel and handed to the form as a fallback locality; the box was removed — Step 1 asks for the
-address anyway, so the form lost nothing — and the panel went with it, because with only a button
-inside it framed nothing and read as a box around a box. Two remnants are deliberate: enquiries sent
-while it existed carry `details.location.area`, which `StoreEnquiryRequest` still accepts and the inbox
-still shows when nothing better exists, and `/api/suburbs` still answers `kind=suburb` (localities and
-postcodes, cached apart from addresses), though nothing on the site asks for it now.
-
-Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has no CA bundle configured
-(`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
-like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
-
-**A section can carry a background image and an overlay, and a column an entrance animation**, all from the Style
-accordion and all gated on `type === 'section'` rather than `has()` — the `cta` block also has a
-`background` key, and a section saved before these keys existed would otherwise show no control.
-The picture is drawn by `SectionContainer` the way `CtaSection` draws its photograph: an absolutely
-positioned `.section-block__bg` under a `.section-block__overlay`, with the swatch colour left as the
-fallback that shows until the image loads. Choosing a navy overlay flips the text theme to light and a
-white one to dark, under one undo tag, the way the swatches do; choosing the image alone flips nothing.
-Two of the overlays are **gradients** — "fading from the left" and "fading from the bottom" — and they
-exist because the first real use was a hero over a crowded photograph with the overlay set to None: a
-flat tint strong enough to carry a paragraph buries the picture, and a fade puts the text on the dark
-side and leaves the photo clear on the other. Light text on an image section also carries a text
-shadow and pure white paragraphs, and its primary button takes the gradient background's `#3570B5`
-rather than navy, which on a navy overlay was a button you could not see.
-**Image position** picks which part of the picture survives the crop — nine positions, mapped to
-`section-block__bg--pos-*` / `banner__bg--pos-*` classes rather than an inline style, so an unknown
-value falls back to centre instead of reaching the stylesheet. A background image cannot lazy-load, and that is accepted. The media library needs no change to know
-about it: `mediaKeysIn()` and `MediaController::usage()` find `/media/…` by regex over the whole tree,
-and `MediaTest` pins that a section background counts as in use.
-
-`home-preview` is where that block is first used — the client's redesigned hero, built entirely out of
-section, row, column and blocks. It is **data, not code**: there is no seed file for it, and each site
-gets it by importing `tests/fixtures/pages/home-preview.page.json` (or a fresh download) — see "Moving a
-page between sites". `HomePreviewPageTest` imports that fixture the same way and pins that it is
-**noindex, out of the sitemap, and in neither menu nor footer**, and that no seed file has crept back;
-`e2e/global-setup.mjs` imports and publishes it for the browser suite. `hero-preview` is the precedent
-for an unlinked review page. The headline needed one thing the heading block lacked, a highlight in mid-sentence, so
-headings carry an optional `headingAfter`, rendered after the highlighted words. It is a multi-line box
-because headings are `white-space: pre-line`, so a line break typed inside the text is kept. One typed at
-either **end** of a box is not: Laravel's `TrimStrings` middleware strips it before the save, and the
-symptom is a heading that breaks in the canvas and runs together after a reload. That is what the
-heading block's two switches are for — `emOnNewLine` and `afterOnNewLine` render a `<br>` before the
-highlight and before the text after it, which no trim can touch. Headings also carry a `size` (standard or large). **Large borrows the
-site's existing scale rather than inventing one**: an h1 takes the hero headline's 38–52px and an h2 the
-website section titles' 32–48px (`h2`, `.section-head__title`). The mockup was drawn at 56px and 46px;
-matching it exactly would have made this the one page on the site with its own type sizes. The rule under
-the hero is a `divider` block — a thin line at the section's content width, which a section's own
-background could not draw.
-
-**A block's own `margin: 0` must come before the `.u-space-*` rules in `app.css`, never after.** Same
-specificity, so whichever is later wins, and the Checklist, Benefits list and Steps strip all had their
-reset below the utilities — their Space above and Space below settings had never done anything on any
-page. The symptom is a spacing control that saves, reloads and changes nothing. Found by measuring this
-page against its mockup; the resets now sit together, directly above the utilities.
-
-One trap from the same page: **two navy sections stacked show a hairline seam** between them, a sliver
-of the light page background, whenever the first ends on a fractional pixel — and a section's height is
-set by its content, so that is most of the time. It looks exactly like a deliberate full-width rule, which
-is how it was first mistaken for one. `.section-block--text-light + .section-block--text-light` overlaps
-any two dark sections by a pixel, whichever dark backgrounds they are.
-
-Sections have two backgrounds beyond flat navy, both measured off the client's mockup rather than chosen:
-**Navy gradient** (135°, `#1A2846` to `#2D4A7D`) and **Deep navy** (`#0F1A30`). The mockup's networks
-**Banner is the full-bleed hero with every proportion a control.** `Hero, full bleed` is the page opener:
-one viewport, a 60px title, a fixed gradient, and it stays that way because the home page depends on it.
-The second time that shape was wanted — a mid-page band on the same page — none of those proportions fit,
-so `banner` carries the same photo-behind-copy layout with Section height, Title size (the three scales the
-site already has), Text size, Overlay, Text alignment and Copy width as fields. Its overlay reuses the
-section's `.section-block__overlay--*` classes so the eight tints have one definition; its text theme is
-derived from the overlay (white tints give dark text) rather than stored; its title joins `HEROES` in
-`headingLevel.js` and the PHP mirror in `SeededPagesTest`, so a banner at the top of a page owns the H1
-and a second one renders `h2`; and `.banner--full` takes the same canvas pin as `.hero-full`.
-
-**The Layout accordion edits one screen at a time.** Every Layout value used to be one scalar in
-`data`, so a change made while looking at the Mobile canvas changed desktop too — the complaint was
-"I edit mobile and tablet moves". Desktop still writes the top-level keys; Tablet and Mobile write
-`data.responsive.{tablet|mobile}.{key}`, and the cascade is Desktop → Tablet → Mobile, resolved by
-`resources/js/sections/responsive.js` for the panel and rendered as suffixed classes
-(`section-block--compact--tablet`, `u-space-above-large--mobile`) that `app.css` scopes to
-`max-width: 1080px` and `640px` — the `u-hide-*` boundaries, which the canvas widths of 820 and 420
-fall inside, so the canvas needs no editing-mode logic and SSR sends the same classes. Two things
-keep it honest. **The override maps name the default value** (`section-block--comfortable--mobile`,
-`u-space-above-none--tablet`), because a phone set back to the default has to beat a desktop
-choice, and the desktop default has no class to beat; the desktop maps keep `''` so nothing already
-saved changes. And **the override rules sit after the existing `@media (max-width: 640px)` section
-fallbacks**, not beside the utilities — same specificity, so a base `.section-block--compact` at
-48px written later would have beaten a tablet override to Tall. Content and Style are deliberately
-one value for every screen; only the `hidden` map and row `stack` were per-device before this.
-
-**Column order is per screen too, and it is CSS `order`, not a second tree.** The report that followed the
-Layout work was "I moved the image column first on Tablet and Desktop moved too" — a column's position
-*is* the tree, and the tree is one thing for every screen. So a column carries
-`responsive.{bp}.order` (a 1-based position, `column-container--order-N--tablet`), and the row being a
-grid means `order` holds both side by side and once the columns stack. Desktop order is never stored: on
-Desktop, Position in row, a drag within the row and the Layers arrows all edit the tree as before; on
-Tablet or Mobile the same three actions write `order` on every column of the row and leave the tree
-alone (`placeColumn` in `Builder.jsx`). A drop into a *different* row is a tree move on every device —
-that is structure, not layout, and cannot be per screen. Layers keeps showing tree order; the canvas on
-the chosen device shows the real one.
-
-**Block ids must be unique across the whole page, and for a long time nothing made them so.** The
-builder minted `type-N` from a counter that started at zero on every load, so a block added today took
-the id of a block saved yesterday, and `patchSelected` — which finds a block by id — edited both. The
-symptom is the one an editor reports: "I change one heading and another one changes too", or a row
-gaining an element it was never given. Three things hold it now: `nextId()` includes a timestamp and a
-random suffix so it cannot collide; `hydrate()` re-ids a duplicate as a page loads, so a page saved
-with them heals on its next save; and `ValidatesSectionTree::checkIdsAreUnique()` refuses the tree by
-every door, with `CmsBuilderTest::test_two_blocks_may_not_share_an_id` pinning it. The home page had
-six such collisions and was repaired in place; nothing else had any.
-
-A row's **Gap between columns** sets `--row-gap`, which is one variable doing two jobs: the space
-between columns side by side and the space between them once they stack. Large and Extra large fall back
-to 32px at the stacking breakpoint for that reason, and a row nested in a column keeps its tighter 16px
-default unless a gap is chosen — the modifier is written `.row-container.row-container--gap-*` so it
-outranks the nested-row rule. Rows also take **Space above** and **Space below** through the same
-`spacingClasses()` every block uses, because two rows in one section sat 16px apart with nothing to
-change it; the controls are gated on `type === 'row'` as well as the key, since rows saved before the
-keys existed have none. The scale gained an **Extra large** step (80px) for the same reason — 48px is
-plenty between paragraphs and not between two rows of cards.
-
-**Full screen** is the other end of the height scale: a section fills the first viewport with the
-hero-full rule (`calc(100svh - 126px)`) and centres its content, so a home hero can be built from a section
-rather than the fixed hero block; on a phone it falls back to Tall's padding. The canvas pins it to 640px
-beside `.hero-full`, and `CmsBuilderTest` guards both pins — the canvas measures its own height from its
-content, so a viewport-height section otherwise grows without end. **That measurement is the bottom edge
-of the body's children, never the body or the document's scroll height.** The frame is `about:blank`,
-which is a quirks-mode document, and in quirks mode the body fills the viewport — which is the frame
-itself — so those two only ever read the frame's own height back: it could grow but never shrink. The
-symptom was a page-length blank below the footer after switching from Mobile back to Desktop, since
-the phone layout is taller. The mockup's networks
-band is also why there is a **Slim** section height (32px, 24px on a phone): Compact's 72px was the
-smallest before, twice what the band carries. The mockup's finer
-details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo — are scoped to the
-gradient background, not to dark sections generally, so choosing it brings the look and no existing navy
-section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white on that blue is 4.0:1,
-which passes only as large text, and the button is the home hero's large one — 17px semibold, still
-short of large text. `#3570B5` (5.1:1) is the nearest blue that passes at that size.
 
 ## Dashboard
 
@@ -880,8 +646,8 @@ middleware, the `Gate` definitions in `AppServiceProvider`, and the sidebar's sh
 
 Client administrators create, edit, publish and unpublish content, and reach `/cms/seo` — its own
 `seo.manage` ability, since the report and the two fields it patches are things they already write in
-the builder. Super administrators additionally delete content, restore archived pages, import page
-files (`pages.import`), manage accounts and reach settings.
+the builder. Super administrators additionally delete content, restore archived pages, manage accounts
+and reach settings.
 Deleting anything is therefore a super-admin route — the scope never gives client users a
 delete, only disable and archive.
 
@@ -1032,13 +798,6 @@ key and resolving a label is that wording can move without data moving. "Wizard"
 and test names as a description of its shape, four steps held together by React state, not as its name.
 The reference a sender quotes was already `AF-2026-00042`.
 
-**The wizard has no consent checkbox.** It had one on step 2 and the client asked for it to go, so
-sending *is* the consent: a note under the Submit button says so, with the privacy link, and
-`payload()` sends `consent: true`. The server still refuses an enquiry without `consent`, and
-`FindMyAgentEnquiryTest::test_nothing_is_stored_without_consent` still pins that — the rule moved from
-a box to a sentence, not out of the request. The contact form section keeps its own checkbox and its
-editable wording.
-
 ### Which form it came from
 
 Two forms write this table: the contact form section, and Agent Finder. `source` says which
@@ -1051,14 +810,6 @@ fact rather than a default nobody set.
 the wizard's extra rules on when the payload says so. A second endpoint would be a public write path
 `OwaspTest` does not know exists — so its rate-limit test now sends the seventh request as a wizard
 payload, which is the whole payoff of the decision.
-
-**Only the contact form asks for consent.** Agent Finder had a "You may contact me about selling my
-property" tick box until the client asked for it to go. The request now `exclude`s `consent` for a
-wizard payload, so those rows store `consented` as false: nobody was asked, so nobody ticked. The
-privacy policy link that sat in the box's sentence stays as a line of its own on step 2, because the
-form still collects a name, a phone number and a home address. If `accepted` is ever put back for both
-forms without the box, the symptom is a Submit button that does nothing: the modal has no field to hang
-a `consent` error on, so the refusal is shown nowhere.
 
 **`details` holds what they picked; `message` stays what they wrote.** The wizard asks four questions
 with fixed answers, and they live in a JSON column as **keys, never wording** — the labels are resolved
@@ -1078,22 +829,6 @@ key belongs so the old wire format cannot come back.
 
 The reference the sender is told to quote is **derived, never stored**: `AF-{year}-{id}`. Nothing to keep
 in step, and it leads straight back to a row this CMS can open.
-
-### SyncID
-
-Every **contact-form** enquiry is forwarded to SyncID immediately after it is saved locally — Agent Finder
-is not, because the field mappings for its answers belong to a separate conversation with SyncID support.
-`app/Integrations/SyncId.php` POSTs to `SYNCID_API_URL` — the SPA's `/api/website-lead` webhook, not the
-site root — with `X-Api-Key: SYNCID_API_KEY` and `SYNCID_OFFICE_ID`. Blank URL means nothing is sent.
-A failure is logged at `error` level and the visitor still sees the confirmation — the local row is the
-record of truth, and the migration comment that mentioned replay was written for exactly this shape.
-
-Two traps from the first deploy: posting to `https://spa.syncid.com.au/` hits the login app and answers
-419 CSRF, which `LOG_LEVEL=error` never recorded because the code logged it as a warning; and Bearer auth
-is wrong — the webhook reads `X-Api-Key` against the office's `website_lead_api_key` attribute. The
-name is split into `first_name` / `last_name`, `page_slug` becomes `campaign`, and the derived reference
-is `external_id`. SyncID returns 202 and queues the lead — a worker on `leads` must be running or the
-webhook accepts and nothing appears in the CRM.
 
 ### The inbox separates them with tabs, not badges
 
@@ -1359,13 +1094,6 @@ prunes and they should not accumulate in the bucket used for development. `globa
 That ordering is the point: `MediaSeeder` swallows a storage failure with a warning, so without the
 preflight a missing container let the run continue and failed several tests as though their screens
 were broken. The suite has always needed `docker compose up -d`; now it says so and stops.
-
-**That stop leaves a trap for the next run.** Global setup empties `database/e2e.sqlite` before
-`media:init`, and Playwright waits for the web server to answer before it runs global setup at all —
-so after an aborted run every request is a 500 for want of a `sessions` table, and the next run fails
-with `Timed out waiting 60000ms from config.webServer` while the server log shows `/` answering every
-few seconds. `APP_ENV=e2e php artisan migrate --force` once gets it going; global setup rebuilds it
-properly from there.
 
 **Two concurrent runs corrupt each other, and not via the port.** The port clash is the visible half
 — `webServer` is `reuseExistingServer: false` deliberately, so the second run refuses to start. The
