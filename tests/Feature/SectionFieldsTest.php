@@ -321,6 +321,48 @@ class SectionFieldsTest extends TestCase
         $this->assertSame('standard', $data['width']);
     }
 
+    public function test_a_section_persists_its_tablet_and_mobile_layout(): void
+    {
+        $section = $this->block('section', [
+            'width' => 'standard',
+            'height' => 'comfortable',
+            'spaceAbove' => 'none',
+            'responsive' => [
+                'tablet' => ['height' => 'compact', 'spaceAbove' => 'large'],
+                'mobile' => ['height' => 'slim'],
+            ],
+        ]);
+
+        $data = $this->publish($section);
+
+        $this->assertSame('comfortable', $data['height']);
+        $this->assertSame('none', $data['spaceAbove']);
+        $this->assertSame('compact', $data['responsive']['tablet']['height']);
+        $this->assertSame('large', $data['responsive']['tablet']['spaceAbove']);
+        $this->assertSame('slim', $data['responsive']['mobile']['height']);
+        $this->assertArrayNotHasKey('spaceAbove', $data['responsive']['mobile']);
+    }
+
+    public function test_a_column_persists_its_tablet_and_mobile_order(): void
+    {
+        $section = $this->block('section', ['width' => 'standard']);
+        $section[0]['children'] = $this->block('row', ['gap' => 'medium']);
+        $section[0]['children'][0]['children'] = [
+            ['id' => 'column-1', 'type' => 'column', 'label' => 'Text', 'active' => true, 'anchor' => null, 'data' => ['alignAcross' => 'fill', 'responsive' => ['tablet' => ['order' => '2']]]],
+            ['id' => 'column-2', 'type' => 'column', 'label' => 'Image', 'active' => true, 'anchor' => null, 'data' => ['alignAcross' => 'fill', 'responsive' => ['tablet' => ['order' => '1'], 'mobile' => ['order' => '2']]]],
+        ];
+
+        $this->publish($section);
+
+        $columns = (new PageContentStore)->document('home')['published'][0]['children'][0]['children'];
+
+        $this->assertSame('Text', $columns[0]['label']);
+        $this->assertSame('2', $columns[0]['data']['responsive']['tablet']['order']);
+        $this->assertSame('1', $columns[1]['data']['responsive']['tablet']['order']);
+        $this->assertSame('2', $columns[1]['data']['responsive']['mobile']['order']);
+        $this->assertArrayNotHasKey('order', $columns[0]['data']);
+    }
+
     public function test_a_column_persists_its_animation_and_delay(): void
     {
         $section = $this->block('section', ['width' => 'standard']);

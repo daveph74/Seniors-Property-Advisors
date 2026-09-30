@@ -129,6 +129,7 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
                 + 'html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none;}'
                 + '.hero-full{min-height:640px;}'
                 + '.section-block--full{min-height:640px;}'
+                + '.section-block--full--tablet{min-height:640px;}'
                 + '.banner--full{min-height:640px;}';
             doc.head.appendChild(reset);
 
@@ -169,11 +170,12 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
         const root = body.ownerDocument.documentElement;
 
         const measure = () => {
-            const next = Math.max(
-                root.scrollHeight,
-                body.scrollHeight,
-                Math.ceil(body.getBoundingClientRect().height),
-            );
+            const top = body.getBoundingClientRect().top;
+            const content = Math.ceil(Array.from(body.children).reduce(
+                (max, child) => Math.max(max, child.getBoundingClientRect().bottom - top),
+                0,
+            ));
+            const next = content > 0 ? content : Math.max(root.scrollHeight, body.scrollHeight);
 
             if (next > 0) {
                 setHeight(next);

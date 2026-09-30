@@ -1,8 +1,14 @@
+import { breakpointClasses } from './responsive';
+
 const BACKGROUNDS = { white: '', wash: 'section-block--bg-wash', 'wash-2': 'section-block--bg-wash-2', navy: 'section-block--bg-navy', 'navy-gradient': 'section-block--bg-navy-gradient', 'navy-deep': 'section-block--bg-navy-deep' };
 const HEIGHTS = { comfortable: '', compact: 'section-block--compact', slim: 'section-block--slim', tall: 'section-block--tall', full: 'section-block--full' };
 const ALIGN = { left: '', center: 'section-block__inner--center', right: 'section-block__inner--right' };
 const SPACING = { medium: '', small: 'section-block__inner--tight', large: 'section-block__inner--loose' };
 const OVERLAYS = ['none', 'navy', 'navy-strong', 'navy-left', 'navy-bottom', 'white', 'white-strong', 'white-left'];
+const WIDTHS = ['standard', 'wide', 'narrow', 'full'];
+const OVERRIDE_HEIGHTS = { comfortable: 'section-block--comfortable', compact: 'section-block--compact', slim: 'section-block--slim', tall: 'section-block--tall', full: 'section-block--full' };
+const OVERRIDE_ALIGN = { left: 'section-block__inner--left', center: 'section-block__inner--center', right: 'section-block__inner--right' };
+const OVERRIDE_SPACING = { medium: 'section-block__inner--regular', small: 'section-block__inner--tight', large: 'section-block__inner--loose' };
 export const POSITIONS = ['center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
 export default function SectionContainer({ data = {}, anchor, children }) {
@@ -16,6 +22,7 @@ export default function SectionContainer({ data = {}, anchor, children }) {
         HEIGHTS[data.height] || '',
         data.textTheme === 'light' ? 'section-block--text-light' : '',
         image ? 'section-block--has-image' : '',
+        breakpointClasses(data, 'height', (v) => OVERRIDE_HEIGHTS[v] || ''),
     ].filter(Boolean).join(' ');
 
     const inner = [
@@ -23,6 +30,9 @@ export default function SectionContainer({ data = {}, anchor, children }) {
         `section-block__inner--${data.width || 'standard'}`,
         ALIGN[data.contentAlign] || '',
         SPACING[data.spacing] || '',
+        breakpointClasses(data, 'width', (v) => (WIDTHS.includes(v) ? `section-block__inner--${v}` : '')),
+        breakpointClasses(data, 'contentAlign', (v) => OVERRIDE_ALIGN[v] || ''),
+        breakpointClasses(data, 'spacing', (v) => OVERRIDE_SPACING[v] || ''),
     ].filter(Boolean).join(' ');
 
     return (

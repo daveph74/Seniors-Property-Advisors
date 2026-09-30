@@ -19,6 +19,7 @@ import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
 import PageSettingsPanel from '../../../cms/builder/PageSettingsPanel';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
 import { writePath } from '../../../cms/builder/repeaters';
+import { effective, breakpointClasses } from '../../../sections/responsive';
 import { relative } from '../../../cms/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
@@ -165,6 +166,13 @@ function mapTree(blocks, id, fn) {
 
         return b;
     });
+}
+
+function orderedColumnIds(row, device) {
+    return (row.children || [])
+        .map((c, i) => ({ id: c.id, at: Number(effective(c.data || {}, device, 'order', i + 1)) }))
+        .sort((a, b) => a.at - b.at)
+        .map((c) => c.id);
 }
 
 function isDescendant(block, id) {
@@ -370,7 +378,85 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
         });
     };
 
+    const setColumnOrder = (rowId, ids) => {
+        setBlocks((prev) => withList(prev, rowId, (list) => list.map((c) => ({
+            ...c,
+            data: writePath(c.data, `responsive.${device}.order`, String(ids.indexOf(c.id) + 1)),
+        }))), `order:${rowId}:${device}`);
+        markUnsaved();
+    };
+
+    const clearColumnOrder = () => {
+        const loc = locate(blocks, selectedId);
+
+        if (loc?.block.type !== 'column' || device === 'desktop') return;
+
+        setBlocks((prev) => withList(prev, loc.parentId, (list) => list.map((c) => ({
+            ...c,
+            data: writePath(c.data, `responsive.${device}.order`, undefined),
+        }))), `order:${loc.parentId}:${device}`);
+        markUnsaved();
+    };
+
+    const placeColumn = (loc, position) => {
+        const row = locate(blocks, loc.parentId)?.block;
+
+        if (!row) return;
+
+        const ids = orderedColumnIds(row, device).filter((x) => x !== loc.block.id);
+        const at = Math.max(0, Math.min(ids.length, position));
+
+        ids.splice(at, 0, loc.block.id);
+        setColumnOrder(row.id, ids);
+    };
+
+    const columnPlace = (() => {
+        const loc = locate(blocks, selectedId);
+
+        if (loc?.block.type !== 'column') return null;
+
+        const row = locate(blocks, loc.parentId)?.block;
+
+        return row ? { index: loc.index, count: row.children.length } : null;
+    })();
+
+    const positionColumn = (position) => {
+        const loc = locate(blocks, selectedId);
+
+        if (loc?.block.type !== 'column') return;
+
+        if (device !== 'desktop') {
+            placeColumn(loc, position);
+
+            return;
+        }
+
+        setBlocks((prev) => withList(prev, loc.parentId, (list) => {
+            const next = list.filter((b) => b.id !== loc.block.id);
+
+            next.splice(Math.max(0, Math.min(next.length, position)), 0, loc.block);
+
+            return next;
+        }));
+        markUnsaved();
+    };
+
     const moveBlock = (id, dir) => {
+        const loc = locate(blocks, id);
+
+        if (loc?.block.type === 'column' && device !== 'desktop') {
+            const row = locate(blocks, loc.parentId)?.block;
+            const ids = orderedColumnIds(row, device);
+            const from = ids.indexOf(id);
+            const to = from + dir;
+
+            if (to < 0 || to >= ids.length) return;
+
+            placeColumn(loc, to);
+
+            return;
+        }
+
         setBlocks((prev) => {
             const loc = locate(prev, id);
 
@@ -392,6 +478,20 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     };
 
     const moveTo = (id, at) => {
+        const loc = locate(blocks, id);
+
+        if (loc?.block.type === 'column' && device !== 'desktop' && at.parentId === loc.parentId) {
+            const row = locate(blocks, loc.parentId)?.block;
+            const ids = orderedColumnIds(row, device);
+            const before = row.children.slice(0, at.index).map((c) => c.id).filter((x) => x !== id);
+            const position = ids.filter((x) => x !== id).findIndex((x) => ! before.includes(x));
+
+            placeColumn(loc, position < 0 ? ids.length - 1 : position);
+            endDrag();
+
+            return;
+        }
+
         setBlocks((prev) => {
             const loc = locate(prev, id);
 
@@ -764,7 +864,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             return (
                 <>
                     {children.map((c, j) => (
-                        <div className="cms-col-cell" key={c.id}>
+                        <div className={`cms-col-cell ${breakpointClasses(c.data || {}, 'order', (v) => `column-container--order-${v}`)}`.trim()} key={c.id}>
                             {isDropAt(b.id, j) ? <div className="cms-drop-line--v cms-drop-line--before" /> : null}
                             {renderBlock(c, j, b.id, 'row', depth)}
                             {j === children.length - 1 && isDropAt(b.id, j + 1)
@@ -1066,6 +1166,9 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                                 device={device}
                                 onDevice={setDevice}
                                 onColumnCount={(n) => setColumnCount(selectedId, n)}
+                                columnPlace={columnPlace}
+                                onPosition={positionColumn}
+                                onClearOrder={clearColumnOrder}
                                 onSaveReusable={() => saveReusable(selected)}
                                 library={library}
                             />
