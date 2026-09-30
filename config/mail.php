@@ -53,6 +53,13 @@ return [
             'transport' => 'ses',
         ],
 
+        'ses_cross_account' => [
+            'transport' => 'ses_cross_account',
+            'region' => env('SES_REGION'),
+            'role_arn' => env('SES_ROLE_ARN'),
+            'session_name' => env('SES_ROLE_SESSION_NAME', 'seniors-property-advisors-mail'),
+        ],
+
         'postmark' => [
             'transport' => 'postmark',
             // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),

@@ -1039,6 +1039,16 @@ email, never an enquiry. `queue:restart` in the release step is not optional: a 
 booted with and would keep sending last week's email. And `MAIL_MAILER` must be a real transport —
 `log` is the local default, and with it every notification is "sent" into `laravel.log`.
 
+**Production mail is `ses_cross_account`: SES in SyncID's AWS account, reached by assuming
+`SES_ROLE_ARN`.** Laravel's own `ses` mailer only takes a static key and secret, and this site is given
+a role to assume rather than keys to hold, so `App\Mail\SesCrossAccountTransport` builds the SES client
+itself: STS assumes the role with whatever credentials the host already has — the instance profile, or
+the `AWS_*` keys where there is none — and the temporary credentials are memoised and refreshed when
+they expire. `MAIL_FROM_ADDRESS` has to be an identity verified in *that* account's SES, in
+`SES_REGION`. Either way a fault ends as an `error` in the log from the notification job, with the
+enquiry saved: a missing region or role names the variable, a role this host may not assume names STS.
+Locally, the floci dummy keys cannot assume anything, so leave `MAIL_MAILER=log` there.
+
 **Docker is not part of any of this.** `docker-compose.yml` runs `floci`, an S3-compatible emulator on
 `:4566`, and it exists for a developer's machine and the browser suite — it is never deployed. A server
 points `AWS_*` at real object storage instead, and the only thing that has to be true of that bucket is
