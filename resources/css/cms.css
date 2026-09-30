@@ -183,6 +183,7 @@
 }
 .cms-input:focus, .cms-select:focus, .cms-textarea:focus{ border-color: var(--cms-accent-2); }
 .cms-textarea{ padding: 8px 10px; height: auto; line-height: 1.5; resize: vertical; }
+.cms-textarea--code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; white-space: pre; tab-size: 2; }
 /* The browser's own control was left showing here, so a select sat among the inputs with a
    different arrow, a different text colour and its own idea of spacing. The arrow is drawn as a
    background so it matches the icons beside it, and the room for it is real padding rather than a

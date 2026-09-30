@@ -1,6 +1,7 @@
 import useReveal from './useReveal';
 import { breakpointClasses } from './responsive';
 import { backdropClasses, BackdropLayers } from './Backdrop';
+import { customCssOf } from './customCss';
 
 const ACROSS = {
     fill: '',
@@ -40,7 +41,7 @@ export function columnWidthClasses(data = {}) {
     ].filter(Boolean).join(' ');
 }
 
-export default function ColumnContainer({ data = {}, anchor, editing = false, children }) {
+export default function ColumnContainer({ data = {}, anchor, blockId, editing = false, children }) {
     const reveal = useReveal(data.animation, data.animationDelay, editing);
 
     const classes = [
@@ -56,7 +57,7 @@ export default function ColumnContainer({ data = {}, anchor, editing = false, ch
     ].filter(Boolean).join(' ');
 
     return (
-        <div ref={reveal.ref} className={classes} id={anchor} data-animate={reveal.animation || undefined}>
+        <div ref={reveal.ref} className={classes} id={anchor} data-cms-block={customCssOf(data) ? blockId : undefined} data-animate={reveal.animation || undefined}>
             <BackdropLayers data={data} />
             {children}
         </div>

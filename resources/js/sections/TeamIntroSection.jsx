@@ -10,7 +10,7 @@ export default function TeamIntroSection({ data, anchor }) {
     return (
         <section className="team-intro" id={anchor}>
             <div className="container">
-                <SectionHead {...data} />
+                <SectionHead {...data} look={data.titleLook} />
 
                 {members.length > 0 ? (
                     <div className="team-intro__grid">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Content\PageContentStore;
 use App\Content\ValidatesSectionTree;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,5 +30,24 @@ class SaveSectionsRequest extends FormRequest
     public function sections(): array
     {
         return $this->sanitiseTree($this->validated()['sections']);
+    }
+
+    protected function storedCustomCss(): array
+    {
+        $cmsId = $this->route('page');
+
+        if ($cmsId === null) {
+            return [];
+        }
+
+        $slug = app(PageContentStore::class)->findByCmsId((int) $cmsId);
+
+        if ($slug === null) {
+            return [];
+        }
+
+        $document = app(PageContentStore::class)->document($slug);
+
+        return $this->customCssIn($document['published'] ?? []) + $this->customCssIn($document['draft'] ?? []);
     }
 }

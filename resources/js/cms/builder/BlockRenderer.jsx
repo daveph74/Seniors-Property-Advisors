@@ -1,6 +1,7 @@
 import { resolveSection } from '../../sections/registry';
 import { HeadingLevel } from '../../sections/headingLevel';
 import Backdrop from '../../sections/Backdrop';
+import CustomStyled from '../../sections/customCss';
 
 export default function BlockRenderer({ block, library = {}, headingLevel = 2, children }) {
     const Section = resolveSection(block.type);
@@ -9,11 +10,13 @@ export default function BlockRenderer({ block, library = {}, headingLevel = 2, c
 
     return (
         <HeadingLevel.Provider value={headingLevel}>
-            <Backdrop type={block.type} data={block.data || {}}>
-                <Section data={block.data || {}} anchor={block.anchor} childBlocks={Array.isArray(block.children) ? block.children : []} actions={{}} library={library} editing>
-                    {children}
-                </Section>
-            </Backdrop>
+            <CustomStyled id={block.id} type={block.type} data={block.data || {}}>
+                <Backdrop type={block.type} data={block.data || {}}>
+                    <Section data={block.data || {}} anchor={block.anchor} blockId={block.id} childBlocks={Array.isArray(block.children) ? block.children : []} actions={{}} library={library} editing>
+                        {children}
+                    </Section>
+                </Backdrop>
+            </CustomStyled>
         </HeadingLevel.Provider>
     );
 }

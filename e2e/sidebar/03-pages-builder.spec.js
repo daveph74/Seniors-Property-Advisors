@@ -739,6 +739,43 @@ test.describe('Pages · Builder', () => {
         await B.saveDraft(page);
     });
 
+    test('a super administrator can give a block custom CSS that the canvas applies', async ({ page }) => {
+        const marker = uniqueValue('Styled');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Advanced');
+        await B.field(page, 'Custom CSS').locator('textarea').fill('border-bottom: 3px solid rgb(255, 0, 0);');
+
+        const heading = B.canvas(page).locator('.block-heading', { hasText: marker });
+        await expect(heading).toHaveCSS('border-bottom-color', 'rgb(255, 0, 0)');
+
+        await B.saveAndReload(page);
+        await expect(B.canvas(page).locator('.block-heading', { hasText: marker })).toHaveCSS('border-bottom-color', 'rgb(255, 0, 0)');
+
+        await B.selectBlock(page, marker);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a heading can wear the H1 look while staying an H2', async ({ page }) => {
+        const marker = uniqueValue('Looks');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+        await B.field(page, 'Look like').getByRole('button', { name: 'H1' }).click();
+
+        const heading = B.canvas(page).locator('h2.block-heading.look-h1', { hasText: marker });
+        await expect(heading).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await expect(B.canvas(page).locator('h2.block-heading.look-h1', { hasText: marker })).toHaveCount(1);
+
+        await B.selectBlock(page, marker);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
     test('a heading centred on Mobile stays left on Desktop', async ({ page }) => {
         const marker = uniqueValue('Centred');
 

@@ -36,6 +36,7 @@ const TEMPLATES = {
         afterOnNewLine: false,
         level: 'h2',
         size: 'standard',
+        look: '',
         align: 'left',
         spaceAbove: 'none',
         spaceBelow: 'none',

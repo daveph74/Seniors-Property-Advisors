@@ -1,3 +1,4 @@
+import { lookClass } from './headingLevel';
 import ActionButton from './ActionButton';
 
 export default function CtaSection({ data, actions, anchor }) {
@@ -24,7 +25,7 @@ export default function CtaSection({ data, actions, anchor }) {
                     <span style={{ background: 'var(--blue)' }} />
                     {data.eyebrow}
                 </div>
-                <h2>
+                <h2 className={lookClass(data.titleLook) || undefined}>
                     {data.heading} <em>{data.headingEm}</em>
                 </h2>
                 <p>{data.body}</p>

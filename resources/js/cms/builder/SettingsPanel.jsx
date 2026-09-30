@@ -60,7 +60,7 @@ function optionsFor(field, library, value) {
     ];
 }
 
-export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, columnPlace = null, onPosition, onClearOrder, onSaveReusable, library = {} }) {
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, columnPlace = null, onPosition, onClearOrder, canCustomCss = false, onSaveReusable, library = {} }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -295,6 +295,25 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         </button>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {has('level') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Look like</label>
+                                <div className="cms-align-row">
+                                    {[['', 'Automatic'], ['h1', 'H1'], ['h2', 'H2'], ['h3', 'H3']].map(([value, text]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            className={`cms-align-btn ${(data.look || '') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patch('look', value)}
+                                        >
+                                            {text}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="cms-hint">Changes the size only. The level above is what search engines and screen readers see.</div>
                             </div>
                         )}
 
@@ -834,6 +853,22 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     : 'Give this a name to link to it from the menu, e.g. #how'}
                             </div>
                         </div>
+                        {canCustomCss ? (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Custom CSS</label>
+                                <textarea
+                                    className="cms-textarea cms-textarea--code"
+                                    rows={8}
+                                    spellCheck={false}
+                                    value={data.customCss || ''}
+                                    onChange={(e) => patch('customCss', e.target.value)}
+                                />
+                                <div className="cms-hint">Plain declarations style this component. Write h2 {'{ … }'} or .btn {'{ … }'} inside it for its parts. Refused: the &lt; character, @import and expression().</div>
+                            </div>
+                        ) : (data.customCss ? (
+                            <div className="cms-hint">This component carries custom CSS set by a super administrator.</div>
+                        ) : null)}
+
                         {type !== 'row' && type !== 'column' && (
                             <div className="cms-reusable-box">
                                 <div className="cms-reusable-box__title">Saved section</div>

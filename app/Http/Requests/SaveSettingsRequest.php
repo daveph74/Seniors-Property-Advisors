@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Content\Css;
 use App\Content\Site;
 use App\Content\Text;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,6 +30,7 @@ class SaveSettingsRequest extends FormRequest
                 'disclaimer' => Text::clean($this->input('legal.disclaimer')),
                 'privacyPage' => $this->input('legal.privacyPage') ?: null,
             ],
+            'customCss' => Css::clean($this->input('customCss')),
         ]);
     }
 
@@ -53,6 +55,17 @@ class SaveSettingsRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('pages', 'id')->where('status', 'published'),
+            ],
+            'customCss' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    foreach (Css::problems($value, Css::SITE_LIMIT) as $problem) {
+                        $fail('Custom CSS may not contain '.$problem.'.');
+
+                        return;
+                    }
+                },
             ],
         ];
     }
@@ -96,6 +109,7 @@ class SaveSettingsRequest extends FormRequest
                     ? (int) $valid['legal']['privacyPage']
                     : null,
             ],
+            'customCss' => $valid['customCss'] ?? null,
         ];
     }
 }

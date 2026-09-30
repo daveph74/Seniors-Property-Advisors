@@ -61,7 +61,7 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
     return (
         <section className="faq-list" id={anchor}>
             <div className="container">
-                <SectionHead {...data} />
+                <SectionHead {...data} look={data.titleLook} />
 
                 {items.length === 0 && ! editing ? null : items.length === 0 ? (
                     <PendingModule

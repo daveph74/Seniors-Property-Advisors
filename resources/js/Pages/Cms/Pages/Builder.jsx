@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import '../../../../css/cms.css';
 import { ToastProvider, useCmsToast } from '../../../cms/ToastContext';
 import { defaultSectionData } from '../../../sections/defaults';
@@ -184,6 +184,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     } = useTreeHistory(() => hydrate(contentBacked ? sections : []), selectionRef, setSelectedId);
     const h1Owner = useMemo(() => ownerOfTheH1(blocks), [blocks]);
     const [device, setDevice] = useState('desktop');
+    const canCustomCss = usePage().props.auth?.can?.['styles.custom'] === true;
     const [canvasHeight, setCanvasHeight] = useState(600);
     const [canvasReady, setCanvasReady] = useState(false);
     const [roomForCanvas, setRoomForCanvas] = useState(0);
@@ -1251,6 +1252,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                                 columnPlace={columnPlace}
                                 onPosition={positionColumn}
                                 onClearOrder={clearColumnOrder}
+                                canCustomCss={canCustomCss}
                                 onSaveReusable={() => saveReusable(selected)}
                                 library={library}
                             />

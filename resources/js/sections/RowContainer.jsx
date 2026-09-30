@@ -2,10 +2,11 @@ import { spacingClasses } from './spacing';
 import { breakpointClasses } from './responsive';
 import { autoColumnSpan } from './ColumnContainer';
 import { backdropClasses, BackdropLayers } from './Backdrop';
+import { customCssOf } from './customCss';
 
 const GAPS = { none: 'row-container--gap-none', small: 'row-container--gap-small', medium: '', large: 'row-container--gap-large', xlarge: 'row-container--gap-xlarge' };
 
-export default function RowContainer({ data = {}, anchor, childBlocks = [], children }) {
+export default function RowContainer({ data = {}, anchor, blockId, childBlocks = [], children }) {
     const classes = [
         'row-container',
         data.stack === 'never' ? 'row-container--no-stack' : '',
@@ -18,7 +19,7 @@ export default function RowContainer({ data = {}, anchor, childBlocks = [], chil
         .join(' ');
 
     return (
-        <div className={classes} id={anchor} style={{ '--auto-span': autoColumnSpan(childBlocks) }}>
+        <div className={classes} id={anchor} data-cms-block={customCssOf(data) ? blockId : undefined} style={{ '--auto-span': autoColumnSpan(childBlocks) }}>
             <BackdropLayers data={data} />
             {children}
         </div>

@@ -902,6 +902,36 @@ section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white 
 which passes only as large text, and the button is the home hero's large one — 17px semibold, still
 short of large text. `#3570B5` (5.1:1) is the nearest blue that passes at that size.
 
+## Custom CSS and heading looks
+
+**Custom CSS is a super administrator's ability (`styles.custom`), and the server compares rather than
+trusts.** A client administrator never sees the box; if they save a page whose block already carries CSS
+the value passes **only if it is byte for byte what is stored** for that block id (draft and published
+both count), and any addition or change is refused with a message. Stripping it silently was considered
+and rejected: an editor's save would quietly delete a super administrator's work. A reusable section
+has no stored tree to compare against, so a non-privileged user is refused when the subtree carries any.
+`app/Content/Css.php` names what is refused — `<` (so the tag can never be closed), `@import`,
+`expression(`, `javascript:`, `behavior:`, `-moz-binding`, and a length ceiling. `url()` is not on the
+list: the content policy already confines what a stylesheet may fetch. `sanitiseBlock()` captures
+`data.customCss` before `strip_tags` and restores it through `Css::safe()`, the capture/restore pattern
+the rich-text body uses.
+
+**Rendering is one `<style>` per block, scoped by block id, and relies on CSS nesting.** Plain
+declarations style the block's root; `h2 { }` written inside styles its parts. Website sections and blocks
+are wrapped in `div.cms-custom[data-cms-block]` (`display: contents`, so no box) and the rule is
+`[data-cms-block="id"] > * { … }`; rows and columns are grid items that cannot be wrapped, so they take a
+`blockId` prop and set the attribute on their own root, with the rule `[data-cms-block="id"] { … }`. Every
+Section receives `blockId`; only those two read it. `</` is escaped to `<\/` on the way out as a second
+line of defence. The site-wide stylesheet lives on `/cms/settings` under `Site.customCss`, is judged again
+by `Site::customCss()` on the way out, and is printed **raw** with `{!! !!}` on public pages and the
+preview only — entities are not decoded inside `<style>`, so an escaped `>` would break a selector, which
+is exactly why `<` is refused at the save instead.
+
+**"Look like" changes a heading's size, never its tag.** `data.look` on the Heading block and
+`data.titleLook` on a Website section's title add `look-h1|h2|h3`. The rules are written with the tag in
+the selector (`h2.look-h1`) so they tie with `h2.block-heading` on specificity and win by coming later,
+and beat the `h2, .section-head__title` global outright. `ownerOfTheH1` still decides the real h1.
+
 ## Dashboard
 
 Everything on `/cms` is counted or read at the moment the page loads. It used to render invented

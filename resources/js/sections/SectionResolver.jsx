@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import { resolveSection } from './registry';
 import { HeadingLevel, ownerOfTheH1 } from './headingLevel';
 import Backdrop from './Backdrop';
+import CustomStyled from './customCss';
 
 const BREAKPOINTS = ['desktop', 'tablet', 'mobile'];
 
@@ -21,18 +22,21 @@ export default function SectionResolver({ sections = [], actions = {}, library =
 
         const rendered = (
             <HeadingLevel.Provider value={section.id === topHeading ? 1 : 2}>
-                <Backdrop type={section.type} data={section.data || {}}>
-                    <Section
-                        data={section.data || {}}
-                        anchor={section.anchor}
-                        childBlocks={Array.isArray(section.children) ? section.children : []}
-                        actions={actions}
-                        library={library}
-                        site={site}
-                    >
-                        {nested}
-                    </Section>
-                </Backdrop>
+                <CustomStyled id={section.id} type={section.type} data={section.data || {}}>
+                    <Backdrop type={section.type} data={section.data || {}}>
+                        <Section
+                            data={section.data || {}}
+                            anchor={section.anchor}
+                            blockId={section.id}
+                            childBlocks={Array.isArray(section.children) ? section.children : []}
+                            actions={actions}
+                            library={library}
+                            site={site}
+                        >
+                            {nested}
+                        </Section>
+                    </Backdrop>
+                </CustomStyled>
             </HeadingLevel.Provider>
         );
 

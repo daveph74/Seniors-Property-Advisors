@@ -405,6 +405,21 @@ class SectionFieldsTest extends TestCase
         $this->assertSame('light', $published[1]['children'][0]['children'][0]['data']['textTheme']);
     }
 
+    public function test_headings_persist_the_look_they_borrow(): void
+    {
+        $heading = $this->block('heading', ['heading' => 'Hello', 'level' => 'h2', 'look' => 'h1']);
+        $why = $this->block('why-list', ['heading' => 'Why us', 'titleLook' => 'h3']);
+        $why[0]['id'] = 'why-1';
+
+        $this->publish([...$heading, ...$why]);
+
+        $published = (new PageContentStore)->document('home')['published'];
+
+        $this->assertSame('h1', $published[0]['data']['look']);
+        $this->assertSame('h2', $published[0]['data']['level']);
+        $this->assertSame('h3', $published[1]['data']['titleLook']);
+    }
+
     public function test_a_column_persists_its_animation_and_delay(): void
     {
         $section = $this->block('section', ['width' => 'standard']);

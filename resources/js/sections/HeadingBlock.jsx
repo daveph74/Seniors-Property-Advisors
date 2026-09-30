@@ -1,5 +1,5 @@
 import { spacingClasses, alignClasses } from './spacing';
-import { useHeadingLevel } from './headingLevel';
+import { useHeadingLevel, lookClass } from './headingLevel';
 
 const LEVELS = { h2: 'h2', h3: 'h3', h4: 'h4' };
 
@@ -14,7 +14,7 @@ export default function HeadingBlock({ data, anchor }) {
     const Tag = leadsPage ? 'h1' : (LEVELS[data.level] || 'h2');
 
     return (
-        <Tag id={anchor} className={`block-heading ${data.size === 'large' ? 'block-heading--large' : ''} ${alignClasses(data, 'block-heading')} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
+        <Tag id={anchor} className={`block-heading ${data.size === 'large' ? 'block-heading--large' : ''} ${lookClass(data.look)} ${alignClasses(data, 'block-heading')} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}>
             {data.heading}
             {data.headingEm ? <>{data.emOnNewLine ? <br /> : ' '}<em>{data.headingEm}</em></> : null}
             {data.headingAfter ? <>{data.afterOnNewLine ? <br /> : ' '}{data.headingAfter}</> : null}

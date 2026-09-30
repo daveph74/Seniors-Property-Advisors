@@ -1,6 +1,6 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { useHeadingLevel } from './headingLevel';
+import { useHeadingLevel, lookClass } from './headingLevel';
 
 const FIELDS = [
     { name: 'name', label: 'Your name', type: 'text', autoComplete: 'name' },
@@ -61,7 +61,7 @@ export default function ContactFormSection({ data, anchor, editing = false, site
                     {data.eyebrow ? <div className="eyebrow-line">{data.eyebrow}</div> : null}
 
                     {data.heading || data.headingEm ? (
-                        <Heading className="section-head__title">
+                        <Heading className={`section-head__title ${lookClass(data.titleLook)}`.trim()}>
                             {data.heading} {data.headingEm ? <em>{data.headingEm}</em> : null}
                         </Heading>
                     ) : null}

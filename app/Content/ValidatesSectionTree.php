@@ -2,6 +2,7 @@
 
 namespace App\Content;
 
+use App\Auth\Permissions;
 use Illuminate\Contracts\Validation\Validator;
 
 /**
@@ -38,6 +39,93 @@ trait ValidatesSectionTree
     {
         $this->checkTier($validator, $items, $root, $root, PageContentStore::SECTION_TYPES);
         $this->checkIdsAreUnique($validator, $items, $root);
+        $this->checkCustomCss($validator, $items, $root);
+    }
+
+    /**
+     * @return array<string, string> block id => stored custom CSS, for the trees this save may replace
+     */
+    protected function storedCustomCss(): array
+    {
+        return [];
+    }
+
+    protected function mayWriteCustomCss(): bool
+    {
+        return Permissions::allows($this->user(), 'styles.custom');
+    }
+
+    private function checkCustomCss(Validator $validator, array $items, string $root): void
+    {
+        $stored = null;
+
+        $walk = function (array $tree) use (&$walk, &$stored, $validator, $root): void {
+            foreach ($tree as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+
+                $css = $item['data']['customCss'] ?? null;
+
+                if ($css !== null && $css !== '') {
+                    if (! is_string($css)) {
+                        $validator->errors()->add($root, 'Custom CSS has to be text.');
+
+                        return;
+                    }
+
+                    $problems = Css::problems(Css::clean($css) ?? '');
+
+                    if ($problems !== []) {
+                        $validator->errors()->add($root, 'Custom CSS may not contain '.$problems[0].'.');
+
+                        return;
+                    }
+
+                    if (! $this->mayWriteCustomCss()) {
+                        $stored ??= $this->storedCustomCss();
+
+                        if (($stored[$item['id'] ?? ''] ?? null) !== Css::clean($css)) {
+                            $validator->errors()->add($root, 'Only a super administrator can add or change custom CSS.');
+
+                            return;
+                        }
+                    }
+                }
+
+                $walk(is_array($item['children'] ?? null) ? $item['children'] : []);
+            }
+        };
+
+        $walk($items);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function customCssIn(array $tree): array
+    {
+        $found = [];
+
+        $walk = function (array $items) use (&$walk, &$found): void {
+            foreach ($items as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+
+                $css = Css::clean($item['data']['customCss'] ?? null);
+
+                if ($css !== null && is_string($item['id'] ?? null)) {
+                    $found[$item['id']] = $css;
+                }
+
+                $walk(is_array($item['children'] ?? null) ? $item['children'] : []);
+            }
+        };
+
+        $walk($tree);
+
+        return $found;
     }
 
     private function checkIdsAreUnique(Validator $validator, array $items, string $root): void
@@ -99,10 +187,22 @@ trait ValidatesSectionTree
             }
         }
 
+        $css = is_string($block['data']['customCss'] ?? null) ? $block['data']['customCss'] : null;
+
         $block = $this->sanitiseTree($block);
 
         foreach ($html as $field => $raw) {
             $block['data'][$field] = str_contains($raw, '<') ? Html::cleanInline($raw) : $raw;
+        }
+
+        if ($css !== null) {
+            $clean = Css::safe($css);
+
+            if ($clean === null) {
+                unset($block['data']['customCss']);
+            } else {
+                $block['data']['customCss'] = $clean;
+            }
         }
 
         return $block;

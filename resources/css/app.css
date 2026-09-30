@@ -1372,6 +1372,13 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 h1.block-heading--large{ font-size: clamp(38px, 4vw, 52px); line-height: 1.08; }
 h2.block-heading--large{ font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; }
 
+h1.look-h1, h2.look-h1, h3.look-h1, h4.look-h1{ font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; }
+h1.look-h2, h2.look-h2, h3.look-h2, h4.look-h2{ font-size: clamp(24px, 2.3vw, 30px); line-height: 1.22; }
+h1.look-h3, h2.look-h3, h3.look-h3, h4.look-h3{ font-size: 22px; line-height: 1.28; }
+h1.look-h1.block-heading--large, h2.look-h1.block-heading--large, h3.look-h1.block-heading--large, h4.look-h1.block-heading--large{ font-size: clamp(38px, 4vw, 52px); line-height: 1.08; }
+h1.look-h2.block-heading--large, h2.look-h2.block-heading--large, h3.look-h2.block-heading--large, h4.look-h2.block-heading--large{ font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; }
+.cms-custom{ display: contents; }
+
 .block-steps-strip{ margin-top: 0; }
 .block-checklist, .block-benefit-list{ margin: 0; }
 .block-divider{ margin: 0; border: 0; border-top: 1px solid var(--line); }

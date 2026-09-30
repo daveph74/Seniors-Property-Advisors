@@ -118,7 +118,11 @@ pages arranged the way the website nests them.
      click their heading.
 3. Click the text you want to change, and edit it in the panel on the right. A **Heading** block has two
    switches for choosing where it wraps: **Highlighted heading starts a new line** and **Text after the
-   highlight starts a new line**. A **Rich text** block's
+   highlight starts a new line**, and a **Look like** row — Automatic, H1, H2 or H3 — that changes only
+   the size, so a heading can wear the H1 look while its **Heading level** stays what search engines and
+   screen readers see. A Website section's title has the same choice as **Title looks like**. A
+   component's Advanced accordion may say *This component carries custom CSS set by a super
+   administrator*; that styling is theirs to change. A **Rich text** block's
    **Text** box has buttons for **B**, **I**, **Bullets**, **Numbers** and **Link** — select some words
    first, then press one.
 4. To add something, drag it from **Components** onto the page. A section's **Layout** accordion has a

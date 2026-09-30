@@ -15,6 +15,7 @@ const TABS = [
     { id: 'general', label: 'General' },
     { id: 'tracking', label: 'Tracking' },
     { id: 'legal', label: 'Legal' },
+    { id: 'css', label: 'Custom CSS' },
 ];
 
 function Field({ label, hint, error, children }) {
@@ -225,6 +226,27 @@ export default function SettingsIndex({ settings, pages = [] }) {
                                 dead link at the moment somebody is asked to agree to it — publish
                                 the privacy policy first and it will appear here.
                             </div>
+                        </section>
+                    )}
+
+                    {tab === 'css' && (
+                        <section className="cms-settings-section">
+                            <h2 className="cms-settings-section__title">Custom CSS</h2>
+                            <p className="cms-settings-section__lead">Added to every public page, after the site's own styles.</p>
+
+                            <Field
+                                label="Stylesheet"
+                                hint="Ordinary CSS rules, such as .btn { border-radius: 4px }. Refused: the < character, @import and expression()."
+                                error={errors.customCss}
+                            >
+                                <textarea
+                                    className="cms-textarea cms-textarea--code"
+                                    rows={16}
+                                    spellCheck={false}
+                                    value={data.customCss || ''}
+                                    onChange={(e) => setData('customCss', e.target.value)}
+                                />
+                            </Field>
                         </section>
                     )}
 
