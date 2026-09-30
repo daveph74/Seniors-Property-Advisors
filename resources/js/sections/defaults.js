@@ -16,6 +16,7 @@ const TEMPLATES = {
         spaceBelow: 'none',
     },
     column: {
+        width: 'auto',
         alignAcross: 'fill',
         alignDown: 'top',
         animation: 'none',
@@ -35,6 +36,7 @@ const TEMPLATES = {
         afterOnNewLine: false,
         level: 'h2',
         size: 'standard',
+        look: '',
         align: 'left',
         spaceAbove: 'none',
         spaceBelow: 'none',

@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 export const ANIMATIONS = ['fade-up', 'fade-in', 'fade-left', 'fade-right', 'zoom-in'];
 const DELAYS = ['100', '200', '300'];
 
-export default function useReveal(requested, requestedDelay, editing = false) {
+export default function useReveal(requested, requestedDelay, editing = false, scope = 'whole') {
     const animation = ! editing && ANIMATIONS.includes(requested) ? requested : null;
     const delay = animation && DELAYS.includes(String(requestedDelay)) ? String(requestedDelay) : null;
+    const parts = animation && scope === 'parts';
     const [inView, setInView] = useState(false);
     const ref = useRef(null);
 
@@ -23,7 +24,7 @@ export default function useReveal(requested, requestedDelay, editing = false) {
                 setInView(true);
                 observer.disconnect();
             }
-        }, { threshold: 0.15 });
+        }, { threshold: 0 });
 
         observer.observe(ref.current);
 
@@ -31,7 +32,7 @@ export default function useReveal(requested, requestedDelay, editing = false) {
     }, [animation]);
 
     const classes = [
-        animation ? `reveal reveal--${animation}` : '',
+        animation ? (parts ? `reveal-parts reveal-parts--${animation}` : `reveal reveal--${animation}`) : '',
         delay ? `reveal--delay-${delay}` : '',
         inView ? 'is-in-view' : '',
     ].filter(Boolean).join(' ');

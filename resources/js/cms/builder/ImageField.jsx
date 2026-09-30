@@ -3,15 +3,31 @@ import { uploadMedia } from './uploadMedia';
 import MediaLibraryModal from './MediaLibraryModal';
 
 export default function ImageField({
-    label, value, alt, caption, onChange, onAltChange, onCaptionChange, hint,
+    label, value, alt, caption, onChange, onAltChange, onCaptionChange, onPick, hint,
 }) {
-    const [failed, setFailed] = useState(false);
+    const [failedSrc, setFailedSrc] = useState(null);
     const [percent, setPercent] = useState(null);
     const [error, setError] = useState(null);
     const [dragging, setDragging] = useState(false);
     const [picking, setPicking] = useState(false);
     const src = (value || '').trim();
+    const failed = failedSrc === src;
     const busy = percent !== null;
+
+    const apply = (media) => {
+        const fillAlt = ! (alt || '').trim() && media.alt ? media.alt : undefined;
+        const fillCaption = ! (caption || '').trim() && media.caption ? media.caption : undefined;
+
+        if (onPick) {
+            onPick({ url: media.url, alt: fillAlt, caption: fillCaption });
+
+            return;
+        }
+
+        onChange(media.url);
+        if (onAltChange && fillAlt !== undefined) onAltChange(fillAlt);
+        if (onCaptionChange && fillCaption !== undefined) onCaptionChange(fillCaption);
+    };
 
     const send = async (file) => {
         if (! file) return;
@@ -22,13 +38,11 @@ export default function ImageField({
         }
 
         setError(null);
-        setFailed(false);
+        setFailedSrc(null);
         setPercent(0);
 
         try {
-            const media = await uploadMedia(file, setPercent);
-            onChange(media.url);
-            if (onAltChange && ! alt) onAltChange('');
+            apply(await uploadMedia(file, setPercent));
         } catch (e) {
             setError(e.message);
         } finally {
@@ -56,7 +70,7 @@ export default function ImageField({
                         className="cms-media-pick-row__thumb cms-media-pick-row__thumb--img"
                         src={src}
                         alt=""
-                        onError={() => setFailed(true)}
+                        onError={() => setFailedSrc(src)}
                     />
                 ) : (
                     <div className="cms-media-pick-row__thumb" />
@@ -108,18 +122,9 @@ export default function ImageField({
                 open={picking}
                 onClose={() => setPicking(false)}
                 onPick={(media) => {
-                    setFailed(false);
+                    setFailedSrc(null);
                     setError(null);
-                    onChange(media.url);
-
-                    /* The library's description and caption are a starting point, never an
-                       overwrite — whatever this placement already says was written for it. The
-                       caption has no input here because the block that supports one renders its
-                       own; this only fills it in. */
-                    if (onAltChange && ! (alt || '').trim() && media.alt) onAltChange(media.alt);
-                    if (onCaptionChange && ! (caption || '').trim() && media.caption) {
-                        onCaptionChange(media.caption);
-                    }
+                    apply(media);
                 }}
             />
         </div>

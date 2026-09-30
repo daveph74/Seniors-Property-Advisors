@@ -1,6 +1,7 @@
 import ActionButton from './ActionButton';
 import { useHeadingLevel } from './headingLevel';
 import useReveal from './useReveal';
+import { revealScope } from './Reveal';
 import { POSITIONS } from './SectionContainer';
 
 const HEIGHTS = ['compact', 'comfortable', 'tall', 'full'];
@@ -21,7 +22,7 @@ export default function BannerSection({ data, actions, anchor, editing = false }
     const width = pick(WIDTHS, data.copyWidth, 'standard');
     const position = pick(POSITIONS, data.imagePosition, 'center');
     const light = ! overlay.startsWith('white');
-    const reveal = useReveal(data.animation, data.animationDelay, editing);
+    const reveal = useReveal(data.animation, data.animationDelay, editing, revealScope('banner', data));
 
     const classes = [
         'banner',

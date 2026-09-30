@@ -50,6 +50,19 @@ test.describe('signing in', () => {
         await expect(page).toHaveURL(/\/login$/);
     });
 
+    test('a client administrator is not offered the custom CSS box', async ({ page }) => {
+        await signIn(page, CLIENT_ADMIN);
+        await page.goto('/cms/pages', { waitUntil: 'domcontentloaded' });
+        await page.getByRole('button', { name: 'Contact', exact: true }).first().click();
+        await page.waitForURL(/\/cms\/pages\/\d+\/edit/);
+
+        await page.frameLocator('.cms-canvas-iframe').locator('.cms-block').first().dispatchEvent('click');
+        await page.locator('.cms-accordion__head', { hasText: 'Advanced' }).click();
+
+        await expect(page.locator('.cms-field-label', { hasText: 'Anchor ID' })).toBeVisible();
+        await expect(page.locator('.cms-field-label', { hasText: 'Custom CSS' })).toHaveCount(0);
+    });
+
     test('a client administrator is kept out of the super-admin modules', async ({ page }) => {
         await signIn(page, CLIENT_ADMIN);
 

@@ -49,6 +49,7 @@ class SettingsController extends Controller
                     'disclaimer' => $site['legal']['disclaimer'] ?? '',
                     'privacyPage' => $site['legal']['privacyPage'] ?? '',
                 ],
+                'customCss' => $site['customCss'] ?? '',
             ],
             /* Published only, matching the rule. Offering a draft would put a consent line in
                front of a 404 — see `Site::pageUrl()`. */
@@ -87,6 +88,7 @@ class SettingsController extends Controller
             'Social links' => ($before['social'] ?? null) !== $after['social'],
             'Tracking' => ($before['tracking'] ?? null) !== $after['tracking'],
             'Legal' => ($before['legal'] ?? null) !== $after['legal'],
+            'Custom CSS' => ($before['customCss'] ?? null) !== $after['customCss'],
         ]));
 
         if ($areas !== []) {

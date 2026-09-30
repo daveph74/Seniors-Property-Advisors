@@ -192,6 +192,30 @@ export async function selectBlock(page, label) {
     await expect(canvas(page).locator('.cms-block__label-tag').first()).toBeVisible();
 }
 
+/** Switches the canvas — and the Layout accordion — to Desktop, Tablet or Mobile. */
+export async function device(page, name) {
+    await page.getByTitle(name).click();
+    await expect(page.locator('.cms-canvas-caption')).toContainText(name);
+}
+
+/** The "Following Desktop" / "Set for Mobile" line under a per-screen field. */
+export function layoutHint(page, label) {
+    return field(page, label).locator('.cms-hint--source');
+}
+
+/** The column cells of a row in the canvas, in the order the screen shows them. */
+export async function cellsInScreenOrder(page, rowLocator) {
+    const cells = rowLocator.locator(':scope > .cms-col-cell');
+    const count = await cells.count();
+    const boxes = [];
+
+    for (let i = 0; i < count; i += 1) {
+        boxes.push({ i, box: await cells.nth(i).boundingBox() });
+    }
+
+    return boxes.sort((a, b) => (a.box.y - b.box.y) || (a.box.x - b.box.x)).map((b) => b.i);
+}
+
 /** For blocks that render nothing findable as text — an image on its own, say. */
 export async function selectLastBlock(page) {
     const block = canvas(page).locator('.cms-block').last();

@@ -7,10 +7,13 @@ export const IMAGE_POSITIONS = [
     ['top-left', 'Top left'], ['top-right', 'Top right'], ['bottom-left', 'Bottom left'], ['bottom-right', 'Bottom right'],
 ];
 
+export const TITLE_LOOKS = [['', 'Automatic'], ['h1', 'H1'], ['h2', 'H2'], ['h3', 'H3']];
+
 const HEAD = [
     TEXT('eyebrow', 'Pre-heading'),
     AREA('heading', 'Heading'),
     TEXT('headingEm', 'Highlighted heading'),
+    PICK('titleLook', 'Title looks like', TITLE_LOOKS),
     AREA('lead', 'Intro text'),
 ];
 
@@ -72,6 +75,7 @@ const CONTENT_SCHEMAS = {
             PICK('align', 'Text alignment', [['left', 'Left'], ['center', 'Centre']]),
             PICK('copyWidth', 'Copy width', [['narrow', 'Narrow'], ['standard', 'Standard'], ['wide', 'Wide']]),
             PICK('animation', 'Animation', [['none', 'None'], ['fade-up', 'Fade up'], ['fade-in', 'Fade in'], ['fade-left', 'Fade left'], ['fade-right', 'Fade right'], ['zoom-in', 'Zoom in']]),
+            PICK('animationScope', 'Animate', [['whole', 'The whole component'], ['parts', 'Each part in turn']]),
             PICK('animationDelay', 'Delay', [['0', 'No delay'], ['100', '100 ms'], ['200', '200 ms'], ['300', '300 ms']]),
         ]),
     ],
@@ -115,6 +119,7 @@ const CONTENT_SCHEMAS = {
         TEXT('eyebrow', 'Pre-heading'),
         AREA('heading', 'Heading'),
         TEXT('headingEm', 'Highlighted heading'),
+        PICK('titleLook', 'Title looks like', TITLE_LOOKS),
         AREA('body', 'Supporting text'),
         PICK('background', 'Background', [['navy', 'Navy'], ['white', 'White'], ['image', 'Photograph']]),
         IMG('image.src', 'Background photograph', 'image.alt'),
@@ -142,6 +147,7 @@ const CONTENT_SCHEMAS = {
         TEXT('eyebrow', 'Pre-heading'),
         AREA('heading', 'Heading'),
         TEXT('headingEm', 'Highlighted heading'),
+        PICK('titleLook', 'Title looks like', TITLE_LOOKS),
         AREA('body', 'Body text'),
         IMG('image.src', 'Image', 'image.alt'),
         PICK('imageSide', 'Image sits', ['right', 'left']),
@@ -171,6 +177,7 @@ const CONTENT_SCHEMAS = {
         TEXT('eyebrow', 'Pre-heading'),
         AREA('heading', 'Heading'),
         TEXT('headingEm', 'Highlighted heading'),
+        PICK('titleLook', 'Title looks like', TITLE_LOOKS),
         AREA('intro', 'Introductory text'),
         TEXT('submitLabel', 'Button label'),
         AREA('consent', 'Privacy consent wording'),

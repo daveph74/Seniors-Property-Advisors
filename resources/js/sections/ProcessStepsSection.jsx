@@ -1,4 +1,4 @@
-import { useHeadingLevel } from './headingLevel';
+import { useHeadingLevel, lookClass } from './headingLevel';
 
 export default function ProcessStepsSection({ data, anchor }) {
     const Heading = `h${useHeadingLevel()}`;
@@ -8,7 +8,7 @@ export default function ProcessStepsSection({ data, anchor }) {
             <div className="container">
                 <div className="section-head center">
                     <div className="eyebrow-line">{data.eyebrow}</div>
-                    <Heading className="section-head__title">
+                    <Heading className={`section-head__title ${lookClass(data.titleLook)}`.trim()}>
                         {data.heading} <em>{data.headingEm}</em>
                     </Heading>
                     <p className="section-lead">{data.lead}</p>

@@ -1,6 +1,5 @@
-import { spacingClasses } from './spacing';
+import { spacingClasses, alignClasses } from './spacing';
 
-const ALIGN = { left: '', center: 'block-rating--center', right: 'block-rating--right' };
 
 export default function RatingStarsBlock({ data, anchor }) {
     if (!data.stars && !data.ratingLabel) return null;
@@ -8,7 +7,7 @@ export default function RatingStarsBlock({ data, anchor }) {
     return (
         <div
             id={anchor}
-            className={`block-rating ${ALIGN[data.align] || ''} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}
+            className={`block-rating ${alignClasses(data, 'block-rating')} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}
         >
             <div className="row">
                 <span className="stars">{data.stars}</span>

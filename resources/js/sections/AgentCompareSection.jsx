@@ -1,5 +1,5 @@
 import ActionButton from './ActionButton';
-import { useHeadingLevel } from './headingLevel';
+import { useHeadingLevel, lookClass } from './headingLevel';
 
 export default function AgentCompareSection({ data, actions, anchor }) {
     const Heading = `h${useHeadingLevel()}`;
@@ -75,7 +75,7 @@ export default function AgentCompareSection({ data, actions, anchor }) {
                 <div className="section-head">
                     <div className="left">
                         <div className="eyebrow-line">{data.eyebrow}</div>
-                        <Heading className="section-head__title">
+                        <Heading className={`section-head__title ${lookClass(data.titleLook)}`.trim()}>
                             {data.heading} <em>{data.headingEm}</em>
                         </Heading>
                         <p className="section-lead">{data.lead}</p>

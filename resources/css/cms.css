@@ -183,6 +183,7 @@
 }
 .cms-input:focus, .cms-select:focus, .cms-textarea:focus{ border-color: var(--cms-accent-2); }
 .cms-textarea{ padding: 8px 10px; height: auto; line-height: 1.5; resize: vertical; }
+.cms-textarea--code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; white-space: pre; tab-size: 2; }
 /* The browser's own control was left showing here, so a select sat among the inputs with a
    different arrow, a different text colour and its own idea of spacing. The arrow is drawn as a
    background so it matches the icons beside it, and the room for it is real padding rather than a
@@ -872,8 +873,13 @@
 .cms-drop-line--v{ position: absolute; top: 0; bottom: 0; width: 4px; height: auto; border-radius: 3px; background: var(--cms-accent-2); z-index: 7; }
 .cms-drop-line--before{ left: calc(var(--row-gap, 32px) / -2 - 2px); }
 .cms-drop-line--after{ right: calc(var(--row-gap, 32px) / -2 - 2px); }
+.cms-drop-line--v.cms-drop-line--stacked{ left: 0; right: 0; width: auto; height: 4px; }
+.cms-drop-line--before.cms-drop-line--stacked{ top: calc(var(--row-gap, 32px) / -2 - 2px); bottom: auto; }
+.cms-drop-line--after.cms-drop-line--stacked{ bottom: calc(var(--row-gap, 32px) / -2 - 2px); top: auto; }
 
-.cms-drop-line{ position: relative; height: 0; }
+.cms-drop-line{ position: absolute; left: 0; right: 0; height: 0; z-index: 7; }
+.cms-drop-line--top{ top: calc(var(--item-gap, 16px) / -2); }
+.cms-drop-line--bottom{ bottom: calc(var(--item-gap, 16px) / -2); }
 .cms-drop-line__bar{ position: absolute; left: 0; right: 0; top: -2px; height: 4px; border-radius: 3px; background: var(--cms-accent-2); }
 .cms-drop-line__label{ position: absolute; left: 50%; top: -12px; transform: translateX(-50%); background: var(--cms-accent-2); color: #fff; font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 5px; white-space: nowrap; z-index: 5; }
 
@@ -924,6 +930,7 @@
 .cms-swatch-row{ display: flex; gap: 8px; margin-bottom: 16px; }
 .cms-swatch{ width: 32px; height: 32px; padding: 0; border-radius: 7px; border: 1px solid var(--cms-border-input); cursor: pointer; }
 .cms-swatch--active{ box-shadow: 0 0 0 2px #C9DAF5; }
+.cms-swatch--default{ background: repeating-linear-gradient(135deg, #fff 0 6px, #EEF2F7 6px 12px); }
 .cms-toggle-row{ display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--cms-border-softer); }
 .cms-toggle-row__label{ font-size: 12.5px; color: var(--cms-text); }
 .cms-check-row{ display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; font-size: 12.5px; color: var(--cms-text); cursor: pointer; }
@@ -1389,6 +1396,7 @@
     display: block; position: absolute; inset: 0; z-index: 29;
     border: 0; padding: 0; background: rgba(12,27,49,0.35);
   }
+  .cms-builder-scrim--dragging{ pointer-events: none; }
   .cms-canvas-outer{ padding: 16px 16px 80px; }
 }
 

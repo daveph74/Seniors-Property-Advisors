@@ -10,6 +10,7 @@ export default function MediaLibraryModal({ open, onClose, onPick }) {
     const [over, setOver] = useState(false);
     const latest = useRef(0);
     const upload = useRef(null);
+    const uploaded = useRef([]);
 
     useEffect(() => {
         if (! open) {
@@ -21,11 +22,18 @@ export default function MediaLibraryModal({ open, onClose, onPick }) {
         const id = ++latest.current;
 
         const timer = setTimeout(() => {
+            setError(null);
             fetch(`/cms/media/library?search=${encodeURIComponent(term)}`, {
                 headers: { Accept: 'application/json' },
             })
                 .then((r) => (r.ok ? r.json() : Promise.reject(new Error('Could not load your images.'))))
-                .then((data) => { if (id === latest.current) setItems(data.items); })
+                .then((data) => {
+                    if (id !== latest.current) return;
+
+                    const fresh = uploaded.current.filter((u) => ! data.items.some((i) => i.id === u.id));
+
+                    setItems([...fresh, ...data.items]);
+                })
                 .catch((e) => {
                     if (id !== latest.current) return;
                     setError(e.message);
@@ -40,7 +48,7 @@ export default function MediaLibraryModal({ open, onClose, onPick }) {
         if (! open) return;
 
         return onUploaded((media) => {
-            latest.current += 1;
+            uploaded.current = [media, ...uploaded.current.filter((u) => u.id !== media.id)];
             setItems((prev) => ((prev || []).some((i) => i.id === media.id) ? prev : [media, ...(prev || [])]));
         });
     }, [open]);

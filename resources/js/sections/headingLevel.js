@@ -14,6 +14,10 @@ export const HeadingLevel = createContext(2);
 
 export const useHeadingLevel = () => useContext(HeadingLevel);
 
+export function lookClass(look) {
+    return ['h1', 'h2', 'h3'].includes(look) ? `look-${look}` : '';
+}
+
 const HEROES = ['hero', 'hero-full', 'banner'];
 
 /** The id of the section that should carry the h1, or null when nothing on the page can. */

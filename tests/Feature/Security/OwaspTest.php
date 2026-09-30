@@ -171,6 +171,31 @@ class OwaspTest extends TestCase
      * Section trees are not HTML, so every string in them is stripped of tags — except a Rich text
      * block's body, which is purified to paragraphs, emphasis, lists and links and nothing more.
      */
+    public function test_a03_custom_css_cannot_close_its_own_tag_or_import(): void
+    {
+        $page = Page::where('status', 'published')->firstOrFail();
+
+        $block = fn (string $css) => ['sections' => [[
+            'id' => 'heading-1', 'type' => 'heading', 'label' => 'Heading', 'active' => true,
+            'data' => ['heading' => 'Hello', 'customCss' => $css], 'children' => [],
+        ]]];
+
+        $this->post("/cms/pages/{$page->cms_id}/draft", $block('color: red; </style><script>alert(1)</script>'))
+            ->assertSessionHasErrors('sections');
+        $this->post("/cms/pages/{$page->cms_id}/draft", $block('@import url(https://evil.example/x.css);'))
+            ->assertSessionHasErrors('sections');
+        $this->post("/cms/pages/{$page->cms_id}/draft", $block('width: expression(alert(1))'))
+            ->assertSessionHasErrors('sections');
+        $this->post("/cms/pages/{$page->cms_id}/draft", $block('@\\69mport url(/x.css);'))
+            ->assertSessionHasErrors('sections');
+
+        $clean = "color: red;\nh2 { letter-spacing: 0.02em; }";
+
+        $this->post("/cms/pages/{$page->cms_id}/draft", $block($clean))->assertSessionHasNoErrors();
+
+        $this->assertSame($clean, $page->refresh()->draft[0]['data']['customCss']);
+    }
+
     public function test_a03_markup_is_stripped_from_every_section_field_but_the_one_html_body(): void
     {
         $page = Page::where('status', 'published')->firstOrFail();

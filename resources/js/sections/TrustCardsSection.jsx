@@ -1,3 +1,4 @@
+import { lookClass } from './headingLevel';
 import ActionButton from './ActionButton';
 import { ICON_MAP } from './iconMap';
 
@@ -8,7 +9,7 @@ export default function TrustCardsSection({ data, actions, anchor }) {
                 <div className="section-head">
                     <div className="left">
                         <div className="eyebrow-line">{data.eyebrow}</div>
-                        <h2>
+                        <h2 className={lookClass(data.titleLook) || undefined}>
                             {data.heading} <em>{data.headingEm}</em>
                         </h2>
                         <p className="section-lead">{data.lead}</p>
