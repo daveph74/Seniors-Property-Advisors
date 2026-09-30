@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import SectionHead from './SectionHead';
 import PendingModule from './PendingModule';
-import { useHeadingLevel } from './headingLevel';
 
 export default function FaqListSection({ data, anchor, library = {}, editing = false }) {
-    /* Level 1 means ownerOfTheH1() nominated this section, so it is what the page is for. */
-    const leadsPage = useHeadingLevel() === 1;
     const limit = Number(data.limit) > 0 ? Number(data.limit) : null;
+    const anchorsPage = Boolean(data.heading || data.headingEm);
     const [chosen, setChosen] = useState(null);
 
     const pulled = (library.faqs || [])
@@ -17,12 +14,6 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
         ? pulled
         : (data.items || []).filter((f) => f && (f.question || f.answer));
 
-    /*
-     * Filtered in the browser, unlike the blog's chips. Every question a reader can see is
-     * already in the payload — there is no paging to get wrong — so switching groups is instant
-     * and needs no request. Pinning the section to one category from the builder removes the
-     * choice, since there would be nothing to choose between.
-     */
     const groups = data.showFilters === false || data.category || pulled.length === 0
         ? []
         : (library.faqCategories || []).filter(
@@ -31,18 +22,11 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
 
     const shown = chosen ? items.filter((f) => f.category === chosen) : items;
 
-    /*
-     * With more than one grouping the section earns the full width: the groups become a rail
-     * beside the answers rather than chips above a column floating in the middle of it. The
-     * answers stay capped at a readable measure either way — a question is a line of prose, not a
-     * layout to fill.
-     */
     const railed = ! editing && groups.length > 1;
 
-    /* Kept when the section is the page: disappearing takes the heading and intro with it and
-       leaves /faqs as a call to action under no title and with no h1. Nothing to show is a
-       normal state before anyone has written — it should read as empty, not broken. */
-    if (items.length === 0 && ! editing && ! leadsPage) return null;
+    if (items.length === 0 && ! editing && ! anchorsPage) return null;
+
+    const hasIntro = data.eyebrow || data.heading || data.headingEm || data.lead;
 
     const count = (name) => items.filter((f) => f.category === name).length;
 
@@ -61,7 +45,22 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
     return (
         <section className="faq-list" id={anchor}>
             <div className="container">
-                <SectionHead {...data} />
+                {hasIntro ? (
+                    <div className="section-head center">
+                        <div className="left">
+                            {data.eyebrow ? <div className="eyebrow-line">{data.eyebrow}</div> : null}
+
+                            {data.heading || data.headingEm ? (
+                                <h2 className="block-heading block-heading--large">
+                                    {data.heading}
+                                    {data.headingEm ? <> <em>{data.headingEm}</em></> : null}
+                                </h2>
+                            ) : null}
+
+                            {data.lead ? <p className="section-lead">{data.lead}</p> : null}
+                        </div>
+                    </div>
+                ) : null}
 
                 {items.length === 0 && ! editing ? null : items.length === 0 ? (
                     <PendingModule

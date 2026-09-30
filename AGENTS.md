@@ -195,6 +195,13 @@ from the page the section sits on.
 Answers are plain text through `Text::clean()`, not HTML. A question is one paragraph; the editor
 that would justify HTML is the one the blog pays 140KB for.
 
+The public `faq-list` section can show a **Browse by topic** rail when **Let readers filter by category**
+is on and at least two categories have questions; turn that switch off (or pin **Category to show**) for a
+single centred accordion. Its title is always **`h2.block-heading.block-heading--large`**, not
+`section-head__title`, and `ownerOfTheH1()` skips `faq-list` so it never consumes the page h1.
+**Category to show** still limits which questions load; categories remain in the CMS for filing and
+page-specific sets.
+
 ## Blog articles
 
 Articles are their own tables (`blog_posts`, `blog_categories`, and a pivot), not page

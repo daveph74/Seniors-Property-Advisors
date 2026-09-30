@@ -31,6 +31,10 @@ export function ownerOfTheH1(sections = []) {
      * agent?" instead of its own title.
      */
     for (const section of visible) {
+        if (section.type === 'faq-list') {
+            continue;
+        }
+
         if (HEROES.includes(section.type) || section.data?.heading || section.data?.headingEm) {
             return section.id;
         }

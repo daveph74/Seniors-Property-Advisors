@@ -23,7 +23,7 @@
                 "lead": "If your question is not here, ring us — no one will try to sign you up.",
                 "category": "",
                 "openFirst": true,
-                "showFilters": true,
+                "showFilters": false,
                 "items": []
             }
         }
