@@ -744,6 +744,13 @@ flat tint strong enough to carry a paragraph buries the picture, and a fade puts
 side and leaves the photo clear on the other. Light text on an image section also carries a text
 shadow and pure white paragraphs, and its primary button takes the gradient background's `#3570B5`
 rather than navy, which on a navy overlay was a button you could not see.
+**Overlay strength** (`overlayOpacity`, 0–100) scales whichever preset is chosen by setting `opacity` on
+the overlay layer, on sections and banners alike, so one number works for flat tints and gradients
+without restating the gradient stops. **Absent means 100**, and 100 emits no style at all — every page
+saved before the slider existed renders exactly as it did. Normalising a missing value to `0` would
+strip the overlay off every such page and leave white text on a bare photograph.
+`sections/overlayOpacity.js` is the one reading of the field; the builder's slider and both renderers
+go through it.
 **Image position** picks which part of the picture survives the crop — nine positions, mapped to
 `section-block__bg--pos-*` / `banner__bg--pos-*` classes rather than an inline style, so an unknown
 value falls back to centre instead of reaching the stylesheet. A background image cannot lazy-load, and that is accepted. The media library needs no change to know

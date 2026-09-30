@@ -1,4 +1,4 @@
-import { TEXT, AREA, PICK, PICKFROM, PICKMANY, FLAGON, NUM, IMG, ACTIONS } from './repeaters';
+import { TEXT, AREA, PICK, PICKFROM, PICKMANY, FLAGON, NUM, IMG, ACTIONS, OVERLAY_STRENGTH } from './repeaters';
 
 const GROUP = (title, fields) => ({ group: true, title, fields });
 
@@ -68,6 +68,7 @@ const CONTENT_SCHEMAS = {
                 ['navy-left', 'Navy, fading from the left'], ['navy-bottom', 'Navy, fading from the bottom'],
                 ['white', 'White'], ['white-strong', 'White, strong'], ['white-left', 'White, fading from the left'],
             ]),
+            OVERLAY_STRENGTH('overlayOpacity', 'overlay', 'navy-left'),
             PICK('imagePosition', 'Image position', IMAGE_POSITIONS),
             PICK('align', 'Text alignment', [['left', 'Left'], ['center', 'Centre']]),
             PICK('copyWidth', 'Copy width', [['narrow', 'Narrow'], ['standard', 'Standard'], ['wide', 'Wide']]),
