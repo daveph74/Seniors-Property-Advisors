@@ -285,7 +285,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
             onFinish: () => {
                 setSending(false);
 
-                if (! answered) {
+                if (!answered) {
                     setFailed('We could not send that just now. Please try again in a minute.');
                 }
             },
@@ -362,8 +362,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                     <div>
                         <h3 id="modal-title">Let’s start with where you live</h3>
                         <p className="help">
-                            Your property’s address helps us shortlist agents who know your street
-                            – not generic state‑wide lists.
+                            Your property address will help us shortlist the best performing local agents in your suburb.
                         </p>
                         <p className="req-note">Both questions below are needed.</p>
 
@@ -419,7 +418,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                     <div>
                         <h3 id="modal-title">How would you like us to reach you?</h3>
                         <p className="help">
-                            A quick 15‑minute conversation with your advisor – at a time that suits.
+                            A quick 10-minute chat with an experienced advisor - at a time that suits.
                         </p>
                         <p className="req-note">All five questions below are needed.</p>
 
@@ -576,7 +575,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                     <div>
                         <h3 id="modal-title">When are you hoping to sell?</h3>
                         <p className="help">
-                            There’s no wrong answer – even “just thinking” is the right time to call.
+                            There’s no wrong answer - even “just thinking” is the right time for an initial call from one of our experienced advisors.
                         </p>
                         <p className="req-note">Choose one. The note at the bottom is up to you.</p>
 
