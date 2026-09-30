@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Content\MediaStorage;
 use Illuminate\Database\Eloquent\Model;
 
 class Media extends Model
@@ -11,6 +12,13 @@ class Media extends Model
     protected $fillable = [
         'key', 'thumb_key', 'name', 'alt', 'caption', 'mime', 'size', 'width', 'height', 'disk',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Media $media) {
+            $media->disk = MediaStorage::DISK;
+        });
+    }
 
     protected $casts = [
         'size' => 'integer',

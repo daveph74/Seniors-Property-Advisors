@@ -289,6 +289,12 @@ them one at a time. The response carries a year-long `immutable` cache, which ho
 key is a ULID and is never reused. `nosniff` and a `default-src 'none'` policy ride along with it,
 because an uploaded file is the one thing here a reader supplies.
 
+**The library never uses local disk.** `App\Content\MediaStorage` is the only seam for bytes in and
+out; every row is stamped `disk: s3` on save. A `/media/…` address is this application's route, not a
+file under `storage/` — thumbs use the `thumbs/` key prefix on the same bucket, which is why the URL
+contains `/media/thumbs/`. Production refuses sign and store when the configured disk is not real
+object storage (bucket set, no emulator endpoint). Rows marked with any other disk are not served.
+
 - **An SVG is a document, not a picture.** It can carry script, so uploading one needs
   `media.upload_svg` — super administrator only. The headers neutralise it either way; the
   permission is about who can put one there.

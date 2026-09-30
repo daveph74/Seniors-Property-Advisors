@@ -3,10 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Content\ImageOptimiser;
+use App\Content\MediaStorage;
 use App\Http\Controllers\Cms\MediaController;
 use App\Models\Media;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -25,7 +25,7 @@ class OptimiseMedia extends Command
     public function handle(): int
     {
         $optimiser = new ImageOptimiser;
-        $disk = Storage::disk('s3');
+        $disk = MediaStorage::disk();
         $dry = (bool) $this->option('dry-run');
         $saved = 0;
 

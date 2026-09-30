@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Content\ImageOptimiser;
+use App\Content\MediaStorage;
 use App\Models\Media;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -42,7 +42,7 @@ class MediaSeeder extends Seeder
 
     public function run(): void
     {
-        $disk = Storage::disk('s3');
+        $disk = MediaStorage::disk();
         $optimiser = new ImageOptimiser;
 
         foreach (self::IMAGES as $file => $name) {
