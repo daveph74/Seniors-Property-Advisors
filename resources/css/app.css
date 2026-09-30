@@ -1302,7 +1302,7 @@ html.js .reveal.is-in-view{ opacity: 1; transform: none; }
    guide read as eight competing headlines with a caption above them. h1 matches the section-head
    size the rest of the site titles pages at, and each step down is a clear one. */
 h1.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; letter-spacing: -0.015em; color: var(--navy); }
-h2.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 2.3vw, 30px); line-height: 1.22; letter-spacing: -0.01em; color: var(--navy); }
+h2.block-heading{ font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: 1.22; letter-spacing: -0.01em; color: var(--navy); }
 h3.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.28; color: var(--navy); }
 h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.35; color: var(--navy); }
 
@@ -1326,8 +1326,11 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 .block-button--center{ justify-content: center; }
 .block-button--right{ justify-content: flex-end; }
 
-h1.block-heading--large{ font-size: clamp(38px, 4vw, 52px); line-height: 1.08; }
-h2.block-heading--large{ font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; }
+.block-heading.block-heading--large{
+  font-size: 52px;
+  line-height: 54.6px;
+  font-weight: 400;
+}
 
 .block-steps-strip{ margin-top: 0; }
 .block-checklist, .block-benefit-list{ margin: 0; }
