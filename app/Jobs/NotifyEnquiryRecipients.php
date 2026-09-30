@@ -3,11 +3,11 @@
 namespace App\Jobs;
 
 use App\Content\Site;
+use App\Logging\Delivery;
 use App\Mail\EnquiryReceived;
 use App\Models\Enquiry;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -26,7 +26,7 @@ class NotifyEnquiryRecipients implements ShouldQueue
     public static function for(Enquiry $enquiry): void
     {
         if (Site::enquiryRecipients() === []) {
-            Log::info('Enquiry notification skipped', [
+            Delivery::log()->info('Enquiry notification skipped', [
                 'enquiry_id' => $enquiry->id,
                 'reason' => 'no_recipients',
             ]);
@@ -43,7 +43,7 @@ class NotifyEnquiryRecipients implements ShouldQueue
         $recipients = Site::enquiryRecipients();
 
         if ($enquiry === null || $recipients === []) {
-            Log::info('Enquiry notification skipped', [
+            Delivery::log()->info('Enquiry notification skipped', [
                 'enquiry_id' => $this->enquiryId,
                 'reason' => $enquiry === null ? 'enquiry_deleted' : 'no_recipients',
             ]);
@@ -54,7 +54,7 @@ class NotifyEnquiryRecipients implements ShouldQueue
         try {
             Mail::to($recipients)->send(new EnquiryReceived($enquiry));
         } catch (Throwable $e) {
-            Log::error('Enquiry notification could not be sent', [
+            Delivery::log()->error('Enquiry notification could not be sent', [
                 'enquiry_id' => $enquiry->id,
                 'recipients' => count($recipients),
                 'message' => $e->getMessage(),
@@ -63,7 +63,7 @@ class NotifyEnquiryRecipients implements ShouldQueue
             return;
         }
 
-        Log::info('Enquiry notification sent', [
+        Delivery::log()->info('Enquiry notification sent', [
             'enquiry_id' => $enquiry->id,
             'recipients' => count($recipients),
         ]);

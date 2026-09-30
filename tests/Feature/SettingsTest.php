@@ -356,6 +356,26 @@ class SettingsTest extends TestCase
         });
     }
 
+    public function test_the_screen_saves_what_it_was_given_back(): void
+    {
+        $props = null;
+        $this->get('/cms/settings')->assertInertia(function ($page) use (&$props) {
+            $props = $page->toArray()['props']['settings'];
+        });
+
+        $props['notifications']['enquiryRecipients'] = "a@example.com\nb@example.com";
+
+        $this->from('/cms/settings')->put('/cms/settings', $props)
+            ->assertRedirect('/cms/settings')->assertSessionHasNoErrors();
+
+        $this->get('/cms/settings')->assertInertia(function ($page) {
+            $this->assertSame(
+                "a@example.com\nb@example.com",
+                $page->toArray()['props']['settings']['notifications']['enquiryRecipients'],
+            );
+        });
+    }
+
     public function test_a_line_that_is_not_an_email_is_refused(): void
     {
         $this->save(['notifications' => ['enquiryRecipients' => "advisor@example.com\nnot an email"]])

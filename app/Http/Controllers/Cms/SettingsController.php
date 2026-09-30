@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cms;
 use App\Content\Site;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveSettingsRequest;
+use App\Logging\Delivery;
 use App\Models\Activity;
 use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
@@ -71,6 +72,14 @@ class SettingsController extends Controller
         /* Merged, not replaced. This row has two writers — the SEO defaults live on `/cms/seo`
            under `seo.manage` — and a wholesale write from either would erase the other's half. */
         Site::merge($after);
+
+        Delivery::log()->info('Settings saved', [
+            'user_id' => $request->user()?->id,
+            'recipients_typed' => $request->typedRecipients,
+            'recipients_validated' => $after['notifications']['enquiryRecipients'],
+            'recipients_stored' => Site::all()['notifications']['enquiryRecipients'] ?? 'MISSING',
+            'recipients_read_back' => Site::enquiryRecipients(),
+        ]);
 
         $this->record($before, $after);
 

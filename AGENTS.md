@@ -927,6 +927,13 @@ waiting with no worker. `--send` posts SyncID's own documented minimal lead (`of
 `email`) through the same client `forward()` uses and sends one real email synchronously, printing the
 status, body or exception. It creates a real test lead in SyncID, which is why it needs the flag.
 
+**Its trail is `storage/logs/delivery.log`, not `laravel.log`.** Production runs at `LOG_LEVEL=error`, so
+every "skipped", "sending" and "saved" line was dropped and a server doing nothing said nothing — the
+symptom was an empty inbox with an empty log. `App\Logging\Delivery::log()` writes SyncID, the
+notification job and every Settings save (the raw typed recipients, what validated, what the row holds
+afterwards, and any refusal) to both files, and `delivery.log` keeps every level. A save that appears
+in neither never reached the controller: look at the browser console, which logs `[settings]` lines.
+
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. Only the team is
 emailed; the sender is not. Wizard submissions are also deliberately **not** written to the activity log:

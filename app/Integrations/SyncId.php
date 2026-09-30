@@ -3,11 +3,11 @@
 namespace App\Integrations;
 
 use App\Enquiries\FindMyAgentOptions;
+use App\Logging\Delivery;
 use App\Models\Enquiry;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class SyncId
 {
@@ -18,7 +18,7 @@ class SyncId
         $url = config('services.syncid.url');
 
         if (! is_string($url) || $url === '') {
-            Log::warning('SyncID skipped an enquiry', [
+            Delivery::log()->warning('SyncID skipped an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
                 'source' => $enquiry->source,
@@ -31,7 +31,7 @@ class SyncId
         $officeId = config('services.syncid.office_id');
 
         if (! is_numeric($officeId)) {
-            Log::error('SyncID skipped an enquiry', [
+            Delivery::log()->error('SyncID skipped an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
                 'source' => $enquiry->source,
@@ -44,7 +44,7 @@ class SyncId
         $request = $this->request();
         $key = config('services.syncid.key');
 
-        Log::info('SyncID sending an enquiry', [
+        Delivery::log()->info('SyncID sending an enquiry', [
             'enquiry_id' => $enquiry->id,
             'external_id' => $reference,
             'source' => $enquiry->source,
@@ -56,7 +56,7 @@ class SyncId
         try {
             $response = $request->post($url, $this->payload($enquiry, (int) $officeId));
         } catch (ConnectionException $e) {
-            Log::error('SyncID could not receive an enquiry', [
+            Delivery::log()->error('SyncID could not receive an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
                 'source' => $enquiry->source,
@@ -68,7 +68,7 @@ class SyncId
         }
 
         if ($response->successful()) {
-            Log::info('SyncID accepted an enquiry', [
+            Delivery::log()->info('SyncID accepted an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
                 'source' => $enquiry->source,
@@ -78,7 +78,7 @@ class SyncId
             return;
         }
 
-        Log::error('SyncID rejected an enquiry', [
+        Delivery::log()->error('SyncID rejected an enquiry', [
             'enquiry_id' => $enquiry->id,
             'external_id' => $reference,
             'source' => $enquiry->source,

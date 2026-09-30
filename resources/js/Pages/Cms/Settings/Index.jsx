@@ -20,6 +20,10 @@ const TABS = [
 
 const RECIPIENTS = 'notifications.enquiryRecipients';
 
+const TAB_OF = { tracking: 'tracking', legal: 'legal', notifications: 'notifications' };
+
+const tabFor = (field) => TAB_OF[field.split('.')[0]] || 'general';
+
 function Field({ label, hint, error, children }) {
     return (
         <label className="cms-field">
@@ -38,11 +42,33 @@ export default function SettingsIndex({ settings, pages = [] }) {
 
     const set = (group, field, value) => setData(group, { ...data[group], [field]: value });
 
-    const save = () => put('/cms/settings', {
-        preserveScroll: true,
-        onSuccess: () => flash('Settings saved'),
-        onError: (bag) => flash(Object.values(bag)[0] || 'Those settings could not be saved'),
-    });
+    const save = () => {
+        let answered = false;
+
+        console.info('[settings] saving', data);
+
+        put('/cms/settings', {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                answered = true;
+                console.info('[settings] saved; server now has', page.props.settings?.notifications);
+                flash('Settings saved');
+            },
+            onError: (bag) => {
+                answered = true;
+                console.warn('[settings] refused', bag);
+                const [field, message] = Object.entries(bag)[0] || [];
+                if (field) setTab(tabFor(field));
+                flash(message || 'Those settings could not be saved');
+            },
+            onFinish: () => {
+                if (! answered) {
+                    console.error('[settings] no answer from the server — check the Network tab for PUT /cms/settings');
+                    flash('The server did not answer. Your settings were not saved.');
+                }
+            },
+        });
+    };
 
     return (
         <div className="cms-page">

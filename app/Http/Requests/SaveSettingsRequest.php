@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Content\Site;
 use App\Content\Text;
+use App\Logging\Delivery;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,9 +13,13 @@ class SaveSettingsRequest extends FormRequest
 {
     public const MAX_RECIPIENTS = 5;
 
+    public mixed $typedRecipients = null;
+
     /** Stripped before the rules run, so `required` judges what will really be stored (§14). */
     protected function prepareForValidation(): void
     {
+        $this->typedRecipients = $this->input('notifications.enquiryRecipients');
+
         $this->merge([
             'name' => Text::clean($this->input('name')),
             'favicon' => Text::clean($this->input('favicon')),
@@ -35,6 +41,17 @@ class SaveSettingsRequest extends FormRequest
                 'enquiryRecipients' => $this->recipientLines(),
             ],
         ]);
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        Delivery::log()->warning('Settings save refused', [
+            'user_id' => $this->user()?->id,
+            'errors' => $validator->errors()->toArray(),
+            'recipients_typed' => $this->typedRecipients,
+        ]);
+
+        parent::failedValidation($validator);
     }
 
     /** Typed one per line; blank lines are dropped rather than stored as gaps. */
