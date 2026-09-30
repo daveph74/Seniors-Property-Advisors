@@ -24,7 +24,7 @@ export default function ContactFormSection({ data, anchor, editing = false, site
     const [failed, setFailed] = useState(null);
 
     const { data: form, setData, post, processing, errors } = useForm({
-        name: '', email: '', phone: '', suburb: '', message: '', consent: false,
+        name: '', email: '', phone: '', suburb: '', message: '', consent: true,
         source: 'contact_form',
         page: typeof window === 'undefined' ? null : window.location.pathname,
     });
@@ -103,48 +103,25 @@ export default function ContactFormSection({ data, anchor, editing = false, site
                             {errors.message ? <em className="contact-form__error">{errors.message}</em> : null}
                         </label>
 
-                        {/* Always shown, wording or not. Consent is required on the way in, so an
-                            editor clearing this field would otherwise leave a form nobody can
-                            submit and no way to see why. */}
-                        <label className="contact-form__consent">
-                            <input
-                                type="checkbox"
-                                name="consent"
-                                checked={form.consent}
-                                onChange={(e) => setData('consent', e.target.checked)}
-                            />
-                            <span>
-                                {data.consent || 'I agree to be contacted about this enquiry.'}
-                                {/* The privacy page chosen in Settings, appended rather than typed
-                                    into the wording: the consent field is plain text, so an editor
-                                    cannot put a link in it, and asking somebody to agree to how
-                                    their details are handled without showing them is not consent. */}
-                                {site.privacyUrl ? (
-                                    <>
-                                        {' '}
-                                        {/* A new tab for the same reason as the wizard's: whatever has
-                                            been typed here is still unsent. */}
-                                        <a
-                                            href={site.privacyUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            Read our privacy policy
-                                        </a>
-                                        .
-                                    </>
-                                ) : null}
-                            </span>
-                        </label>
-
-                        {errors.consent ? <em className="contact-form__error">{errors.consent}</em> : null}
-
                         {/* Not attached to a field, because nothing they typed is wrong. */}
                         {failed ? <em className="contact-form__error" role="status">{failed}</em> : null}
 
                         <button type="submit" className="btn primary" disabled={processing}>
                             {processing ? 'Sending…' : (data.submitLabel || 'Send enquiry')}
                         </button>
+
+                        <p className="contact-form__consent-note">
+                            {data.consent || 'By sending this you agree that we may contact you about this enquiry.'}
+                            {site.privacyUrl ? (
+                                <>
+                                    {' '}
+                                    <a href={site.privacyUrl} target="_blank" rel="noopener noreferrer">
+                                        Read our privacy policy
+                                    </a>
+                                    .
+                                </>
+                            ) : null}
+                        </p>
                     </form>
                 )}
             </div>

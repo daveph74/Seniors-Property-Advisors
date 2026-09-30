@@ -97,7 +97,7 @@ class ContentSeeder extends Seeder
      * Points the site at the privacy policy it ships with, on a fresh installation only.
      *
      * The setting names a page by database id, which no seed file can know, so it arrives null —
-     * and the consent box on the contact form offers a privacy link only when it resolves. A new
+     * and the consent note on the contact form offers a privacy link only when it resolves. A new
      * site therefore came up asking people to agree to how their details would be handled with
      * nowhere to read it, until somebody thought to set it in Settings.
      *

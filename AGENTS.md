@@ -805,6 +805,12 @@ key and resolving a label is that wording can move without data moving. "Wizard"
 and test names as a description of its shape, four steps held together by React state, not as its name.
 The reference a sender quotes was already `AF-2026-00042`.
 
+**Neither public form asks for a consent checkbox.** Agent Finder dropped its tick box first; the
+contact form followed — sending is the consent, with a note under the button and the privacy link
+appended the same way the wizard does. The server still requires `consent` on a contact-form payload
+and the form sends `consent: true`; the wizard `exclude`s it, so those rows store `consented` as
+false because nobody was asked.
+
 ### Which form it came from
 
 Two forms write this table: the contact form section, and Agent Finder. `source` says which

@@ -261,11 +261,11 @@ class SeededPagesTest extends TestCase
     }
 
     /**
-     * The consent box on the contact form offers the privacy policy, and finds it through a
+     * The consent note on the contact form offers the privacy policy, and finds it through a
      * setting that names a published page. Nothing joined those up, so the form asked people to
      * agree to how their details would be handled with nowhere to go and read it.
      */
-    public function test_the_consent_box_can_point_at_a_privacy_policy(): void
+    public function test_the_consent_note_can_point_at_a_privacy_policy(): void
     {
         $this->get('/contact')->assertOk()->assertInertia(function (AssertableInertia $p) {
             $this->assertSame('/privacy-policy', $p->toArray()['props']['site']['privacyUrl']);

@@ -1907,10 +1907,8 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 .contact-form__field input:focus, .contact-form__field textarea:focus{
   outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint);
 }
-.contact-form__consent{ display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-mid); }
-.contact-form__consent input{ margin-top: 3px; accent-color: var(--blue-deep); flex: none; }
-/* Same reasoning as the wizard's: the privacy link has to look like one. */
-.contact-form__consent a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
+.contact-form__consent-note{ margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-mid); }
+.contact-form__consent-note a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .contact-form__error{
   display: block; margin-top: 6px; font-style: normal; font-size: 13.5px; color: var(--danger);
 }

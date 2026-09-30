@@ -174,7 +174,7 @@ const CONTENT_SCHEMAS = {
         TEXT('headingEm', 'Highlighted heading'),
         AREA('intro', 'Introductory text'),
         TEXT('submitLabel', 'Button label'),
-        AREA('consent', 'Privacy consent wording'),
+        AREA('consent', 'Consent note'),
         AREA('confirmation', 'Confirmation message'),
     ],
     'blog-list': [
