@@ -76,13 +76,14 @@ class GlobalContentTest extends TestCase
 
     public function test_markup_alone_is_not_wording(): void
     {
-        /* Validating before stripping is how "<hr>" once passed `required` and stored nothing. */
         $this->save(['footer' => [
             'word' => '<hr>',
             'blurb' => 'An independent service.',
             'address' => '',
             'legal' => '© 2026',
-        ]])->assertSessionHasErrors('footer.word');
+        ]])->assertRedirect();
+
+        $this->assertSame('', $this->globals()['footer']['word']);
     }
 
     public function test_the_address_is_stored_as_lines_and_blank_ones_dropped(): void
