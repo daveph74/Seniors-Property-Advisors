@@ -1260,6 +1260,28 @@ html.js .reveal.is-in-view{ opacity: 1; transform: none; }
 .section-block__bg--pos-bottom-left, .banner__bg--pos-bottom-left{ background-position: left bottom; }
 .section-block__bg--pos-bottom-right, .banner__bg--pos-bottom-right{ background-position: right bottom; }
 
+.backdrop{ position: relative; }
+.backdrop--wrap > *:not(.section-block__bg):not(.section-block__overlay){ position: relative; z-index: 1; background: transparent; }
+.backdrop--has-image{ overflow: hidden; }
+.backdrop--has-image > *:not(.section-block__bg):not(.section-block__overlay){ position: relative; z-index: 1; }
+.backdrop--bg-white{ background: var(--white); }
+.backdrop--bg-wash{ background: var(--blue-wash); }
+.backdrop--bg-wash-2{ background: var(--blue-wash-2); }
+.backdrop--bg-navy{ background: var(--navy); }
+.backdrop--bg-navy-gradient{ background: linear-gradient(135deg, #1A2846 0%, #2D4A7D 100%); }
+.backdrop--bg-navy-deep{ background: #0F1A30; }
+.row-container.backdrop, .column-container.backdrop{ padding: 24px; border-radius: var(--radius, 12px); }
+.backdrop--text-light,
+.backdrop--text-light :is(p, li, dd, dt, blockquote, figcaption, small, .section-lead, .lead, .muted){ color: #DDE6F4; }
+.backdrop--text-light :is(h1, h2, h3, h4, h5, strong, b, .section-head__title, .headline){ color: var(--white); }
+.backdrop--text-light :is(h1, h2, h3, h4, .headline) em{ color: var(--blue-pale); }
+.backdrop--text-light :is(.eyebrow-line, .eyebrow){ color: var(--blue-pale); }
+.backdrop--text-light a:not(.btn){ color: var(--blue-pale); }
+.backdrop--text-dark,
+.backdrop--text-dark :is(p, li, dd, dt, blockquote, figcaption, small, .section-lead, .lead, .muted){ color: var(--text); }
+.backdrop--text-dark :is(h1, h2, h3, h4, h5, strong, b, .section-head__title, .headline){ color: var(--navy); }
+.backdrop--text-dark :is(.eyebrow-line, .eyebrow){ color: var(--blue); }
+
 .section-block--text-light{ color: #DDE6F4; }
 .section-block--text-light .block-heading{ color: var(--white); }
 .section-block--text-light .block-heading em{ color: var(--blue-pale); }

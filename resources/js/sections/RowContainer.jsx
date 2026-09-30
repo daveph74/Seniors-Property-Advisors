@@ -1,6 +1,7 @@
 import { spacingClasses } from './spacing';
 import { breakpointClasses } from './responsive';
 import { autoColumnSpan } from './ColumnContainer';
+import { backdropClasses, BackdropLayers } from './Backdrop';
 
 const GAPS = { none: 'row-container--gap-none', small: 'row-container--gap-small', medium: '', large: 'row-container--gap-large', xlarge: 'row-container--gap-xlarge' };
 
@@ -11,12 +12,14 @@ export default function RowContainer({ data = {}, anchor, childBlocks = [], chil
         GAPS[data.gap] || '',
         spacingClasses(data),
         breakpointClasses(data, 'gap', (v) => (v in GAPS ? `row-container--gap-${v}` : '')),
+        backdropClasses(data),
     ]
         .filter(Boolean)
         .join(' ');
 
     return (
         <div className={classes} id={anchor} style={{ '--auto-span': autoColumnSpan(childBlocks) }}>
+            <BackdropLayers data={data} />
             {children}
         </div>
     );

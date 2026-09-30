@@ -722,6 +722,21 @@ Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has
 (`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
 like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
 
+**Every Website section, row and column can carry the same backdrop** — the six brand swatches, a
+background image, its position, the overlay and the text theme — through `resources/js/sections/Backdrop.jsx`,
+one module so the nine positions and eight overlays keep their single definition in `SectionContainer`'s
+classes. Nothing chosen means nothing rendered: a page saved before this looks exactly as it did, and the
+first swatch, **As designed**, is how an editor gets back there. Website sections are **wrapped** in a
+`div.backdrop` by `SectionResolver` and `BlockRenderer`, and the CSS makes their own root transparent and
+lifts it above the layers, because each section's `<section>` sets its own background and touching
+sixteen components would have been sixteen chances to differ. Rows and columns are **not** wrapped: the
+column is the row's grid item and carries the width and order classes, so a wrapper would break the grid
+— they draw the layers inside themselves and take the classes on their own root, with padding and the
+brand radius when a backdrop is set. The text theme recolours through `:is()` selectors at a specificity
+that beats a section's own colour rules, which is what keeps a navy why-list legible on a pale wash.
+Excluded on purpose: **Section** (already had it), **Hero, full bleed** and **Banner** (photo-behind-copy
+with their own controls), **CTA** (its own background field and photograph), and plain blocks.
+
 **A section can carry a background image and an overlay, and a column an entrance animation**, all from the Style
 accordion and all gated on `type === 'section'` rather than `has()` — the `cta` block also has a
 `background` key, and a section saved before these keys existed would otherwise show no control.

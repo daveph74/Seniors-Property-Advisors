@@ -929,6 +929,7 @@
 .cms-swatch-row{ display: flex; gap: 8px; margin-bottom: 16px; }
 .cms-swatch{ width: 32px; height: 32px; padding: 0; border-radius: 7px; border: 1px solid var(--cms-border-input); cursor: pointer; }
 .cms-swatch--active{ box-shadow: 0 0 0 2px #C9DAF5; }
+.cms-swatch--default{ background: repeating-linear-gradient(135deg, #fff 0 6px, #EEF2F7 6px 12px); }
 .cms-toggle-row{ display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--cms-border-softer); }
 .cms-toggle-row__label{ font-size: 12.5px; color: var(--cms-text); }
 .cms-check-row{ display: flex; align-items: flex-start; gap: 9px; padding: 6px 0; font-size: 12.5px; color: var(--cms-text); cursor: pointer; }

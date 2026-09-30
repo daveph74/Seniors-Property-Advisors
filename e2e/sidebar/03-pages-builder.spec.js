@@ -717,6 +717,28 @@ test.describe('Pages · Builder', () => {
         await B.saveDraft(page);
     });
 
+    test('a website section takes a background swatch and keeps it', async ({ page }) => {
+        const marker = uniqueValue('Backed');
+
+        await B.addBlock(page, 'Why list');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await page.locator('.cms-swatch[title="navy"]').click();
+
+        await expect(B.canvas(page).locator('.backdrop--bg-navy.backdrop--text-light')).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await B.selectBlock(page, marker);
+        await expect(B.canvas(page).locator('.backdrop--bg-navy.backdrop--text-light')).toHaveCount(1);
+
+        await B.openTab(page, 'Style');
+        await page.locator('.cms-swatch[title="As designed"]').click();
+        await expect(B.canvas(page).locator('.backdrop')).toHaveCount(0);
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
     test('a heading centred on Mobile stays left on Desktop', async ({ page }) => {
         const marker = uniqueValue('Centred');
 

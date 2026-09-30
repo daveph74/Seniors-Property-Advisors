@@ -380,6 +380,31 @@ class SectionFieldsTest extends TestCase
         $this->assertSame('half', $column['responsive']['tablet']['width']);
     }
 
+    public function test_a_website_section_and_a_column_persist_a_backdrop(): void
+    {
+        $why = $this->block('why-list', [
+            'heading' => 'Why us',
+            'background' => 'wash',
+            'textTheme' => 'dark',
+            'backgroundImage' => ['src' => '/media/2026/09/office.jpg', 'alt' => 'The office'],
+            'backgroundPosition' => 'left',
+            'overlay' => 'white-left',
+        ]);
+        $section = $this->block('section', ['width' => 'standard']);
+        $section[0]['children'] = $this->block('row', ['gap' => 'medium']);
+        $section[0]['children'][0]['children'] = $this->block('column', ['background' => 'navy', 'textTheme' => 'light']);
+
+        $this->publish([...$why, ...$section]);
+
+        $published = (new PageContentStore)->document('home')['published'];
+
+        $this->assertSame('wash', $published[0]['data']['background']);
+        $this->assertSame('/media/2026/09/office.jpg', $published[0]['data']['backgroundImage']['src']);
+        $this->assertSame('white-left', $published[0]['data']['overlay']);
+        $this->assertSame('navy', $published[1]['children'][0]['children'][0]['data']['background']);
+        $this->assertSame('light', $published[1]['children'][0]['children'][0]['data']['textTheme']);
+    }
+
     public function test_a_column_persists_its_animation_and_delay(): void
     {
         $section = $this->block('section', ['width' => 'standard']);

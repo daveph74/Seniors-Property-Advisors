@@ -6,6 +6,7 @@ import { repeatersFor, readPath } from './repeaters';
 import { contentFieldsFor, IMAGE_POSITIONS } from './contentFields';
 import { toEditorHtml } from './richTextBody';
 import { effective, sourceOf, overrideOf } from '../../sections/responsive';
+import { takesBackdrop } from '../../sections/Backdrop';
 
 const InlineRichTextEditor = lazy(() => import('../components/InlineRichTextEditor'));
 
@@ -89,6 +90,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
     const hiddenOn = ['desktop', 'tablet', 'mobile'].filter((bp) => (data.hidden || {})[bp]);
 
     const repeaters = repeatersFor(type, data);
+    const backdrop = takesBackdrop(type);
 
     const layoutValue = (key, fallback) => effective(data, device, key, fallback);
     const patchLayout = (key, value) => (device === 'desktop' ? patch(key, value) : patch(`responsive.${device}.${key}`, value));
@@ -661,16 +663,27 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
 
                 <AccordionSection id="style" title={PANELS[2][1]} open={openPanels.has('style')} onToggle={onTogglePanel}>
                     <>
-                        {has('background') ? (
+                        {(has('background') || backdrop) ? (
                             <>
                                 <label className="cms-field-label" style={{ marginBottom: 7 }}>Background</label>
                                 <div className="cms-swatch-row">
+                                    {backdrop && (
+                                        <button
+                                            type="button"
+                                            title="As designed"
+                                            className={`cms-swatch cms-swatch--default ${! data.background ? 'cms-swatch--active' : ''}`}
+                                            onClick={() => {
+                                                patch('background', '', 'background');
+                                                patch('textTheme', '', 'background');
+                                            }}
+                                        />
+                                    )}
                                     {BACKGROUNDS.map(({ value, colour, dark }) => (
                                         <button
                                             key={value}
                                             type="button"
                                             title={value}
-                                            className={`cms-swatch ${(data.background || 'white') === value ? 'cms-swatch--active' : ''}`}
+                                            className={`cms-swatch ${(data.background || (backdrop ? '' : 'white')) === value ? 'cms-swatch--active' : ''}`}
                                             style={{ background: colour, borderColor: dark ? colour : undefined }}
                                             onClick={() => {
                                                 patch('background', value, 'background');
@@ -679,10 +692,11 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         />
                                     ))}
                                 </div>
+                                {backdrop && <div className="cms-hint">As designed keeps the look this component came with.</div>}
                             </>
                         ) : null}
 
-                        {type === 'section' && (
+                        {(type === 'section' || backdrop) && (
                             <>
                                 <ImageField
                                     label="Background image"
@@ -755,10 +769,11 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </>
                         )}
 
-                        {has('textTheme') && (
+                        {(has('textTheme') || backdrop) && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Text theme</label>
-                                <select className="cms-select" value={data.textTheme || 'dark'} onChange={(e) => patch('textTheme', e.target.value)}>
+                                <select className="cms-select" value={data.textTheme || (backdrop ? '' : 'dark')} onChange={(e) => patch('textTheme', e.target.value)}>
+                                    {backdrop && <option value="">As designed</option>}
                                     <option value="dark">Dark text on light</option>
                                     <option value="light">Light text on dark</option>
                                 </select>

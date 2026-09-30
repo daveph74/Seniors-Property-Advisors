@@ -1,5 +1,6 @@
 import useReveal from './useReveal';
 import { breakpointClasses } from './responsive';
+import { backdropClasses, BackdropLayers } from './Backdrop';
 
 const ACROSS = {
     fill: '',
@@ -51,10 +52,12 @@ export default function ColumnContainer({ data = {}, anchor, editing = false, ch
         breakpointClasses(data, 'alignDown', (v) => (v in DOWN ? `column-container--down-${v}` : '')),
         breakpointClasses(data, 'order', (v) => (ORDERS.includes(String(v)) ? `column-container--order-${v}` : '')),
         columnWidthClasses(data),
+        backdropClasses(data),
     ].filter(Boolean).join(' ');
 
     return (
         <div ref={reveal.ref} className={classes} id={anchor} data-animate={reveal.animation || undefined}>
+            <BackdropLayers data={data} />
             {children}
         </div>
     );

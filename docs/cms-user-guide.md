@@ -125,7 +125,10 @@ pages arranged the way the website nests them.
    **Section height** — Comfortable, Compact, Slim, Tall or **Full screen**, which makes the section fill
    the first screen a reader sees with its content centred. Its **Style** accordion also
    offers a **Background image** from the media library with an **Image position** for which part of
-   the picture stays in view, and an **Overlay** to keep the text readable. A column's **Style**
+   the picture stays in view, and an **Overlay** to keep the text readable. Every Website section, row
+   and column has the same **Background** swatches, **Background image**, **Image position**, **Overlay**
+   and **Text theme** in its **Style** accordion; the first swatch, **As designed**, keeps the look the
+   component came with. A column's **Style**
    accordion has an **Animation** with a **Delay**, which plays once as a reader scrolls to it — set a
    different delay on each column of a row to bring them in one after another. A row's **Layout**
    accordion has a **Gap between columns**, which is also the space between them once they stack on a
