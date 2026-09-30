@@ -1864,7 +1864,9 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding: 20px 24px; cursor: pointer; font-weight: 600; color: var(--navy);
   font-size: 17px; list-style: none;
+  transition: background-color .18s ease;
 }
+.faq__q:hover{ background: #60a5fa; }
 .faq__q::-webkit-details-marker{ display: none; }
 .faq__mark{ position: relative; width: 14px; height: 14px; flex: none; }
 .faq__mark::before, .faq__mark::after{
