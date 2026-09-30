@@ -1199,6 +1199,13 @@ symptom was an empty inbox with an empty log. `App\Logging\Delivery::log()` writ
 notification job and every Settings save (the raw typed recipients, what validated, what the row holds
 afterwards, and any refusal) to both files, and `delivery.log` keeps every level. A save that appears
 in neither never reached the controller: look at the browser console, which logs `[settings]` lines.
+A refused enquiry from either public form is logged as `Enquiry refused` with its source and the
+**names** of the failing fields, never their values — they are a stranger's name, phone and address, and
+a log file is not a place those may be copied to. An Agent Finder enquiry that saved leaves `SyncID
+sending` then `accepted` or `failed`, and the email leaves `Enquiry notification queued` (naming the
+queue connection) and later `sent` or `could not be sent` — `queued` with nothing after it is a worker
+that is not running; one with no line at all never reached the server, and the
+browser's Network tab on `POST /enquiries` says why.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. Only the team is

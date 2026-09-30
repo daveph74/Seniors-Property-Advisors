@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Enquiry;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
+use Psr\Log\LoggerInterface;
 use Tests\TestCase;
 
 class FindMyAgentEnquiryTest extends TestCase
@@ -51,6 +53,24 @@ class FindMyAgentEnquiryTest extends TestCase
         /* Copied out of the answer so the list, the detail header and the search all keep working
            without knowing this form exists. */
         $this->assertSame('Mosman', $enquiry->suburb);
+    }
+
+    public function test_a_refusal_is_logged_by_field_name_and_never_by_value(): void
+    {
+        $logged = [];
+        $logger = \Mockery::mock(LoggerInterface::class);
+        $logger->shouldReceive('warning')->andReturnUsing(function ($message, $context) use (&$logged) {
+            $logged[] = [$message, $context];
+        });
+        Log::shouldReceive('stack')->andReturn($logger);
+
+        $this->send(['phone' => ''], ['location' => ['street' => '']])->assertSessionHasErrors();
+
+        $this->assertSame([['Enquiry refused', [
+            'source' => Enquiry::FIND_MY_AGENT,
+            'fields' => ['phone', 'details.location.street'],
+        ]]], $logged);
+        $this->assertStringNotContainsString('jane@example.com', json_encode($logged));
     }
 
     public function test_the_reference_leads_back_to_the_row(): void

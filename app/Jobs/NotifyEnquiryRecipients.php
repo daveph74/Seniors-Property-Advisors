@@ -35,6 +35,12 @@ class NotifyEnquiryRecipients implements ShouldQueue
         }
 
         self::dispatch($enquiry->id);
+
+        Delivery::log()->info('Enquiry notification queued', [
+            'enquiry_id' => $enquiry->id,
+            'recipients' => count(Site::enquiryRecipients()),
+            'queue' => config('queue.default'),
+        ]);
     }
 
     public function handle(): void
