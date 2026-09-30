@@ -727,6 +727,10 @@ The picture is drawn by `SectionContainer` the way `CtaSection` draws its photog
 positioned `.section-block__bg` under a `.section-block__overlay`, with the swatch colour left as the
 fallback that shows until the image loads. Choosing a navy overlay flips the text theme to light and a
 white one to dark, under one undo tag, the way the swatches do; choosing the image alone flips nothing.
+The navy-labelled scrims match **[aspropertyadvisors.com.au](https://www.aspropertyadvisors.com.au/)** — black
+under the photograph and a **flat** neutral overlay (`0.45` on "Navy", `0.58` on "Navy, strong"), not a
+blue wash or a left-to-right fade. The CMS name marks light text; "Navy, fading from the left" keeps a
+gradient for editors who want copy dark on one side only.
 Two of the overlays are **gradients** — "fading from the left" and "fading from the bottom" — and they
 exist because the first real use was a hero over a crowded photograph with the overlay set to None: a
 flat tint strong enough to carry a paragraph buries the picture, and a fade puts the text on the dark

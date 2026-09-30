@@ -504,24 +504,12 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   position: absolute; inset: 0;
   background-size: cover;
   background-position: center right;
-  background-color: var(--navy);
+  background-color: #000;
   z-index: 0;
 }
-/* Navy scrim, heaviest over the copy. Brand shading rather than a grey wash. The stops
-   are set by measurement, not taste: the bright window behind the middle of the frame is
-   near-white, so the scrim has to still be ~0.74 where the lead paragraph ends for 18px
-   text to clear 4.5:1. It clears to nothing before it reaches the people. */
 .hero-full-bg::after{
   content:""; position:absolute; inset: 0;
-  background: linear-gradient(
-    100deg,
-    rgba(13,34,63,0.92) 0%,
-    rgba(13,34,63,0.88) 26%,
-    rgba(13,34,63,0.74) 44%,
-    rgba(13,34,63,0.40) 60%,
-    rgba(13,34,63,0.12) 78%,
-    rgba(13,34,63,0.00) 92%
-  );
+  background: rgba(0,0,0,0.45);
 }
 /* width:100% — as a flex item the container would otherwise shrink to its content and
    the auto margins would centre it, pulling the copy off the page gutter. */
@@ -577,7 +565,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 .banner__bg{
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
-  background-color: var(--navy);
+  background-color: #000;
 }
 .banner .section-block__overlay{ z-index: 0; }
 .banner .container{ position: relative; z-index: 1; width: 100%; }
@@ -1131,16 +1119,7 @@ footer{
   .hero-pentagon{ display: none; }
   .hero-steps, .block-steps-strip{ flex-wrap: wrap; gap: 8px; }
   .hero-full-bg{ background-position: 72% center; }
-  .hero-full-bg::after{
-    background: linear-gradient(
-      100deg,
-      rgba(13,34,63,0.94) 0%,
-      rgba(13,34,63,0.90) 34%,
-      rgba(13,34,63,0.80) 56%,
-      rgba(13,34,63,0.45) 74%,
-      rgba(13,34,63,0.15) 90%
-    );
-  }
+  .hero-full-bg::after{ background: rgba(0,0,0,0.50); }
   .why-grid, .family-grid{ grid-template-columns: 1fr; gap: 56px;}
   .steps, .block-step-grid{ grid-template-columns: 1fr 1fr; }
   .steps::before, .block-step-grid::before{ display: none;}
@@ -1155,14 +1134,7 @@ footer{
      scrim runs top to bottom rather than left to right. */
   .hero-full{ min-height: auto; padding: 56px 0 72px; }
   .hero-full-bg{ background-position: 68% center; }
-  .hero-full-bg::after{
-    background: linear-gradient(
-      180deg,
-      rgba(13,34,63,0.90) 0%,
-      rgba(13,34,63,0.70) 55%,
-      rgba(13,34,63,0.55) 100%
-    );
-  }
+  .hero-full-bg::after{ background: rgba(0,0,0,0.55); }
   .hero-full .hero-full__title{ font-size: 38px; }
   .hero-full .hero-ctas .btn{ flex: 1 1 auto; justify-content: center; }
   .banner--full{ min-height: auto; }
@@ -1214,12 +1186,27 @@ footer{
 .section-block--has-image{ overflow: hidden; }
 .section-block__bg{ position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; }
 .section-block__overlay{ position: absolute; inset: 0; z-index: 0; }
-.section-block__overlay--navy{ background: rgba(13,34,63,0.6); }
-.section-block__overlay--navy-strong{ background: rgba(13,34,63,0.88); }
+.section-block__overlay--navy{ background: rgba(0,0,0,0.45); }
+.section-block__overlay--navy-strong{ background: rgba(0,0,0,0.58); }
 .section-block__overlay--white{ background: rgba(255,255,255,0.65); }
 .section-block__overlay--white-strong{ background: rgba(255,255,255,0.9); }
-.section-block__overlay--navy-left{ background: linear-gradient(90deg, rgba(13,34,63,0.94) 0%, rgba(13,34,63,0.86) 35%, rgba(13,34,63,0.45) 65%, rgba(13,34,63,0.15) 100%); }
-.section-block__overlay--navy-bottom{ background: linear-gradient(180deg, rgba(13,34,63,0.2) 0%, rgba(13,34,63,0.55) 45%, rgba(13,34,63,0.92) 100%); }
+.section-block__overlay--navy-left{
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.88) 0%,
+    rgba(0,0,0,0.72) 35%,
+    rgba(0,0,0,0.38) 65%,
+    rgba(0,0,0,0.10) 100%
+  );
+}
+.section-block__overlay--navy-bottom{
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.15) 0%,
+    rgba(0,0,0,0.45) 45%,
+    rgba(0,0,0,0.82) 100%
+  );
+}
 .section-block__overlay--white-left{ background: linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.9) 35%, rgba(255,255,255,0.5) 65%, rgba(255,255,255,0.15) 100%); }
 .section-block--has-image > .section-block__inner{ position: relative; z-index: 1; }
 .section-block--has-image.section-block--text-light .block-heading,
