@@ -5,6 +5,7 @@ import { ToastProvider, useCmsToast } from '../../../cms/ToastContext';
 import { defaultSectionData } from '../../../sections/defaults';
 import { canContain, isContainerType, MAX_ROW_DEPTH } from '../../../sections/childTypes';
 import { SECTION_LABELS } from '../../../sections/registry';
+import { ownerOfTheH1 } from '../../../sections/headingLevel';
 import SiteHeader from '../../../sections/SiteHeader';
 import SiteFooter from '../../../sections/SiteFooter';
 import BlockRenderer from '../../../cms/builder/BlockRenderer';
@@ -18,6 +19,7 @@ import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
 import PageSettingsPanel from '../../../cms/builder/PageSettingsPanel';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
 import { writePath } from '../../../cms/builder/repeaters';
+import { effective, breakpointClasses } from '../../../sections/responsive';
 import { relative } from '../../../cms/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
@@ -64,7 +66,7 @@ const isBlank = (v) => (Array.isArray(v) ? v.length === 0 : !v);
 let uid = 0;
 function nextId(type) {
     uid += 1;
-    return `${type}-${uid}`;
+    return `${type}-${Date.now().toString(36)}${uid.toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
 function firstError(errors, fallback) {
@@ -98,12 +100,19 @@ function reid(b) {
     };
 }
 
-function hydrate(list) {
-    return list.map((b) => ({
-        ...b,
-        data: { ...b.data },
-        ...(Array.isArray(b.children) ? { children: hydrate(b.children) } : {}),
-    }));
+function hydrate(list, seen = new Set()) {
+    return list.map((b) => {
+        const id = seen.has(b.id) ? nextId(b.type) : b.id;
+
+        seen.add(id);
+
+        return {
+            ...b,
+            id,
+            data: { ...b.data },
+            ...(Array.isArray(b.children) ? { children: hydrate(b.children, seen) } : {}),
+        };
+    });
 }
 
 function serialise(b) {
@@ -159,6 +168,13 @@ function mapTree(blocks, id, fn) {
     });
 }
 
+function orderedColumnIds(row, device) {
+    return (row.children || [])
+        .map((c, i) => ({ id: c.id, at: Number(effective(c.data || {}, device, 'order', i + 1)) }))
+        .sort((a, b) => a.at - b.at)
+        .map((c) => c.id);
+}
+
 function isDescendant(block, id) {
     return (block.children || []).some((c) => c.id === id || isDescendant(c, id));
 }
@@ -172,6 +188,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     const {
         blocks, commit: setBlocks, undo, redo, canUndo, canRedo,
     } = useTreeHistory(() => hydrate(contentBacked ? sections : []), selectionRef, setSelectedId);
+    const h1Owner = useMemo(() => ownerOfTheH1(blocks), [blocks]);
     const [device, setDevice] = useState('desktop');
     const [canvasHeight, setCanvasHeight] = useState(600);
     const [canvasReady, setCanvasReady] = useState(false);
@@ -361,7 +378,85 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
         });
     };
 
+    const setColumnOrder = (rowId, ids) => {
+        setBlocks((prev) => withList(prev, rowId, (list) => list.map((c) => ({
+            ...c,
+            data: writePath(c.data, `responsive.${device}.order`, String(ids.indexOf(c.id) + 1)),
+        }))), `order:${rowId}:${device}`);
+        markUnsaved();
+    };
+
+    const clearColumnOrder = () => {
+        const loc = locate(blocks, selectedId);
+
+        if (loc?.block.type !== 'column' || device === 'desktop') return;
+
+        setBlocks((prev) => withList(prev, loc.parentId, (list) => list.map((c) => ({
+            ...c,
+            data: writePath(c.data, `responsive.${device}.order`, undefined),
+        }))), `order:${loc.parentId}:${device}`);
+        markUnsaved();
+    };
+
+    const placeColumn = (loc, position) => {
+        const row = locate(blocks, loc.parentId)?.block;
+
+        if (!row) return;
+
+        const ids = orderedColumnIds(row, device).filter((x) => x !== loc.block.id);
+        const at = Math.max(0, Math.min(ids.length, position));
+
+        ids.splice(at, 0, loc.block.id);
+        setColumnOrder(row.id, ids);
+    };
+
+    const columnPlace = (() => {
+        const loc = locate(blocks, selectedId);
+
+        if (loc?.block.type !== 'column') return null;
+
+        const row = locate(blocks, loc.parentId)?.block;
+
+        return row ? { index: loc.index, count: row.children.length } : null;
+    })();
+
+    const positionColumn = (position) => {
+        const loc = locate(blocks, selectedId);
+
+        if (loc?.block.type !== 'column') return;
+
+        if (device !== 'desktop') {
+            placeColumn(loc, position);
+
+            return;
+        }
+
+        setBlocks((prev) => withList(prev, loc.parentId, (list) => {
+            const next = list.filter((b) => b.id !== loc.block.id);
+
+            next.splice(Math.max(0, Math.min(next.length, position)), 0, loc.block);
+
+            return next;
+        }));
+        markUnsaved();
+    };
+
     const moveBlock = (id, dir) => {
+        const loc = locate(blocks, id);
+
+        if (loc?.block.type === 'column' && device !== 'desktop') {
+            const row = locate(blocks, loc.parentId)?.block;
+            const ids = orderedColumnIds(row, device);
+            const from = ids.indexOf(id);
+            const to = from + dir;
+
+            if (to < 0 || to >= ids.length) return;
+
+            placeColumn(loc, to);
+
+            return;
+        }
+
         setBlocks((prev) => {
             const loc = locate(prev, id);
 
@@ -383,6 +478,20 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     };
 
     const moveTo = (id, at) => {
+        const loc = locate(blocks, id);
+
+        if (loc?.block.type === 'column' && device !== 'desktop' && at.parentId === loc.parentId) {
+            const row = locate(blocks, loc.parentId)?.block;
+            const ids = orderedColumnIds(row, device);
+            const before = row.children.slice(0, at.index).map((c) => c.id).filter((x) => x !== id);
+            const position = ids.filter((x) => x !== id).findIndex((x) => ! before.includes(x));
+
+            placeColumn(loc, position < 0 ? ids.length - 1 : position);
+            endDrag();
+
+            return;
+        }
+
         setBlocks((prev) => {
             const loc = locate(prev, id);
 
@@ -755,7 +864,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             return (
                 <>
                     {children.map((c, j) => (
-                        <div className="cms-col-cell" key={c.id}>
+                        <div className={`cms-col-cell ${breakpointClasses(c.data || {}, 'order', (v) => `column-container--order-${v}`)}`.trim()} key={c.id}>
                             {isDropAt(b.id, j) ? <div className="cms-drop-line--v cms-drop-line--before" /> : null}
                             {renderBlock(c, j, b.id, 'row', depth)}
                             {j === children.length - 1 && isDropAt(b.id, j + 1)
@@ -805,7 +914,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             {CONTENT_KEY[b.type] && isBlank(b.data[CONTENT_KEY[b.type]]) ? (
                 <div className="cms-block-placeholder">{SECTION_LABELS[b.type]} — no content yet</div>
             ) : (
-                <BlockRenderer block={b} library={library}>
+                <BlockRenderer block={b} library={library} headingLevel={b.id === h1Owner ? 1 : 2}>
                     {isContainerType(b.type)
                         ? renderChildren(b, b.type === 'row' ? parentDepth + 1 : parentDepth)
                         : null}
@@ -1057,6 +1166,9 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                                 device={device}
                                 onDevice={setDevice}
                                 onColumnCount={(n) => setColumnCount(selectedId, n)}
+                                columnPlace={columnPlace}
+                                onPosition={positionColumn}
+                                onClearOrder={clearColumnOrder}
                                 onSaveReusable={() => saveReusable(selected)}
                                 library={library}
                             />

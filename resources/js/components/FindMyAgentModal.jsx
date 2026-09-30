@@ -630,6 +630,21 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
                         {step !== 4 && !sending && <span className="arr">→</span>}
                     </button>
                 </div>
+
+                {step === 3 && (
+                    <p className="fma-consent-note">
+                        By sending this you agree that we may contact you about selling your property.
+                        {site.privacyUrl ? (
+                            <>
+                                {' '}
+                                <a href={site.privacyUrl} target="_blank" rel="noopener noreferrer">
+                                    Read our privacy policy
+                                </a>
+                                .
+                            </>
+                        ) : null}
+                    </p>
+                )}
             </div>
         </div>
     );

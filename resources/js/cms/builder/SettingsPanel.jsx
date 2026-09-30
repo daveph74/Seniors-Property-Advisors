@@ -1,8 +1,13 @@
+import { lazy, Suspense } from 'react';
 import { Toggle, AccordionSection } from '../components/ui';
 import RepeaterEditor from './RepeaterEditor';
 import ImageField from './ImageField';
 import { repeatersFor, readPath } from './repeaters';
-import { contentFieldsFor } from './contentFields';
+import { contentFieldsFor, IMAGE_POSITIONS } from './contentFields';
+import { toEditorHtml } from './richTextBody';
+import { effective, sourceOf, overrideOf } from '../../sections/responsive';
+
+const InlineRichTextEditor = lazy(() => import('../components/InlineRichTextEditor'));
 
 const BACKGROUNDS = [
     { value: 'white', colour: '#FFFFFF' },
@@ -13,12 +18,15 @@ const BACKGROUNDS = [
     { value: 'navy-deep', colour: '#0F1A30', dark: true },
 ];
 
-const SPACE_STEPS = [['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']];
+const SPACE_STEPS = [['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large'], ['xlarge', 'Extra large']];
 
 const FIELDS = {
     'rating-stars': [['stars', 'Stars'], ['ratingLabel', 'Headline'], ['note', 'Sub-note']],
     'stat-stamp': [['value', 'Big number'], ['text', 'Caption']],
 };
+
+const DEVICES = [['desktop', 'Desktop'], ['tablet', 'Tablet'], ['mobile', 'Mobile']];
+const DEVICE_LABEL = Object.fromEntries(DEVICES);
 
 const PANELS = [
     ['content', 'Content'],
@@ -51,7 +59,7 @@ function optionsFor(field, library, value) {
     ];
 }
 
-export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, onSaveReusable, library = {} }) {
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, columnPlace = null, onPosition, onClearOrder, onSaveReusable, library = {} }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -81,6 +89,41 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
     const hiddenOn = ['desktop', 'tablet', 'mobile'].filter((bp) => (data.hidden || {})[bp]);
 
     const repeaters = repeatersFor(type, data);
+
+    const layoutValue = (key, fallback) => effective(data, device, key, fallback);
+    const patchLayout = (key, value) => (device === 'desktop' ? patch(key, value) : patch(`responsive.${device}.${key}`, value));
+    const layoutSource = (key) => {
+        if (device === 'desktop') return null;
+
+        const source = sourceOf(data, device, key);
+        const own = overrideOf(data, device, key) !== undefined;
+        const inherits = DEVICES[DEVICES.findIndex(([d]) => d === device) - 1][0];
+
+        return (
+            <div className="cms-hint cms-hint--source">
+                {own ? `Set for ${DEVICE_LABEL[device]}. ` : `Following ${DEVICE_LABEL[source]}. `}
+                {own && (
+                    <button type="button" className="cms-link-btn" onClick={() => (key === 'order' ? onClearOrder() : patch(`responsive.${device}.${key}`, undefined))}>
+                        Use the {DEVICE_LABEL[inherits]} value
+                    </button>
+                )}
+            </div>
+        );
+    };
+    const deviceStrip = (
+        <div className="cms-align-row">
+            {DEVICES.map(([value, text]) => (
+                <button
+                    key={value}
+                    type="button"
+                    className={`cms-align-btn ${device === value ? 'cms-align-btn--active' : ''}`}
+                    onClick={() => onDevice(value)}
+                >
+                    {text}
+                </button>
+            ))}
+        </div>
+    );
 
     const renderField = (f) => {
         const value = readPath(data, f.path);
@@ -278,11 +321,28 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
+                        {type === 'heading' && (
+                            <div className="cms-toggle-row">
+                                <span className="cms-toggle-row__label">Highlighted heading starts a new line</span>
+                                <Toggle on={!!data.emOnNewLine} onChange={(v) => patch('emOnNewLine', v)} />
+                            </div>
+                        )}
+
                         {has('headingAfter') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Text after the highlight</label>
                                 <textarea className="cms-textarea" rows={2} value={data.headingAfter || ''} onChange={(e) => patch('headingAfter', e.target.value)} />
                             </div>
+                        )}
+
+                        {type === 'heading' && (
+                            <>
+                                <div className="cms-toggle-row">
+                                    <span className="cms-toggle-row__label">Text after the highlight starts a new line</span>
+                                    <Toggle on={!!data.afterOnNewLine} onChange={(v) => patch('afterOnNewLine', v)} />
+                                </div>
+                                <div className="cms-hint">Use these to choose where the heading breaks — a line break typed at the very start or end of a box is removed when the page saves.</div>
+                            </>
                         )}
 
                         {hasSubhead && (
@@ -299,7 +359,17 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </div>
                         )}
 
-                        {hasBody && (
+                        {hasBody && type === 'rich-text' && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Text</label>
+                                <Suspense fallback={<div className="cms-rt"><div className="cms-rt__surface cms-rt__surface--inline">Loading the editor…</div></div>}>
+                                    <InlineRichTextEditor value={toEditorHtml(data.body)} onChange={(html) => patch('body', html)} />
+                                </Suspense>
+                                <div className="cms-hint">Select some words, then use the buttons above to make them bold, a list or a link.</div>
+                            </div>
+                        )}
+
+                        {hasBody && type !== 'rich-text' && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Supporting text</label>
                                 <textarea className="cms-textarea" rows={4} value={data.body || ''} onChange={(e) => patch('body', e.target.value)} />
@@ -418,16 +488,25 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
 
                 <AccordionSection id="layout" title={PANELS[1][1]} open={openPanels.has('layout')} onToggle={onTogglePanel}>
                     <>
+                        <div className="cms-field">
+                            {deviceStrip}
+                            <div className="cms-hint">
+                                {device === 'desktop' && 'Editing the Desktop layout. Tablets and phones follow it unless given their own.'}
+                                {device === 'tablet' && 'Editing the Tablet layout. Phones follow these values until given their own.'}
+                                {device === 'mobile' && 'Editing the Mobile layout. Nothing else changes.'}
+                            </div>
+                        </div>
                         {has('width') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Section width</label>
-                                <select className="cms-select" value={data.width || 'standard'} onChange={(e) => patch('width', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('width', 'standard')} onChange={(e) => patchLayout('width', e.target.value)}>
                                     <option value="standard">Standard (1240px)</option>
                                     <option value="wide">Wide (1440px)</option>
                                     <option value="narrow">Narrow (860px)</option>
                                     <option value="full">Full bleed</option>
                                 </select>
                                 <div className="cms-hint">Nested sections inherit the parent width.</div>
+                                {layoutSource('width')}
                             </div>
                         )}
                         {has('contentAlign') && (
@@ -438,72 +517,111 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         <button
                                             key={value}
                                             type="button"
-                                            className={`cms-align-btn ${(data.contentAlign || 'left') === value ? 'cms-align-btn--active' : ''}`}
-                                            onClick={() => patch('contentAlign', value)}
+                                            className={`cms-align-btn ${layoutValue('contentAlign', 'left') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patchLayout('contentAlign', value)}
                                         >
                                             {text}
                                         </button>
                                     ))}
                                 </div>
+                                {layoutSource('contentAlign')}
                             </div>
                         )}
 
                         {has('height') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Section height</label>
-                                <select className="cms-select" value={data.height || 'comfortable'} onChange={(e) => patch('height', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('height', 'comfortable')} onChange={(e) => patchLayout('height', e.target.value)}>
                                     <option value="comfortable">Comfortable</option>
                                     <option value="compact">Compact</option>
                                     <option value="slim">Slim</option>
                                     <option value="tall">Tall</option>
+                                    <option value="full">Full screen</option>
                                 </select>
+                                {layoutSource('height')}
+                            </div>
+                        )}
+
+                        {type === 'row' && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Gap between columns</label>
+                                <select className="cms-select" value={layoutValue('gap', 'medium')} onChange={(e) => patchLayout('gap', e.target.value)}>
+                                    <option value="none">None</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                    <option value="xlarge">Extra large</option>
+                                </select>
+                                {layoutSource('gap')}
+                                <div className="cms-hint">Also the space between them when they stack on a phone.</div>
                             </div>
                         )}
 
                         {has('alignAcross') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Align across</label>
-                                <select className="cms-select" value={data.alignAcross || 'fill'} onChange={(e) => patch('alignAcross', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('alignAcross', 'fill')} onChange={(e) => patchLayout('alignAcross', e.target.value)}>
                                     <option value="fill">Fill the width</option>
                                     <option value="left">Left</option>
                                     <option value="center">Centre</option>
                                     <option value="right">Right</option>
                                 </select>
+                                {layoutSource('alignAcross')}
+                            </div>
+                        )}
+
+                        {type === 'column' && columnPlace && columnPlace.count > 1 && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Position in row</label>
+                                <select
+                                    className="cms-select"
+                                    value={String(layoutValue('order', String(columnPlace.index + 1)))}
+                                    onChange={(e) => onPosition(Number(e.target.value) - 1)}
+                                >
+                                    {Array.from({ length: columnPlace.count }, (_, i) => (
+                                        <option key={i} value={String(i + 1)}>{i + 1}{i === 0 ? ' (first)' : i === columnPlace.count - 1 ? ' (last)' : ''}</option>
+                                    ))}
+                                </select>
+                                <div className="cms-hint">On Tablet and Mobile this reorders the columns for that screen only. Dragging a column within its row does the same.</div>
+                                {layoutSource('order')}
                             </div>
                         )}
 
                         {has('alignDown') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Align down</label>
-                                <select className="cms-select" value={data.alignDown || 'top'} onChange={(e) => patch('alignDown', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('alignDown', 'top')} onChange={(e) => patchLayout('alignDown', e.target.value)}>
                                     <option value="top">Top</option>
                                     <option value="middle">Middle</option>
                                     <option value="bottom">Bottom</option>
                                     <option value="spread">Spread out</option>
                                 </select>
+                                {layoutSource('alignDown')}
                                 <div className="cms-hint">Only visible when this column is shorter than the one beside it.</div>
                             </div>
                         )}
 
-                        {has('spaceAbove') && (
+                        {(has('spaceAbove') || type === 'row') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Space above</label>
-                                <select className="cms-select" value={data.spaceAbove || 'none'} onChange={(e) => patch('spaceAbove', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('spaceAbove', 'none')} onChange={(e) => patchLayout('spaceAbove', e.target.value)}>
                                     {SPACE_STEPS.map(([value, text]) => (
                                         <option key={value} value={value}>{text}</option>
                                     ))}
                                 </select>
+                                {layoutSource('spaceAbove')}
                             </div>
                         )}
 
-                        {has('spaceBelow') && (
+                        {(has('spaceBelow') || type === 'row') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Space below</label>
-                                <select className="cms-select" value={data.spaceBelow || 'none'} onChange={(e) => patch('spaceBelow', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('spaceBelow', 'none')} onChange={(e) => patchLayout('spaceBelow', e.target.value)}>
                                     {SPACE_STEPS.map(([value, text]) => (
                                         <option key={value} value={value}>{text}</option>
                                     ))}
                                 </select>
+                                {layoutSource('spaceBelow')}
                                 <div className="cms-hint">Added on top of the spacing the section already applies.</div>
                             </div>
                         )}
@@ -511,11 +629,12 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                         {has('spacing') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Item spacing</label>
-                                <select className="cms-select" value={data.spacing || 'medium'} onChange={(e) => patch('spacing', e.target.value)}>
+                                <select className="cms-select" value={layoutValue('spacing', 'medium')} onChange={(e) => patchLayout('spacing', e.target.value)}>
                                     <option value="medium">Medium</option>
                                     <option value="small">Small</option>
                                     <option value="large">Large</option>
                                 </select>
+                                {layoutSource('spacing')}
                                 <div className="cms-hint">Space between the blocks stacked inside this section.</div>
                             </div>
                         )}
@@ -545,6 +664,79 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </>
                         ) : null}
 
+                        {type === 'section' && (
+                            <>
+                                <ImageField
+                                    label="Background image"
+                                    value={(data.backgroundImage || {}).src || ''}
+                                    alt={(data.backgroundImage || {}).alt || ''}
+                                    onChange={(v) => patch('backgroundImage.src', v)}
+                                    onAltChange={(v) => patch('backgroundImage.alt', v)}
+                                    hint="Sits over the background colour, which shows until the picture loads."
+                                />
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Image position</label>
+                                    <select className="cms-select" value={data.backgroundPosition || 'center'} onChange={(e) => patch('backgroundPosition', e.target.value)}>
+                                        {IMAGE_POSITIONS.map(([value, text]) => (
+                                            <option key={value} value={value}>{text}</option>
+                                        ))}
+                                    </select>
+                                    <div className="cms-hint">Which part of the picture stays in view when it is cropped.</div>
+                                </div>
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Overlay</label>
+                                    <select
+                                        className="cms-select"
+                                        value={data.overlay || 'navy'}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            patch('overlay', value, 'overlay');
+
+                                            if (value.startsWith('navy')) patch('textTheme', 'light', 'overlay');
+                                            if (value.startsWith('white')) patch('textTheme', 'dark', 'overlay');
+                                        }}
+                                    >
+                                        <option value="none">None</option>
+                                        <option value="navy">Navy</option>
+                                        <option value="navy-strong">Navy, strong</option>
+                                        <option value="navy-left">Navy, fading from the left</option>
+                                        <option value="navy-bottom">Navy, fading from the bottom</option>
+                                        <option value="white">White</option>
+                                        <option value="white-strong">White, strong</option>
+                                        <option value="white-left">White, fading from the left</option>
+                                    </select>
+                                    <div className="cms-hint">Tints the background image so text stays readable. A fading overlay keeps the photo clear on one side and puts the text on the other.</div>
+                                </div>
+                            </>
+                        )}
+
+                        {type === 'column' && (
+                            <>
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Animation</label>
+                                    <select className="cms-select" value={data.animation || 'none'} onChange={(e) => patch('animation', e.target.value)}>
+                                        <option value="none">None</option>
+                                        <option value="fade-up">Fade up</option>
+                                        <option value="fade-in">Fade in</option>
+                                        <option value="fade-left">Fade left</option>
+                                        <option value="fade-right">Fade right</option>
+                                        <option value="zoom-in">Zoom in</option>
+                                    </select>
+                                </div>
+                                <div className="cms-field">
+                                    <label className="cms-field-label">Delay</label>
+                                    <select className="cms-select" value={data.animationDelay || '0'} onChange={(e) => patch('animationDelay', e.target.value)}>
+                                        <option value="0">No delay</option>
+                                        <option value="100">100 ms</option>
+                                        <option value="200">200 ms</option>
+                                        <option value="300">300 ms</option>
+                                    </select>
+                                    <div className="cms-hint">Plays once as the column scrolls into view. Give each column of a row its own delay to bring them in one after another. Readers who have asked their device for less motion see the column without it.</div>
+                                </div>
+                            </>
+                        )}
+
                         {has('textTheme') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Text theme</label>
@@ -562,18 +754,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
 
                 <AccordionSection id="responsive" title={PANELS[3][1]} open={openPanels.has('responsive')} onToggle={onTogglePanel}>
                     <>
-                        <div className="cms-align-row">
-                            {[['desktop', 'Desktop'], ['tablet', 'Tablet'], ['mobile', 'Mobile']].map(([value, text]) => (
-                                <button
-                                    key={value}
-                                    type="button"
-                                    className={`cms-align-btn ${device === value ? 'cms-align-btn--active' : ''}`}
-                                    onClick={() => onDevice(value)}
-                                >
-                                    {text}
-                                </button>
-                            ))}
-                        </div>
+                        {deviceStrip}
 
                         {type === 'row' && (
                             <div className="cms-field">

@@ -211,6 +211,235 @@ test.describe('Pages · Builder', () => {
         await B.saveDraft(page);
     });
 
+    test('bold in a rich text block survives a save and a reload', async ({ page }) => {
+        await B.addBlock(page, 'Rich text');
+
+        /* The editor loads lazily behind a placeholder that wears the same surface class, so the
+           real one is the one that can be typed into. */
+        const surface = B.field(page, 'Text').locator('.cms-rt__surface[contenteditable="true"]');
+        const marker = uniqueValue('Bold');
+
+        await expect(surface).toBeVisible();
+        await surface.click();
+        await page.keyboard.press('Control+b');
+        await page.keyboard.type(marker);
+
+        await expect(B.canvas(page).locator('.block-text strong')).toContainText(marker);
+
+        await B.saveAndReload(page);
+        await B.selectBlock(page, marker);
+
+        await expect(B.canvas(page).locator('.block-text strong')).toContainText(marker);
+        await expect(B.field(page, 'Text').locator('.cms-rt__surface strong')).toContainText(marker);
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    /* A section arrives with a row and a column — three blocks, so `addBlock` cannot count it in, and
+       the last block in the canvas is the column. Layers is the one place the section itself can be
+       picked by name. */
+    const addSection = async (page) => {
+        await page.locator('.cms-component-card[title="Section"]').click();
+        await expect(B.canvas(page).locator('.cms-nest-drop')).toHaveCount(1);
+        await expect(page.locator('.cms-accordion__head', { hasText: 'Style' })).toBeVisible();
+    };
+
+    const selectLastSection = async (page) => {
+        await page.getByRole('button', { name: 'Layers' }).click();
+        await page.locator('.cms-layer-row', { hasText: 'Section' }).last().click();
+        await expect(page.locator('.cms-accordion__head', { hasText: 'Style' })).toBeVisible();
+    };
+
+    test('a section background image chosen from the library survives a save and a reload', async ({ page }) => {
+        await addSection(page);
+        await B.openTab(page, 'Style');
+        await B.chooseImage(page, 'Background image');
+        await B.input(page, 'Image position').selectOption('top-right');
+
+        const chosen = await B.field(page, 'Background image').locator('.cms-media-pick-row__name').innerText();
+
+        await expect(B.canvas(page).locator('.section-block__bg--pos-top-right')).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await selectLastSection(page);
+        await B.openTab(page, 'Style');
+
+        await expect(B.field(page, 'Background image').locator('.cms-media-pick-row__name')).toHaveText(chosen);
+        await expect(B.input(page, 'Image position')).toHaveValue('top-right');
+        await expect(B.canvas(page).locator('.section-block__bg--pos-top-right')).toHaveCount(1);
+
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a heading can put its highlight on a new line, and keeps the choice', async ({ page }) => {
+        await B.addBlock(page, 'Heading');
+        const marker = uniqueValue('How we');
+
+        await B.fillField(page, 'Heading', marker);
+        await B.fillField(page, 'Highlighted heading', 'help you');
+
+        const toggle = () => B.field(page, 'Highlighted heading starts a new line').getByRole('switch');
+
+        await toggle().click();
+        await expect(toggle()).toHaveAttribute('aria-checked', 'true');
+        await expect(B.canvas(page).locator('.block-heading br')).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await B.selectBlock(page, marker);
+
+        await expect(toggle()).toHaveAttribute('aria-checked', 'true');
+        await expect(B.canvas(page).locator('.block-heading br')).toHaveCount(1);
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a banner keeps its look settings through a save and a reload', async ({ page }) => {
+        await B.addBlock(page, 'Banner, full bleed');
+        await B.chooseImage(page, 'Background image');
+        await B.input(page, 'Overlay', { within: 'Look' }).selectOption('navy-left');
+        await B.input(page, 'Section height', { within: 'Look' }).selectOption('compact');
+
+        await expect(B.canvas(page).locator('.banner--compact .section-block__overlay--navy-left')).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await B.selectLastBlock(page);
+
+        await expect(B.input(page, 'Overlay', { within: 'Look' })).toHaveValue('navy-left');
+        await expect(B.input(page, 'Section height', { within: 'Look' })).toHaveValue('compact');
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('editing one of two new headings leaves the other alone', async ({ page }) => {
+        await B.addBlock(page, 'Heading');
+        await B.addBlock(page, 'Heading');
+
+        const marker = uniqueValue('Only here');
+        await B.fillField(page, 'Heading', marker);
+
+        await expect(B.canvas(page).locator('.block-heading', { hasText: marker })).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await expect(B.canvas(page).locator('.block-heading', { hasText: marker })).toHaveCount(1);
+
+        await B.selectBlock(page, marker);
+        await B.deleteSelected(page);
+        await B.selectLastBlock(page);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('two full-bleed heroes still leave the page with one h1', async ({ page }) => {
+        await B.addBlock(page, 'Hero, full bleed');
+        await B.addBlock(page, 'Hero, full bleed');
+
+        await expect(B.canvas(page).locator('.hero-full__title')).toHaveCount(2);
+        await expect(B.canvas(page).locator('h1')).toHaveCount(1);
+
+        await B.deleteSelected(page);
+        await B.selectLastBlock(page);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a Full screen section height survives a save and a reload', async ({ page }) => {
+        await addSection(page);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Section height').selectOption('full');
+
+        await expect(B.canvas(page).locator('.section-block--full')).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await selectLastSection(page);
+        await B.openTab(page, 'Layout');
+
+        await expect(B.input(page, 'Section height')).toHaveValue('full');
+
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    const selectLastRow = async (page) => {
+        await page.getByRole('button', { name: 'Layers' }).click();
+        await page.locator('.cms-layer-row', { hasText: 'Row' }).last().click();
+        await expect(page.locator('.cms-accordion__head', { hasText: 'Layout' })).toBeVisible();
+    };
+
+    test('a row gap setting survives a save and a reload', async ({ page }) => {
+        await addSection(page);
+        await selectLastRow(page);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Gap between columns').selectOption('large');
+        await B.input(page, 'Space above').selectOption('xlarge');
+
+        await expect(B.canvas(page).locator('.row-container--gap-large.u-space-above-xlarge')).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await selectLastRow(page);
+        await B.openTab(page, 'Layout');
+
+        await expect(B.input(page, 'Gap between columns')).toHaveValue('large');
+        await expect(B.input(page, 'Space above')).toHaveValue('xlarge');
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    const selectLastColumn = async (page) => {
+        await page.getByRole('button', { name: 'Layers' }).click();
+        await page.locator('.cms-layer-row', { hasText: 'Column' }).last().click();
+        await expect(page.locator('.cms-accordion__head', { hasText: 'Style' })).toBeVisible();
+    };
+
+    test('an animated column reveals itself once it scrolls into view', async ({ page }) => {
+        await addSection(page);
+        await selectLastColumn(page);
+        await B.openTab(page, 'Style');
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.saveDraft(page);
+
+        const builder = page.url();
+        await page.goto(builder.replace(/\/edit$/, '/preview'), { waitUntil: 'domcontentloaded' });
+
+        const section = page.locator('.reveal').last();
+        await expect(section).toHaveCount(1);
+        await section.scrollIntoViewIfNeeded();
+        await expect(section).toHaveClass(/is-in-view/);
+
+        await page.goto(builder, { waitUntil: 'domcontentloaded' });
+        await expect(B.canvas(page).locator('body')).not.toBeEmpty();
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a column animation setting survives a save and a reload', async ({ page }) => {
+        await addSection(page);
+        await selectLastColumn(page);
+        await B.openTab(page, 'Style');
+
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.input(page, 'Delay').selectOption('200');
+
+        await B.saveAndReload(page);
+        await selectLastColumn(page);
+        await B.openTab(page, 'Style');
+
+        await expect(B.input(page, 'Animation')).toHaveValue('fade-up');
+        await expect(B.input(page, 'Delay')).toHaveValue('200');
+        /* The canvas is editing, so the column is never hidden waiting for a scroll. */
+        await expect(B.canvas(page).locator('.reveal')).toHaveCount(0);
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
     test('a block can be renamed in the panel', async ({ page }) => {
         await B.addBlock(page, 'Heading');
         await B.openTab(page, 'Advanced');

@@ -14,7 +14,8 @@ use Illuminate\Foundation\Http\FormRequest;
  * `resources/content/pages/` is accepted too, since it carries the same tree under `published`.
  *
  * The file is decoded and sanitised before the rules run, so what is validated is exactly what will be
- * stored: the tree goes through the same rules a draft save does, and nothing in it arrives as markup.
+ * stored: the tree goes through the same rules a draft save does, so the only markup that survives is
+ * what a Rich text block is allowed to hold.
  */
 class ImportPageRequest extends FormRequest
 {

@@ -242,4 +242,142 @@ class SectionFieldsTest extends TestCase
 
         $this->assertSame('saving', $data['cardStyle']);
     }
+
+    public function test_a_section_persists_its_background_image_and_overlay(): void
+    {
+        $data = $this->publish($this->block('section', [
+            'background' => 'navy',
+            'textTheme' => 'light',
+            'backgroundImage' => ['src' => '/media/2026/07/skyline.jpg', 'alt' => 'The city at dusk'],
+            'backgroundPosition' => 'top-right',
+            'overlay' => 'navy-strong',
+        ]));
+
+        $this->assertSame('/media/2026/07/skyline.jpg', $data['backgroundImage']['src']);
+        $this->assertSame('The city at dusk', $data['backgroundImage']['alt']);
+        $this->assertSame('top-right', $data['backgroundPosition']);
+        $this->assertSame('navy-strong', $data['overlay']);
+
+        $this->get('/')->assertInertia(fn (AssertableInertia $p) => $p
+            ->where('sections.0.data.backgroundImage.src', '/media/2026/07/skyline.jpg')
+            ->where('sections.0.data.overlay', 'navy-strong'));
+    }
+
+    public function test_a_heading_persists_its_line_break_switches(): void
+    {
+        $data = $this->publish($this->block('heading', [
+            'heading' => 'How we',
+            'headingEm' => 'help you',
+            'headingAfter' => 'sell your home',
+            'emOnNewLine' => true,
+            'afterOnNewLine' => true,
+        ]));
+
+        $this->assertTrue($data['emOnNewLine']);
+        $this->assertTrue($data['afterOnNewLine']);
+    }
+
+    public function test_a_banner_persists_its_controls(): void
+    {
+        $data = $this->publish($this->block('banner', [
+            'heading' => 'Highest Price.',
+            'headingEm' => 'Minimal Stress.',
+            'emOnNewLine' => true,
+            'lead' => 'Our service is tailored to your needs.',
+            'image' => ['src' => '/media/2026/09/wine.jpg', 'alt' => 'Friends at a table'],
+            'ctas' => [['label' => "Let's talk", 'href' => '/contact', 'variant' => 'primary', 'onNavy' => true]],
+            'height' => 'compact',
+            'titleSize' => 'hero',
+            'textSize' => 'large',
+            'overlay' => 'navy-bottom',
+            'imagePosition' => 'bottom-left',
+            'align' => 'center',
+            'copyWidth' => 'wide',
+            'animation' => 'fade-in',
+            'animationDelay' => '300',
+        ]));
+
+        foreach (['height' => 'compact', 'titleSize' => 'hero', 'textSize' => 'large', 'overlay' => 'navy-bottom', 'imagePosition' => 'bottom-left', 'align' => 'center', 'copyWidth' => 'wide', 'animation' => 'fade-in', 'animationDelay' => '300'] as $key => $value) {
+            $this->assertSame($value, $data[$key]);
+        }
+
+        $this->assertTrue($data['emOnNewLine']);
+        $this->assertSame('/media/2026/09/wine.jpg', $data['image']['src']);
+        $this->assertSame("Let's talk", $data['ctas'][0]['label']);
+    }
+
+    public function test_a_row_persists_its_column_gap(): void
+    {
+        $section = $this->block('section', ['width' => 'standard']);
+        $section[0]['children'] = $this->block('row', ['gap' => 'large', 'spaceAbove' => 'xlarge', 'spaceBelow' => 'small']);
+
+        $data = $this->publish($section);
+
+        $row = (new PageContentStore)->document('home')['published'][0]['children'][0]['data'];
+
+        $this->assertSame('large', $row['gap']);
+        $this->assertSame('xlarge', $row['spaceAbove']);
+        $this->assertSame('small', $row['spaceBelow']);
+        $this->assertSame('standard', $data['width']);
+    }
+
+    public function test_a_section_persists_its_tablet_and_mobile_layout(): void
+    {
+        $section = $this->block('section', [
+            'width' => 'standard',
+            'height' => 'comfortable',
+            'spaceAbove' => 'none',
+            'responsive' => [
+                'tablet' => ['height' => 'compact', 'spaceAbove' => 'large'],
+                'mobile' => ['height' => 'slim'],
+            ],
+        ]);
+
+        $data = $this->publish($section);
+
+        $this->assertSame('comfortable', $data['height']);
+        $this->assertSame('none', $data['spaceAbove']);
+        $this->assertSame('compact', $data['responsive']['tablet']['height']);
+        $this->assertSame('large', $data['responsive']['tablet']['spaceAbove']);
+        $this->assertSame('slim', $data['responsive']['mobile']['height']);
+        $this->assertArrayNotHasKey('spaceAbove', $data['responsive']['mobile']);
+    }
+
+    public function test_a_column_persists_its_tablet_and_mobile_order(): void
+    {
+        $section = $this->block('section', ['width' => 'standard']);
+        $section[0]['children'] = $this->block('row', ['gap' => 'medium']);
+        $section[0]['children'][0]['children'] = [
+            ['id' => 'column-1', 'type' => 'column', 'label' => 'Text', 'active' => true, 'anchor' => null, 'data' => ['alignAcross' => 'fill', 'responsive' => ['tablet' => ['order' => '2']]]],
+            ['id' => 'column-2', 'type' => 'column', 'label' => 'Image', 'active' => true, 'anchor' => null, 'data' => ['alignAcross' => 'fill', 'responsive' => ['tablet' => ['order' => '1'], 'mobile' => ['order' => '2']]]],
+        ];
+
+        $this->publish($section);
+
+        $columns = (new PageContentStore)->document('home')['published'][0]['children'][0]['children'];
+
+        $this->assertSame('Text', $columns[0]['label']);
+        $this->assertSame('2', $columns[0]['data']['responsive']['tablet']['order']);
+        $this->assertSame('1', $columns[1]['data']['responsive']['tablet']['order']);
+        $this->assertSame('2', $columns[1]['data']['responsive']['mobile']['order']);
+        $this->assertArrayNotHasKey('order', $columns[0]['data']);
+    }
+
+    public function test_a_column_persists_its_animation_and_delay(): void
+    {
+        $section = $this->block('section', ['width' => 'standard']);
+        $section[0]['children'] = $this->block('row', ['gap' => 'medium']);
+        $section[0]['children'][0]['children'] = $this->block('column', [
+            'alignAcross' => 'fill',
+            'animation' => 'fade-up',
+            'animationDelay' => '200',
+        ]);
+
+        $this->publish($section);
+
+        $column = (new PageContentStore)->document('home')['published'][0]['children'][0]['children'][0]['data'];
+
+        $this->assertSame('fade-up', $column['animation']);
+        $this->assertSame('200', $column['animationDelay']);
+    }
 }

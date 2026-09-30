@@ -1,3 +1,6 @@
+import useReveal from './useReveal';
+import { breakpointClasses } from './responsive';
+
 const ACROSS = {
     fill: '',
     left: 'column-container--across-left',
@@ -12,15 +15,23 @@ const DOWN = {
     spread: 'column-container--down-spread',
 };
 
-export default function ColumnContainer({ data = {}, anchor, children }) {
+const ORDERS = ['1', '2', '3', '4', '5', '6'];
+
+export default function ColumnContainer({ data = {}, anchor, editing = false, children }) {
+    const reveal = useReveal(data.animation, data.animationDelay, editing);
+
     const classes = [
         'column-container',
         ACROSS[data.alignAcross] || '',
         DOWN[data.alignDown] || '',
+        reveal.classes,
+        breakpointClasses(data, 'alignAcross', (v) => (v in ACROSS ? `column-container--across-${v}` : '')),
+        breakpointClasses(data, 'alignDown', (v) => (v in DOWN ? `column-container--down-${v}` : '')),
+        breakpointClasses(data, 'order', (v) => (ORDERS.includes(String(v)) ? `column-container--order-${v}` : '')),
     ].filter(Boolean).join(' ');
 
     return (
-        <div className={classes} id={anchor}>
+        <div ref={reveal.ref} className={classes} id={anchor} data-animate={reveal.animation || undefined}>
             {children}
         </div>
     );

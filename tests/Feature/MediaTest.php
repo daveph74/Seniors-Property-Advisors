@@ -610,6 +610,27 @@ class MediaTest extends TestCase
         Storage::disk('s3')->assertExists('2026/07/abc123.png');
     }
 
+    public function test_a_section_background_image_counts_as_in_use(): void
+    {
+        Storage::fake('s3');
+
+        $media = $this->record();
+
+        Page::create([
+            'cms_id' => Page::max('cms_id') + 1,
+            'title' => 'Backdrop',
+            'slug' => 'backdrop',
+            'url' => '/backdrop',
+            'status' => 'published',
+            'draft' => [],
+            'published' => [['id' => 's', 'type' => 'section', 'data' => ['backgroundImage' => ['src' => $media->url(), 'alt' => '']]]],
+        ]);
+
+        $this->deleteJson('/cms/media', ['ids' => [$media->id]])
+            ->assertOk()
+            ->assertJsonPath('kept.0.usedBy.0', 'Backdrop (live)');
+    }
+
     public function test_it_keeps_an_image_a_draft_still_uses(): void
     {
         Storage::fake('s3');

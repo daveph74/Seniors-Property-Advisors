@@ -116,12 +116,33 @@ pages arranged the way the website nests them.
    - **The settings panel** on the right — every setting for whatever you have selected, in
      accordions: Content is already open, and Layout, Style, Responsive and Advanced open when you
      click their heading.
-3. Click the text you want to change, and edit it in the panel on the right.
-4. To add something, drag it from **Components** onto the page.
+3. Click the text you want to change, and edit it in the panel on the right. A **Heading** block has two
+   switches for choosing where it wraps: **Highlighted heading starts a new line** and **Text after the
+   highlight starts a new line**. A **Rich text** block's
+   **Text** box has buttons for **B**, **I**, **Bullets**, **Numbers** and **Link** — select some words
+   first, then press one.
+4. To add something, drag it from **Components** onto the page. A section's **Layout** accordion has a
+   **Section height** — Comfortable, Compact, Slim, Tall or **Full screen**, which makes the section fill
+   the first screen a reader sees with its content centred. Its **Style** accordion also
+   offers a **Background image** from the media library with an **Image position** for which part of
+   the picture stays in view, and an **Overlay** to keep the text readable. A column's **Style**
+   accordion has an **Animation** with a **Delay**, which plays once as a reader scrolls to it — set a
+   different delay on each column of a row to bring them in one after another. A row's **Layout**
+   accordion has a **Gap between columns**, which is also the space between them once they stack on a
+   phone, and **Space above** and **Space below** for the room around the row itself. Under Website sections, **Banner, full bleed** is a photo running edge to edge with words over
+   it, and its **Look** group lets you set the **Section height**, **Title size**, **Text size**,
+   **Overlay**, **Image position**, **Text alignment**, **Copy width**, and an **Animation** with a
+   **Delay**.
 5. Hovering a block gives you a small toolbar: move it, duplicate it, save it as a reusable section,
    **Hide on page**, or delete it. Hiding is not deleting — the block stays, and stops being shown.
 6. **Undo** and **Redo** are at the top left, next to the Desktop / Tablet / Mobile buttons. Those three
-   change what the canvas shows you; they do not change the page.
+   change what the canvas shows you, and which screen the **Layout** accordion edits. A Layout change
+   made on Desktop applies everywhere; one made on Tablet applies to tablets and phones; one made on
+   Mobile applies to phones only. Under each Layout field it says **Following Desktop** or **Set for
+   Mobile**, with **Use the Desktop value** (or **Use the Tablet value**, on Mobile) to go back. The
+   order of the columns in a row works the same way: a column's **Layout** accordion has **Position in
+   row**, and on Tablet or Mobile choosing a position, dragging the column within its row, or moving it
+   in **Layers** changes the order for that screen only. Content and Style are the same on every screen.
 
 Above the canvas it says **All changes saved** or **Unsaved changes**, so you always know where you are.
 

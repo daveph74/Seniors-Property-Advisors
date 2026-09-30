@@ -167,8 +167,11 @@ class OwaspTest extends TestCase
         }
     }
 
-    /** Section trees are not HTML at all, so every string in them is stripped of tags. */
-    public function test_a03_markup_cannot_be_stored_in_a_section_tree(): void
+    /**
+     * Section trees are not HTML, so every string in them is stripped of tags — except a Rich text
+     * block's body, which is purified to paragraphs, emphasis, lists and links and nothing more.
+     */
+    public function test_a03_markup_is_stripped_from_every_section_field_but_the_one_html_body(): void
     {
         $page = Page::where('status', 'published')->firstOrFail();
 
@@ -183,6 +186,22 @@ class OwaspTest extends TestCase
 
         $this->assertStringNotContainsString('<script', $draft);
         $this->assertStringContainsString('Hello', $draft);
+
+        $this->post("/cms/pages/{$page->cms_id}/draft", [
+            'sections' => [[
+                'id' => 'section-1', 'type' => 'section', 'label' => 'Section', 'active' => true,
+                'data' => [], 'children' => [[
+                    'id' => 'text-1', 'type' => 'rich-text', 'label' => 'Rich text', 'active' => true,
+                    'data' => ['body' => '<strong>Bold</strong><script>alert(1)</script><a href="javascript:alert(1)">x</a>'],
+                ]],
+            ]],
+        ])->assertSessionHasNoErrors();
+
+        $body = $page->refresh()->draft[0]['children'][0]['data']['body'];
+
+        $this->assertStringContainsString('<strong>Bold</strong>', $body);
+        $this->assertStringNotContainsString('<script', $body);
+        $this->assertStringNotContainsString('javascript:', $body);
     }
 
     // --------------------------------------------------------------------- A04: Insecure design

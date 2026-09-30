@@ -132,8 +132,14 @@ that already has the row, and `/cms/navigation` is where a running site is edite
 
 Adding a block type touches `PageContentStore::BLOCK_TYPES`, `resources/js/sections/childTypes.js`
 and the React registry — never the database. Adding a `data` key touches nothing.
-Note that `ValidatesSectionTree::sanitiseTree()` strips tags from every string in the tree,
-so no `data` key can hold markup.
+`ValidatesSectionTree::sanitiseTree()` strips tags from every string in the tree **except the keys named
+in `PageContentStore::HTML_FIELDS`** — today only a `rich-text` block's `body` — which go through
+`Html::cleanInline()` instead: paragraphs, bold, italic, lists and links, and nothing else. The
+contract, held in PHP, the renderer and the builder's editor helper alike, is that **a body is HTML if
+and only if it contains `<`**: every seeded body is plain text and keeps splitting on blank lines, and
+a plain body is stored byte for byte rather than entity-encoded by a purifier it never needed. Adding
+an HTML key means adding it to that constant and a case to `RichTextBodyTest`; `OwaspTest`'s a03 pins
+that everything else in the tree is still stripped whole.
 
 `php artisan content:import [--force]` migrates a legacy `storage/app/content/` overlay
 into the database. Run it manually; never from a migration.
@@ -258,15 +264,24 @@ Image fields are skipped there and the picker has one real test in `03-pages-bui
 
 Section trees have no server-side backstop for this, deliberately: the schema saying which keys hold an
 image is in `contentFields.js` and nowhere in PHP, so one would mean the schema in two languages or
-guessing by file extension.
+guessing by file extension. The one HTML field in a tree is the exception by construction: the Rich text
+block's purifier allows no `img` at all, so an image of any origin pasted there is removed rather than
+judged.
 
 Two traps: `DisableExternalResources` must not become `DisableExternal`, which takes links with it, and
 `URI.Host` has to be set from `app.url` or HTMLPurifier calls this site's own absolute address external
 and strips an image the form request just allowed.
 
 The editor is TipTap (MIT). CKEditor and TinyMCE were rejected: both are GPL-or-paid, and GPL
-copyleft would reach this application. It lazy-loads as its own Vite chunk (~140KB gzipped),
-so only the article editor pays for it.
+copyleft would reach this application. It lands in its own Vite chunk (~140KB gzipped) because Inertia
+splits every page, so only the article editor pays for it. The builder's Rich text block uses a second,
+smaller TipTap configuration — `InlineRichTextEditor`, bold, italic, lists and links — which
+`SettingsPanel` loads with `React.lazy` the first time such a block is selected; a static import there
+would pull TipTap into the builder chunk for everybody editing a heading. One trap from that file: the
+effect that writes an incoming value back into the editor has to check `editor.isDestroyed` first. In
+the builder the panel re-renders constantly, TipTap replaces the instance under it, and calling
+`getHTML()` on the old one throws `Cannot read properties of null (reading 'cached')` — the symptom is
+the whole builder going blank the moment a saved Rich text block is selected.
 
 The listing at `/blog` is an ordinary CMS page holding a `blog-list` section, so its heading
 and intro stay editable. Only `/blog/{article}` is a route, which is why `articles` is a
@@ -406,6 +421,26 @@ The hydration contract that keeps it honest: **nothing may touch `window`, `docu
 measured width. A section that formats a date or reads `innerWidth` during render produces a body that
 differs from what hydration wants, and React recovers by redrawing: the visible symptom is a flash, the
 crawled symptom is wrong content.
+
+Entrance animations — on **columns** and banners, not sections; a section fading as one slab was
+tried first and reads as the page stalling, where columns staggered by their own delays read as the
+page arriving — live inside that contract, and three things make them safe. **The hidden
+state is scoped to `html.js`**, a class set by a nonced inline script in the head of `app.blade.php` on
+public routes only, so a crawler, a reader with JavaScript off, or a browser whose observer never fires
+is delivered the section fully visible — the version of this that goes wrong is a whole site at
+`opacity: 0` to everything that does not scroll. The class is set from the head rather than `app.jsx`
+because that runs after first paint and would show the section and then hide it. **The observer is
+effect-only**: `useReveal()` — and the classes are
+`.reveal`, `.reveal--fade-up`, `.reveal--delay-100` and `.reveal.is-in-view`, shared by
+`ColumnContainer` and `BannerSection` — renders the same classes on the server and the client and adds
+`is-in-view` from an `IntersectionObserver` inside `useEffect`.
+And **the canvas never animates**:
+`BlockRenderer` passes `editing`, which disables it, and the iframe document carries no `html.js`
+either. The preview route is under `/cms` but is a reader's view, so `app.blade.php` gives it the class
+too — an editor has to be able to judge an animation before publishing it — while the rest of the admin
+still gets none. `SsrScopeTest` pins the head script and its nonce on a public page and its absence
+on an admin screen; the e2e "reveals itself" test drives the preview. The `aos` package was not used: it touches
+`document` at import, which the SSR renderer's eager glob would execute at boot.
 
 Two local traps. **`public/hot` diverts SSR to Vite**, so with `composer dev` running the production path
 is never exercised — if you are checking whether SSR works, that file must be out of the way, and a test
@@ -547,15 +582,17 @@ Four things an audit flagged and the code did not need, recorded so nobody pays 
   next point if that page's design is ever promoted to the real home page.
 - **An eager-loading escape hatch for `ImageBlock`.** Same reason: it would let a page opt out of lazy
   loading for its largest image, and the only page where that image is above the fold is not indexed.
-- **A single-`<h1>` guard.** Two hero sections on one page would produce two, and nothing prevents it — but
-  no page has two, and multiple `h1`s have not been a ranking problem for years. The cost of the guard is
-  making every hero ask whether it is the first one.
+- **A single-`<h1>` guard** — this one *was* worth making, once the home page had two full-bleed heroes and
+  two h1s. `ownerOfTheH1` walks the whole tree in reading order and nominates the first hero or the first
+  block with a heading; both hero components read `useHeadingLevel()` and render `h2` unless nominated, so
+  their CSS is keyed on `.hero-full__title` and `.headline` rather than the tag. The builder canvas has to
+  nominate the same way — `Builder.jsx` passes `headingLevel` through `BlockRenderer` — or every hero in
+  the canvas turns into an h2 the moment the components start reading a context nobody provides.
 - **Editorial internal links.** Real finding: `/how-it-works`, `/why-agent-finder`, `/faqs` and `/contact`
   have no internal links in their body at all, so nothing but the header and footer passes any authority to
-  them. It is not fixable as metadata, and it is somebody's decision rather than a defect: section text
-  cannot hold markup (`ValidatesSectionTree::sanitiseTree()` strips tags from every string), so a link means a
-  button or a call-to-action block — which is exactly what was deliberately removed when every page was cut
-  to one section.
+  them. It is not fixable as metadata, and it is somebody's decision rather than a defect: a Rich text
+  block can carry a link now, so an internal link is an editor's job in the builder rather than a code
+  change — and nobody has written one yet.
 ### The SEO screen
 
 `/cms/seo` is two tabs over one ability, `seo.manage` — super **and** client administrator, because a
@@ -683,6 +720,25 @@ Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has
 (`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
 like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
 
+**A section can carry a background image and an overlay, and a column an entrance animation**, all from the Style
+accordion and all gated on `type === 'section'` rather than `has()` — the `cta` block also has a
+`background` key, and a section saved before these keys existed would otherwise show no control.
+The picture is drawn by `SectionContainer` the way `CtaSection` draws its photograph: an absolutely
+positioned `.section-block__bg` under a `.section-block__overlay`, with the swatch colour left as the
+fallback that shows until the image loads. Choosing a navy overlay flips the text theme to light and a
+white one to dark, under one undo tag, the way the swatches do; choosing the image alone flips nothing.
+Two of the overlays are **gradients** — "fading from the left" and "fading from the bottom" — and they
+exist because the first real use was a hero over a crowded photograph with the overlay set to None: a
+flat tint strong enough to carry a paragraph buries the picture, and a fade puts the text on the dark
+side and leaves the photo clear on the other. Light text on an image section also carries a text
+shadow and pure white paragraphs, and its primary button takes the gradient background's `#3570B5`
+rather than navy, which on a navy overlay was a button you could not see.
+**Image position** picks which part of the picture survives the crop — nine positions, mapped to
+`section-block__bg--pos-*` / `banner__bg--pos-*` classes rather than an inline style, so an unknown
+value falls back to centre instead of reaching the stylesheet. A background image cannot lazy-load, and that is accepted. The media library needs no change to know
+about it: `mediaKeysIn()` and `MediaController::usage()` find `/media/…` by regex over the whole tree,
+and `MediaTest` pins that a section background counts as in use.
+
 `home-preview` is where that block is first used — the client's redesigned hero, built entirely out of
 section, row, column and blocks. It is **data, not code**: there is no seed file for it, and each site
 gets it by importing `tests/fixtures/pages/home-preview.page.json` (or a fresh download) — see "Moving a
@@ -691,8 +747,11 @@ page between sites". `HomePreviewPageTest` imports that fixture the same way and
 `e2e/global-setup.mjs` imports and publishes it for the browser suite. `hero-preview` is the precedent
 for an unlinked review page. The headline needed one thing the heading block lacked, a highlight in mid-sentence, so
 headings carry an optional `headingAfter`, rendered after the highlighted words. It is a multi-line box
-because headings are `white-space: pre-line`, and a line break typed there is the only way an editor can
-choose where a heading breaks. Headings also carry a `size` (standard or large). **Large borrows the
+because headings are `white-space: pre-line`, so a line break typed inside the text is kept. One typed at
+either **end** of a box is not: Laravel's `TrimStrings` middleware strips it before the save, and the
+symptom is a heading that breaks in the canvas and runs together after a reload. That is what the
+heading block's two switches are for — `emOnNewLine` and `afterOnNewLine` render a `<br>` before the
+highlight and before the text after it, which no trim can touch. Headings also carry a `size` (standard or large). **Large borrows the
 site's existing scale rather than inventing one**: an h1 takes the hero headline's 38–52px and an h2 the
 website section titles' 32–48px (`h2`, `.section-head__title`). The mockup was drawn at 56px and 46px;
 matching it exactly would have made this the one page on the site with its own type sizes. The rule under
@@ -713,6 +772,73 @@ any two dark sections by a pixel, whichever dark backgrounds they are.
 
 Sections have two backgrounds beyond flat navy, both measured off the client's mockup rather than chosen:
 **Navy gradient** (135°, `#1A2846` to `#2D4A7D`) and **Deep navy** (`#0F1A30`). The mockup's networks
+**Banner is the full-bleed hero with every proportion a control.** `Hero, full bleed` is the page opener:
+one viewport, a 60px title, a fixed gradient, and it stays that way because the home page depends on it.
+The second time that shape was wanted — a mid-page band on the same page — none of those proportions fit,
+so `banner` carries the same photo-behind-copy layout with Section height, Title size (the three scales the
+site already has), Text size, Overlay, Text alignment and Copy width as fields. Its overlay reuses the
+section's `.section-block__overlay--*` classes so the eight tints have one definition; its text theme is
+derived from the overlay (white tints give dark text) rather than stored; its title joins `HEROES` in
+`headingLevel.js` and the PHP mirror in `SeededPagesTest`, so a banner at the top of a page owns the H1
+and a second one renders `h2`; and `.banner--full` takes the same canvas pin as `.hero-full`.
+
+**The Layout accordion edits one screen at a time.** Every Layout value used to be one scalar in
+`data`, so a change made while looking at the Mobile canvas changed desktop too — the complaint was
+"I edit mobile and tablet moves". Desktop still writes the top-level keys; Tablet and Mobile write
+`data.responsive.{tablet|mobile}.{key}`, and the cascade is Desktop → Tablet → Mobile, resolved by
+`resources/js/sections/responsive.js` for the panel and rendered as suffixed classes
+(`section-block--compact--tablet`, `u-space-above-large--mobile`) that `app.css` scopes to
+`max-width: 1080px` and `640px` — the `u-hide-*` boundaries, which the canvas widths of 820 and 420
+fall inside, so the canvas needs no editing-mode logic and SSR sends the same classes. Two things
+keep it honest. **The override maps name the default value** (`section-block--comfortable--mobile`,
+`u-space-above-none--tablet`), because a phone set back to the default has to beat a desktop
+choice, and the desktop default has no class to beat; the desktop maps keep `''` so nothing already
+saved changes. And **the override rules sit after the existing `@media (max-width: 640px)` section
+fallbacks**, not beside the utilities — same specificity, so a base `.section-block--compact` at
+48px written later would have beaten a tablet override to Tall. Content and Style are deliberately
+one value for every screen; only the `hidden` map and row `stack` were per-device before this.
+
+**Column order is per screen too, and it is CSS `order`, not a second tree.** The report that followed the
+Layout work was "I moved the image column first on Tablet and Desktop moved too" — a column's position
+*is* the tree, and the tree is one thing for every screen. So a column carries
+`responsive.{bp}.order` (a 1-based position, `column-container--order-N--tablet`), and the row being a
+grid means `order` holds both side by side and once the columns stack. Desktop order is never stored: on
+Desktop, Position in row, a drag within the row and the Layers arrows all edit the tree as before; on
+Tablet or Mobile the same three actions write `order` on every column of the row and leave the tree
+alone (`placeColumn` in `Builder.jsx`). A drop into a *different* row is a tree move on every device —
+that is structure, not layout, and cannot be per screen. Layers keeps showing tree order; the canvas on
+the chosen device shows the real one.
+
+**Block ids must be unique across the whole page, and for a long time nothing made them so.** The
+builder minted `type-N` from a counter that started at zero on every load, so a block added today took
+the id of a block saved yesterday, and `patchSelected` — which finds a block by id — edited both. The
+symptom is the one an editor reports: "I change one heading and another one changes too", or a row
+gaining an element it was never given. Three things hold it now: `nextId()` includes a timestamp and a
+random suffix so it cannot collide; `hydrate()` re-ids a duplicate as a page loads, so a page saved
+with them heals on its next save; and `ValidatesSectionTree::checkIdsAreUnique()` refuses the tree by
+every door, with `CmsBuilderTest::test_two_blocks_may_not_share_an_id` pinning it. The home page had
+six such collisions and was repaired in place; nothing else had any.
+
+A row's **Gap between columns** sets `--row-gap`, which is one variable doing two jobs: the space
+between columns side by side and the space between them once they stack. Large and Extra large fall back
+to 32px at the stacking breakpoint for that reason, and a row nested in a column keeps its tighter 16px
+default unless a gap is chosen — the modifier is written `.row-container.row-container--gap-*` so it
+outranks the nested-row rule. Rows also take **Space above** and **Space below** through the same
+`spacingClasses()` every block uses, because two rows in one section sat 16px apart with nothing to
+change it; the controls are gated on `type === 'row'` as well as the key, since rows saved before the
+keys existed have none. The scale gained an **Extra large** step (80px) for the same reason — 48px is
+plenty between paragraphs and not between two rows of cards.
+
+**Full screen** is the other end of the height scale: a section fills the first viewport with the
+hero-full rule (`calc(100svh - 126px)`) and centres its content, so a home hero can be built from a section
+rather than the fixed hero block; on a phone it falls back to Tall's padding. The canvas pins it to 640px
+beside `.hero-full`, and `CmsBuilderTest` guards both pins — the canvas measures its own height from its
+content, so a viewport-height section otherwise grows without end. **That measurement is the bottom edge
+of the body's children, never the body or the document's scroll height.** The frame is `about:blank`,
+which is a quirks-mode document, and in quirks mode the body fills the viewport — which is the frame
+itself — so those two only ever read the frame's own height back: it could grow but never shrink. The
+symptom was a page-length blank below the footer after switching from Mobile back to Desktop, since
+the phone layout is taller. The mockup's networks
 band is also why there is a **Slim** section height (32px, 24px on a phone): Compact's 72px was the
 smallest before, twice what the band carries. The mockup's finer
 details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo — are scoped to the
@@ -905,6 +1031,13 @@ them costs a migration or a public address for nothing a reader would see — th
 key and resolving a label is that wording can move without data moving. "Wizard" survives in comments
 and test names as a description of its shape, four steps held together by React state, not as its name.
 The reference a sender quotes was already `AF-2026-00042`.
+
+**The wizard has no consent checkbox.** It had one on step 2 and the client asked for it to go, so
+sending *is* the consent: a note under the Submit button says so, with the privacy link, and
+`payload()` sends `consent: true`. The server still refuses an enquiry without `consent`, and
+`FindMyAgentEnquiryTest::test_nothing_is_stored_without_consent` still pins that — the rule moved from
+a box to a sentence, not out of the request. The contact form section keeps its own checkbox and its
+editable wording.
 
 ### Which form it came from
 

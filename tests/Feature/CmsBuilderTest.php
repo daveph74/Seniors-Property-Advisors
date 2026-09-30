@@ -360,7 +360,7 @@ class CmsBuilderTest extends TestCase
             $this->assertContains($type, PageContentStore::BLOCK_TYPES, "{$type} is missing");
         }
 
-        $this->assertCount(33, PageContentStore::BLOCK_TYPES);
+        $this->assertCount(34, PageContentStore::BLOCK_TYPES);
     }
 
     public function test_the_scoped_section_types_are_registered(): void
@@ -384,7 +384,7 @@ class CmsBuilderTest extends TestCase
     /**
      * The canvas measures its own height from its content, so a section sized in viewport units
      * grows without end inside it: taller frame, taller 100vh, taller content, taller frame.
-     * `.hero-full` is the one such section today, and the canvas pins it. Deleting that pin
+     * `.hero-full` and a section set to Full screen are the two such today, and the canvas pins both. Deleting a pin
      * brings the runaway back, and nothing else would catch it — the loop only happens in a
      * browser, and there is no JavaScript test runner here.
      */
@@ -397,6 +397,30 @@ class CmsBuilderTest extends TestCase
             '/\.hero-full\{[^}]*min-height:\s*calc\(100[sd]?vh/s',
             $css,
             'the public hero no longer uses viewport units — the canvas pin may be unnecessary',
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/\.section-block--full\{[^}]*min-height:\s*calc\(100[sd]?vh/s',
+            $css,
+            'a Full screen section no longer uses viewport units — the canvas pin may be unnecessary',
+        );
+
+        $this->assertStringContainsString(
+            '.section-block--full{min-height:',
+            $canvas,
+            'CanvasFrame must cap a Full screen section or the builder scrolls forever',
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/\.banner--full\{[^}]*min-height:\s*calc\(100[sd]?vh/s',
+            $css,
+            'a Full screen banner no longer uses viewport units — the canvas pin may be unnecessary',
+        );
+
+        $this->assertStringContainsString(
+            '.banner--full{min-height:',
+            $canvas,
+            'CanvasFrame must cap a Full screen banner or the builder scrolls forever',
         );
 
         $this->assertStringContainsString(
@@ -635,6 +659,36 @@ class CmsBuilderTest extends TestCase
         $document = (new PageContentStore)->document('home');
 
         $this->assertSame('alert(1)Clean', $document['draft'][0]['data']['heading']);
+    }
+
+    /**
+     * The framework trims every request string, so a line break typed at the end of a heading — to
+     * push the highlighted words onto the next line — never reaches the database. The heading block's
+     * "starts a new line" switches exist because of this; if the trim ever goes, they still work.
+     */
+    public function test_a_line_break_at_the_edge_of_a_heading_is_trimmed_on_save(): void
+    {
+        $this->post('/cms/pages/1/draft', ['sections' => $this->sections("How we\n")])->assertRedirect();
+
+        $this->assertSame('How we', (new PageContentStore)->document('home')['draft'][0]['data']['heading']);
+    }
+
+    /**
+     * The builder patches a block by id, so two blocks sharing one are edited together — "I change
+     * one heading and another changes too". The builder mints ids that cannot collide now and heals
+     * duplicates as it loads a page; this is the backstop that keeps a tree with duplicates out of
+     * the database by any door.
+     */
+    public function test_two_blocks_may_not_share_an_id(): void
+    {
+        $sections = $this->section([
+            ['id' => 'heading-1', 'type' => 'heading', 'label' => 'Heading', 'active' => true, 'data' => ['heading' => 'One']],
+            ['id' => 'heading-1', 'type' => 'heading', 'label' => 'Heading', 'active' => true, 'data' => ['heading' => 'Two']],
+        ]);
+
+        $this->post('/cms/pages/1/draft', ['sections' => $sections])->assertSessionHasErrors('sections');
+
+        $this->assertNull((new PageContentStore)->document('home')['draft']);
     }
 
     public function test_an_unknown_page_id_cannot_be_saved(): void
