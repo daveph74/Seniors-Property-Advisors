@@ -12,14 +12,40 @@
     "draft": null,
     "published": [
         {
+            "id": "faq-hero",
+            "type": "banner",
+            "label": "Image panel",
+            "active": true,
+            "data": {
+                "eyebrow": "Selling your home",
+                "heading": "Frequently asked questions",
+                "headingEm": "",
+                "lead": "",
+                "image": {
+                    "src": "/media/2026/08/home-exterior.jpg",
+                    "alt": "A senior couple smiling in front of their home"
+                },
+                "ctas": [],
+                "height": "tall",
+                "titleSize": "hero",
+                "textSize": "standard",
+                "overlay": "navy",
+                "imagePosition": "center",
+                "align": "left",
+                "copyWidth": "standard",
+                "animation": "none",
+                "animationDelay": "0"
+            }
+        },
+        {
             "id": "faq-list",
             "type": "faq-list",
             "label": "Questions",
             "active": true,
             "data": {
-                "eyebrow": "Questions we are asked",
-                "heading": "The things people ask",
-                "headingEm": "before they start.",
+                "eyebrow": "",
+                "heading": "The most frequently asked questions",
+                "headingEm": "",
                 "lead": "If your question is not here, ring us — no one will try to sign you up.",
                 "category": "",
                 "openFirst": true,
