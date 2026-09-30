@@ -568,6 +568,13 @@ test.describe('Pages · Builder', () => {
         const row = await addTwoColumnSection(page);
         const cells = row.locator(':scope > .cms-col-cell');
 
+        /* Grid gap is per track, and a 60-track row once carried 59 gutters — wider than the row itself.
+           A column must never be wider than the row that holds it. */
+        const overflow = await row.evaluate((el) => el.scrollWidth - el.clientWidth);
+        expect(overflow).toBeLessThanOrEqual(0);
+        const [rowBox, firstBox] = [await row.boundingBox(), await cells.nth(0).boundingBox()];
+        expect(firstBox.width).toBeLessThan(rowBox.width);
+
         await selectCell(page, row, 0);
         await B.openTab(page, 'Layout');
         await B.input(page, 'Column width').selectOption('two-thirds');

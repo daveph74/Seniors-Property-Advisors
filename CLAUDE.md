@@ -821,7 +821,13 @@ fraction offered (quarter 15, third 20, half 30, two-thirds 40, three-quarters 4
 `data.width` becomes a `col-w-*` class and the columns left on "Equal share" split what remains through
 `--auto-span`, which `RowContainer` computes from a `childBlocks` prop every Section now receives and only
 rows read (`autoColumnSpan`). Without that share the sized column pushed its neighbour onto a second line,
-which is how the first version was found wrong. The classes are `col-w-*` rather than
+which is how the first version was found wrong. **The gutter is not the grid's `gap`.** Grid gap sits
+between every track, and 59 gaps of 32px is wider than any row: the first release of this made a single
+column 1888px wide inside a 1176px row, and the symptom was a heading or an image running past its section
+the moment it was dropped in. So the row has `column-gap: 0`, each column carries half the gutter as
+`margin-inline`, and the row pulls the outer halves back with a negative margin, which is why column edges
+still meet the section's content edges. A row with its own backdrop drops the negative margin and pads
+instead, or its colour would bleed past the content edge. The classes are `col-w-*` rather than
 `column-container--*` because the grid item differs: on the site it is the column (or the `display:
 contents` hide wrapper's child), in the canvas it is `.cms-col-cell`, and both carry the same names.
 Per-screen widths ride the `responsive` map like the other Layout keys, and **a set width beats
