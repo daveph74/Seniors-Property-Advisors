@@ -136,7 +136,13 @@ pages arranged the way the website nests them.
 5. Hovering a block gives you a small toolbar: move it, duplicate it, save it as a reusable section,
    **Hide on page**, or delete it. Hiding is not deleting — the block stays, and stops being shown.
 6. **Undo** and **Redo** are at the top left, next to the Desktop / Tablet / Mobile buttons. Those three
-   change what the canvas shows you; they do not change the page.
+   change what the canvas shows you, and which screen the **Layout** accordion edits. A Layout change
+   made on Desktop applies everywhere; one made on Tablet applies to tablets and phones; one made on
+   Mobile applies to phones only. Under each Layout field it says **Following Desktop** or **Set for
+   Mobile**, with **Use the Desktop value** (or **Use the Tablet value**, on Mobile) to go back. The
+   order of the columns in a row works the same way: a column's **Layout** accordion has **Position in
+   row**, and on Tablet or Mobile choosing a position, dragging the column within its row, or moving it
+   in **Layers** changes the order for that screen only. Content and Style are the same on every screen.
 
 Above the canvas it says **All changes saved** or **Unsaved changes**, so you always know where you are.
 

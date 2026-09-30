@@ -773,6 +773,33 @@ derived from the overlay (white tints give dark text) rather than stored; its ti
 `headingLevel.js` and the PHP mirror in `SeededPagesTest`, so a banner at the top of a page owns the H1
 and a second one renders `h2`; and `.banner--full` takes the same canvas pin as `.hero-full`.
 
+**The Layout accordion edits one screen at a time.** Every Layout value used to be one scalar in
+`data`, so a change made while looking at the Mobile canvas changed desktop too — the complaint was
+"I edit mobile and tablet moves". Desktop still writes the top-level keys; Tablet and Mobile write
+`data.responsive.{tablet|mobile}.{key}`, and the cascade is Desktop → Tablet → Mobile, resolved by
+`resources/js/sections/responsive.js` for the panel and rendered as suffixed classes
+(`section-block--compact--tablet`, `u-space-above-large--mobile`) that `app.css` scopes to
+`max-width: 1080px` and `640px` — the `u-hide-*` boundaries, which the canvas widths of 820 and 420
+fall inside, so the canvas needs no editing-mode logic and SSR sends the same classes. Two things
+keep it honest. **The override maps name the default value** (`section-block--comfortable--mobile`,
+`u-space-above-none--tablet`), because a phone set back to the default has to beat a desktop
+choice, and the desktop default has no class to beat; the desktop maps keep `''` so nothing already
+saved changes. And **the override rules sit after the existing `@media (max-width: 640px)` section
+fallbacks**, not beside the utilities — same specificity, so a base `.section-block--compact` at
+48px written later would have beaten a tablet override to Tall. Content and Style are deliberately
+one value for every screen; only the `hidden` map and row `stack` were per-device before this.
+
+**Column order is per screen too, and it is CSS `order`, not a second tree.** The report that followed the
+Layout work was "I moved the image column first on Tablet and Desktop moved too" — a column's position
+*is* the tree, and the tree is one thing for every screen. So a column carries
+`responsive.{bp}.order` (a 1-based position, `column-container--order-N--tablet`), and the row being a
+grid means `order` holds both side by side and once the columns stack. Desktop order is never stored: on
+Desktop, Position in row, a drag within the row and the Layers arrows all edit the tree as before; on
+Tablet or Mobile the same three actions write `order` on every column of the row and leave the tree
+alone (`placeColumn` in `Builder.jsx`). A drop into a *different* row is a tree move on every device —
+that is structure, not layout, and cannot be per screen. Layers keeps showing tree order; the canvas on
+the chosen device shows the real one.
+
 **Block ids must be unique across the whole page, and for a long time nothing made them so.** The
 builder minted `type-N` from a counter that started at zero on every load, so a block added today took
 the id of a block saved yesterday, and `patchSelected` — which finds a block by id — edited both. The
@@ -797,7 +824,12 @@ plenty between paragraphs and not between two rows of cards.
 hero-full rule (`calc(100svh - 126px)`) and centres its content, so a home hero can be built from a section
 rather than the fixed hero block; on a phone it falls back to Tall's padding. The canvas pins it to 640px
 beside `.hero-full`, and `CmsBuilderTest` guards both pins — the canvas measures its own height from its
-content, so a viewport-height section otherwise grows without end. The mockup's networks
+content, so a viewport-height section otherwise grows without end. **That measurement is the bottom edge
+of the body's children, never the body or the document's scroll height.** The frame is `about:blank`,
+which is a quirks-mode document, and in quirks mode the body fills the viewport — which is the frame
+itself — so those two only ever read the frame's own height back: it could grow but never shrink. The
+symptom was a page-length blank below the footer after switching from Mobile back to Desktop, since
+the phone layout is taller. The mockup's networks
 band is also why there is a **Slim** section height (32px, 24px on a phone): Compact's 72px was the
 smallest before, twice what the band carries. The mockup's finer
 details — the `#79B3F2` accent, pale-blue tick circles, the framed and shadowed photo — are scoped to the
