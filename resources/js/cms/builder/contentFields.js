@@ -75,6 +75,7 @@ const CONTENT_SCHEMAS = {
             PICK('align', 'Text alignment', [['left', 'Left'], ['center', 'Centre']]),
             PICK('copyWidth', 'Copy width', [['narrow', 'Narrow'], ['standard', 'Standard'], ['wide', 'Wide']]),
             PICK('animation', 'Animation', [['none', 'None'], ['fade-up', 'Fade up'], ['fade-in', 'Fade in'], ['fade-left', 'Fade left'], ['fade-right', 'Fade right'], ['zoom-in', 'Zoom in']]),
+            PICK('animationScope', 'Animate', [['whole', 'The whole component'], ['parts', 'Each part in turn']]),
             PICK('animationDelay', 'Delay', [['0', 'No delay'], ['100', '100 ms'], ['200', '200 ms'], ['300', '300 ms']]),
         ]),
     ],

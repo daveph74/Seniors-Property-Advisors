@@ -418,6 +418,101 @@ test.describe('Pages · Builder', () => {
         await B.saveDraft(page);
     });
 
+    test('an animated heading reveals itself in the preview and keeps the setting', async ({ page }) => {
+        const marker = uniqueValue('Revealed');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.input(page, 'Delay').selectOption('200');
+
+        /* The canvas never animates, so the heading is simply there. */
+        await expect(B.canvas(page).locator('.block-heading', { hasText: marker })).toBeVisible();
+        await expect(B.canvas(page).locator('.reveal', { hasText: marker })).toHaveCount(0);
+
+        await B.saveDraft(page);
+
+        const builder = page.url();
+        await page.goto(builder.replace(/\/edit$/, '/preview'), { waitUntil: 'domcontentloaded' });
+
+        const revealed = page.locator('.reveal.reveal--fade-up.reveal--delay-200', { hasText: marker });
+        await expect(revealed).toHaveCount(1);
+        await revealed.scrollIntoViewIfNeeded();
+        await expect(revealed).toHaveClass(/is-in-view/);
+
+        await page.goto(builder, { waitUntil: 'domcontentloaded' });
+        await expect(B.canvas(page).locator('body')).not.toBeEmpty();
+        await B.selectBlock(page, marker);
+        await B.openTab(page, 'Style');
+        await expect(B.input(page, 'Animation')).toHaveValue('fade-up');
+        await expect(B.input(page, 'Delay')).toHaveValue('200');
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a component can bring its parts in one after another', async ({ page }) => {
+        const marker = uniqueValue('Parts');
+
+        await B.addBlock(page, 'Trust cards');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.input(page, 'Animate').selectOption('parts');
+        await B.saveDraft(page);
+
+        const builder = page.url();
+        await page.goto(builder.replace(/\/edit$/, '/preview'), { waitUntil: 'domcontentloaded' });
+
+        const wrapper = page.locator('.reveal-parts.reveal-parts--fade-up', { hasText: marker });
+        await expect(wrapper).toHaveCount(1);
+        /* The wrapper itself is never hidden — only its parts are. */
+        await expect(wrapper).toHaveCSS('opacity', '1');
+        await wrapper.scrollIntoViewIfNeeded();
+        await expect(wrapper).toHaveClass(/is-in-view/);
+        await expect(wrapper.locator('.section-head')).toHaveCSS('opacity', '1');
+
+        await page.goto(builder, { waitUntil: 'domcontentloaded' });
+        await expect(B.canvas(page).locator('body')).not.toBeEmpty();
+        await B.selectBlock(page, marker);
+        await B.openTab(page, 'Style');
+        await expect(B.input(page, 'Animate')).toHaveValue('parts');
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a full-bleed hero brings its copy in part by part while its photo stays put', async ({ page }) => {
+        const marker = uniqueValue('HeroParts');
+
+        await B.addBlock(page, 'Hero, full bleed');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.input(page, 'Animate').selectOption('parts');
+        await B.saveDraft(page);
+
+        const builder = page.url();
+        await page.goto(builder.replace(/\/edit$/, '/preview'), { waitUntil: 'domcontentloaded' });
+
+        const wrapper = page.locator('.reveal-parts.reveal-parts--fade-up', { hasText: marker });
+        await expect(wrapper).toHaveCount(1);
+        await expect(wrapper.locator('.hero-full-bg')).toHaveCSS('opacity', '1');
+        await wrapper.scrollIntoViewIfNeeded();
+        await expect(wrapper).toHaveClass(/is-in-view/);
+        await expect(wrapper.locator('.hero-full__title')).toHaveCSS('opacity', '1');
+
+        await page.goto(builder, { waitUntil: 'domcontentloaded' });
+        await expect(B.canvas(page).locator('body')).not.toBeEmpty();
+        await B.selectBlock(page, marker);
+        await B.openTab(page, 'Style');
+        await expect(B.input(page, 'Animate')).toHaveValue('parts');
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
     test('a column animation setting survives a save and a reload', async ({ page }) => {
         await addSection(page);
         await selectLastColumn(page);

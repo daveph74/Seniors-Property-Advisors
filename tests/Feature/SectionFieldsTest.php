@@ -420,6 +420,50 @@ class SectionFieldsTest extends TestCase
         $this->assertSame('h3', $published[1]['data']['titleLook']);
     }
 
+    public function test_any_block_persists_an_animation_and_delay(): void
+    {
+        $heading = $this->block('heading', ['heading' => 'Hello', 'animation' => 'fade-left', 'animationDelay' => '100']);
+        $why = $this->block('why-list', ['heading' => 'Why', 'animation' => 'zoom-in', 'animationDelay' => '300']);
+        $why[0]['id'] = 'why-1';
+
+        $this->publish([...$heading, ...$why]);
+
+        $published = (new PageContentStore)->document('home')['published'];
+
+        $this->assertSame('fade-left', $published[0]['data']['animation']);
+        $this->assertSame('100', $published[0]['data']['animationDelay']);
+        $this->assertSame('zoom-in', $published[1]['data']['animation']);
+    }
+
+    public function test_a_component_and_a_row_persist_an_animation_per_part(): void
+    {
+        $trust = $this->block('trust-cards', ['heading' => 'Trust', 'animation' => 'fade-up', 'animationScope' => 'parts']);
+        $section = $this->block('section', ['width' => 'standard']);
+        $section[0]['id'] = 'section-9';
+        $section[0]['children'] = $this->block('row', ['gap' => 'medium', 'animation' => 'fade-in', 'animationScope' => 'parts']);
+
+        $this->publish([...$trust, ...$section]);
+
+        $published = (new PageContentStore)->document('home')['published'];
+
+        $this->assertSame('parts', $published[0]['data']['animationScope']);
+        $this->assertSame('parts', $published[1]['children'][0]['data']['animationScope']);
+    }
+
+    public function test_the_heroes_and_the_banner_persist_an_animation_per_part(): void
+    {
+        $hero = $this->block('hero-full', ['heading' => 'Welcome', 'animation' => 'fade-up', 'animationScope' => 'parts']);
+        $banner = $this->block('banner', ['heading' => 'Band', 'animation' => 'fade-in', 'animationScope' => 'parts']);
+        $banner[0]['id'] = 'banner-9';
+
+        $this->publish([...$hero, ...$banner]);
+
+        $published = (new PageContentStore)->document('home')['published'];
+
+        $this->assertSame('parts', $published[0]['data']['animationScope']);
+        $this->assertSame('parts', $published[1]['data']['animationScope']);
+    }
+
     public function test_a_column_persists_its_animation_and_delay(): void
     {
         $section = $this->block('section', ['width' => 'standard']);

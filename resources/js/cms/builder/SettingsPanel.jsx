@@ -7,6 +7,7 @@ import { contentFieldsFor, IMAGE_POSITIONS } from './contentFields';
 import { toEditorHtml } from './richTextBody';
 import { effective, sourceOf, overrideOf } from '../../sections/responsive';
 import { takesBackdrop } from '../../sections/Backdrop';
+import { hasParts } from '../../sections/Reveal';
 
 const InlineRichTextEditor = lazy(() => import('../components/InlineRichTextEditor'));
 
@@ -680,7 +681,6 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                     </>
                 </AccordionSection>
 
-                {(has('background') || backdrop || type === 'section' || type === 'column' || has('textTheme')) && (
                 <AccordionSection id="style" title={PANELS[2][1]} open={openPanels.has('style')} onToggle={onTogglePanel}>
                     <>
                         {(has('background') || backdrop) ? (
@@ -763,7 +763,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </>
                         )}
 
-                        {type === 'column' && (
+                        {type !== 'banner' && (
                             <>
                                 <div className="cms-field">
                                     <label className="cms-field-label">Animation</label>
@@ -784,8 +784,18 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         <option value="200">200 ms</option>
                                         <option value="300">300 ms</option>
                                     </select>
-                                    <div className="cms-hint">Plays once as the column scrolls into view. Give each column of a row its own delay to bring them in one after another. Readers who have asked their device for less motion see the column without it.</div>
+                                    <div className="cms-hint">Plays once as this component scrolls into view. Readers who have asked their device for less motion see it without the animation.</div>
                                 </div>
+                                {hasParts(type) && (data.animation || 'none') !== 'none' && (
+                                    <div className="cms-field">
+                                        <label className="cms-field-label">Animate</label>
+                                        <select className="cms-select" value={data.animationScope === 'parts' ? 'parts' : 'whole'} onChange={(e) => patch('animationScope', e.target.value)}>
+                                            <option value="whole">The whole component</option>
+                                            <option value="parts">Each part in turn</option>
+                                        </select>
+                                        <div className="cms-hint">Parts come in one after another, 100 ms apart, after the Delay.</div>
+                                    </div>
+                                )}
                             </>
                         )}
 
@@ -804,7 +814,6 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                         <div className="cms-panel-note">Style options are limited to the Seniors Property Advisors brand kit so pages stay consistent.</div>
                     </>
                 </AccordionSection>
-                )}
 
                 <AccordionSection id="responsive" title={PANELS[3][1]} open={openPanels.has('responsive')} onToggle={onTogglePanel}>
                     <>

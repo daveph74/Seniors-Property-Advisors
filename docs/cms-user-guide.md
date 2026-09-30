@@ -115,8 +115,7 @@ pages arranged the way the website nests them.
    - **The canvas** in the middle — the page itself. Click a block to select it.
    - **The settings panel** on the right — every setting for whatever you have selected, in
      accordions: Content is already open, and Layout, Style, Responsive and Advanced open when you
-     click their heading. Style appears only for components that have style choices — sections, rows,
-     columns and the Website sections — so a plain heading or button shows the other four.
+     click their heading.
 3. Click the text you want to change, and edit it in the panel on the right. A **Heading** block has two
    switches for choosing where it wraps: **Highlighted heading starts a new line** and **Text after the
    highlight starts a new line**, and a **Look like** row — Automatic, H1, H2 or H3 — that changes only
@@ -133,9 +132,11 @@ pages arranged the way the website nests them.
    the picture stays in view, and an **Overlay** to keep the text readable. Every Website section, row
    and column has the same **Background** swatches, **Background image**, **Image position**, **Overlay**
    and **Text theme** in its **Style** accordion; the first swatch, **As designed**, keeps the look the
-   component came with. A column's **Style**
-   accordion has an **Animation** with a **Delay**, which plays once as a reader scrolls to it — set a
-   different delay on each column of a row to bring them in one after another. A row's **Layout**
+   component came with. Every component's **Style**
+   accordion has an **Animation** with a **Delay**, which plays once as a reader scrolls to it, and an
+   **Animate** choice: **The whole component**, or **Each part in turn** so the blocks in a section, the
+   columns in a row, or the cards in a component arrive one after another — the heroes and the banner
+   included, whose eyebrow, title, text and buttons come in one by one while the picture stays put. A row's **Layout**
    accordion has a **Gap between columns**, which is also the space between them once they stack on a
    phone, and **Space above** and **Space below** for the room around the row itself. A column's
    **Layout** accordion has a **Column width** — Equal share, A quarter, A third, Half, Two thirds, Three
@@ -391,7 +392,9 @@ Two screens change things that appear on *every* page, so a change here is seen 
 
 - **Header menu** — the links across the top. A link can be set to **Opens a dropdown**, in which case the links
   under it become the dropdown.
-- **Footer columns** — the grouped links at the bottom.
+- **Footer columns** — the grouped links at the bottom. **Add a column** makes another, up to four
+  beside the brand column, and **Remove column** takes one away with its links; the footer lays out
+  whatever number you keep.
 - **Small print** — the row underneath those.
 
 Drag to reorder, then **Save menus**. Nothing changes on the website until you press it.

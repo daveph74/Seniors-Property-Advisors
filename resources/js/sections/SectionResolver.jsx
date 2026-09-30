@@ -3,6 +3,7 @@ import { resolveSection } from './registry';
 import { HeadingLevel, ownerOfTheH1 } from './headingLevel';
 import Backdrop from './Backdrop';
 import CustomStyled from './customCss';
+import Reveal from './Reveal';
 
 const BREAKPOINTS = ['desktop', 'tablet', 'mobile'];
 
@@ -27,6 +28,7 @@ export default function SectionResolver({ sections = [], actions = {}, library =
 
         const rendered = (
             <HeadingLevel.Provider value={section.id === topHeading ? 1 : 2}>
+                <Reveal type={section.type} data={section.data || {}}>
                 <CustomStyled id={section.id} type={section.type} data={section.data || {}}>
                     <Backdrop type={section.type} data={section.data || {}}>
                         <Section
@@ -43,6 +45,7 @@ export default function SectionResolver({ sections = [], actions = {}, library =
                         </Section>
                     </Backdrop>
                 </CustomStyled>
+                </Reveal>
             </HeadingLevel.Provider>
         );
 

@@ -424,9 +424,28 @@ measured width. A section that formats a date or reads `innerWidth` during rende
 differs from what hydration wants, and React recovers by redrawing: the visible symptom is a flash, the
 crawled symptom is wrong content.
 
-Entrance animations — on **columns** and banners, not sections; a section fading as one slab was
-tried first and reads as the page stalling, where columns staggered by their own delays read as the
-page arriving — live inside that contract, and three things make them safe. **The hidden
+Entrance animations — on **every component** now, through `resources/js/sections/Reveal.jsx`, a
+wrapper the resolver and `BlockRenderer` put **outermost** around a block (outside the custom-CSS and
+backdrop wrappers, so the custom-CSS scope still lands on the section and the transform sits on the
+outer box); rows, columns and the banner animate their own root instead and the wrapper skips them,
+because a column is a grid item and the banner already had the control in its Look group. A section
+fading as one slab was tried first and reads as the page stalling, where parts staggered read as the
+page arriving — which is what **Animate: Each part in turn** does (`animationScope: 'parts'`). It is CSS
+over the *same* observer: the root gets `reveal-parts reveal-parts--{animation}` and is never hidden
+itself; its parts — found by the classes each component already renders, listed once per type in
+`PARTS` in `Reveal.jsx` and mirrored in the `:is(…)` lists in `app.css` — start hidden and reveal when the
+root gains `is-in-view`, each `.1s` later than the last through `--reveal-i` from `:nth-child`, after the
+Delay (`--reveal-base`). No per-item observers and no component edits; adding a type to `PARTS` means
+adding its selector to those lists too, or the panel offers a choice that draws nothing. The heroes,
+the banner, the CTA and the contact form were first left out as "one piece of copy", which was wrong —
+each is an eyebrow, a title, a lead and a button row, and those are their parts now; the picture layers
+are never parts. The banner animates its own root, so it reads `animationScope` from its Look group,
+where its Animation already lives. A plain
+section's parts reach **through its row into each column's blocks**, because a section built in the
+builder is almost always one row of columns and "each part" of that would otherwise be the row alone;
+each column's blocks count from one, so the first block of every column arrives together, then the
+second, which is the reading order a row has. They live
+inside that contract, and three things make them safe. **The hidden
 state is scoped to `html.js`**, a class set by a nonced inline script in the head of `app.blade.php` on
 public routes only, so a crawler, a reader with JavaScript off, or a browser whose observer never fires
 is delivered the section fully visible — the version of this that goes wrong is a whole site at
@@ -653,6 +672,14 @@ every month.
 There is **no CSV export**. One was built and removed: Google reads the XML, and a spreadsheet was a
 workflow nobody had asked for, carrying formula-injection escaping and an export-versus-screen filter
 mismatch to keep in step for it.
+
+## Navigation
+
+**The footer takes as many columns as the editor keeps, up to four.** `SaveNavigationRequest` always
+allowed zero to four, but the screen had no way to add or remove one and `.foot-grid` was fixed at four
+tracks, so the footer read as immovable. `SiteFooter` now sets `--foot-cols` from the stored count and
+the grid is `1.4fr repeat(var(--foot-cols), 1fr)`; the tablet and phone rules keep their own two and
+one columns. Removing a column removes its links with it, and the screen says so before the button.
 
 ## Site settings and global content
 
@@ -917,11 +944,6 @@ gradient background, not to dark sections generally, so choosing it brings the l
 section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white on that blue is 4.0:1,
 which passes only as large text, and the button is the home hero's large one — 17px semibold, still
 short of large text. `#3570B5` (5.1:1) is the nearest blue that passes at that size.
-
-**The Style accordion is shown only when it has a control in it.** Blocks with no background, backdrop or
-text theme — a heading, a button — used to open it onto nothing but the brand-kit note, which read as a
-control that did nothing. The gate mirrors the fields inside it, so adding a style control to a block type
-means adding it to the gate too or the accordion stays hidden.
 
 ## Custom CSS and heading looks
 

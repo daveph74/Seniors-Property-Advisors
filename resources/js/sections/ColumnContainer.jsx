@@ -1,4 +1,5 @@
 import useReveal from './useReveal';
+import { revealScope } from './Reveal';
 import { breakpointClasses } from './responsive';
 import { backdropClasses, BackdropLayers } from './Backdrop';
 import { customCssOf } from './customCss';
@@ -46,7 +47,7 @@ export function columnWidthClasses(data = {}) {
 }
 
 export default function ColumnContainer({ data = {}, anchor, blockId, hideClasses = '', editing = false, children }) {
-    const reveal = useReveal(data.animation, data.animationDelay, editing);
+    const reveal = useReveal(data.animation, data.animationDelay, editing, revealScope('column', data));
 
     const classes = [
         'column-container',

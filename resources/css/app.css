@@ -978,7 +978,7 @@ footer{
   padding: 80px 0 36px;
 }
 .foot-grid{
-  display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 56px;
+  display:grid; grid-template-columns: 1.4fr repeat(var(--foot-cols, 3), 1fr); gap: 56px;
 }
 .foot-grid h2{
   color: var(--white); font-size: 14px; font-weight: 600;
@@ -1244,8 +1244,32 @@ html.js .reveal.is-in-view{ opacity: 1; transform: none; }
 .reveal--delay-100{ transition-delay: .1s; }
 .reveal--delay-200{ transition-delay: .2s; }
 .reveal--delay-300{ transition-delay: .3s; }
+.reveal--delay-100{ --reveal-base: .1s; }
+.reveal--delay-200{ --reveal-base: .2s; }
+.reveal--delay-300{ --reveal-base: .3s; }
+html.js .reveal-parts :is(.section-block__inner > :not(.row-container), .section-block__inner > .row-container > .column-container > *, .row-container > *, .column-container > *, .section-head, .card, .step, .why-list > li, .why-visual, .cmp-card, .family-grid > *, .text-image__copy, .text-image__media, .stat-row__item, .testimonial, .faq, .team-member, .article-card, .hero-grid > * > *, .hero-steps, .hero-full-copy > *, .banner__copy > *, .cta > .container > *, .contact-form__copy > *, .contact-form__form){
+  opacity: 0;
+  transition: opacity .7s ease, transform .7s ease;
+  transition-delay: calc(var(--reveal-base, 0s) + var(--reveal-i, 0) * .1s);
+}
+html.js .reveal-parts--fade-up :is(.section-block__inner > :not(.row-container), .section-block__inner > .row-container > .column-container > *, .row-container > *, .column-container > *, .section-head, .card, .step, .why-list > li, .why-visual, .cmp-card, .family-grid > *, .text-image__copy, .text-image__media, .stat-row__item, .testimonial, .faq, .team-member, .article-card, .hero-grid > * > *, .hero-steps, .hero-full-copy > *, .banner__copy > *, .cta > .container > *, .contact-form__copy > *, .contact-form__form){ transform: translateY(28px); }
+html.js .reveal-parts--fade-left :is(.section-block__inner > :not(.row-container), .section-block__inner > .row-container > .column-container > *, .row-container > *, .column-container > *, .section-head, .card, .step, .why-list > li, .why-visual, .cmp-card, .family-grid > *, .text-image__copy, .text-image__media, .stat-row__item, .testimonial, .faq, .team-member, .article-card, .hero-grid > * > *, .hero-steps, .hero-full-copy > *, .banner__copy > *, .cta > .container > *, .contact-form__copy > *, .contact-form__form){ transform: translateX(-28px); }
+html.js .reveal-parts--fade-right :is(.section-block__inner > :not(.row-container), .section-block__inner > .row-container > .column-container > *, .row-container > *, .column-container > *, .section-head, .card, .step, .why-list > li, .why-visual, .cmp-card, .family-grid > *, .text-image__copy, .text-image__media, .stat-row__item, .testimonial, .faq, .team-member, .article-card, .hero-grid > * > *, .hero-steps, .hero-full-copy > *, .banner__copy > *, .cta > .container > *, .contact-form__copy > *, .contact-form__form){ transform: translateX(28px); }
+html.js .reveal-parts--zoom-in :is(.section-block__inner > :not(.row-container), .section-block__inner > .row-container > .column-container > *, .row-container > *, .column-container > *, .section-head, .card, .step, .why-list > li, .why-visual, .cmp-card, .family-grid > *, .text-image__copy, .text-image__media, .stat-row__item, .testimonial, .faq, .team-member, .article-card, .hero-grid > * > *, .hero-steps, .hero-full-copy > *, .banner__copy > *, .cta > .container > *, .contact-form__copy > *, .contact-form__form){ transform: scale(0.96); }
+html.js .reveal-parts.is-in-view :is(.section-block__inner > :not(.row-container), .section-block__inner > .row-container > .column-container > *, .row-container > *, .column-container > *, .section-head, .card, .step, .why-list > li, .why-visual, .cmp-card, .family-grid > *, .text-image__copy, .text-image__media, .stat-row__item, .testimonial, .faq, .team-member, .article-card, .hero-grid > * > *, .hero-steps, .hero-full-copy > *, .banner__copy > *, .cta > .container > *, .contact-form__copy > *, .contact-form__form){ opacity: 1; transform: none; }
+.reveal-parts :is(*:nth-child(1)){ --reveal-i: 0; }
+.reveal-parts :is(*:nth-child(2)){ --reveal-i: 1; }
+.reveal-parts :is(*:nth-child(3)){ --reveal-i: 2; }
+.reveal-parts :is(*:nth-child(4)){ --reveal-i: 3; }
+.reveal-parts :is(*:nth-child(5)){ --reveal-i: 4; }
+.reveal-parts :is(*:nth-child(6)){ --reveal-i: 5; }
+.reveal-parts :is(*:nth-child(7)){ --reveal-i: 6; }
+.reveal-parts :is(*:nth-child(n+8)){ --reveal-i: 7; }
+.reveal-parts .section-head{ --reveal-i: 0; }
+
 @media (prefers-reduced-motion: reduce){
   html.js .reveal{ opacity: 1; transform: none; transition: none; }
+  html.js .reveal-parts *{ opacity: 1; transform: none; transition: none; }
 }
 @media print{
   .reveal{ opacity: 1; transform: none; }
