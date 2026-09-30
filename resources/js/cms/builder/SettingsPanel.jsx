@@ -104,7 +104,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                 {own ? `Set for ${DEVICE_LABEL[device]}. ` : `Following ${DEVICE_LABEL[source]}. `}
                 {own && (
                     <button type="button" className="cms-link-btn" onClick={() => (key === 'order' ? onClearOrder() : patch(`responsive.${device}.${key}`, undefined))}>
-                        Use the {DEVICE_LABEL[inherits]} value
+                        {key === 'order' ? `Put the row back to its ${DEVICE_LABEL[sourceOf(data, inherits, key)]} order` : `Use the ${DEVICE_LABEL[sourceOf(data, inherits, key)]} value`}
                     </button>
                 )}
             </div>
@@ -267,7 +267,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                         {hasEyebrow && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Pre-heading</label>
-                                <input className="cms-input" value={data.eyebrow} onChange={(e) => patch('eyebrow', e.target.value)} />
+                                <input className="cms-input" value={data.eyebrow || ''} onChange={(e) => patch('eyebrow', e.target.value)} />
                             </div>
                         )}
 
@@ -363,7 +363,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             <div className="cms-field">
                                 <label className="cms-field-label">Text</label>
                                 <Suspense fallback={<div className="cms-rt"><div className="cms-rt__surface cms-rt__surface--inline">Loading the editor…</div></div>}>
-                                    <InlineRichTextEditor value={toEditorHtml(data.body)} onChange={(html) => patch('body', html)} />
+                                    <InlineRichTextEditor key={block.id} value={toEditorHtml(data.body)} onChange={(html) => patch('body', html)} />
                                 </Suspense>
                                 <div className="cms-hint">Select some words, then use the buttons above to make them bold, a list or a link.</div>
                             </div>

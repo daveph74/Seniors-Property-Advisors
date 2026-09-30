@@ -19,7 +19,7 @@ import PreviewPromptModal from '../../../cms/builder/PreviewPromptModal';
 import PageSettingsPanel from '../../../cms/builder/PageSettingsPanel';
 import useTreeHistory from '../../../cms/builder/useTreeHistory';
 import { writePath } from '../../../cms/builder/repeaters';
-import { effective, breakpointClasses } from '../../../sections/responsive';
+import { overrideOf, breakpointClasses, orderedColumnIds, BREAKPOINTS } from '../../../sections/responsive';
 import { relative } from '../../../cms/relativeTime';
 import {
     BackArrowIcon, UndoIcon, RedoIcon, DesktopIcon, TabletIcon, MobileIcon, HistoryIcon,
@@ -168,13 +168,6 @@ function mapTree(blocks, id, fn) {
     });
 }
 
-function orderedColumnIds(row, device) {
-    return (row.children || [])
-        .map((c, i) => ({ id: c.id, at: Number(effective(c.data || {}, device, 'order', i + 1)) }))
-        .sort((a, b) => a.at - b.at)
-        .map((c) => c.id);
-}
-
 function isDescendant(block, id) {
     return (block.children || []).some((c) => c.id === id || isDescendant(c, id));
 }
@@ -186,7 +179,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     const selectionRef = useRef(null);
     selectionRef.current = selectedId;
     const {
-        blocks, commit: setBlocks, undo, redo, canUndo, canRedo,
+        blocks, commit: setBlocks, undo, redo, reset: resetBlocks, canUndo, canRedo,
     } = useTreeHistory(() => hydrate(contentBacked ? sections : []), selectionRef, setSelectedId);
     const h1Owner = useMemo(() => ownerOfTheH1(blocks), [blocks]);
     const [device, setDevice] = useState('desktop');
@@ -327,6 +320,25 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
         flash(`${label} added`);
     };
 
+    const addFromLibrary = (type, label) => {
+        if (canContain(null, 0, type)) {
+            insertBlock(type, label, null);
+
+            return;
+        }
+
+        const section = makeBlock('section', 'Section');
+        const row = section.children[0];
+
+        if (type === 'row') section.children = [makeBlock('row', label)];
+        if (type === 'column') row.children = [makeBlock('column', label)];
+
+        setBlocks((prev) => [...prev, section]);
+        setSelectedId(type === 'row' ? section.children[0].id : row.children[0].id);
+        setOpenPanels((prev) => new Set(prev).add('content'));
+        markUnsaved();
+    };
+
     const insertReusable = async (reusableId, label, at) => {
         endDrag();
 
@@ -379,6 +391,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     };
 
     const setColumnOrder = (rowId, ids) => {
+        const row = locate(blocks, rowId)?.block;
+
+        if (!row || orderedColumnIds(row, device).join() === ids.join()) return;
+
         setBlocks((prev) => withList(prev, rowId, (list) => list.map((c) => ({
             ...c,
             data: writePath(c.data, `responsive.${device}.order`, String(ids.indexOf(c.id) + 1)),
@@ -394,8 +410,20 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
         setBlocks((prev) => withList(prev, loc.parentId, (list) => list.map((c) => ({
             ...c,
             data: writePath(c.data, `responsive.${device}.order`, undefined),
-        }))), `order:${loc.parentId}:${device}`);
+        }))), `order-clear:${loc.parentId}:${device}`);
         markUnsaved();
+    };
+
+    const renumberColumnOrders = (list) => {
+        const bps = BREAKPOINTS.filter((bp) => list.some((c) => overrideOf(c.data || {}, bp, 'order') !== undefined));
+
+        if (bps.length === 0) return list;
+
+        return bps.reduce((cols, bp) => {
+            const ids = orderedColumnIds({ children: cols }, bp);
+
+            return cols.map((c) => ({ ...c, data: writePath(c.data, `responsive.${bp}.order`, String(ids.indexOf(c.id) + 1)) }));
+        }, list);
     };
 
     const placeColumn = (loc, position) => {
@@ -482,11 +510,11 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
 
         if (loc?.block.type === 'column' && device !== 'desktop' && at.parentId === loc.parentId) {
             const row = locate(blocks, loc.parentId)?.block;
-            const ids = orderedColumnIds(row, device);
-            const before = row.children.slice(0, at.index).map((c) => c.id).filter((x) => x !== id);
-            const position = ids.filter((x) => x !== id).findIndex((x) => ! before.includes(x));
+            const others = orderedColumnIds(row, device).filter((x) => x !== id);
+            const anchorAt = others.indexOf(at.anchorId);
+            const position = anchorAt < 0 ? others.length : anchorAt + (at.side === 'after' ? 1 : 0);
 
-            placeColumn(loc, position < 0 ? ids.length - 1 : position);
+            placeColumn(loc, position);
             endDrag();
 
             return;
@@ -504,15 +532,22 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             if (!canContain(dest.type, dest.depth, loc.block.type)) return prev;
             if (dest.depth + rowHeight(loc.block) > MAX_ROW_DEPTH) return prev;
 
-            const removed = withList(prev, loc.parentId, (list) => list.filter((b) => b.id !== id));
+            const column = loc.block.type === 'column';
+            const removed = withList(prev, loc.parentId, (list) => {
+                const rest = list.filter((b) => b.id !== id);
+
+                return column ? renumberColumnOrders(rest) : rest;
+            });
             const sameList = (loc.parentId ?? null) === (at.parentId ?? null);
             const target = sameList && at.index > loc.index ? at.index - 1 : at.index;
+
+            if (sameList && target === loc.index) return prev;
 
             return withList(removed, at.parentId, (list) => {
                 const next = list.slice();
                 next.splice(Math.max(0, Math.min(next.length, target)), 0, loc.block);
 
-                return next;
+                return column ? renumberColumnOrders(next) : next;
             });
         });
         endDrag();
@@ -533,7 +568,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                 const next = list.slice();
                 next.splice(loc.index + 1, 0, copy);
 
-                return next;
+                return copy.type === 'column' ? renumberColumnOrders(next) : next;
             });
         });
         markUnsaved();
@@ -546,7 +581,11 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
 
             if (!loc) return prev;
 
-            return withList(prev, loc.parentId, (list) => list.filter((b) => b.id !== id));
+            return withList(prev, loc.parentId, (list) => {
+                const rest = list.filter((b) => b.id !== id);
+
+                return loc.block.type === 'column' ? renumberColumnOrders(rest) : rest;
+            });
         });
 
         if (selectedId === id) setSelectedId(null);
@@ -579,10 +618,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             return;
         }
 
-        setBlocks((prev) => withList(prev, row.id, (list) => (
+        setBlocks((prev) => withList(prev, row.id, (list) => renumberColumnOrders(
             target > list.length
                 ? [...list, ...Array.from({ length: target - list.length }, (_, k) => makeBlock('column', `Column ${list.length + k + 1}`))]
-                : list.slice(0, target)
+                : list.slice(0, target),
         )));
         markUnsaved();
     };
@@ -626,7 +665,10 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     };
 
     const onLibraryDragStart = (e, type, label, reusableId = null) => {
-        if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copy';
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', type);
+        }
 
         drag.current = { dragKind: type, dragLabel: label, dragId: null, reusableId };
         setDragType(type);
@@ -635,34 +677,45 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
     const onBlockDragStart = (e, id, type) => {
         e.stopPropagation();
 
-        if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', id);
+        }
 
         drag.current = { dragKind: null, dragLabel: null, dragId: id };
         setDragType(type);
     };
 
-    const onBlockDragOver = (e, parentId, index, parentType, parentDepth) => {
+    const onBlockDragOver = (e, parentId, index, parentType, parentDepth, anchorId) => {
+        if (!canContain(parentType, parentDepth, dragType)) {
+            if (dropAt !== null) setDropAt(null);
+
+            return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
 
-        if (!canContain(parentType, parentDepth, dragType)) return;
-
         const rect = e.currentTarget.getBoundingClientRect();
-        const before = parentType === 'row'
+        const sideBySide = parentType === 'row' && device === 'desktop';
+        const before = sideBySide
             ? e.clientX < rect.left + rect.width / 2
             : e.clientY < rect.top + rect.height / 2;
         const idx = before ? index : index + 1;
+        const side = before ? 'before' : 'after';
 
-        if (!isDropAt(parentId, idx)) setDropAt({ parentId, index: idx });
+        if (!isDropAt(parentId, idx) || dropAt.anchorId !== anchorId || dropAt.side !== side) {
+            setDropAt({ parentId, index: idx, anchorId, side });
+        }
     };
 
-    const performDrop = (fallbackAt) => {
+    const performDrop = (fallbackAt = null) => {
         const at = dropAt ?? fallbackAt;
         const { dragId, dragKind, dragLabel, reusableId } = drag.current;
         const type = dragId ? locate(blocks, dragId)?.block.type : dragKind;
-        const target = parentInfo(blocks, at.parentId);
+        const target = at ? parentInfo(blocks, at.parentId) : { found: false };
 
-        if (!canContain(target.type, target.depth, type)) {
+        if (!at || !target.found || !canContain(target.type, target.depth, type)) {
             endDrag();
             return;
         }
@@ -806,7 +859,7 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             preserveScroll: true,
             preserveState: true,
             onSuccess: (visit) => {
-                setBlocks(hydrate(visit.props.sections ?? []));
+                resetBlocks(hydrate(visit.props.sections ?? []));
                 setSelectedId(null);
                 setSaveState('saved');
                 setHistoryOpen(false);
@@ -845,11 +898,17 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                     blocked ? 'cms-nest-drop--blocked' : '',
                 ].filter(Boolean).join(' ')}
                 onDragOver={(e) => {
+                    if (!allowed) {
+                        if (dropAt !== null) setDropAt(null);
+
+                        return;
+                    }
+
                     e.preventDefault();
                     e.stopPropagation();
-                    if (allowed && !isDropAt(b.id, 0)) setDropAt({ parentId: b.id, index: 0 });
+                    if (!isDropAt(b.id, 0)) setDropAt({ parentId: b.id, index: 0 });
                 }}
-                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId: b.id, index: 0 }); }}
+                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(); }}
             >
                 <PlusIcon size={16} stroke="currentColor" />
                 <span>{blocked ? BLOCKED_COPY[b.type] : EMPTY_COPY[b.type]}</span>
@@ -865,10 +924,12 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                 <>
                     {children.map((c, j) => (
                         <div className={`cms-col-cell ${breakpointClasses(c.data || {}, 'order', (v) => `column-container--order-${v}`)}`.trim()} key={c.id}>
-                            {isDropAt(b.id, j) ? <div className="cms-drop-line--v cms-drop-line--before" /> : null}
+                            {dropAt?.parentId === b.id && dropAt.anchorId === c.id && dropAt.side === 'before'
+                                ? <div className={`cms-drop-line--v cms-drop-line--before ${device === 'desktop' ? '' : 'cms-drop-line--stacked'}`} />
+                                : null}
                             {renderBlock(c, j, b.id, 'row', depth)}
-                            {j === children.length - 1 && isDropAt(b.id, j + 1)
-                                ? <div className="cms-drop-line--v cms-drop-line--after" />
+                            {dropAt?.parentId === b.id && dropAt.anchorId === c.id && dropAt.side === 'after'
+                                ? <div className={`cms-drop-line--v cms-drop-line--after ${device === 'desktop' ? '' : 'cms-drop-line--stacked'}`} />
                                 : null}
                         </div>
                     ))}
@@ -886,7 +947,15 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                     if (!canContain(b.type, depth, dragType)) return;
                     e.preventDefault();
                     e.stopPropagation();
-                    if (!isDropAt(b.id, children.length)) setDropAt(appendAt);
+
+                    const cells = Array.from(e.currentTarget.children).filter((el) => el.classList.contains('cms-block'));
+                    const index = cells.filter((el) => {
+                        const r = el.getBoundingClientRect();
+
+                        return e.clientY >= r.top + r.height / 2;
+                    }).length;
+
+                    if (!isDropAt(b.id, index)) setDropAt({ parentId: b.id, index });
                 }}
                 onDrop={(e) => {
                     e.preventDefault();
@@ -905,12 +974,18 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
             draggable
             onDragStart={(e) => onBlockDragStart(e, b.id, b.type)}
             onDragEnd={endDrag}
-            onDragOver={(e) => onBlockDragOver(e, parentId, i, parentType, parentDepth)}
-            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop({ parentId, index: i }); }}
+            onDragOver={(e) => onBlockDragOver(e, parentId, i, parentType, parentDepth, b.id)}
+            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); performDrop(); }}
             onClick={(e) => { e.stopPropagation(); setSelectedId(b.id); }}
             className={`cms-block ${b.id === selectedId ? 'cms-block--selected' : ''}`}
             style={b.active === false || b.data?.hidden?.[device] ? { opacity: 0.4 } : undefined}
         >
+            {parentType !== 'row' && isDropAt(parentId, i) ? (
+                <div className="cms-drop-line cms-drop-line--top">
+                    <div className="cms-drop-line__bar" />
+                    <div className="cms-drop-line__label">Drop here</div>
+                </div>
+            ) : null}
             {CONTENT_KEY[b.type] && isBlank(b.data[CONTENT_KEY[b.type]]) ? (
                 <div className="cms-block-placeholder">{SECTION_LABELS[b.type]} — no content yet</div>
             ) : (
@@ -960,7 +1035,6 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
 
     const renderRow = (b, i, parentId, parentType, parentDepth) => (
         <Fragment key={b.id}>
-            {dropLine(parentId, i, 'Drop here')}
             {renderBlock(b, i, parentId, parentType, parentDepth)}
         </Fragment>
     );
@@ -1063,13 +1137,14 @@ function BuilderInner({ page, pageId, sections, revisions, globals, library = {}
                                 onDragEnd={endDrag}
                                 onAdd={(type, label, reusableId) => (reusableId
                                     ? insertReusable(reusableId, label, null)
-                                    : insertBlock(type, label, null))}
+                                    : addFromLibrary(type, label))}
                                 onDeleteReusable={deleteReusable}
                                 reusables={reusables}
                             />
                         ) : (
                             <LayersPanel
                                 blocks={blocks}
+                                device={device}
                                 selectedId={selectedId}
                                 onSelect={setSelectedId}
                                 onMoveUp={(id) => moveBlock(id, -1)}

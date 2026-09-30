@@ -262,6 +262,13 @@ outlived its target, and `04-pages-blocks` filled image fields by typing a path,
 the "Describe the image" box in the same `.cms-field` and round-trip perfectly while asserting nothing.
 Image fields are skipped there and the picker has one real test in `03-pages-builder` instead.
 
+**`ImageField` reports a pick as one call, `onPick({ url, alt, caption })`.** It used to call `onChange`
+and then `onAltChange` back to back, which is fine in the settings panel (two functional patches on two
+paths) and wrong in a repeater, whose `replace()` rebuilds the list from the render-time item: the second
+call overwrote the first and an uploaded team photo with no description was thrown away. A failed
+thumbnail is remembered by address, not as a flag, so a dead image on one block does not mark the next
+block's good image as broken.
+
 Section trees have no server-side backstop for this, deliberately: the schema saying which keys hold an
 image is in `contentFields.js` and nowhere in PHP, so one would mean the schema in two languages or
 guessing by file extension. The one HTML field in a tree is the exception by construction: the Rich text
@@ -281,7 +288,11 @@ would pull TipTap into the builder chunk for everybody editing a heading. One tr
 effect that writes an incoming value back into the editor has to check `editor.isDestroyed` first. In
 the builder the panel re-renders constantly, TipTap replaces the instance under it, and calling
 `getHTML()` on the old one throws `Cannot read properties of null (reading 'cached')` — the symptom is
-the whole builder going blank the moment a saved Rich text block is selected.
+the whole builder going blank the moment a saved Rich text block is selected. A second trap from the same
+file: **the editor is keyed on the block id**, and the value written back into it is set with
+`addToHistory: false`. Without both, one TipTap instance served every Rich text block on the page and
+`setContent` was recorded in its undo stack, so Ctrl+Z inside block B restored block A's text and saved
+it as B's — reproduced in the browser, and it is data loss with no error.
 
 The listing at `/blog` is an ordinary CMS page holding a `blog-list` section, so its heading
 and intro stay editable. Only `/blog/{article}` is a route, which is why `articles` is a
@@ -797,8 +808,26 @@ grid means `order` holds both side by side and once the columns stack. Desktop o
 Desktop, Position in row, a drag within the row and the Layers arrows all edit the tree as before; on
 Tablet or Mobile the same three actions write `order` on every column of the row and leave the tree
 alone (`placeColumn` in `Builder.jsx`). A drop into a *different* row is a tree move on every device —
-that is structure, not layout, and cannot be per screen. Layers keeps showing tree order; the canvas on
-the chosen device shows the real one.
+that is structure, not layout, and cannot be per screen. Layers keeps showing tree order, with its arrows
+enabled by the on-screen position; the canvas on the chosen device shows the real one.
+
+Three rules keep that honest. **A drop target is the block the pointer is over plus a side**, not a tree
+index: `dropAt` carries `anchorId` and `side`, because on Tablet the columns are displayed in override
+order and stacked, so a tree index pointed at the wrong cell and the left/right half of a stacked column
+decided before/after while the editor moved up and down. **Hovering somewhere the dragged thing is not
+allowed clears the target** rather than leaving the last valid one live — `preventDefault()` only when
+allowed, and `performDrop` refuses with no target — or the drop landed wherever the marker had last been,
+possibly off screen. And **any change to a row's column list renumbers its orders** (`renumberColumnOrders`
+on add, remove, duplicate and a cross-row move): a column with no order is `order: 0` in CSS and first on
+the live site while the panel calls it last.
+
+Two more that cost a session each. **The canvas iframe has its own keyboard**: Ctrl+Z, Ctrl+Y and Escape
+are listened for on the parent `window`, and a click on a block focuses the frame's document, so
+`CanvasFrame` forwards those keys as a fresh event on the parent. And **clicking a Row or Column in the
+Components panel wraps it** in a section (`addFromLibrary`), because the click path never checked
+`canContain` and a bare row at page level saved as a validation error the editor could not see the cause
+of. Restoring a version goes through the history hook's `reset`, not `commit`, or Undo brings back the
+unsaved tree the restore replaced.
 
 **Block ids must be unique across the whole page, and for a long time nothing made them so.** The
 builder minted `type-N` from a counter that started at zero on every load, so a block added today took

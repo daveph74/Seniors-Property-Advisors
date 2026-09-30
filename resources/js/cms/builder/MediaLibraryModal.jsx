@@ -21,6 +21,7 @@ export default function MediaLibraryModal({ open, onClose, onPick }) {
         const id = ++latest.current;
 
         const timer = setTimeout(() => {
+            setError(null);
             fetch(`/cms/media/library?search=${encodeURIComponent(term)}`, {
                 headers: { Accept: 'application/json' },
             })
@@ -40,7 +41,6 @@ export default function MediaLibraryModal({ open, onClose, onPick }) {
         if (! open) return;
 
         return onUploaded((media) => {
-            latest.current += 1;
             setItems((prev) => ((prev || []).some((i) => i.id === media.id) ? prev : [media, ...(prev || [])]));
         });
     }, [open]);

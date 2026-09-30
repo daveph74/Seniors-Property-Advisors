@@ -139,10 +139,11 @@ pages arranged the way the website nests them.
    change what the canvas shows you, and which screen the **Layout** accordion edits. A Layout change
    made on Desktop applies everywhere; one made on Tablet applies to tablets and phones; one made on
    Mobile applies to phones only. Under each Layout field it says **Following Desktop** or **Set for
-   Mobile**, with **Use the Desktop value** (or **Use the Tablet value**, on Mobile) to go back. The
-   order of the columns in a row works the same way: a column's **Layout** accordion has **Position in
-   row**, and on Tablet or Mobile choosing a position, dragging the column within its row, or moving it
-   in **Layers** changes the order for that screen only. Content and Style are the same on every screen.
+   Mobile**, with **Use the Desktop value** (or **Use the Tablet value**, when Tablet has one) to go
+   back. The order of the columns in a row works the same way: a column's **Layout** accordion has
+   **Position in row**, and on Tablet or Mobile choosing a position, dragging the column within its row,
+   or moving it in **Layers** changes the order for that screen only. **Put the row back to its Desktop
+   order** undoes that for the whole row. Content and Style are the same on every screen.
 
 Above the canvas it says **All changes saved** or **Unsaved changes**, so you always know where you are.
 

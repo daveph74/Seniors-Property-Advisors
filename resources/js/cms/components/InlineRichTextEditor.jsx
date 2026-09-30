@@ -34,7 +34,7 @@ export default function InlineRichTextEditor({ value, onChange }) {
         const incoming = value || '';
 
         if (incoming !== fromEditor(editor)) {
-            editor.commands.setContent(incoming, { emitUpdate: false });
+            editor.chain().setMeta('addToHistory', false).setContent(incoming, { emitUpdate: false }).run();
         }
     }, [editor, value]);
 

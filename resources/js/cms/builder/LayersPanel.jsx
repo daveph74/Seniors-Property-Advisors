@@ -1,8 +1,10 @@
 import { Fragment } from 'react';
 import { LayersIcon, LockIcon, ChevronUpSmallIcon, ChevronDownSmallIcon } from '../components/icons';
+import { orderedColumnIds } from '../../sections/responsive';
 
-function LayerRow({ block, index, total, depth, selectedId, onSelect, onMoveUp, onMoveDown }) {
+function LayerRow({ block, index, total, depth, device, selectedId, onSelect, onMoveUp, onMoveDown }) {
     const children = block.children || [];
+    const shown = block.type === 'row' && device !== 'desktop' ? orderedColumnIds(block, device) : null;
 
     return (
         <Fragment>
@@ -37,9 +39,10 @@ function LayerRow({ block, index, total, depth, selectedId, onSelect, onMoveUp, 
                 <LayerRow
                     key={c.id}
                     block={c}
-                    index={j}
+                    index={shown ? shown.indexOf(c.id) : j}
                     total={children.length}
                     depth={depth + 1}
+                    device={device}
                     selectedId={selectedId}
                     onSelect={onSelect}
                     onMoveUp={onMoveUp}
@@ -50,7 +53,7 @@ function LayerRow({ block, index, total, depth, selectedId, onSelect, onMoveUp, 
     );
 }
 
-export default function LayersPanel({ blocks, selectedId, onSelect, onMoveUp, onMoveDown }) {
+export default function LayersPanel({ blocks, device = 'desktop', selectedId, onSelect, onMoveUp, onMoveDown }) {
     return (
         <div className="cms-builder-left__body">
             <div className="cms-component-group__title" style={{ marginBottom: 8 }}>Page structure</div>
@@ -61,6 +64,7 @@ export default function LayersPanel({ blocks, selectedId, onSelect, onMoveUp, on
                     index={i}
                     total={blocks.length}
                     depth={0}
+                    device={device}
                     selectedId={selectedId}
                     onSelect={onSelect}
                     onMoveUp={onMoveUp}

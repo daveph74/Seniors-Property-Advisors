@@ -872,8 +872,13 @@
 .cms-drop-line--v{ position: absolute; top: 0; bottom: 0; width: 4px; height: auto; border-radius: 3px; background: var(--cms-accent-2); z-index: 7; }
 .cms-drop-line--before{ left: calc(var(--row-gap, 32px) / -2 - 2px); }
 .cms-drop-line--after{ right: calc(var(--row-gap, 32px) / -2 - 2px); }
+.cms-drop-line--v.cms-drop-line--stacked{ left: 0; right: 0; width: auto; height: 4px; }
+.cms-drop-line--before.cms-drop-line--stacked{ top: calc(var(--row-gap, 32px) / -2 - 2px); bottom: auto; }
+.cms-drop-line--after.cms-drop-line--stacked{ bottom: calc(var(--row-gap, 32px) / -2 - 2px); top: auto; }
 
-.cms-drop-line{ position: relative; height: 0; }
+.cms-drop-line{ position: absolute; left: 0; right: 0; height: 0; z-index: 7; }
+.cms-drop-line--top{ top: calc(var(--item-gap, 16px) / -2); }
+.cms-drop-line--bottom{ bottom: calc(var(--item-gap, 16px) / -2); }
 .cms-drop-line__bar{ position: absolute; left: 0; right: 0; top: -2px; height: 4px; border-radius: 3px; background: var(--cms-accent-2); }
 .cms-drop-line__label{ position: absolute; left: 50%; top: -12px; transform: translateX(-50%); background: var(--cms-accent-2); color: #fff; font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 5px; white-space: nowrap; z-index: 5; }
 
