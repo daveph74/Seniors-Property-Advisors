@@ -2,6 +2,7 @@
 
 namespace App\Integrations;
 
+use App\Enquiries\FindMyAgentOptions;
 use App\Models\Enquiry;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -13,23 +14,13 @@ class SyncId
     {
         $reference = $enquiry->reference();
 
-        if ($enquiry->source !== Enquiry::CONTACT_FORM) {
-            Log::info('SyncID skipped an enquiry', [
-                'enquiry_id' => $enquiry->id,
-                'external_id' => $reference,
-                'source' => $enquiry->source,
-                'reason' => 'not_contact_form',
-            ]);
-
-            return;
-        }
-
         $url = config('services.syncid.url');
 
         if (! is_string($url) || $url === '') {
             Log::warning('SyncID skipped an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
+                'source' => $enquiry->source,
                 'reason' => 'url_not_configured',
             ]);
 
@@ -42,6 +33,7 @@ class SyncId
             Log::error('SyncID skipped an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
+                'source' => $enquiry->source,
                 'reason' => 'office_id_not_configured',
             ]);
 
@@ -61,6 +53,7 @@ class SyncId
         Log::info('SyncID sending an enquiry', [
             'enquiry_id' => $enquiry->id,
             'external_id' => $reference,
+            'source' => $enquiry->source,
             'url' => $url,
             'office_id' => (int) $officeId,
             'has_api_key' => is_string($key) && $key !== '',
@@ -72,6 +65,7 @@ class SyncId
             Log::error('SyncID could not receive an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
+                'source' => $enquiry->source,
                 'url' => $url,
                 'message' => $e->getMessage(),
             ]);
@@ -83,6 +77,7 @@ class SyncId
             Log::info('SyncID accepted an enquiry', [
                 'enquiry_id' => $enquiry->id,
                 'external_id' => $reference,
+                'source' => $enquiry->source,
                 'status' => $response->status(),
             ]);
 
@@ -92,6 +87,7 @@ class SyncId
         Log::error('SyncID rejected an enquiry', [
             'enquiry_id' => $enquiry->id,
             'external_id' => $reference,
+            'source' => $enquiry->source,
             'url' => $url,
             'status' => $response->status(),
             'body' => $response->body(),
@@ -103,7 +99,7 @@ class SyncId
     {
         $names = $this->names($enquiry->name);
 
-        return array_filter([
+        $payload = [
             'office_id' => $officeId,
             'first_name' => $names['first_name'],
             'last_name' => $names['last_name'],
@@ -114,7 +110,41 @@ class SyncId
             'source' => $enquiry->sourceLabel(),
             'campaign' => $this->campaign($enquiry->page_slug),
             'external_id' => $enquiry->reference(),
-        ], fn ($value) => $value !== null && $value !== '');
+        ];
+
+        if ($enquiry->source === Enquiry::FIND_MY_AGENT && is_array($enquiry->details)) {
+            $payload = array_merge($payload, $this->wizardFields($enquiry->details));
+        }
+
+        return array_filter(
+            $payload,
+            fn ($value) => $value !== null && $value !== '',
+        );
+    }
+
+    /** @return array<string, mixed> */
+    private function wizardFields(array $details): array
+    {
+        $location = is_array($details['location'] ?? null) ? $details['location'] : [];
+
+        return [
+            'property_address' => FindMyAgentOptions::formattedAddress($location),
+            'property_type' => FindMyAgentOptions::label(
+                FindMyAgentOptions::PROPERTY_TYPES,
+                $details['property_type'] ?? null,
+            ),
+            'timeline' => FindMyAgentOptions::label(
+                FindMyAgentOptions::TIMELINES,
+                $details['timeline'] ?? null,
+            ),
+            'best_time' => FindMyAgentOptions::label(
+                FindMyAgentOptions::BEST_TIMES,
+                $details['best_time'] ?? null,
+            ),
+            'street' => $location['street'] ?? null,
+            'state' => $location['state'] ?? null,
+            'postcode' => $location['postcode'] ?? null,
+        ];
     }
 
     /** @return array{first_name: string, last_name: string} */

@@ -53,7 +53,7 @@ class FindMyAgentOptions
         }
 
         $answers = [
-            ['label' => 'Property address', 'value' => self::place($details['location'] ?? null)],
+            ['label' => 'Property address', 'value' => self::formattedAddress($details['location'] ?? null)],
             ['label' => 'Property type', 'value' => self::label(self::PROPERTY_TYPES, $details['property_type'] ?? null)],
             ['label' => 'Looking to sell', 'value' => self::label(self::TIMELINES, $details['timeline'] ?? null)],
             ['label' => 'Best time to call', 'value' => self::label(self::BEST_TIMES, $details['best_time'] ?? null)],
@@ -73,7 +73,12 @@ class FindMyAgentOptions
      * its suburb. The suburb or postcode typed into a start box stands in when the address resolved
      * no suburb of its own, and never overrules one that did.
      */
-    private static function place(?array $location): ?string
+    public static function formattedAddress(?array $location): ?string
+    {
+        return self::addressLines($location);
+    }
+
+    private static function addressLines(?array $location): ?string
     {
         if ($location === null) {
             return null;

@@ -830,6 +830,15 @@ key belongs so the old wire format cannot come back.
 The reference the sender is told to quote is **derived, never stored**: `AF-{year}-{id}`. Nothing to keep
 in step, and it leads straight back to a row this CMS can open.
 
+### SyncID
+
+Both public forms forward to SyncID after the row is saved — contact form and Agent Finder alike.
+`app/Integrations/SyncId.php` POSTs to `SYNCID_API_URL` (`/api/website-lead`) with `X-Api-Key` and
+`SYNCID_OFFICE_ID`; blank URL means nothing leaves the site. Agent Finder adds wizard answers as labelled
+fields (`property_address`, `property_type`, `timeline`, `best_time`, and address parts) without
+composing them into `message`, which stays the sender's notes. Failures log and never block the
+confirmation the visitor sees.
+
 ### The inbox separates them with tabs, not badges
 
 A segmented strip — All / Contact form / Agent Finder — and **no source badge on the rows**. The rule
