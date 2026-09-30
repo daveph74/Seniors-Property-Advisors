@@ -932,8 +932,14 @@ list: the content policy already confines what a stylesheet may fetch. `sanitise
 `data.customCss` before `strip_tags` and restores it through `Css::safe()`, the capture/restore pattern
 the rich-text body uses.
 
-**Rendering is one `<style>` per block, scoped by block id, and relies on CSS nesting.** Plain
-declarations style the block's root; `h2 { }` written inside styles its parts. Website sections and blocks
+**Rendering is one `<style>` per block, scoped by block id, and the scoping is done by a small splitter,
+not by CSS nesting.** `splitCss()` in `customCss.jsx` separates top-level declarations from top-level
+rules by brace depth. Declarations become `ROOT { … }`; each rule `sel { … }` becomes
+`ROOT:is(sel), ROOT :is(sel) { … }`, so it matches the block's **own** element as well as anything inside
+it. Nesting alone was tried first and `h2 { color: orange }` on a Heading block did nothing — the block's
+root *is* the h2, and a nested selector only ever reaches descendants. A selector carrying a pseudo-element
+cannot go inside `:is()`, so it is emitted as a plain descendant (and appended to the root when it starts
+with a colon); `&` still means the root. Website sections and blocks
 are wrapped in `div.cms-custom[data-cms-block]` (`display: contents`, so no box) and the rule is
 `[data-cms-block="id"] > * { … }`; rows and columns are grid items that cannot be wrapped, so they take a
 `blockId` prop and set the attribute on their own root, with the rule `[data-cms-block="id"] { … }`. Every

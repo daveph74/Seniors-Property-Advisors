@@ -752,10 +752,13 @@ test.describe('Pages · Builder', () => {
         await B.addBlock(page, 'Heading');
         await B.fillField(page, 'Heading', marker);
         await B.openTab(page, 'Advanced');
-        await B.field(page, 'Custom CSS').locator('textarea').fill('border-bottom: 3px solid rgb(255, 0, 0);');
+        /* A declaration for the block itself, and a rule naming its own tag: the block's root is the h2,
+           so `h2 { }` has to reach it rather than hunt for an h2 inside it. */
+        await B.field(page, 'Custom CSS').locator('textarea').fill('border-bottom: 3px solid rgb(255, 0, 0);\nh2 { color: rgb(255, 165, 0); }');
 
         const heading = B.canvas(page).locator('.block-heading', { hasText: marker });
         await expect(heading).toHaveCSS('border-bottom-color', 'rgb(255, 0, 0)');
+        await expect(heading).toHaveCSS('color', 'rgb(255, 165, 0)');
 
         await B.saveAndReload(page);
         await expect(B.canvas(page).locator('.block-heading', { hasText: marker })).toHaveCSS('border-bottom-color', 'rgb(255, 0, 0)');

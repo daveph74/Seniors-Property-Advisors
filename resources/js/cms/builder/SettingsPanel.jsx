@@ -863,7 +863,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     value={data.customCss || ''}
                                     onChange={(e) => patch('customCss', e.target.value)}
                                 />
-                                <div className="cms-hint">Plain declarations style this component. Write h2 {'{ … }'} or .btn {'{ … }'} inside it for its parts. Refused: the &lt; character, @import and expression().</div>
+                                <div className="cms-hint">Plain declarations style this component. A rule such as h2 {'{ … }'} or .btn {'{ … }'} styles the component itself when it matches, and anything inside it. Refused: the &lt; character, @import and expression().</div>
                             </div>
                         ) : (data.customCss ? (
                             <div className="cms-hint">This component carries custom CSS set by a super administrator.</div>
