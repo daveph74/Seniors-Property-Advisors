@@ -305,7 +305,10 @@ object storage (bucket set, no emulator endpoint). Rows marked with any other di
   served through the same route so it inherits the same headers. `media:optimise` brings images
   uploaded before any of this existed up to the same standard; re-running is safe.
 - **`media:init` creates the bucket and applies CORS.** A presigned PUT is cross-origin and fails
-  without it. `global-setup.mjs` runs it before seeding for exactly that reason.
+  without it. `global-setup.mjs` runs it before seeding for exactly that reason. On a server with an
+  IAM instance profile, leave `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` empty — the SDK reads
+  the role the same way `MediaStorage` does for sign, store and `/media`. Keys in `.env` are only
+  for hosts without a role (local floci uses dummy keys from `.env.example`).
 - **The record call does not believe the browser.** `sign()` checks the name and extension, but
   `store()` re-opens the object and judges it **by its bytes** — a PHP file uploaded as `lie.jpg`
   with `image/jpeg` is refused and the object is removed — and it refuses any key this application
@@ -1197,8 +1200,10 @@ The rest, each of which fails quietly rather than loudly (no count, because this
   would ever tell you.
 - **`SESSION_SECURE_COOKIE=true`** and a deliberate `SESSION_LIFETIME`, neither of which belongs in a
   local `.env` — see `.env.production.example`, and `security:check` again.
-- **`AWS_BUCKET` and the credentials must be filled**, and `AWS_ENDPOINT` left unset. Blank credentials
-  are the same silence as a wrong endpoint: every upload fails at the browser and the log says nothing.
+- **`AWS_BUCKET` must be filled** and **`AWS_ENDPOINT` left unset** on AWS. Access keys in `.env` are
+  optional when the host has an IAM instance profile — blank keys with a role attached is the normal
+  production shape. Without a bucket, or with a loopback emulator endpoint, uploads fail at the browser
+  and the log says nothing because the disk is configured not to throw.
 - **`TRUSTED_PROXIES` must name the proxy**, or every rate limit keyed on a visitor collapses onto one
   bucket and HSTS is never sent. `CACHE_STORE=file` too, on a single server: the limiter counts in the
   cache, and counting in SQLite takes a database-wide write lock on every throttled request.

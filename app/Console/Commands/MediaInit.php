@@ -27,16 +27,7 @@ class MediaInit extends Command
         $this->line("Bucket:   {$bucket}");
 
         try {
-            $client = new S3Client([
-                'version' => 'latest',
-                'region' => config('filesystems.disks.s3.region'),
-                'endpoint' => $endpoint,
-                'use_path_style_endpoint' => true,
-                'credentials' => [
-                    'key' => config('filesystems.disks.s3.key'),
-                    'secret' => config('filesystems.disks.s3.secret'),
-                ],
-            ]);
+            $client = new S3Client($this->clientConfig());
         } catch (Throwable $e) {
             $this->error('Could not build the S3 client: '.$e->getMessage());
 
@@ -77,5 +68,27 @@ class MediaInit extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    private function clientConfig(): array
+    {
+        $config = [
+            'version' => 'latest',
+            'region' => config('filesystems.disks.s3.region'),
+            'use_path_style_endpoint' => (bool) config('filesystems.disks.s3.use_path_style_endpoint', false),
+        ];
+
+        if (filled($endpoint = config('filesystems.disks.s3.endpoint'))) {
+            $config['endpoint'] = $endpoint;
+        }
+
+        $key = config('filesystems.disks.s3.key');
+        $secret = config('filesystems.disks.s3.secret');
+
+        if (filled($key) && filled($secret)) {
+            $config['credentials'] = ['key' => $key, 'secret' => $secret];
+        }
+
+        return $config;
     }
 }

@@ -598,6 +598,13 @@ class OwaspTest extends TestCase
         ]);
 
         $this->artisan('security:check --production')->assertSuccessful();
+
+        config([
+            'filesystems.disks.s3.key' => null,
+            'filesystems.disks.s3.secret' => null,
+        ]);
+
+        $this->artisan('security:check --production')->assertSuccessful();
     }
 
     /**
