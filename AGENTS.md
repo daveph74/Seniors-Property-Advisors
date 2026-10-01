@@ -593,7 +593,11 @@ mismatch to keep in step for it.
 Two `settings` rows, and the split is a permissions boundary rather than a filing choice. `globals`
 is wording a **client administrator** edits at `/cms/global-content` — footer blurb, announcement
 bar, phone. `app/Content/Site.php` is the row behind `/cms/settings`, **super administrator only**
-(`settings.manage`) — the GA4/GTM ids, the legal wording, the switches set once.
+(`settings.manage`) — the GA4/GTM ids, the legal wording, the switches set once. Those ids are
+**identifiers only**: `app.blade.php` prints Google's head snippets from them on public routes, and
+GTM's noscript iframe right after `<body>`, never on `/cms/*` or login. `Site::tracking()` re-checks
+the format on the way out; `SecurityHeaders` widens `frame-src` to Tag Manager only when a GTM id is
+saved, because the noscript fallback loads an iframe there — GA4 alone does not need it.
 
 The SEO defaults are the exception and they live on `/cms/seo` under `seo.manage`, so this row has two
 writers. That is only safe because both go through `Site::merge()`; see "The SEO screen" above for

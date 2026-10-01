@@ -262,6 +262,20 @@ class SettingsTest extends TestCase
         $this->assertStringNotContainsString('gtag/js', $this->get('/cms/settings')->getContent());
     }
 
+    public function test_tag_manager_noscript_loads_for_a_reader_and_not_inside_the_admin(): void
+    {
+        $this->page('services');
+        $this->save(['tracking' => ['ga4' => null, 'gtm' => 'GTM-ABCDE1234']])->assertRedirect();
+
+        $html = $this->get('/services')->getContent();
+        $this->assertStringContainsString('googletagmanager.com/ns.html?id=GTM-ABCDE1234', $html);
+
+        $this->assertStringNotContainsString(
+            'googletagmanager.com/ns.html',
+            $this->get('/cms/settings')->getContent(),
+        );
+    }
+
     public function test_the_disclaimer_reaches_the_footer(): void
     {
         $this->page('services');
