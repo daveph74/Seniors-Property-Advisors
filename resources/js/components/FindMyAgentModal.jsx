@@ -161,6 +161,7 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
     // Set to the first unanswered field on a failed Continue, so focus moves
     // there once only — not on every later re-render.
     const focusTarget = useRef(null);
+    const lockedAt = useRef(null);
 
     const set = (key) => (val) => {
         setForm((f) => ({ ...f, [key]: val }));
@@ -169,14 +170,30 @@ export default function FindMyAgentModal({ open, onClose, site = {} }) {
         setErrors((e) => (key in e ? { ...e, [key]: undefined } : e));
     };
 
+    const unlockScroll = () => {
+        if (lockedAt.current === null) return;
+        Object.assign(document.body.style, { position: '', top: '', left: '', right: '', overflow: '' });
+        window.scrollTo(0, lockedAt.current);
+        lockedAt.current = null;
+    };
+
+    useEffect(() => unlockScroll, []);
+
     useEffect(() => {
         if (open) {
-            document.body.style.overflow = 'hidden';
+            lockedAt.current = window.scrollY;
+            Object.assign(document.body.style, {
+                position: 'fixed',
+                top: `-${lockedAt.current}px`,
+                left: '0',
+                right: '0',
+                overflow: 'hidden',
+            });
             // Move focus into the dialog so its title is announced and the next
             // Tab lands on the first question rather than back in the page.
-            dialogRef.current?.focus();
+            dialogRef.current?.focus({ preventScroll: true });
         } else {
-            document.body.style.overflow = '';
+            unlockScroll();
             // The modal never unmounts (visibility is CSS), so clear the answers
             // after the close transition or a reopened form shows stale input.
             const t = setTimeout(() => {

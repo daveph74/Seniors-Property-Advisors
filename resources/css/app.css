@@ -1009,13 +1009,16 @@ footer{
   position: fixed; inset: 0; z-index: 100;
   background: rgba(2,14,60,0.45);
   backdrop-filter: blur(8px);
-  display: grid; place-items: center;
+  display: flex; justify-content: center; align-items: flex-start;
+  overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   opacity: 0; pointer-events: none;
   transition: opacity .3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 24px;
 }
 .modal-back.open{ opacity: 1; pointer-events: auto;}
 .modal{
+  flex: none; margin: auto 0;
   width: min(560px, 100%);
   background: var(--white);
   border-radius: 28px;
@@ -1101,6 +1104,22 @@ footer{
 .success p.help{ max-width: 360px; margin: 0 auto 10px; }
 .success .ref{ font-size: 13.5px; color: var(--text-mid); }
 .success .ref strong{ color: var(--navy); }
+
+@media (max-width: 640px){
+  .modal-back{ padding: 12px; }
+  .modal{ padding: 24px 20px; border-radius: 20px; }
+  .modal h3{ font-size: 23px; padding-right: 40px; }
+  .modal .opt-grid, .modal .opt-grid.three{ grid-template-columns: 1fr; }
+  .modal .field.flush{ margin-bottom: 14px; }
+  .modal .field input{ font-size: 16px; }
+  .modal .combo-list{ position: static; margin-top: 6px; box-shadow: none; }
+  .modal-actions{
+    position: sticky; bottom: 0; z-index: 4;
+    margin: 20px -20px 0; padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    background: var(--white);
+    border-top: 1px solid var(--line);
+  }
+}
 
 /* ===================== Responsive ===================== */
 /* The number itself, not just an icon: measured, it fits from 768px up. It hides only

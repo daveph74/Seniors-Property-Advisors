@@ -102,3 +102,63 @@ test('the start box opens the form', async ({ page }) => {
 
     expect(problems, 'the start box and the wizard must raise no errors').toEqual([]);
 });
+
+test.describe('on a phone', () => {
+    test.use({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
+
+    test('every field can be reached, and the page behind stays put', async ({ page }) => {
+        const problems = [];
+        page.on('pageerror', (error) => problems.push(error.message));
+
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+        await expect
+            .poll(() => page.evaluate(() => (window.scrollTo(0, 600), window.scrollY)))
+            .toBeGreaterThan(0);
+        const before = await page.evaluate(() => window.scrollY);
+
+        await page.getByRole('button', { name: /find my agent/i }).first().click();
+        const back = page.locator('.modal-back.open');
+        await expect(back).toBeVisible();
+
+        await page.fill('#fma-address', '12 Smith Street, Mosman NSW');
+        await back.locator('.opt', { hasText: 'House' }).first().click();
+        await page.getByRole('button', { name: /continue/i }).click();
+        await expect(back.locator('.step-count')).toHaveText('Step 2 of 3');
+
+        const first = await back.getByLabel('First Name').boundingBox();
+        const surname = await back.getByLabel('Surname').boundingBox();
+        expect(surname.y, 'surname stacks under first name').toBeGreaterThan(first.y + first.height);
+        for (const id of ['#fma-firstName', '#fma-surname', '#fma-phone', '#fma-email']) {
+            expect((await back.locator(id).boundingBox()).width, `${id} has room to type in`).toBeGreaterThanOrEqual(280);
+        }
+        const fontSize = await back.locator('#fma-email').evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+        expect(fontSize, 'under 16px, iOS zooms the page on focus').toBeGreaterThanOrEqual(16);
+
+        expect(await back.evaluate((el) => el.scrollHeight > el.clientHeight), 'step 2 is taller than a phone').toBe(true);
+
+        const bodyTop = () => page.evaluate(() => document.body.getBoundingClientRect().top);
+        const pinned = await bodyTop();
+        await page.mouse.move(187, 400);
+        await page.mouse.wheel(0, 2000);
+        await expect(back.locator('.opt', { hasText: 'Morning' })).toBeInViewport();
+        await expect(page.getByRole('button', { name: /continue/i })).toBeInViewport();
+        expect(await bodyTop(), 'scrolling the form must not move the page behind it').toBe(pinned);
+
+        await page.mouse.wheel(0, -2000);
+        await expect(back.locator('#modal-title')).toBeInViewport();
+
+        await page.getByRole('button', { name: 'Close' }).click();
+        await expect(page.locator('.modal-back.open')).toHaveCount(0);
+        expect(await page.evaluate(() => window.scrollY), 'closing puts the page back where it was').toBe(before);
+
+        expect(problems).toEqual([]);
+    });
+
+    test('the whole form can be finished', async ({ page }) => {
+        await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+        const modal = await answer(page, { email: 'phone@example.invalid' });
+
+        await expect(modal.locator('.ref')).toContainText(/AF-\d{4}-\d{5}/);
+    });
+});

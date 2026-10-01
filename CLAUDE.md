@@ -1069,6 +1069,22 @@ sending *is* the consent: a note under the Submit button says so, with the priva
 a box to a sentence, not out of the request. The contact form section keeps its own checkbox and its
 editable wording.
 
+**On a phone the pop-up is a scrolling sheet, and four things keep it usable.** The report was "you
+can't get to some fields and the scrolling moves the background". Step 2 is taller than a phone, and
+the overlay was a fixed grid centring a box that could not scroll, so the title and Continue sat off
+both edges with nothing able to reach them. **The overlay scrolls, not `.modal`**: an overflow on the
+modal would clip the address suggestions. **It is flex with `margin: auto 0` on the box, never
+`place-items: center`**, which clips the top of anything taller than the screen. **The page is locked
+by pinning `body` (`position: fixed` at minus the scroll offset)** and the offset is restored on
+close, because iOS Safari ignores `overflow: hidden` on the body. And below 640px the cards and
+paired inputs stack, inputs are 16px (under that iOS zooms the page on every focus), and Back /
+Continue stick to the bottom. The address suggestions sit **in the flow** at that width, because
+floating over the stacked cards they covered House, and a tap on them counted as inside the field.
+That made the next trap: `AddressAutocomplete` dismissed its list on `mousedown`, so the cards jumped
+up between press and release and the tap landed on nothing — the symptom was a card that would not
+select on the first tap. It dismisses on `click` now, after the card has had its own.
+`e2e/public`'s "on a phone" tests pin the stacking, the reach, the font size and the page staying put.
+
 ### Which form it came from
 
 Two forms write this table: the contact form section, and Agent Finder. `source` says which
