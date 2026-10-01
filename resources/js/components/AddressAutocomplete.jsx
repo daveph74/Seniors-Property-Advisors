@@ -132,8 +132,8 @@ export default function AddressAutocomplete({
         const onDocClick = (e) => {
             if (!fieldRef.current?.contains(e.target)) setOpenList(false);
         };
-        document.addEventListener('mousedown', onDocClick);
-        return () => document.removeEventListener('mousedown', onDocClick);
+        document.addEventListener('click', onDocClick);
+        return () => document.removeEventListener('click', onDocClick);
     }, [openList]);
 
     const select = async (suggestion) => {

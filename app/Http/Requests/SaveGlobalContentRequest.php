@@ -46,7 +46,7 @@ class SaveGlobalContentRequest extends FormRequest
             'phone.label' => ['required', 'string', 'max:40'],
             'cta.label' => ['required', 'string', 'max:40'],
 
-            'footer.word' => ['required', 'string', 'max:60'],
+            'footer.word' => ['nullable', 'string', 'max:60'],
             'footer.blurb' => ['required', 'string', 'max:400'],
             'footer.address' => ['nullable', 'string', 'max:200'],
             'footer.legal' => ['required', 'string', 'max:200'],
@@ -118,7 +118,7 @@ class SaveGlobalContentRequest extends FormRequest
         ));
 
         return [
-            'word' => $footer['word'],
+            'word' => $footer['word'] ?? '',
             'blurb' => $footer['blurb'],
             'address' => $address,
             'legal' => $footer['legal'],

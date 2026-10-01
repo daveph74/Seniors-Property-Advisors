@@ -16,9 +16,11 @@ export default function SiteFooter({ globals = {}, site = {} }) {
                     <div className="foot-brand">
                         <SiteLink href="/" className="brand">
                             <BrandLogo logo={logo} />
-                            <span className="word">
-                                <b>{footer.word}</b>
-                            </span>
+                            {footer.word ? (
+                                <span className="word">
+                                    <b>{footer.word}</b>
+                                </span>
+                            ) : null}
                         </SiteLink>
                         <p>{footer.blurb}</p>
                         <p className="muted">

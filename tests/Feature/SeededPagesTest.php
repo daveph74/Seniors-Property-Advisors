@@ -27,7 +27,7 @@ class SeededPagesTest extends TestCase
      * second block comes back.
      *
      * The section kept is the first, which is why nothing stopped working: contact opens with its
-     * form, faqs with the question list, blog with the article listing.
+     * form, faqs with the image banner then the question list, blog with the article listing.
      */
     public static function pages(): array
     {
@@ -38,7 +38,7 @@ class SeededPagesTest extends TestCase
             'for families' => ['for-families', 14, 'For families', ['family']],
             'contact' => ['contact', 18, 'Contact', ['contact-form']],
             'blog' => ['blog', 16, 'Blog', ['blog-list']],
-            'faqs' => ['faqs', 17, 'FAQs', ['faq-list']],
+            'faqs' => ['faqs', 17, 'FAQs', ['banner', 'faq-list']],
         ];
     }
 
@@ -209,9 +209,10 @@ class SeededPagesTest extends TestCase
 
         $this->get($path)->assertOk()->assertInertia(function (AssertableInertia $p) use ($type) {
             $props = $p->toArray()['props'];
+            $section = collect($props['sections'])->firstWhere('type', $type);
 
-            $this->assertSame($type, $props['sections'][0]['type']);
-            $this->assertNotEmpty($props['sections'][0]['data']['heading']);
+            $this->assertNotNull($section);
+            $this->assertNotEmpty($section['data']['heading']);
             $this->assertSame([], $props['library']['posts'] ?? []);
             $this->assertSame([], $props['library']['faqs'] ?? []);
         });
@@ -260,11 +261,11 @@ class SeededPagesTest extends TestCase
     }
 
     /**
-     * The consent box on the contact form offers the privacy policy, and finds it through a
+     * The consent note on the contact form offers the privacy policy, and finds it through a
      * setting that names a published page. Nothing joined those up, so the form asked people to
      * agree to how their details would be handled with nowhere to go and read it.
      */
-    public function test_the_consent_box_can_point_at_a_privacy_policy(): void
+    public function test_the_consent_note_can_point_at_a_privacy_policy(): void
     {
         $this->get('/contact')->assertOk()->assertInertia(function (AssertableInertia $p) {
             $this->assertSame('/privacy-policy', $p->toArray()['props']['site']['privacyUrl']);

@@ -57,26 +57,43 @@ class SyncIdTest extends TestCase
         });
     }
 
-    public function test_agent_finder_enquiries_are_not_forwarded(): void
+    public function test_agent_finder_enquiries_are_forwarded_to_syncid(): void
     {
-        Http::fake();
+        Http::fake([
+            'spa.syncid.com.au/*' => Http::response(['message' => 'Lead accepted for processing'], 202),
+        ]);
 
         $this->post('/enquiries', [
             'name' => 'Janet Reid',
             'email' => 'janet@example.com',
             'phone' => '0400 000 000',
-            'consent' => true,
+            'message' => 'Please call after Easter.',
             'source' => Enquiry::FIND_MY_AGENT,
             'page' => '/',
             'details' => [
                 'property_type' => 'house',
-                'timeline' => 'three_to_six_months',
+                'timeline' => 'in_3_6_months',
                 'best_time' => 'morning',
-                'location' => ['street' => '12 Smith Street'],
+                'location' => [
+                    'street' => '12 Smith Street',
+                    'suburb' => 'Mosman',
+                    'state' => 'NSW',
+                    'postcode' => '2088',
+                ],
             ],
         ])->assertRedirect();
 
-        Http::assertNothingSent();
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://spa.syncid.com.au/api/website-lead'
+                && $request['source'] === 'Agent Finder'
+                && $request['property_type'] === 'House'
+                && $request['timeline'] === 'In 3 – 6 months'
+                && $request['best_time'] === 'Morning'
+                && $request['property_address'] === '12 Smith Street, Mosman NSW 2088'
+                && $request['street'] === '12 Smith Street'
+                && $request['suburb'] === 'Mosman'
+                && $request['message'] === 'Please call after Easter.';
+        });
     }
 
     public function test_nothing_is_sent_when_syncid_is_not_configured(): void

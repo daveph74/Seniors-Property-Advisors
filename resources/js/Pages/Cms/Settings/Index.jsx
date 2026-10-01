@@ -16,7 +16,14 @@ const TABS = [
     { id: 'tracking', label: 'Tracking' },
     { id: 'legal', label: 'Legal' },
     { id: 'css', label: 'Custom CSS' },
+    { id: 'notifications', label: 'Notifications' },
 ];
+
+const RECIPIENTS = 'notifications.enquiryRecipients';
+
+const TAB_OF = { tracking: 'tracking', legal: 'legal', notifications: 'notifications' };
+
+const tabFor = (field) => TAB_OF[field.split('.')[0]] || 'general';
 
 function Field({ label, hint, error, children }) {
     return (
@@ -36,11 +43,33 @@ export default function SettingsIndex({ settings, pages = [] }) {
 
     const set = (group, field, value) => setData(group, { ...data[group], [field]: value });
 
-    const save = () => put('/cms/settings', {
-        preserveScroll: true,
-        onSuccess: () => flash('Settings saved'),
-        onError: (bag) => flash(Object.values(bag)[0] || 'Those settings could not be saved'),
-    });
+    const save = () => {
+        let answered = false;
+
+        console.info('[settings] saving', data);
+
+        put('/cms/settings', {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                answered = true;
+                console.info('[settings] saved; server now has', page.props.settings?.notifications);
+                flash('Settings saved');
+            },
+            onError: (bag) => {
+                answered = true;
+                console.warn('[settings] refused', bag);
+                const [field, message] = Object.entries(bag)[0] || [];
+                if (field) setTab(tabFor(field));
+                flash(message || 'Those settings could not be saved');
+            },
+            onFinish: () => {
+                if (! answered) {
+                    console.error('[settings] no answer from the server — check the Network tab for PUT /cms/settings');
+                    flash('The server did not answer. Your settings were not saved.');
+                }
+            },
+        });
+    };
 
     return (
         <div className="cms-page">
@@ -245,6 +274,30 @@ export default function SettingsIndex({ settings, pages = [] }) {
                                     spellCheck={false}
                                     value={data.customCss || ''}
                                     onChange={(e) => setData('customCss', e.target.value)}
+                                />
+                            </Field>
+                        </section>
+                    )}
+
+                    {tab === 'notifications' && (
+                        <section className="cms-settings-section">
+                            <h2 className="cms-settings-section__title">Notifications</h2>
+                            <p className="cms-settings-section__lead">
+                                Who is emailed when somebody sends an enquiry.
+                            </p>
+
+                            <Field
+                                label="Enquiry notification emails"
+                                hint="One address per line, up to five. Every enquiry from the contact form and Agent Finder is emailed to each of them. Leave blank and no emails are sent — enquiries still arrive in Enquiries."
+                                error={errors[RECIPIENTS] || Object.entries(errors).find(([key]) => key.startsWith(`${RECIPIENTS}.`))?.[1]}
+                            >
+                                <textarea
+                                    className="cms-textarea"
+                                    rows={5}
+                                    style={{ maxWidth: 420 }}
+                                    placeholder={'advisor@example.com\noffice@example.com'}
+                                    value={data.notifications.enquiryRecipients}
+                                    onChange={(e) => set('notifications', 'enquiryRecipients', e.target.value)}
                                 />
                             </Field>
                         </section>

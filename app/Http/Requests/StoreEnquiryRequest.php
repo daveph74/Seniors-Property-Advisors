@@ -4,7 +4,9 @@ namespace App\Http\Requests;
 
 use App\Content\Text;
 use App\Enquiries\FindMyAgentOptions;
+use App\Logging\Delivery;
 use App\Models\Enquiry;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -140,6 +142,17 @@ class StoreEnquiryRequest extends FormRequest
                the CMS render an empty heading over nothing. */
             'details' => $this->fromWizard() ? $data['details'] : null,
         ];
+    }
+
+    /** Field names only: the values are a stranger's name, phone and home address. */
+    protected function failedValidation(Validator $validator): void
+    {
+        Delivery::log()->warning('Enquiry refused', [
+            'source' => $this->input('source') ?? Enquiry::CONTACT_FORM,
+            'fields' => array_keys($validator->errors()->toArray()),
+        ]);
+
+        parent::failedValidation($validator);
     }
 
     private function fromWizard(): bool

@@ -1,4 +1,5 @@
 import { breakpointClasses } from './responsive';
+import { overlayOpacityStyle } from './overlayOpacity';
 
 const BACKGROUNDS = { white: '', wash: 'section-block--bg-wash', 'wash-2': 'section-block--bg-wash-2', navy: 'section-block--bg-navy', 'navy-gradient': 'section-block--bg-navy-gradient', 'navy-deep': 'section-block--bg-navy-deep' };
 const HEIGHTS = { comfortable: '', compact: 'section-block--compact', slim: 'section-block--slim', tall: 'section-block--tall', full: 'section-block--full' };
@@ -45,7 +46,7 @@ export default function SectionContainer({ data = {}, anchor, children }) {
                     aria-label={data.backgroundImage.alt || ''}
                 />
             ) : null}
-            {image && overlay !== 'none' ? <div className={`section-block__overlay section-block__overlay--${overlay}`} /> : null}
+            {image && overlay !== 'none' ? <div className={`section-block__overlay section-block__overlay--${overlay}`} style={overlayOpacityStyle(data)} /> : null}
             <div className={inner}>{children}</div>
         </section>
     );

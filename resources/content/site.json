@@ -17,5 +17,8 @@
     "legal": {
         "disclaimer": null,
         "privacyPage": null
+    },
+    "notifications": {
+        "enquiryRecipients": []
     }
 }

@@ -52,8 +52,9 @@ it against the code before repeating it — that is the failure mode this reposi
 
 ## Commands
 
-- `composer dev` — the server and Vite together, so assets rebuild without a second
-  terminal. `concurrently --kill-others` means one process failing stops the rest, which is why
+- `composer dev` — the server, Vite and a queue listener together, so assets rebuild and enquiry
+  notification emails send without a second terminal. `queue:listen` rather than `queue:work` because
+  it reloads the code on every job, and it needs no `pcntl`. `concurrently --kill-others` means one process failing stops the rest, which is why
   **`pail` is not in there**: it needs `pcntl`, XAMPP on Windows has no such extension, so it exited
   immediately and took the whole stack down with it — the symptom is `composer dev` returning code 1
   seconds after starting, naming the concurrently line rather than the command that actually failed.
@@ -69,14 +70,14 @@ it against the code before repeating it — that is the failure mode this reposi
   reports whether it is stale and writes nothing, which is what `UserGuideTest` runs
 
 **Deploying is not one of these commands.** `composer dev` is a laptop convenience with no production
-equivalent — a server has a release step and two processes something else keeps alive. That is
+equivalent — a server has a release step and three processes something else keeps alive. That is
 "Running it in production", further down, and it is the section to read before a first deploy: every
 mistake it lists fails silently rather than loudly.
 
 Run by hand, never scheduled or called from a migration: `content:import [--force]`, `seo:apply [--force]`,
 `content:purge-deleted [--days=90] [--force]`, `enquiries:purge [--months=24] [--force]`,
 `enquiries:erase {email} [--force]`, `activity:prune [--months=24] [--force]`, `media:init`,
-`media:optimise [--dry-run]`, `pages:scaffold`, `security:check [--production]`, `cms:user`. Each says
+`media:optimise [--dry-run]`, `pages:scaffold`, `security:check [--production]`, `enquiries:check-delivery [--send]`, `cms:user`. Each says
 why under its own heading below; the pattern they share is that all of them either destroy something
 or touch the environment, and both are somebody's decision rather than a side effect of deploying.
 
@@ -194,6 +195,13 @@ from the page the section sits on.
 
 Answers are plain text through `Text::clean()`, not HTML. A question is one paragraph; the editor
 that would justify HTML is the one the blog pays 140KB for.
+
+The public `faq-list` section can show a **Browse by topic** rail when **Let readers filter by category**
+is on and at least two categories have questions; turn that switch off (or pin **Category to show**) for a
+single centred accordion. Its title is always **`h2.block-heading.block-heading--large`**, not
+`section-head__title`, and `ownerOfTheH1()` skips `faq-list` so it never consumes the page h1.
+**Category to show** still limits which questions load; categories remain in the CMS for filing and
+page-specific sets.
 
 ## Blog articles
 
@@ -585,7 +593,11 @@ mismatch to keep in step for it.
 Two `settings` rows, and the split is a permissions boundary rather than a filing choice. `globals`
 is wording a **client administrator** edits at `/cms/global-content` — footer blurb, announcement
 bar, phone. `app/Content/Site.php` is the row behind `/cms/settings`, **super administrator only**
-(`settings.manage`) — the GA4/GTM ids, the legal wording, the switches set once.
+(`settings.manage`) — the GA4/GTM ids, the legal wording, the switches set once. Those ids are
+**identifiers only**: `app.blade.php` prints Google's head snippets from them on public routes, and
+GTM's noscript iframe just before `</body>`, never on `/cms/*` or login. `Site::tracking()` re-checks
+the format on the way out; `SecurityHeaders` widens `frame-src` to Tag Manager only when a GTM id is
+saved, because the noscript fallback loads an iframe there — GA4 alone does not need it.
 
 The SEO defaults are the exception and they live on `/cms/seo` under `seo.manage`, so this row has two
 writers. That is only safe because both go through `Site::merge()`; see "The SEO screen" above for
@@ -593,6 +605,13 @@ what the wholesale write it replaced would have erased.
 
 Nothing is stored in both. The phone number, address and copyright line live in `globals` and stay
 there; a value stored twice is a value that disagrees with itself.
+
+**Who is emailed about an enquiry is a setting, not configuration** — the Notifications tab, stored as
+`notifications.enquiryRecipients` on the `site` row, typed one address per line and capped at five.
+Not `.env`, because changing who hears about a new enquiry is the client's decision and should not
+need a deploy. `Site::enquiryRecipients()` re-checks every address on the way out, the same second
+guard `tracking()` gives the analytics ids, so a row edited by hand cannot hand the mailer garbage.
+The mail server itself stays in `.env` (`MAIL_*`); an empty list means nothing is sent.
 
 `security:check [--production]` is the deployment list — the session cookie, debug mode, the proxy in
 front, where media is really stored, and whether anything from a developer's machine came along — as a
@@ -798,6 +817,12 @@ key and resolving a label is that wording can move without data moving. "Wizard"
 and test names as a description of its shape, four steps held together by React state, not as its name.
 The reference a sender quotes was already `AF-2026-00042`.
 
+**Neither public form asks for a consent checkbox.** Agent Finder dropped its tick box first; the
+contact form followed — sending is the consent, with a note under the button and the privacy link
+appended the same way the wizard does. The server still requires `consent` on a contact-form payload
+and the form sends `consent: true`; the wizard `exclude`s it, so those rows store `consented` as
+false because nobody was asked.
+
 ### Which form it came from
 
 Two forms write this table: the contact form section, and Agent Finder. `source` says which
@@ -829,6 +854,15 @@ key belongs so the old wire format cannot come back.
 
 The reference the sender is told to quote is **derived, never stored**: `AF-{year}-{id}`. Nothing to keep
 in step, and it leads straight back to a row this CMS can open.
+
+### SyncID
+
+Both public forms forward to SyncID after the row is saved — contact form and Agent Finder alike.
+`app/Integrations/SyncId.php` POSTs to `SYNCID_API_URL` (`/api/website-lead`) with `X-Api-Key` and
+`SYNCID_OFFICE_ID`; blank URL means nothing leaves the site. Agent Finder adds wizard answers as labelled
+fields (`property_address`, `property_type`, `timeline`, `best_time`, and address parts) without
+composing them into `message`, which stays the sender's notes. Failures log and never block the
+confirmation the visitor sees.
 
 ### The inbox separates them with tabs, not badges
 
@@ -871,14 +905,49 @@ the policy, a subscription never authorised, a queue nobody was draining. If it 
 it needed are in this file's history — but the question to answer first is what a live inbox is worth
 against two more things a server has to keep alive.
 
-Nothing is queued now, which is why there is no worker in `composer dev` and none in the process table
-under "Running it in production". An enquiry is saved in the request that brings it, full stop. The
-first mailable to land here changes that, and the worker comes back in the same commit.
+An enquiry is still saved in the request that brings it, so no background process can lose one. What
+is queued is the email about it — see below — which is why a worker is back in `composer dev` and in
+the process table under "Running it in production".
+
+### The team is emailed about every enquiry
+
+`EnquiryController::store` saves the row, forwards it to SyncID, then calls
+`NotifyEnquiryRecipients::for()`, which queues one job when Settings lists anybody and logs
+`no_recipients` when it does not. The job mails `EnquiryReceived` — the same fields the inbox modal
+shows, Agent Finder's answers included, a link to `/cms/enquiries?open={id}`, and **the sender as
+reply-to**, so answering the email answers them. Contact form and Agent Finder both, because both
+come through this one controller.
+
+**Queued, and fail-open like SyncID.** A slow mail server must not hold up the visitor's confirmation,
+and a failed send is logged at `error` and dropped — the row in the CMS is the record of truth, and
+the job catches everything so a mail outage cannot retry itself into a flood. The symptom of a dead
+worker is enquiries arriving in the CMS with nobody emailed, and rows piling up in `jobs`.
+
+**`php artisan enquiries:check-delivery` is where to start when either delivery goes quiet.** Both fail
+open, so the only symptom on a server is an empty CRM or inbox. It prints the configuration the running
+application really has — warning when config is cached, since an edited `.env` then does nothing — and
+names what is wrong: a blank or site-root SyncID URL, a missing key, no recipients, a `log` mailer, jobs
+waiting with no worker. `--send` posts SyncID's own documented minimal lead (`office_id`, `first_name`,
+`email`) through the same client `forward()` uses and sends one real email synchronously, printing the
+status, body or exception. It creates a real test lead in SyncID, which is why it needs the flag.
+
+**Its trail is `storage/logs/delivery.log`, not `laravel.log`.** Production runs at `LOG_LEVEL=error`, so
+every "skipped", "sending" and "saved" line was dropped and a server doing nothing said nothing — the
+symptom was an empty inbox with an empty log. `App\Logging\Delivery::log()` writes SyncID, the
+notification job and every Settings save (the raw typed recipients, what validated, what the row holds
+afterwards, and any refusal) to both files, and `delivery.log` keeps every level. A save that appears
+in neither never reached the controller: look at the browser console, which logs `[settings]` lines.
+A refused enquiry from either public form is logged as `Enquiry refused` with its source and the
+**names** of the failing fields, never their values — they are a stranger's name, phone and address, and
+a log file is not a place those may be copied to. An Agent Finder enquiry that saved leaves `SyncID
+sending` then `accepted` or `failed`, and the email leaves `Enquiry notification queued` (naming the
+queue connection) and later `sent` or `could not be sent` — `queued` with nothing after it is a worker
+that is not running; one with no line at all never reached the server, and the
+browser's Network tab on `POST /enquiries` says why.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
-a reference that was the same five digits for everybody, while storing nothing at all. There is no
-`app/Mail` in this repository — nobody internal is notified of a new enquiry either, which is arguably the
-more urgent half. Wizard submissions are also deliberately **not** written to the activity log:
+a reference that was the same five digits for everybody, while storing nothing at all. Only the team is
+emailed; the sender is not. Wizard submissions are also deliberately **not** written to the activity log:
 `Activity::labelFor()` falls through to `name`, and that log has no delete path, which is exactly what
 `OwaspTest`'s a09 test protects against.
 
@@ -977,21 +1046,34 @@ rm -f public/hot
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 php artisan inertia:stop-ssr || true
+php artisan queue:restart
 php artisan security:check --production
 ```
 
-And two processes, each under a supervisor that restarts them on failure and on boot — systemd or
+And three processes, each under a supervisor that restarts them on failure and on boot — systemd or
 supervisord on Linux, a service wrapper on Windows:
 
 | what | how | what happens without it |
 |---|---|---|
 | the site | nginx or Apache with **PHP-FPM**, serving `public/` | `artisan serve` is PHP's built-in server: one request at a time, and it is a development tool |
 | the renderer | `php artisan inertia:start-ssr` — a unit file is in `deploy/seniors-ssr.service` | the site still works, and serves a body with no heading and no links — see below, because this is the quietest failure here |
+| the queue worker | `php artisan queue:work` — a unit file is in `deploy/seniors-queue.service` | enquiries still save and reach SyncID, but nobody is emailed about them; the jobs wait in the `jobs` table |
 
-**There is no queue worker, because nothing is queued** — see "The inbox updates when somebody looks at
-it". An enquiry is written in the request that carries it, so no background process can lose one. The
-first mailable or deferred job to land here brings the worker and `queue:restart` back with it, in the
-same commit.
+**The worker exists for the enquiry notification emails and nothing else** — see "The team is emailed
+about every enquiry". An enquiry is written in the request that carries it, so a dead worker loses an
+email, never an enquiry. `queue:restart` in the release step is not optional: a worker holds the code it
+booted with and would keep sending last week's email. And `MAIL_MAILER` must be a real transport —
+`log` is the local default, and with it every notification is "sent" into `laravel.log`.
+
+**Production mail is `ses_cross_account`: SES in SyncID's AWS account, reached by assuming
+`SES_ROLE_ARN`.** Laravel's own `ses` mailer only takes a static key and secret, and this site is given
+a role to assume rather than keys to hold, so `App\Mail\SesCrossAccountTransport` builds the SES client
+itself: STS assumes the role with whatever credentials the host already has — the instance profile, or
+the `AWS_*` keys where there is none — and the temporary credentials are memoised and refreshed when
+they expire. `MAIL_FROM_ADDRESS` has to be an identity verified in *that* account's SES, in
+`SES_REGION`. Either way a fault ends as an `error` in the log from the notification job, with the
+enquiry saved: a missing region or role names the variable, a role this host may not assume names STS.
+Locally, the floci dummy keys cannot assume anything, so leave `MAIL_MAILER=log` there.
 
 **Docker is not part of any of this.** `docker-compose.yml` runs `floci`, an S3-compatible emulator on
 `:4566`, and it exists for a developer's machine and the browser suite — it is never deployed. A server

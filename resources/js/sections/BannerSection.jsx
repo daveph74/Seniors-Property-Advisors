@@ -3,6 +3,7 @@ import { useHeadingLevel } from './headingLevel';
 import useReveal from './useReveal';
 import { revealScope } from './Reveal';
 import { POSITIONS } from './SectionContainer';
+import { overlayOpacityStyle } from './overlayOpacity';
 
 const HEIGHTS = ['compact', 'comfortable', 'tall', 'full'];
 const TITLES = ['standard', 'large', 'hero'];
@@ -43,7 +44,7 @@ export default function BannerSection({ data, actions, anchor, editing = false }
                 role={image.src ? 'img' : undefined}
                 aria-label={image.src ? image.alt || '' : undefined}
             />
-            {overlay !== 'none' ? <div className={`section-block__overlay section-block__overlay--${overlay}`} /> : null}
+            {overlay !== 'none' ? <div className={`section-block__overlay section-block__overlay--${overlay}`} style={overlayOpacityStyle(data)} /> : null}
 
             <div className="container">
                 <div className="banner__copy">

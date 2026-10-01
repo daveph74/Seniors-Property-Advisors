@@ -73,6 +73,7 @@ class SecurityHeaders
         $style = ["'self'", "'unsafe-inline'"];
         $font = ["'self'"];
         $connect = ["'self'"];
+        $frame = ["'self'"];
 
         /* Not `https:`. A blanket scheme here is an open exfiltration channel — `new Image().src` at
            any host on the internet needs no response to have already sent the query string — and it
@@ -105,6 +106,13 @@ class SecurityHeaders
                    permission is as narrow as the thing it is for. */
                 $img[] = $host;
             }
+
+            try {
+                if (isset(Site::tracking()['gtm'])) {
+                    $frame[] = 'https://www.googletagmanager.com';
+                }
+            } catch (\Throwable $e) {
+            }
         }
 
         /* Development only, and only while the Vite server is actually running: hot reloading is
@@ -126,7 +134,7 @@ class SecurityHeaders
             'img-src '.implode(' ', $img),
             'font-src '.implode(' ', $font),
             'connect-src '.implode(' ', $connect),
-            "frame-src 'self'",
+            'frame-src '.implode(' ', $frame),
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",

@@ -277,7 +277,9 @@ const TEMPLATES = {
         heading: '',
         headingEm: '',
         lead: '',
+        category: '',
         openFirst: true,
+        showFilters: true,
         items: [],
     },
     'team-intro': {

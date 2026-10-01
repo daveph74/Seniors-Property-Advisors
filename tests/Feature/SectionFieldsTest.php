@@ -251,16 +251,19 @@ class SectionFieldsTest extends TestCase
             'backgroundImage' => ['src' => '/media/2026/07/skyline.jpg', 'alt' => 'The city at dusk'],
             'backgroundPosition' => 'top-right',
             'overlay' => 'navy-strong',
+            'overlayOpacity' => 40,
         ]));
 
         $this->assertSame('/media/2026/07/skyline.jpg', $data['backgroundImage']['src']);
         $this->assertSame('The city at dusk', $data['backgroundImage']['alt']);
         $this->assertSame('top-right', $data['backgroundPosition']);
         $this->assertSame('navy-strong', $data['overlay']);
+        $this->assertSame(40, $data['overlayOpacity']);
 
         $this->get('/')->assertInertia(fn (AssertableInertia $p) => $p
             ->where('sections.0.data.backgroundImage.src', '/media/2026/07/skyline.jpg')
-            ->where('sections.0.data.overlay', 'navy-strong'));
+            ->where('sections.0.data.overlay', 'navy-strong')
+            ->where('sections.0.data.overlayOpacity', 40));
     }
 
     public function test_a_heading_persists_its_line_break_switches(): void
@@ -290,6 +293,7 @@ class SectionFieldsTest extends TestCase
             'titleSize' => 'hero',
             'textSize' => 'large',
             'overlay' => 'navy-bottom',
+            'overlayOpacity' => 65,
             'imagePosition' => 'bottom-left',
             'align' => 'center',
             'copyWidth' => 'wide',
@@ -297,7 +301,7 @@ class SectionFieldsTest extends TestCase
             'animationDelay' => '300',
         ]));
 
-        foreach (['height' => 'compact', 'titleSize' => 'hero', 'textSize' => 'large', 'overlay' => 'navy-bottom', 'imagePosition' => 'bottom-left', 'align' => 'center', 'copyWidth' => 'wide', 'animation' => 'fade-in', 'animationDelay' => '300'] as $key => $value) {
+        foreach (['height' => 'compact', 'titleSize' => 'hero', 'textSize' => 'large', 'overlay' => 'navy-bottom', 'overlayOpacity' => 65, 'imagePosition' => 'bottom-left', 'align' => 'center', 'copyWidth' => 'wide', 'animation' => 'fade-in', 'animationDelay' => '300'] as $key => $value) {
             $this->assertSame($value, $data[$key]);
         }
 

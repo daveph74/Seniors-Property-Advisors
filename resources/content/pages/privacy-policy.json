@@ -59,7 +59,7 @@
                     "label": "Text",
                     "active": true,
                     "data": {
-                        "body": "When you send an enquiry through this website, the form asks for your name, email address, phone number and suburb, along with whatever you write in the message. It also records which page you sent it from, and that you ticked the consent box.\n\nThat is the whole of what the website itself asks you for. There is no account to create and no newsletter sign-up.",
+                        "body": "When you send an enquiry through this website, the form asks for your name, email address, phone number and suburb, along with whatever you write in the message. It also records which page you sent it from.\n\nThat is the whole of what the website itself asks you for. There is no account to create and no newsletter sign-up.",
                         "spaceBelow": "small"
                     }
                 },

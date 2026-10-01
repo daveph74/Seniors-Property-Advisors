@@ -125,5 +125,11 @@
 </head>
 <body>
     @inertia
+    @if (! request()->is('cms', 'cms/*', 'login'))
+        @php($trackingBody = App\Content\Site::tracking())
+        @isset($trackingBody['gtm'])
+            <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $trackingBody['gtm'] }}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        @endisset
+    @endif
 </body>
 </html>

@@ -10,6 +10,7 @@ export const PICKMANY = (path, label, source, empty) => ({ path, label, type: 'c
 export const FLAG = (path, label) => ({ path, label, type: 'toggle' });
 export const FLAGON = (path, label) => ({ path, label, type: 'toggle', whenAbsent: true });
 export const NUM = (path, label) => ({ path, label, type: 'number' });
+export const OVERLAY_STRENGTH = (path, overlayPath, fallback) => ({ path, label: 'Overlay strength', type: 'overlay-strength', overlayPath, fallback });
 export const IMG = (path, label, altPath = null, captionPath = null) => ({ path, label, type: 'image', altPath, captionPath });
 
 const BUTTON_FIELDS = [

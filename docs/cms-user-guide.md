@@ -129,7 +129,9 @@ pages arranged the way the website nests them.
    **Section height** — Comfortable, Compact, Slim, Tall or **Full screen**, which makes the section fill
    the first screen a reader sees with its content centred. Its **Style** accordion also
    offers a **Background image** from the media library with an **Image position** for which part of
-   the picture stays in view, and an **Overlay** to keep the text readable. Every Website section, row
+   the picture stays in view, and an **Overlay** to keep the text readable. The overlay chooses the
+   colour and direction of the tint; **Overlay strength** beneath it makes that tint lighter or darker,
+   and 100% is the overlay as designed. Every Website section, row
    and column has the same **Background** swatches, **Background image**, **Image position**, **Overlay**
    and **Text theme** in its **Style** accordion; the first swatch, **As designed**, keeps the look the
    component came with. Every component's **Style**
@@ -144,7 +146,7 @@ pages arranged the way the website nests them.
    or Mobile a set width holds instead of stacking, so give every column in the row one to keep them side
    by side there. A block's **Alignment** follows the screen the same way the Layout accordion does. Under Website sections, **Banner, full bleed** is a photo running edge to edge with words over
    it, and its **Look** group lets you set the **Section height**, **Title size**, **Text size**,
-   **Overlay**, **Image position**, **Text alignment**, **Copy width**, and an **Animation** with a
+   **Overlay** and its **Overlay strength**, **Image position**, **Text alignment**, **Copy width**, and an **Animation** with a
    **Delay**.
 5. Hovering a block gives you a small toolbar: move it, duplicate it, save it as a reusable section,
    **Hide on page**, or delete it. Hiding is not deleting — the block stays, and stops being shown.

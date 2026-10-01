@@ -8,6 +8,30 @@ import { toEditorHtml } from './richTextBody';
 import { effective, sourceOf, overrideOf } from '../../sections/responsive';
 import { takesBackdrop } from '../../sections/Backdrop';
 import { hasParts } from '../../sections/Reveal';
+import { overlayOpacity } from '../../sections/overlayOpacity';
+
+function OverlayStrength({ data, onChange }) {
+    const value = overlayOpacity(data);
+
+    return (
+        <div className="cms-field">
+            <label className="cms-field-label cms-range-label">
+                <span>Overlay strength</span>
+                <span className="cms-range-value">{value}%</span>
+            </label>
+            <input
+                className="cms-range"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={value}
+                onChange={(e) => onChange(Number(e.target.value))}
+            />
+            <div className="cms-hint">Lightens or darkens the tint. 100% matches the overlay as designed.</div>
+        </div>
+    );
+}
 
 const InlineRichTextEditor = lazy(() => import('../components/InlineRichTextEditor'));
 
@@ -188,6 +212,12 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                     ))}
                 </div>
             );
+        }
+
+        if (f.type === 'overlay-strength') {
+            if ((readPath(data, f.overlayPath) || f.fallback) === 'none') return null;
+
+            return <OverlayStrength key={f.path} data={data} onChange={set} />;
         }
 
         if (f.type === 'toggle') {
@@ -760,6 +790,9 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     </select>
                                     <div className="cms-hint">Tints the background image so text stays readable. A fading overlay keeps the photo clear on one side and puts the text on the other.</div>
                                 </div>
+                                {(data.backgroundImage || {}).src && (data.overlay || 'navy') !== 'none' && (
+                                    <OverlayStrength data={data} onChange={(v) => patch('overlayOpacity', v)} />
+                                )}
                             </>
                         )}
 

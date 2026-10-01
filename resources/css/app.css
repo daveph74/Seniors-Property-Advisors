@@ -504,24 +504,12 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
   position: absolute; inset: 0;
   background-size: cover;
   background-position: center right;
-  background-color: var(--navy);
+  background-color: #000;
   z-index: 0;
 }
-/* Navy scrim, heaviest over the copy. Brand shading rather than a grey wash. The stops
-   are set by measurement, not taste: the bright window behind the middle of the frame is
-   near-white, so the scrim has to still be ~0.74 where the lead paragraph ends for 18px
-   text to clear 4.5:1. It clears to nothing before it reaches the people. */
 .hero-full-bg::after{
   content:""; position:absolute; inset: 0;
-  background: linear-gradient(
-    100deg,
-    rgba(13,34,63,0.92) 0%,
-    rgba(13,34,63,0.88) 26%,
-    rgba(13,34,63,0.74) 44%,
-    rgba(13,34,63,0.40) 60%,
-    rgba(13,34,63,0.12) 78%,
-    rgba(13,34,63,0.00) 92%
-  );
+  background: rgba(0,0,0,0.45);
 }
 /* width:100% — as a flex item the container would otherwise shrink to its content and
    the auto margins would centre it, pulling the copy off the page gutter. */
@@ -542,7 +530,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 
 .hero-full .hero-full__title{
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 400;
   font-size: clamp(40px, 4.6vw, 60px);
   line-height: 1.08;
   letter-spacing: -0.015em;
@@ -577,7 +565,7 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 .banner__bg{
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
-  background-color: var(--navy);
+  background-color: #000;
 }
 .banner .section-block__overlay{ z-index: 0; }
 .banner .container{ position: relative; z-index: 1; width: 100%; }
@@ -588,14 +576,14 @@ button{ font-family: inherit; cursor:pointer; border:none; background:none; colo
 .banner--center .hero-ctas{ justify-content: center; }
 .banner__title{
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.015em;
   margin: 24px 0 20px;
   white-space: pre-line;
 }
 .banner--title-standard .banner__title{ font-size: clamp(24px, 2.3vw, 30px); line-height: 1.22; }
-.banner--title-large .banner__title{ font-size: clamp(32px, 3.4vw, 48px); }
+.banner--title-large .banner__title{ font-size: 65px; line-height: 65px; }
 .banner--title-hero .banner__title{ font-size: clamp(40px, 4.6vw, 60px); line-height: 1.08; }
 .banner__title em{ font-style: italic; }
 .banner__lead{ font-size: 18px; line-height: 1.6; max-width: 500px; margin: 0 0 36px; white-space: pre-line; }
@@ -1021,13 +1009,16 @@ footer{
   position: fixed; inset: 0; z-index: 100;
   background: rgba(2,14,60,0.45);
   backdrop-filter: blur(8px);
-  display: grid; place-items: center;
+  display: flex; justify-content: center; align-items: flex-start;
+  overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   opacity: 0; pointer-events: none;
   transition: opacity .3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 24px;
 }
 .modal-back.open{ opacity: 1; pointer-events: auto;}
 .modal{
+  flex: none; margin: auto 0;
   width: min(560px, 100%);
   background: var(--white);
   border-radius: 28px;
@@ -1114,6 +1105,22 @@ footer{
 .success .ref{ font-size: 13.5px; color: var(--text-mid); }
 .success .ref strong{ color: var(--navy); }
 
+@media (max-width: 640px){
+  .modal-back{ padding: 12px; }
+  .modal{ padding: 24px 20px; border-radius: 20px; }
+  .modal h3{ font-size: 23px; padding-right: 40px; }
+  .modal .opt-grid, .modal .opt-grid.three{ grid-template-columns: 1fr; }
+  .modal .field.flush{ margin-bottom: 14px; }
+  .modal .field input{ font-size: 16px; }
+  .modal .combo-list{ position: static; margin-top: 6px; box-shadow: none; }
+  .modal-actions{
+    position: sticky; bottom: 0; z-index: 4;
+    margin: 20px -20px 0; padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    background: var(--white);
+    border-top: 1px solid var(--line);
+  }
+}
+
 /* ===================== Responsive ===================== */
 /* The number itself, not just an icon: measured, it fits from 768px up. It hides only
    below 760, where the logo, CTA and menu button already fill the bar. */
@@ -1131,16 +1138,7 @@ footer{
   .hero-pentagon{ display: none; }
   .hero-steps, .block-steps-strip{ flex-wrap: wrap; gap: 8px; }
   .hero-full-bg{ background-position: 72% center; }
-  .hero-full-bg::after{
-    background: linear-gradient(
-      100deg,
-      rgba(13,34,63,0.94) 0%,
-      rgba(13,34,63,0.90) 34%,
-      rgba(13,34,63,0.80) 56%,
-      rgba(13,34,63,0.45) 74%,
-      rgba(13,34,63,0.15) 90%
-    );
-  }
+  .hero-full-bg::after{ background: rgba(0,0,0,0.50); }
   .why-grid, .family-grid{ grid-template-columns: 1fr; gap: 56px;}
   .steps, .block-step-grid{ grid-template-columns: 1fr 1fr; }
   .steps::before, .block-step-grid::before{ display: none;}
@@ -1155,19 +1153,12 @@ footer{
      scrim runs top to bottom rather than left to right. */
   .hero-full{ min-height: auto; padding: 56px 0 72px; }
   .hero-full-bg{ background-position: 68% center; }
-  .hero-full-bg::after{
-    background: linear-gradient(
-      180deg,
-      rgba(13,34,63,0.90) 0%,
-      rgba(13,34,63,0.70) 55%,
-      rgba(13,34,63,0.55) 100%
-    );
-  }
+  .hero-full-bg::after{ background: rgba(0,0,0,0.55); }
   .hero-full .hero-full__title{ font-size: 38px; }
   .hero-full .hero-ctas .btn{ flex: 1 1 auto; justify-content: center; }
   .banner--full{ min-height: auto; }
   .banner--title-hero .banner__title{ font-size: 38px; }
-  .banner--title-large .banner__title{ font-size: 32px; }
+  .banner--title-large .banner__title{ font-size: 38px; line-height: 38px; }
   .banner .hero-ctas .btn{ flex: 1 1 auto; justify-content: center; }
   .hero-steps, .block-steps-strip{ flex-direction: column; gap: 0; padding: 8px 20px;}
   .hero-steps .hs-item, .block-steps-strip .hs-item{ justify-content: flex-start; padding: 14px 0;}
@@ -1214,12 +1205,27 @@ footer{
 .section-block--has-image{ overflow: hidden; }
 .section-block__bg{ position: absolute; inset: 0; z-index: 0; background-size: cover; background-position: center; }
 .section-block__overlay{ position: absolute; inset: 0; z-index: 0; }
-.section-block__overlay--navy{ background: rgba(13,34,63,0.6); }
-.section-block__overlay--navy-strong{ background: rgba(13,34,63,0.88); }
+.section-block__overlay--navy{ background: rgba(0,0,0,0.45); }
+.section-block__overlay--navy-strong{ background: rgba(0,0,0,0.58); }
 .section-block__overlay--white{ background: rgba(255,255,255,0.65); }
 .section-block__overlay--white-strong{ background: rgba(255,255,255,0.9); }
-.section-block__overlay--navy-left{ background: linear-gradient(90deg, rgba(13,34,63,0.94) 0%, rgba(13,34,63,0.86) 35%, rgba(13,34,63,0.45) 65%, rgba(13,34,63,0.15) 100%); }
-.section-block__overlay--navy-bottom{ background: linear-gradient(180deg, rgba(13,34,63,0.2) 0%, rgba(13,34,63,0.55) 45%, rgba(13,34,63,0.92) 100%); }
+.section-block__overlay--navy-left{
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.88) 0%,
+    rgba(0,0,0,0.72) 35%,
+    rgba(0,0,0,0.38) 65%,
+    rgba(0,0,0,0.10) 100%
+  );
+}
+.section-block__overlay--navy-bottom{
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.15) 0%,
+    rgba(0,0,0,0.45) 45%,
+    rgba(0,0,0,0.82) 100%
+  );
+}
 .section-block__overlay--white-left{ background: linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.9) 35%, rgba(255,255,255,0.5) 65%, rgba(255,255,255,0.15) 100%); }
 .section-block--has-image > .section-block__inner{ position: relative; z-index: 1; }
 .section-block--has-image.section-block--text-light .block-heading,
@@ -1371,11 +1377,11 @@ html.js .reveal-parts.is-in-view :is(.section-block__inner > :not(.row-container
    guide read as eight competing headlines with a caption above them. h1 matches the section-head
    size the rest of the site titles pages at, and each step down is a clear one. */
 h1.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; letter-spacing: -0.015em; color: var(--navy); }
-h2.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 2.3vw, 30px); line-height: 1.22; letter-spacing: -0.01em; color: var(--navy); }
+h2.block-heading{ font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: 1.22; letter-spacing: -0.01em; color: var(--navy); }
 h3.block-heading{ font-family: var(--font-display); font-weight: 700; font-size: 22px; line-height: 1.28; color: var(--navy); }
 h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.35; color: var(--navy); }
 
-.block-text p{ margin: 0 0 14px; color: var(--text-mid); font-size: 18px; line-height: 1.6; white-space: pre-line; }
+.block-text p{ margin: 0 0 14px; color: var(--text-mid); font-size: 15.6px; line-height: 23.4px; white-space: pre-line; }
 .block-text p:last-child{ margin-bottom: 0; }
 .block-text--center{ text-align: center; }
 .block-text--right{ text-align: right; }
@@ -1395,8 +1401,11 @@ h4.block-heading{ font-family: var(--font-display); font-weight: 600; font-size:
 .block-button--center{ justify-content: center; }
 .block-button--right{ justify-content: flex-end; }
 
-h1.block-heading--large{ font-size: clamp(38px, 4vw, 52px); line-height: 1.08; }
-h2.block-heading--large{ font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; }
+.block-heading.block-heading--large{
+  font-size: 52px;
+  line-height: 54.6px;
+  font-weight: 400;
+}
 
 h1.look-h1, h2.look-h1, h3.look-h1, h4.look-h1{ font-size: clamp(32px, 3.4vw, 48px); line-height: 1.1; }
 h1.look-h2, h2.look-h2, h3.look-h2, h4.look-h2{ font-size: clamp(24px, 2.3vw, 30px); line-height: 1.22; }
@@ -1984,7 +1993,9 @@ h1.look-h2.block-heading--large, h2.look-h2.block-heading--large, h3.look-h2.blo
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding: 20px 24px; cursor: pointer; font-weight: 600; color: var(--navy);
   font-size: 17px; list-style: none;
+  transition: background-color .18s ease;
 }
+.faq__q:hover{ background: #60a5fa; }
 .faq__q::-webkit-details-marker{ display: none; }
 .faq__mark{ position: relative; width: 14px; height: 14px; flex: none; }
 .faq__mark::before, .faq__mark::after{
@@ -2025,10 +2036,8 @@ h1.look-h2.block-heading--large, h2.look-h2.block-heading--large, h3.look-h2.blo
 .contact-form__field input:focus, .contact-form__field textarea:focus{
   outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint);
 }
-.contact-form__consent{ display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-mid); }
-.contact-form__consent input{ margin-top: 3px; accent-color: var(--blue-deep); flex: none; }
-/* Same reasoning as the wizard's: the privacy link has to look like one. */
-.contact-form__consent a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
+.contact-form__consent-note{ margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-mid); }
+.contact-form__consent-note a{ color: var(--navy); text-decoration: underline; text-underline-offset: 3px; }
 .contact-form__error{
   display: block; margin-top: 6px; font-style: normal; font-size: 13.5px; color: var(--danger);
 }

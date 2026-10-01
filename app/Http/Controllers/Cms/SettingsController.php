@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Cms;
 use App\Content\Site;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveSettingsRequest;
+use App\Logging\Delivery;
 use App\Models\Activity;
 use App\Models\Page;
 use Illuminate\Http\RedirectResponse;
@@ -50,6 +51,9 @@ class SettingsController extends Controller
                     'privacyPage' => $site['legal']['privacyPage'] ?? '',
                 ],
                 'customCss' => $site['customCss'] ?? '',
+                'notifications' => [
+                    'enquiryRecipients' => implode("\n", Site::enquiryRecipients()),
+                ],
             ],
             /* Published only, matching the rule. Offering a draft would put a consent line in
                front of a 404 — see `Site::pageUrl()`. */
@@ -70,6 +74,14 @@ class SettingsController extends Controller
            under `seo.manage` — and a wholesale write from either would erase the other's half. */
         Site::merge($after);
 
+        Delivery::log()->info('Settings saved', [
+            'user_id' => $request->user()?->id,
+            'recipients_typed' => $request->typedRecipients,
+            'recipients_validated' => $after['notifications']['enquiryRecipients'],
+            'recipients_stored' => Site::all()['notifications']['enquiryRecipients'] ?? 'MISSING',
+            'recipients_read_back' => Site::enquiryRecipients(),
+        ]);
+
         $this->record($before, $after);
 
         return back();
@@ -89,6 +101,8 @@ class SettingsController extends Controller
             'Tracking' => ($before['tracking'] ?? null) !== $after['tracking'],
             'Legal' => ($before['legal'] ?? null) !== $after['legal'],
             'Custom CSS' => ($before['customCss'] ?? null) !== $after['customCss'],
+            'Enquiry notifications' => ($before['notifications']['enquiryRecipients'] ?? [])
+                !== $after['notifications']['enquiryRecipients'],
         ]));
 
         if ($areas !== []) {

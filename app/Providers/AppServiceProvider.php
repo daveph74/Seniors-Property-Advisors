@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Auth\Permissions;
 use App\Http\Limits;
+use App\Mail\SesCrossAccountTransport;
 use App\Models\BlogPost;
 use App\Models\Faq;
 use App\Models\Media;
@@ -12,6 +13,7 @@ use App\Models\Testimonial;
 use App\Observers\RecordsActivity;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
         /* Named here so the routes read `throttle:cms-write` rather than a number nobody can weigh
            without knowing what else is set. */
         Limits::define();
+
+        Mail::extend('ses_cross_account', fn (array $config) => SesCrossAccountTransport::make($config));
 
         /*
          * Who the visitor is, once something else terminates TLS in front of this.
