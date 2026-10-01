@@ -224,15 +224,32 @@ export default function NavigationIndex({ nav = [], footer = { columns: [], link
             <section className="cms-card" style={{ padding: 18, marginBottom: 20 }}>
                 <h2 className="cms-card__title" style={{ marginBottom: 12 }}>Footer columns</h2>
 
+                <p className="cms-hint" style={{ marginBottom: 12 }}>
+                    Up to four columns of grouped links beside the brand column. Remove one and its links go with it.
+                </p>
+
                 {data.footer.columns.map((column) => (
                     <div key={column.key} className="cms-nav-column">
-                        <input
-                            className="cms-input"
-                            style={{ maxWidth: 260, marginBottom: 10 }}
-                            value={column.heading ?? ''}
-                            placeholder="Column heading"
-                            onChange={(e) => setColumn(column.key, 'heading', e.target.value)}
-                        />
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+                            <input
+                                className="cms-input"
+                                style={{ maxWidth: 260 }}
+                                value={column.heading ?? ''}
+                                placeholder="Column heading"
+                                onChange={(e) => setColumn(column.key, 'heading', e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                className="cms-btn cms-btn--xs"
+                                aria-label="Remove this column"
+                                onClick={() => setData('footer', {
+                                    ...data.footer,
+                                    columns: data.footer.columns.filter((c) => c.key !== column.key),
+                                })}
+                            >
+                                Remove column
+                            </button>
+                        </div>
 
                         <Rows
                             rows={column.links}
@@ -253,6 +270,23 @@ export default function NavigationIndex({ nav = [], footer = { columns: [], link
                         </button>
                     </div>
                 ))}
+
+                {data.footer.columns.length < 4 ? (
+                    <button
+                        type="button"
+                        className="cms-btn cms-btn--sm"
+                        style={{ marginTop: 6 }}
+                        onClick={() => setData('footer', {
+                            ...data.footer,
+                            columns: [...data.footer.columns, keyed({ heading: '', links: [] })],
+                        })}
+                    >
+                        <PlusIcon size={12} />
+                        Add a column
+                    </button>
+                ) : (
+                    <div className="cms-hint">Four columns is the most the footer can hold side by side.</div>
+                )}
             </section>
 
             <section className="cms-card" style={{ padding: 18 }}>

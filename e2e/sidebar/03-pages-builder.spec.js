@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures.js';
 import * as B from '../support/builder.js';
-import { dragLibraryItem } from '../support/dragShim.js';
+import { dragLibraryItem, dragBlock } from '../support/dragShim.js';
 import { uniqueValue } from '../support/unique.js';
 
 /** The builder as a tool, rather than as a way of editing one block. */
@@ -418,6 +418,101 @@ test.describe('Pages · Builder', () => {
         await B.saveDraft(page);
     });
 
+    test('an animated heading reveals itself in the preview and keeps the setting', async ({ page }) => {
+        const marker = uniqueValue('Revealed');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.input(page, 'Delay').selectOption('200');
+
+        /* The canvas never animates, so the heading is simply there. */
+        await expect(B.canvas(page).locator('.block-heading', { hasText: marker })).toBeVisible();
+        await expect(B.canvas(page).locator('.reveal', { hasText: marker })).toHaveCount(0);
+
+        await B.saveDraft(page);
+
+        const builder = page.url();
+        await page.goto(builder.replace(/\/edit$/, '/preview'), { waitUntil: 'domcontentloaded' });
+
+        const revealed = page.locator('.reveal.reveal--fade-up.reveal--delay-200', { hasText: marker });
+        await expect(revealed).toHaveCount(1);
+        await revealed.scrollIntoViewIfNeeded();
+        await expect(revealed).toHaveClass(/is-in-view/);
+
+        await page.goto(builder, { waitUntil: 'domcontentloaded' });
+        await expect(B.canvas(page).locator('body')).not.toBeEmpty();
+        await B.selectBlock(page, marker);
+        await B.openTab(page, 'Style');
+        await expect(B.input(page, 'Animation')).toHaveValue('fade-up');
+        await expect(B.input(page, 'Delay')).toHaveValue('200');
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a component can bring its parts in one after another', async ({ page }) => {
+        const marker = uniqueValue('Parts');
+
+        await B.addBlock(page, 'Trust cards');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.input(page, 'Animate').selectOption('parts');
+        await B.saveDraft(page);
+
+        const builder = page.url();
+        await page.goto(builder.replace(/\/edit$/, '/preview'), { waitUntil: 'domcontentloaded' });
+
+        const wrapper = page.locator('.reveal-parts.reveal-parts--fade-up', { hasText: marker });
+        await expect(wrapper).toHaveCount(1);
+        /* The wrapper itself is never hidden — only its parts are. */
+        await expect(wrapper).toHaveCSS('opacity', '1');
+        await wrapper.scrollIntoViewIfNeeded();
+        await expect(wrapper).toHaveClass(/is-in-view/);
+        await expect(wrapper.locator('.section-head')).toHaveCSS('opacity', '1');
+
+        await page.goto(builder, { waitUntil: 'domcontentloaded' });
+        await expect(B.canvas(page).locator('body')).not.toBeEmpty();
+        await B.selectBlock(page, marker);
+        await B.openTab(page, 'Style');
+        await expect(B.input(page, 'Animate')).toHaveValue('parts');
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a full-bleed hero brings its copy in part by part while its photo stays put', async ({ page }) => {
+        const marker = uniqueValue('HeroParts');
+
+        await B.addBlock(page, 'Hero, full bleed');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await B.input(page, 'Animation').selectOption('fade-up');
+        await B.input(page, 'Animate').selectOption('parts');
+        await B.saveDraft(page);
+
+        const builder = page.url();
+        await page.goto(builder.replace(/\/edit$/, '/preview'), { waitUntil: 'domcontentloaded' });
+
+        const wrapper = page.locator('.reveal-parts.reveal-parts--fade-up', { hasText: marker });
+        await expect(wrapper).toHaveCount(1);
+        await expect(wrapper.locator('.hero-full-bg')).toHaveCSS('opacity', '1');
+        await wrapper.scrollIntoViewIfNeeded();
+        await expect(wrapper).toHaveClass(/is-in-view/);
+        await expect(wrapper.locator('.hero-full__title')).toHaveCSS('opacity', '1');
+
+        await page.goto(builder, { waitUntil: 'domcontentloaded' });
+        await expect(B.canvas(page).locator('body')).not.toBeEmpty();
+        await B.selectBlock(page, marker);
+        await B.openTab(page, 'Style');
+        await expect(B.input(page, 'Animate')).toHaveValue('parts');
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
     test('a column animation setting survives a save and a reload', async ({ page }) => {
         await addSection(page);
         await selectLastColumn(page);
@@ -516,6 +611,295 @@ test.describe('Pages · Builder', () => {
            absence of the nesting is the test's. */
         await expect(B.canvas(page).locator('.cms-nest-drop')).toHaveCount(0);
         await expect(B.canvas(page).locator('.cms-block')).toHaveCount(before - 3);
+        await B.saveDraft(page);
+    });
+
+    /* A section with a two-column row, selected through Layers so the row itself is what the
+       panel edits. Returns the row as it appears in the canvas. */
+    const addTwoColumnSection = async (page) => {
+        await addSection(page);
+        await selectLastRow(page);
+        await B.input(page, 'Columns').fill('2');
+
+        const row = B.canvas(page).locator('.row-container').last();
+
+        await expect(row.locator(':scope > .cms-col-cell')).toHaveCount(2);
+
+        return row;
+    };
+
+    const selectCell = async (page, row, index) => {
+        await row.locator(':scope > .cms-col-cell').nth(index).locator(':scope > .cms-block').dispatchEvent('click');
+        await expect(page.locator('.cms-accordion__head', { hasText: 'Style' })).toBeVisible();
+    };
+
+    test('a Layout change on Mobile leaves Desktop alone', async ({ page }) => {
+        await addSection(page);
+        await selectLastSection(page);
+        await B.openTab(page, 'Layout');
+
+        await B.device(page, 'Mobile');
+        await B.input(page, 'Section height').selectOption('compact');
+        await expect(B.layoutHint(page, 'Section height')).toContainText('Set for Mobile');
+        await expect(B.canvas(page).locator('.section-block--compact--mobile')).toHaveCount(1);
+
+        await B.device(page, 'Desktop');
+        await expect(B.input(page, 'Section height')).toHaveValue('comfortable');
+        await expect(B.layoutHint(page, 'Section height')).toHaveCount(0);
+
+        await B.saveAndReload(page);
+        await selectLastSection(page);
+        await B.openTab(page, 'Layout');
+        await expect(B.input(page, 'Section height')).toHaveValue('comfortable');
+        await B.device(page, 'Mobile');
+        await expect(B.input(page, 'Section height')).toHaveValue('compact');
+
+        await B.device(page, 'Desktop');
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a column width is a share of the row, and a tablet width holds instead of stacking', async ({ page }) => {
+        const row = await addTwoColumnSection(page);
+        const cells = row.locator(':scope > .cms-col-cell');
+
+        /* Grid gap is per track, and a 60-track row once carried 59 gutters — wider than the row itself.
+           A column must never be wider than the row that holds it. */
+        const overflow = await row.evaluate((el) => el.scrollWidth - el.clientWidth);
+        expect(overflow).toBeLessThanOrEqual(0);
+        const [rowBox, firstBox] = [await row.boundingBox(), await cells.nth(0).boundingBox()];
+        expect(firstBox.width).toBeLessThan(rowBox.width);
+
+        await selectCell(page, row, 0);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Column width').selectOption('two-thirds');
+
+        await expect(cells.nth(0)).toHaveClass(/col-w-two-thirds/);
+        const [wide, narrow] = [await cells.nth(0).boundingBox(), await cells.nth(1).boundingBox()];
+        expect(wide.width).toBeGreaterThan(narrow.width * 1.8);
+        expect(Math.round(wide.y)).toBe(Math.round(narrow.y));
+
+        await B.device(page, 'Tablet');
+        await B.input(page, 'Column width').selectOption('half');
+        await selectCell(page, row, 1);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Column width').selectOption('half');
+        await expect(B.layoutHint(page, 'Column width')).toContainText('Set for Tablet');
+
+        const [a, b] = [await cells.nth(0).boundingBox(), await cells.nth(1).boundingBox()];
+        expect(Math.round(a.y)).toBe(Math.round(b.y));
+
+        await B.saveAndReload(page);
+        await B.device(page, 'Tablet');
+        const after = B.canvas(page).locator('.row-container').last();
+        await selectCell(page, after, 1);
+        await B.openTab(page, 'Layout');
+        await expect(B.input(page, 'Column width')).toHaveValue('half');
+        await B.device(page, 'Desktop');
+        await expect(B.input(page, 'Column width')).toHaveValue('auto');
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a column position chosen on Tablet does not move Desktop', async ({ page }) => {
+        const row = await addTwoColumnSection(page);
+
+        await B.device(page, 'Tablet');
+        await selectCell(page, row, 1);
+        await B.openTab(page, 'Layout');
+        await B.input(page, 'Position in row').selectOption('1');
+
+        await expect(B.layoutHint(page, 'Position in row')).toContainText('Set for Tablet');
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([1, 0]);
+
+        await page.getByRole('button', { name: 'Layers' }).click();
+        await expect(page.locator('.cms-layer-row--active').getByTitle('Move up')).toBeDisabled();
+
+        await B.device(page, 'Desktop');
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([0, 1]);
+        await expect(B.input(page, 'Position in row')).toHaveValue('2');
+
+        await B.device(page, 'Tablet');
+        await B.layoutHint(page, 'Position in row').getByRole('button').click();
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([0, 1]);
+
+        await B.device(page, 'Desktop');
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a column dragged within its row on Tablet reorders that screen only', async ({ page }) => {
+        const row = await addTwoColumnSection(page);
+        const cells = '.row-container @last > .cms-col-cell';
+
+        await B.device(page, 'Tablet');
+
+        const marker = await dragBlock(page, `${cells}:nth-child(2) > .cms-block`, `${cells}:nth-child(1) > .cms-block`, { edge: 'before' });
+
+        expect(marker).toBe(true);
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([1, 0]);
+
+        await B.device(page, 'Desktop');
+        expect(await B.cellsInScreenOrder(page, row)).toEqual([0, 1]);
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('undo inside a rich text block stays inside it', async ({ page }) => {
+        const first = uniqueValue('First');
+        const second = uniqueValue('Second');
+
+        await B.addBlock(page, 'Rich text');
+        let surface = B.field(page, 'Text').locator('.cms-rt__surface[contenteditable="true"]');
+        await surface.click();
+        await page.keyboard.type(first);
+
+        await B.addBlock(page, 'Rich text');
+        surface = B.field(page, 'Text').locator('.cms-rt__surface[contenteditable="true"]');
+        await surface.click();
+        await page.keyboard.type(second);
+        await page.keyboard.press('Control+z');
+
+        await expect(B.canvas(page).locator('.block-text', { hasText: first })).toHaveCount(1);
+        await expect(B.canvas(page).locator('.block-text', { hasText: second })).toHaveCount(0);
+        await expect(surface).not.toContainText(first);
+
+        await B.deleteSelected(page);
+        await B.selectBlock(page, first);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('the keyboard undoes from inside the canvas too', async ({ page }) => {
+        const before = await B.canvas(page).locator('.cms-block').count();
+
+        await B.addBlock(page, 'Heading');
+        await B.canvas(page).locator('.cms-block').last().click();
+        await B.canvas(page).locator('body').press('Control+z');
+
+        await expect(B.canvas(page).locator('.cms-block')).toHaveCount(before);
+        await B.saveDraft(page);
+    });
+
+    test('a Row from the library arrives inside a section', async ({ page }) => {
+        const top = B.canvas(page).locator('.cms-canvas-page > .cms-block');
+        const before = await top.count();
+
+        await page.locator('.cms-component-card[title="Row"]').click();
+
+        await expect(top).toHaveCount(before + 1);
+        await expect(top.last().locator(':scope > .section-block')).toHaveCount(1);
+        await expect(page.locator('.cms-builder-right__type')).toHaveText('row');
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('hovering somewhere a block is not allowed shows no marker and drops nothing', async ({ page }) => {
+        await addSection(page);
+
+        /* A row may not sit at page level, and nothing above a top-level block can take it either, so
+           dragging the new section's row over the first block on the page has nowhere valid to land. */
+        const top = B.canvas(page).locator('.cms-canvas-page > .cms-block');
+        const before = await top.count();
+        const marker = await dragBlock(page, '.cms-canvas-page > .cms-block @last .cms-block', '.cms-canvas-page > .cms-block', { edge: 'before' });
+
+        expect(marker).toBe(false);
+        await expect(top).toHaveCount(before);
+        await expect(top.last().locator('.row-container')).toHaveCount(1);
+
+        await selectLastSection(page);
+        await B.toolbar(page, 'Delete');
+        await B.saveDraft(page);
+    });
+
+    test('a website section takes a background swatch and keeps it', async ({ page }) => {
+        const marker = uniqueValue('Backed');
+
+        await B.addBlock(page, 'Why list');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Style');
+        await page.locator('.cms-swatch[title="navy"]').click();
+
+        await expect(B.canvas(page).locator('.backdrop--bg-navy.backdrop--text-light')).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await B.selectBlock(page, marker);
+        await expect(B.canvas(page).locator('.backdrop--bg-navy.backdrop--text-light')).toHaveCount(1);
+
+        await B.openTab(page, 'Style');
+        await page.locator('.cms-swatch[title="As designed"]').click();
+        await expect(B.canvas(page).locator('.backdrop')).toHaveCount(0);
+
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a super administrator can give a block custom CSS that the canvas applies', async ({ page }) => {
+        const marker = uniqueValue('Styled');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+        await B.openTab(page, 'Advanced');
+        /* A declaration for the block itself, and a rule naming its own tag: the block's root is the h2,
+           so `h2 { }` has to reach it rather than hunt for an h2 inside it. */
+        await B.field(page, 'Custom CSS').locator('textarea').fill('border-bottom: 3px solid rgb(255, 0, 0);\nh2 { color: rgb(255, 165, 0); }');
+
+        const heading = B.canvas(page).locator('.block-heading', { hasText: marker });
+        await expect(heading).toHaveCSS('border-bottom-color', 'rgb(255, 0, 0)');
+        await expect(heading).toHaveCSS('color', 'rgb(255, 165, 0)');
+
+        await B.saveAndReload(page);
+        await expect(B.canvas(page).locator('.block-heading', { hasText: marker })).toHaveCSS('border-bottom-color', 'rgb(255, 0, 0)');
+
+        await B.selectBlock(page, marker);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a heading can wear the H1 look while staying an H2', async ({ page }) => {
+        const marker = uniqueValue('Looks');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+        await B.field(page, 'Look like').getByRole('button', { name: 'H1' }).click();
+
+        const heading = B.canvas(page).locator('h2.block-heading.look-h1', { hasText: marker });
+        await expect(heading).toHaveCount(1);
+
+        await B.saveAndReload(page);
+        await expect(B.canvas(page).locator('h2.block-heading.look-h1', { hasText: marker })).toHaveCount(1);
+
+        await B.selectBlock(page, marker);
+        await B.deleteSelected(page);
+        await B.saveDraft(page);
+    });
+
+    test('a heading centred on Mobile stays left on Desktop', async ({ page }) => {
+        const marker = uniqueValue('Centred');
+
+        await B.addBlock(page, 'Heading');
+        await B.fillField(page, 'Heading', marker);
+
+        await B.device(page, 'Mobile');
+        await B.field(page, 'Alignment').getByRole('button', { name: 'Centre' }).click();
+        await expect(B.layoutHint(page, 'Alignment')).toContainText('Set for Mobile');
+        await expect(B.canvas(page).locator('.block-heading--center--mobile')).toHaveCount(1);
+
+        await B.device(page, 'Desktop');
+        await expect(B.field(page, 'Alignment').locator('.cms-align-btn--active')).toHaveText('Left');
+
+        await B.saveAndReload(page);
+        await B.selectBlock(page, marker);
+        await expect(B.canvas(page).locator('.block-heading--center--mobile')).toHaveCount(1);
+
+        await B.deleteSelected(page);
         await B.saveDraft(page);
     });
 });

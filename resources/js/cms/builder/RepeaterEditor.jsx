@@ -79,7 +79,11 @@ export default function RepeaterEditor({ collection, items, onChange }) {
                                             value={value}
                                             alt={f.altPath ? readPath(item, f.altPath) : null}
                                             onChange={set}
-                                            onAltChange={f.altPath ? (v) => replace(index, writePath(item, f.altPath, v)) : null}
+                                            onPick={({ url, alt }) => {
+                                                const withUrl = writePath(item, f.path, url);
+
+                                                replace(index, f.altPath && alt !== undefined ? writePath(withUrl, f.altPath, alt) : withUrl);
+                                            }}
                                         />
                                     );
                                 }

@@ -30,6 +30,10 @@ class Permissions
            stay there. */
         'seo.manage' => [User::SUPER_ADMIN, User::CLIENT_ADMIN],
         'settings.manage' => [User::SUPER_ADMIN],
+        /* Custom CSS is code in all but name: it can hide content, repaint the site or fetch what the
+           content policy allows. A client administrator neither sees the box nor may change a value
+           through a save; the server compares against what is stored rather than trusting the form. */
+        'styles.custom' => [User::SUPER_ADMIN],
     ];
 
     public const MODULES = [

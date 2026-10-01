@@ -1,3 +1,4 @@
+import { lookClass } from './headingLevel';
 import ActionButton from './ActionButton';
 
 export default function TextImageSection({ data, actions, anchor }) {
@@ -11,7 +12,7 @@ export default function TextImageSection({ data, actions, anchor }) {
                     {data.eyebrow ? <div className="eyebrow-line">{data.eyebrow}</div> : null}
 
                     {data.heading || data.headingEm ? (
-                        <h2>
+                        <h2 className={lookClass(data.titleLook) || undefined}>
                             {data.heading} {data.headingEm ? <em>{data.headingEm}</em> : null}
                         </h2>
                     ) : null}

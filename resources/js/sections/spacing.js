@@ -3,6 +3,15 @@ import { breakpointClasses } from './responsive';
 const STEPS = ['small', 'medium', 'large', 'xlarge'];
 const OVERRIDE_STEPS = ['none', ...STEPS];
 
+const ALIGNS = ['left', 'center', 'right'];
+
+export function alignClasses(data = {}, prefix) {
+    return [
+        data.align === 'center' || data.align === 'right' ? `${prefix}--${data.align}` : '',
+        breakpointClasses(data, 'align', (v) => (ALIGNS.includes(v) ? `${prefix}--${v}` : '')),
+    ].filter(Boolean).join(' ');
+}
+
 export function spacingClasses(data = {}) {
     return [
         STEPS.includes(data.spaceAbove) ? `u-space-above-${data.spaceAbove}` : '',

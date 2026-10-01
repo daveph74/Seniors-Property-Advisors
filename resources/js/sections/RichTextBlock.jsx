@@ -1,10 +1,9 @@
-import { spacingClasses } from './spacing';
+import { spacingClasses, alignClasses } from './spacing';
 
-const ALIGN = { left: '', center: 'block-text--center', right: 'block-text--right' };
 
 export default function RichTextBlock({ data, anchor }) {
     const body = String(data.body || '');
-    const className = `block-text ${ALIGN[data.align] || ''} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim();
+    const className = `block-text ${alignClasses(data, 'block-text')} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim();
 
     if (body.includes('<')) {
         return <div id={anchor} className={className} dangerouslySetInnerHTML={{ __html: body }} />;

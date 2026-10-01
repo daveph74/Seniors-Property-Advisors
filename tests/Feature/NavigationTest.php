@@ -98,6 +98,30 @@ class NavigationTest extends TestCase
         ]])->assertSessionHasErrors('nav.0.children.0.href');
     }
 
+    public function test_footer_columns_can_be_added_and_removed_up_to_four(): void
+    {
+        $column = fn (string $heading) => ['heading' => $heading, 'links' => [['label' => 'Link', 'href' => '/faqs']]];
+
+        $this->put('/cms/navigation', ['nav' => [], 'footer' => [
+            'columns' => [$column('One')],
+            'links' => [],
+        ]])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertCount(1, Setting::find('globals')->value['footer']['columns']);
+
+        $this->put('/cms/navigation', ['nav' => [], 'footer' => [
+            'columns' => [$column('One'), $column('Two'), $column('Three'), $column('Four')],
+            'links' => [],
+        ]])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertCount(4, Setting::find('globals')->value['footer']['columns']);
+
+        $this->put('/cms/navigation', ['nav' => [], 'footer' => [
+            'columns' => [$column('1'), $column('2'), $column('3'), $column('4'), $column('5')],
+            'links' => [],
+        ]])->assertSessionHasErrors('footer.columns');
+    }
+
     public function test_a_footer_column_needs_a_heading(): void
     {
         $this->save(['footer' => [

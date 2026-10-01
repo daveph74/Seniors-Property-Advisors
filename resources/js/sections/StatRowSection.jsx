@@ -6,7 +6,7 @@ export default function StatRowSection({ data, anchor }) {
     return (
         <section className="stat-row" id={anchor}>
             <div className="container">
-                <SectionHead {...data} />
+                <SectionHead {...data} look={data.titleLook} />
 
                 {stats.length > 0 ? (
                     <dl className="stat-row__grid">

@@ -74,6 +74,24 @@ class SettingsTest extends TestCase
         });
     }
 
+    public function test_site_custom_css_reaches_public_pages_and_never_the_admin(): void
+    {
+        $this->save(['customCss' => '.btn { border-radius: 4px; }'])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame('.btn { border-radius: 4px; }', $this->site()['customCss']);
+
+        $this->get('/')->assertOk()
+            ->assertSee('<style id="site-custom-css">.btn { border-radius: 4px; }</style>', false);
+        $this->get('/cms')->assertOk()->assertDontSee('site-custom-css');
+
+        $this->save(['customCss' => '.x { } </style><script>alert(1)</script>'])
+            ->assertSessionHasErrors('customCss');
+        $this->save(['customCss' => '@import url(https://evil.example/a.css);'])
+            ->assertSessionHasErrors('customCss');
+
+        $this->assertSame('.btn { border-radius: 4px; }', $this->site()['customCss']);
+    }
+
     public function test_the_title_pattern_reaches_the_delivered_html(): void
     {
         $this->page('services');

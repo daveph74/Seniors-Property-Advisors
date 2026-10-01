@@ -57,6 +57,18 @@ test.describe('Navigation', () => {
         await expect(rows).toHaveCount(before);
     });
 
+    test('a footer column can be added and removed again', async ({ page }) => {
+        const card = page.locator('.cms-card', { hasText: 'Footer columns' });
+        const columns = card.locator('.cms-nav-column');
+        const before = await columns.count();
+
+        await card.getByRole('button', { name: 'Add a column' }).click();
+        await expect(columns).toHaveCount(before + 1);
+
+        await columns.last().getByRole('button', { name: 'Remove this column' }).click();
+        await expect(columns).toHaveCount(before);
+    });
+
     /* Only the header nests, and only one level: a dropdown holds links, not more dropdowns. */
     test('a header item can hold a dropdown child', async ({ page }) => {
         const rows = header(page).locator('.cms-nav-row');

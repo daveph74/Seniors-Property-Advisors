@@ -6,6 +6,8 @@ import { repeatersFor, readPath } from './repeaters';
 import { contentFieldsFor, IMAGE_POSITIONS } from './contentFields';
 import { toEditorHtml } from './richTextBody';
 import { effective, sourceOf, overrideOf } from '../../sections/responsive';
+import { takesBackdrop } from '../../sections/Backdrop';
+import { hasParts } from '../../sections/Reveal';
 import { overlayOpacity } from '../../sections/overlayOpacity';
 
 function OverlayStrength({ data, onChange }) {
@@ -83,7 +85,7 @@ function optionsFor(field, library, value) {
     ];
 }
 
-export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, columnPlace = null, onPosition, onClearOrder, onSaveReusable, library = {} }) {
+export default function SettingsPanel({ block, openPanels, onTogglePanel, patch, setLabel, setAnchor, device, onDevice, onColumnCount, columnPlace = null, onPosition, onClearOrder, canCustomCss = false, onSaveReusable, library = {} }) {
     if (!block) {
         return (
             <div className="cms-no-selection">
@@ -113,6 +115,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
     const hiddenOn = ['desktop', 'tablet', 'mobile'].filter((bp) => (data.hidden || {})[bp]);
 
     const repeaters = repeatersFor(type, data);
+    const backdrop = takesBackdrop(type);
 
     const layoutValue = (key, fallback) => effective(data, device, key, fallback);
     const patchLayout = (key, value) => (device === 'desktop' ? patch(key, value) : patch(`responsive.${device}.${key}`, value));
@@ -128,7 +131,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                 {own ? `Set for ${DEVICE_LABEL[device]}. ` : `Following ${DEVICE_LABEL[source]}. `}
                 {own && (
                     <button type="button" className="cms-link-btn" onClick={() => (key === 'order' ? onClearOrder() : patch(`responsive.${device}.${key}`, undefined))}>
-                        Use the {DEVICE_LABEL[inherits]} value
+                        {key === 'order' ? `Put the row back to its ${DEVICE_LABEL[sourceOf(data, inherits, key)]} order` : `Use the ${DEVICE_LABEL[sourceOf(data, inherits, key)]} value`}
                     </button>
                 )}
             </div>
@@ -297,7 +300,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                         {hasEyebrow && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Pre-heading</label>
-                                <input className="cms-input" value={data.eyebrow} onChange={(e) => patch('eyebrow', e.target.value)} />
+                                <input className="cms-input" value={data.eyebrow || ''} onChange={(e) => patch('eyebrow', e.target.value)} />
                             </div>
                         )}
 
@@ -323,6 +326,25 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         </button>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {has('level') && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Look like</label>
+                                <div className="cms-align-row">
+                                    {[['', 'Automatic'], ['h1', 'H1'], ['h2', 'H2'], ['h3', 'H3']].map(([value, text]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            className={`cms-align-btn ${(data.look || '') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patch('look', value)}
+                                        >
+                                            {text}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="cms-hint">Changes the size only. The level above is what search engines and screen readers see.</div>
                             </div>
                         )}
 
@@ -393,7 +415,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             <div className="cms-field">
                                 <label className="cms-field-label">Text</label>
                                 <Suspense fallback={<div className="cms-rt"><div className="cms-rt__surface cms-rt__surface--inline">Loading the editor…</div></div>}>
-                                    <InlineRichTextEditor value={toEditorHtml(data.body)} onChange={(html) => patch('body', html)} />
+                                    <InlineRichTextEditor key={block.id} value={toEditorHtml(data.body)} onChange={(html) => patch('body', html)} />
                                 </Suspense>
                                 <div className="cms-hint">Select some words, then use the buttons above to make them bold, a list or a link.</div>
                             </div>
@@ -467,13 +489,15 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         <button
                                             key={value}
                                             type="button"
-                                            className={`cms-align-btn ${(data.align || 'left') === value ? 'cms-align-btn--active' : ''}`}
-                                            onClick={() => patch('align', value)}
+                                            className={`cms-align-btn ${layoutValue('align', 'left') === value ? 'cms-align-btn--active' : ''}`}
+                                            onClick={() => patchLayout('align', value)}
                                         >
                                             {text}
                                         </button>
                                     ))}
                                 </div>
+                                {device !== 'desktop' && <div className="cms-hint">Editing the {DEVICE_LABEL[device]} alignment.</div>}
+                                {layoutSource('align')}
                             </div>
                         )}
 
@@ -526,7 +550,23 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                 {device === 'mobile' && 'Editing the Mobile layout. Nothing else changes.'}
                             </div>
                         </div>
-                        {has('width') && (
+                        {type === 'column' && (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Column width</label>
+                                <select className="cms-select" value={layoutValue('width', 'auto')} onChange={(e) => (device !== 'desktop' && e.target.value === 'auto' ? patch(`responsive.${device}.width`, undefined) : patchLayout('width', e.target.value))}>
+                                    <option value="auto">Equal share</option>
+                                    <option value="quarter">A quarter</option>
+                                    <option value="third">A third</option>
+                                    <option value="half">Half</option>
+                                    <option value="two-thirds">Two thirds</option>
+                                    <option value="three-quarters">Three quarters</option>
+                                    <option value="full">Full width</option>
+                                </select>
+                                <div className="cms-hint">Equal share splits what the sized columns leave. On Tablet and Mobile a set width holds instead of stacking, so give every column in the row one to keep them side by side.</div>
+                                {layoutSource('width')}
+                            </div>
+                        )}
+                        {type === 'section' && has('width') && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Section width</label>
                                 <select className="cms-select" value={layoutValue('width', 'standard')} onChange={(e) => patchLayout('width', e.target.value)}>
@@ -673,16 +713,27 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
 
                 <AccordionSection id="style" title={PANELS[2][1]} open={openPanels.has('style')} onToggle={onTogglePanel}>
                     <>
-                        {has('background') ? (
+                        {(has('background') || backdrop) ? (
                             <>
                                 <label className="cms-field-label" style={{ marginBottom: 7 }}>Background</label>
                                 <div className="cms-swatch-row">
+                                    {backdrop && (
+                                        <button
+                                            type="button"
+                                            title="As designed"
+                                            className={`cms-swatch cms-swatch--default ${! data.background ? 'cms-swatch--active' : ''}`}
+                                            onClick={() => {
+                                                patch('background', '', 'background');
+                                                patch('textTheme', '', 'background');
+                                            }}
+                                        />
+                                    )}
                                     {BACKGROUNDS.map(({ value, colour, dark }) => (
                                         <button
                                             key={value}
                                             type="button"
                                             title={value}
-                                            className={`cms-swatch ${(data.background || 'white') === value ? 'cms-swatch--active' : ''}`}
+                                            className={`cms-swatch ${(data.background || (backdrop ? '' : 'white')) === value ? 'cms-swatch--active' : ''}`}
                                             style={{ background: colour, borderColor: dark ? colour : undefined }}
                                             onClick={() => {
                                                 patch('background', value, 'background');
@@ -691,10 +742,11 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         />
                                     ))}
                                 </div>
+                                {backdrop && <div className="cms-hint">As designed keeps the look this component came with.</div>}
                             </>
                         ) : null}
 
-                        {type === 'section' && (
+                        {(type === 'section' || backdrop) && (
                             <>
                                 <ImageField
                                     label="Background image"
@@ -744,7 +796,7 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                             </>
                         )}
 
-                        {type === 'column' && (
+                        {type !== 'banner' && (
                             <>
                                 <div className="cms-field">
                                     <label className="cms-field-label">Animation</label>
@@ -765,15 +817,26 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                         <option value="200">200 ms</option>
                                         <option value="300">300 ms</option>
                                     </select>
-                                    <div className="cms-hint">Plays once as the column scrolls into view. Give each column of a row its own delay to bring them in one after another. Readers who have asked their device for less motion see the column without it.</div>
+                                    <div className="cms-hint">Plays once as this component scrolls into view. Readers who have asked their device for less motion see it without the animation.</div>
                                 </div>
+                                {hasParts(type) && (data.animation || 'none') !== 'none' && (
+                                    <div className="cms-field">
+                                        <label className="cms-field-label">Animate</label>
+                                        <select className="cms-select" value={data.animationScope === 'parts' ? 'parts' : 'whole'} onChange={(e) => patch('animationScope', e.target.value)}>
+                                            <option value="whole">The whole component</option>
+                                            <option value="parts">Each part in turn</option>
+                                        </select>
+                                        <div className="cms-hint">Parts come in one after another, 100 ms apart, after the Delay.</div>
+                                    </div>
+                                )}
                             </>
                         )}
 
-                        {has('textTheme') && (
+                        {(has('textTheme') || backdrop) && (
                             <div className="cms-field">
                                 <label className="cms-field-label">Text theme</label>
-                                <select className="cms-select" value={data.textTheme || 'dark'} onChange={(e) => patch('textTheme', e.target.value)}>
+                                <select className="cms-select" value={data.textTheme || (backdrop ? '' : 'dark')} onChange={(e) => patch('textTheme', e.target.value)}>
+                                    {backdrop && <option value="">As designed</option>}
                                     <option value="dark">Dark text on light</option>
                                     <option value="light">Light text on dark</option>
                                 </select>
@@ -834,6 +897,22 @@ export default function SettingsPanel({ block, openPanels, onTogglePanel, patch,
                                     : 'Give this a name to link to it from the menu, e.g. #how'}
                             </div>
                         </div>
+                        {canCustomCss ? (
+                            <div className="cms-field">
+                                <label className="cms-field-label">Custom CSS</label>
+                                <textarea
+                                    className="cms-textarea cms-textarea--code"
+                                    rows={8}
+                                    spellCheck={false}
+                                    value={data.customCss || ''}
+                                    onChange={(e) => patch('customCss', e.target.value)}
+                                />
+                                <div className="cms-hint">Plain declarations style this component. A rule such as h2 {'{ … }'} or .btn {'{ … }'} styles the component itself when it matches, and anything inside it. Refused: the &lt; character, @import and expression().</div>
+                            </div>
+                        ) : (data.customCss ? (
+                            <div className="cms-hint">This component carries custom CSS set by a super administrator.</div>
+                        ) : null)}
+
                         {type !== 'row' && type !== 'column' && (
                             <div className="cms-reusable-box">
                                 <div className="cms-reusable-box__title">Saved section</div>

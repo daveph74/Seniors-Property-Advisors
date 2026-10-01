@@ -51,6 +51,18 @@ class StructuredDataTest extends TestCase
         ], $overrides));
     }
 
+    /** The seeded FAQ page opens with a banner, so the question list is not the first section. */
+    private function faqListIndex(array $sections): int
+    {
+        foreach ($sections as $i => $section) {
+            if ($section['type'] === 'faq-list') {
+                return $i;
+            }
+        }
+
+        $this->fail('The FAQ page has no faq-list section.');
+    }
+
     public function test_the_home_page_says_who_the_website_belongs_to(): void
     {
         $organisation = $this->ofType('/', 'ProfessionalService');
@@ -211,7 +223,7 @@ class StructuredDataTest extends TestCase
 
         $page = Page::where('slug', 'faqs')->firstOrFail();
         $sections = $page->published;
-        $sections[0]['data']['limit'] = 1;
+        $sections[$this->faqListIndex($sections)]['data']['limit'] = 1;
         $page->update(['published' => $sections]);
 
         $this->assertCount(1, $this->ofType('/faqs', 'FAQPage')['mainEntity']);
@@ -222,7 +234,7 @@ class StructuredDataTest extends TestCase
     {
         $page = Page::where('slug', 'faqs')->firstOrFail();
         $sections = $page->published;
-        $sections[0]['data']['items'] = [
+        $sections[$this->faqListIndex($sections)]['data']['items'] = [
             ['question' => 'Typed in?', 'answer' => 'Yes.'],
             ['question' => 'Half finished?', 'answer' => ''],
         ];

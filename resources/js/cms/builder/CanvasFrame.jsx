@@ -89,10 +89,48 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
 
         const blockSubmit = (event) => event.preventDefault();
 
+        const refuseFiles = (event) => {
+            if (event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files')) {
+                event.preventDefault();
+            }
+        };
+
+        const forwardKeys = (event) => {
+            if (!(event.ctrlKey || event.metaKey || event.key === 'Escape')) return;
+
+            const target = event.target;
+
+            if (target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))) return;
+
+            const copy = new KeyboardEvent('keydown', {
+                key: event.key,
+                code: event.code,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+                shiftKey: event.shiftKey,
+                altKey: event.altKey,
+                bubbles: true,
+                cancelable: true,
+            });
+
+            window.dispatchEvent(copy);
+
+            if (copy.defaultPrevented) event.preventDefault();
+        };
+
         const attach = () => {
             const doc = iframe.contentDocument;
 
-            if (! doc) return;
+            if (! doc) {
+                if (! recovering) {
+                    recovering = true;
+                    iframe.src = 'about:blank';
+                }
+
+                return;
+            }
+
+            if (doc.documentElement.classList.contains('cms-portal')) return;
 
             if (iframe.contentWindow?.location.href !== 'about:blank') {
                 if (recovering) return;
@@ -136,6 +174,9 @@ export default function CanvasFrame({ width, scale = 1, onHeight, onReady, child
             doc.addEventListener('click', stayPut, true);
             doc.addEventListener('auxclick', stayPut, true);
             doc.addEventListener('submit', blockSubmit, true);
+            doc.addEventListener('keydown', forwardKeys);
+            doc.addEventListener('dragover', refuseFiles);
+            doc.addEventListener('drop', refuseFiles);
 
             whenStyled(links).then(() => {
                 if (cancelled) return;

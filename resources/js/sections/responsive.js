@@ -22,6 +22,13 @@ export function effective(data = {}, device, key, fallback) {
     return (source === 'desktop' ? data[key] : overrideOf(data, source, key)) || fallback;
 }
 
+export function orderedColumnIds(row, device) {
+    return (row.children || [])
+        .map((c, i) => ({ id: c.id, at: Number(effective(c.data || {}, device, 'order', i + 1)) }))
+        .sort((a, b) => a.at - b.at)
+        .map((c) => c.id);
+}
+
 export function breakpointClasses(data = {}, key, nameFor) {
     return BREAKPOINTS
         .map((bp) => {
