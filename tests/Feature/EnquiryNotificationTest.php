@@ -6,8 +6,11 @@ use App\Content\Site;
 use App\Jobs\NotifyEnquiryRecipients;
 use App\Mail\EnquiryReceived;
 use App\Models\Enquiry;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
+use Mockery;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -118,5 +121,31 @@ class EnquiryNotificationTest extends TestCase
         $this->contactForm();
 
         $this->assertSame(1, Enquiry::count());
+    }
+
+    public function test_the_trail_names_the_mailer_and_the_addresses_and_never_the_sender(): void
+    {
+        $this->recipients(['advisor@example.com']);
+        $logged = [];
+        $logger = Mockery::mock(LoggerInterface::class);
+        foreach (['info', 'warning', 'error'] as $level) {
+            $logger->shouldReceive($level)->andReturnUsing(function ($message, $context = []) use (&$logged, $level) {
+                $logged[$message] = [$level, $context];
+            });
+        }
+        Log::shouldReceive('stack')->andReturn($logger);
+
+        $this->agentFinder();
+
+        $this->assertSame(['advisor@example.com'], $logged['Enquiry notification sending'][1]['to']);
+        $this->assertSame('array', $logged['Enquiry notification sending'][1]['mailer']);
+        $this->assertSame(['advisor@example.com'], $logged['Enquiry notification sent'][1]['envelope_to']);
+        $this->assertNotEmpty($logged['Enquiry notification sent'][1]['message_id']);
+        $this->assertSame('warning', $logged['Enquiry notification was not delivered: the mailer only writes it to the log'][0]);
+
+        $trail = json_encode($logged);
+        $this->assertStringNotContainsString('jane@example.com', $trail);
+        $this->assertStringNotContainsString('Jane Wilson', $trail);
+        $this->assertStringNotContainsString('0412 345 678', $trail);
     }
 }

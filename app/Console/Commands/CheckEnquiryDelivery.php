@@ -143,7 +143,7 @@ class CheckEnquiryDelivery extends Command
         }
 
         try {
-            Mail::raw(
+            $sent = Mail::raw(
                 'This is a test from '.config('app.url').'. Enquiry notifications will arrive like this one.',
                 fn ($message) => $message->to($recipients)->subject('Test: enquiry notifications'),
             );
@@ -155,6 +155,8 @@ class CheckEnquiryDelivery extends Command
         }
 
         $this->line('  Test email  sent to '.count($recipients).' address(es)');
+        $this->line('  Message-ID  '.($sent?->getMessageId() ?: '(none)'));
+        $this->line('  SES id      '.($sent?->getOriginalMessage()->getHeaders()->get('X-SES-Message-ID')?->getBodyAsString() ?: '(none — not sent through SES)'));
     }
 
     private function problem(string $message): void

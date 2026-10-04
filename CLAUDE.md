@@ -1223,9 +1223,22 @@ A refused enquiry from either public form is logged as `Enquiry refused` with it
 **names** of the failing fields, never their values — they are a stranger's name, phone and address, and
 a log file is not a place those may be copied to. An Agent Finder enquiry that saved leaves `SyncID
 sending` then `accepted` or `failed`, and the email leaves `Enquiry notification queued` (naming the
-queue connection) and later `sent` or `could not be sent` — `queued` with nothing after it is a worker
+queue connection and the addresses), `sending` (the mailer, transport, from address, SES region and role)
+and later `sent` or `could not be sent` — `queued` with nothing after it is a worker
 that is not running; one with no line at all never reached the server, and the
-browser's Network tab on `POST /enquiries` says why.
+browser's Network tab on `POST /enquiries` says why. Beneath those, `App\Logging\AwsCalls` is attached to
+both clients the SES mailer builds, so `AWS AssumeRole` and `AWS SendEmail` each log `calling` and then
+`succeeded` or `failed` with the AWS request id, the error code, and on a send the recipients and the
+**SES MessageId**. What none of them logs is the message itself, its subject or its reply-to: all three
+carry the enquirer, who is `enquiry_id` and nothing more in this file.
+
+**`sent` means the transport accepted the email, not that anybody received it.** The trap that prompted
+the detail above: a client reported no email while the log said `sent` with one recipient, and that line
+named neither the mailer nor the address — it reads the same under `MAIL_MAILER=log`, which now earns its
+own `not delivered` warning. On SES, `sent` is a MessageId and nothing more; the next places to look are
+the SES account's suppression list and its sending events for that id, and then the recipient's spam
+folder, since the from address is a `syncid.com.au` identity. `enquiries:check-delivery --send` prints the
+Message-ID and SES id of its test email for the same search.
 
 **No confirmation email exists, and step 4 no longer claims one.** The wizard used to promise one and show
 a reference that was the same five digits for everybody, while storing nothing at all. Only the team is

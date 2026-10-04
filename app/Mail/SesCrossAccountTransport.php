@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Logging\AwsCalls;
 use Aws\Credentials\AssumeRoleCredentialProvider;
 use Aws\Credentials\CredentialProvider;
 use Aws\SesV2\SesV2Client;
@@ -29,25 +30,28 @@ class SesCrossAccountTransport
             throw new InvalidArgumentException('The ses_cross_account mailer needs SES_REGION and SES_ROLE_ARN.');
         }
 
+        $sts = new StsClient([
+            'region' => $region,
+            'version' => 'latest',
+            'credentials' => CredentialProvider::defaultProvider(),
+        ]);
+        AwsCalls::attach($sts);
+
         $assumed = new AssumeRoleCredentialProvider([
-            'client' => new StsClient([
-                'region' => $region,
-                'version' => 'latest',
-                'credentials' => CredentialProvider::defaultProvider(),
-            ]),
+            'client' => $sts,
             'assume_role_params' => [
                 'RoleArn' => $roleArn,
                 'RoleSessionName' => $config['session_name'] ?? 'seniors-property-advisors-mail',
             ],
         ]);
 
-        return new SesV2Transport(
-            new SesV2Client([
-                'region' => $region,
-                'version' => 'latest',
-                'credentials' => CredentialProvider::memoize($assumed),
-            ]),
-            $config['options'] ?? [],
-        );
+        $ses = new SesV2Client([
+            'region' => $region,
+            'version' => 'latest',
+            'credentials' => CredentialProvider::memoize($assumed),
+        ]);
+        AwsCalls::attach($ses);
+
+        return new SesV2Transport($ses, $config['options'] ?? []);
     }
 }
