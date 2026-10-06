@@ -50,6 +50,7 @@ class SettingsController extends Controller
                     'disclaimer' => $site['legal']['disclaimer'] ?? '',
                     'privacyPage' => $site['legal']['privacyPage'] ?? '',
                 ],
+                'customCss' => $site['customCss'] ?? '',
                 'notifications' => [
                     'enquiryRecipients' => implode("\n", Site::enquiryRecipients()),
                 ],
@@ -99,6 +100,7 @@ class SettingsController extends Controller
             'Social links' => ($before['social'] ?? null) !== $after['social'],
             'Tracking' => ($before['tracking'] ?? null) !== $after['tracking'],
             'Legal' => ($before['legal'] ?? null) !== $after['legal'],
+            'Custom CSS' => ($before['customCss'] ?? null) !== $after['customCss'],
             'Enquiry notifications' => ($before['notifications']['enquiryRecipients'] ?? [])
                 !== $after['notifications']['enquiryRecipients'],
         ]));

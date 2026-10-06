@@ -144,7 +144,7 @@ export default function BlogListSection({ data, anchor, library = {}, editing = 
     return (
         <section className="blog-list" id={anchor}>
             <div className="container">
-                <SectionHead {...data} />
+                <SectionHead {...data} look={data.titleLook} />
 
                 {editing ? null : chips}
 

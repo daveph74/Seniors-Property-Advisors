@@ -234,7 +234,10 @@ that would justify HTML is the one the blog pays 140KB for.
 The public `faq-list` section can show a **Browse by topic** rail when **Let readers filter by category**
 is on and at least two categories have questions; turn that switch off (or pin **Category to show**) for a
 single centred accordion. Its title is always **`h2.block-heading.block-heading--large`**, not
-`section-head__title`, and `ownerOfTheH1()` skips `faq-list` so it never consumes the page h1.
+`section-head__title`, and `ownerOfTheH1()` skips `faq-list` so it never consumes the page h1. It does
+not go through `SectionHead` for that reason — that helper reads the heading level — but it still takes
+the **Title looks like** class, since the Content accordion offers that field on every `HEAD_CENTRED`
+block and a choice that drew nothing here would be the trap "Custom CSS and heading looks" warns of.
 **Category to show** still limits which questions load; categories remain in the CMS for filing and
 page-specific sets.
 
@@ -270,6 +273,13 @@ outlived its target, and `04-pages-blocks` filled image fields by typing a path,
 the "Describe the image" box in the same `.cms-field` and round-trip perfectly while asserting nothing.
 Image fields are skipped there and the picker has one real test in `03-pages-builder` instead.
 
+**`ImageField` reports a pick as one call, `onPick({ url, alt, caption })`.** It used to call `onChange`
+and then `onAltChange` back to back, which is fine in the settings panel (two functional patches on two
+paths) and wrong in a repeater, whose `replace()` rebuilds the list from the render-time item: the second
+call overwrote the first and an uploaded team photo with no description was thrown away. A failed
+thumbnail is remembered by address, not as a flag, so a dead image on one block does not mark the next
+block's good image as broken.
+
 Section trees have no server-side backstop for this, deliberately: the schema saying which keys hold an
 image is in `contentFields.js` and nowhere in PHP, so one would mean the schema in two languages or
 guessing by file extension. The one HTML field in a tree is the exception by construction: the Rich text
@@ -289,7 +299,11 @@ would pull TipTap into the builder chunk for everybody editing a heading. One tr
 effect that writes an incoming value back into the editor has to check `editor.isDestroyed` first. In
 the builder the panel re-renders constantly, TipTap replaces the instance under it, and calling
 `getHTML()` on the old one throws `Cannot read properties of null (reading 'cached')` — the symptom is
-the whole builder going blank the moment a saved Rich text block is selected.
+the whole builder going blank the moment a saved Rich text block is selected. A second trap from the same
+file: **the editor is keyed on the block id**, and the value written back into it is set with
+`addToHistory: false`. Without both, one TipTap instance served every Rich text block on the page and
+`setContent` was recorded in its undo stack, so Ctrl+Z inside block B restored block A's text and saved
+it as B's — reproduced in the browser, and it is data loss with no error.
 
 The listing at `/blog` is an ordinary CMS page holding a `blog-list` section, so its heading
 and intro stay editable. Only `/blog/{article}` is a route, which is why `articles` is a
@@ -430,9 +444,28 @@ measured width. A section that formats a date or reads `innerWidth` during rende
 differs from what hydration wants, and React recovers by redrawing: the visible symptom is a flash, the
 crawled symptom is wrong content.
 
-Entrance animations — on **columns** and banners, not sections; a section fading as one slab was
-tried first and reads as the page stalling, where columns staggered by their own delays read as the
-page arriving — live inside that contract, and three things make them safe. **The hidden
+Entrance animations — on **every component** now, through `resources/js/sections/Reveal.jsx`, a
+wrapper the resolver and `BlockRenderer` put **outermost** around a block (outside the custom-CSS and
+backdrop wrappers, so the custom-CSS scope still lands on the section and the transform sits on the
+outer box); rows, columns and the banner animate their own root instead and the wrapper skips them,
+because a column is a grid item and the banner already had the control in its Look group. A section
+fading as one slab was tried first and reads as the page stalling, where parts staggered read as the
+page arriving — which is what **Animate: Each part in turn** does (`animationScope: 'parts'`). It is CSS
+over the *same* observer: the root gets `reveal-parts reveal-parts--{animation}` and is never hidden
+itself; its parts — found by the classes each component already renders, listed once per type in
+`PARTS` in `Reveal.jsx` and mirrored in the `:is(…)` lists in `app.css` — start hidden and reveal when the
+root gains `is-in-view`, each `.1s` later than the last through `--reveal-i` from `:nth-child`, after the
+Delay (`--reveal-base`). No per-item observers and no component edits; adding a type to `PARTS` means
+adding its selector to those lists too, or the panel offers a choice that draws nothing. The heroes,
+the banner, the CTA and the contact form were first left out as "one piece of copy", which was wrong —
+each is an eyebrow, a title, a lead and a button row, and those are their parts now; the picture layers
+are never parts. The banner animates its own root, so it reads `animationScope` from its Look group,
+where its Animation already lives. A plain
+section's parts reach **through its row into each column's blocks**, because a section built in the
+builder is almost always one row of columns and "each part" of that would otherwise be the row alone;
+each column's blocks count from one, so the first block of every column arrives together, then the
+second, which is the reading order a row has. They live
+inside that contract, and three things make them safe. **The hidden
 state is scoped to `html.js`**, a class set by a nonced inline script in the head of `app.blade.php` on
 public routes only, so a crawler, a reader with JavaScript off, or a browser whose observer never fires
 is delivered the section fully visible — the version of this that goes wrong is a whole site at
@@ -660,6 +693,14 @@ There is **no CSV export**. One was built and removed: Google reads the XML, and
 workflow nobody had asked for, carrying formula-injection escaping and an export-versus-screen filter
 mismatch to keep in step for it.
 
+## Navigation
+
+**The footer takes as many columns as the editor keeps, up to four.** `SaveNavigationRequest` always
+allowed zero to four, but the screen had no way to add or remove one and `.foot-grid` was fixed at four
+tracks, so the footer read as immovable. `SiteFooter` now sets `--foot-cols` from the stored count and
+the grid is `1.4fr repeat(var(--foot-cols), 1fr)`; the tablet and phone rules keep their own two and
+one columns. Removing a column removes its links with it, and the screen says so before the button.
+
 ## Site settings and global content
 
 Two `settings` rows, and the split is a permissions boundary rather than a filing choice. `globals`
@@ -738,6 +779,27 @@ postcodes, cached apart from addresses), though nothing on the site asks for it 
 Locally, **every Places lookup fails with `cURL error 60`** when XAMPP's PHP has no CA bundle configured
 (`curl.cainfo` in `php.ini`). The symptom is both boxes saying there is no match for anything, which reads
 like a broken lookup and is really the fallback working. `storage/logs/laravel.log` names the cause.
+
+**Every Website section, row and column can carry the same backdrop** — the six brand swatches, a
+background image, its position, the overlay and the text theme — through `resources/js/sections/Backdrop.jsx`,
+one module so the nine positions and eight overlays keep their single definition in `SectionContainer`'s
+classes. Nothing chosen means nothing rendered: a page saved before this looks exactly as it did, and the
+first swatch, **As designed**, is how an editor gets back there. Website sections are **wrapped** in a
+`div.backdrop` by `SectionResolver` and `BlockRenderer`, and the CSS makes their own root transparent and
+lifts it above the layers, because each section's `<section>` sets its own background and touching
+sixteen components would have been sixteen chances to differ. Rows and columns are **not** wrapped: the
+column is the row's grid item and carries the width and order classes, so a wrapper would break the grid
+— they draw the layers inside themselves and take the classes on their own root, with padding and the
+brand radius when a backdrop is set. The text theme recolours through `:is()` selectors at a specificity
+that beats a section's own colour rules, which is what keeps a navy why-list legible on a pale wash — and
+**excludes the interiors of white cards** (`.testimonial`, `.faq`, `.article-card`, `.card` and the rest),
+because the same specificity had turned quotes, answers and card titles white on their white cards. An
+image chosen with no swatch implies the theme from its overlay (navy tints → light text), or dark-text
+sections sat transparent over a navy tint. Custom CSS is scoped to the block's own root **or**, when a
+backdrop wrapper is present, to the root inside it, and the `<style>` sits *before* the wrapper so a
+`display:` rule cannot make the stylesheet itself visible.
+Excluded on purpose: **Section** (already had it), **Hero, full bleed** and **Banner** (photo-behind-copy
+with their own controls), **CTA** (its own background field and photograph), and plain blocks.
 
 **A section can carry a background image and an overlay, and a column an entrance animation**, all from the Style
 accordion and all gated on `type === 'section'` rather than `has()` — the `cta` block also has a
@@ -828,6 +890,33 @@ fallbacks**, not beside the utilities — same specificity, so a base `.section-
 48px written later would have beaten a tablet override to Tall. Content and Style are deliberately
 one value for every screen; only the `hidden` map and row `stack` were per-device before this.
 
+**A row is a 12-track grid with the ordinary grid `gap`, and a column's width is a span of it.** Rows used
+to be `grid-auto-columns: 1fr`, which could only make equal columns. Twelve divides by one, two, three, four
+and six columns and by every fraction offered (quarter 3, third 4, half 6, two-thirds 8, three-quarters 9,
+full 12), so a column's `data.width` becomes a `col-w-*` class and the columns left on "Equal share" split
+what remains through `--auto-span`, which `RowContainer` computes from a `childBlocks` prop every Section
+receives and only rows read (`autoColumnSpan`, over the **active** children only, or a switched-off column
+left a hole). Five equal columns are the one shape twelve cannot make, so a row of five unsized columns gets
+`row-container--five` and its own five tracks; five columns with a fraction among them fall back to twelve
+and come out uneven, accepted. **Why twelve and not more:** grid gap sits between every *track*, so the
+track count bounds the gutter — a 60-track version of this put 59 gaps of 32px into a 1176px row and a
+single column came out 1888px wide, then a "fix" with negative margins overhung the section by 4px on
+every Extra-large-gap row and by the whole gutter in a Full-width section. With twelve tracks a fraction is
+`k` tracks plus `k-1` gaps, which is exactly what two halves plus one gap add up to, so edges meet the
+section's content edges by construction and no margin trickery is needed. The classes are `col-w-*` rather
+than `column-container--*` because the grid item differs: on the site it is the column, in the canvas it is
+`.cms-col-cell`, and both carry the same names. **A row or column carries its own `u-hide-*` classes**
+rather than being wrapped in the `display: contents` hide wrapper the other blocks get: every row rule is a
+child selector, and with a wrapper in between a column hidden on one screen collapsed to a single track on
+the others — invisible in the canvas, which styles the cell directly.
+Per-screen widths ride the `responsive` map like the other Layout keys, and **a set width beats
+stacking**: the stacking rule is `.row-container:not(--no-stack) > *{ grid-column: 1 / -1 }` and the
+`.row-container > .col-w-X--tablet` rules sit after it at equal specificity, which is what lets a tablet
+keep 2 + 1 while a phone stacks. A nested row's stacking rule has one more class and wins; per-screen
+widths inside a nested row are therefore not honoured, deliberately, until somebody needs them. Text
+alignment on the seven aligned blocks goes through `alignClasses()` and the same map, so a heading can be
+centred on a phone only.
+
 **Column order is per screen too, and it is CSS `order`, not a second tree.** The report that followed the
 Layout work was "I moved the image column first on Tablet and Desktop moved too" — a column's position
 *is* the tree, and the tree is one thing for every screen. So a column carries
@@ -836,8 +925,29 @@ grid means `order` holds both side by side and once the columns stack. Desktop o
 Desktop, Position in row, a drag within the row and the Layers arrows all edit the tree as before; on
 Tablet or Mobile the same three actions write `order` on every column of the row and leave the tree
 alone (`placeColumn` in `Builder.jsx`). A drop into a *different* row is a tree move on every device —
-that is structure, not layout, and cannot be per screen. Layers keeps showing tree order; the canvas on
-the chosen device shows the real one.
+that is structure, not layout, and cannot be per screen. Layers keeps showing tree order, with its arrows
+enabled by the on-screen position; the canvas on the chosen device shows the real one.
+
+Three rules keep that honest. **A drop target is the block the pointer is over plus a side**, not a tree
+index: `dropAt` carries `anchorId` and `side`, because on Tablet the columns are displayed in override
+order and stacked, so a tree index pointed at the wrong cell and the left/right half of a stacked column
+decided before/after while the editor moved up and down. **Hovering somewhere the dragged thing is not
+allowed clears the target** rather than leaving the last valid one live — `preventDefault()` only when
+allowed, and `performDrop` refuses with no target — or the drop landed wherever the marker had last been,
+possibly off screen. The page-level zones (the canvas surround, the empty-page zone and the drop-end
+strip) check `canContain(null, 0, dragType)` the same way: they used to set an "end of page" target for
+anything at all, so a row dragged anywhere lit the bottom marker and then refused on drop. A browser test
+dragging a row over a top-level block is what caught it. And **any change to a row's column list renumbers its orders** (`renumberColumnOrders`
+on add, remove, duplicate and a cross-row move): a column with no order is `order: 0` in CSS and first on
+the live site while the panel calls it last.
+
+Two more that cost a session each. **The canvas iframe has its own keyboard**: Ctrl+Z, Ctrl+Y and Escape
+are listened for on the parent `window`, and a click on a block focuses the frame's document, so
+`CanvasFrame` forwards those keys as a fresh event on the parent. And **clicking a Row or Column in the
+Components panel wraps it** in a section (`addFromLibrary`), because the click path never checked
+`canContain` and a bare row at page level saved as a validation error the editor could not see the cause
+of. Restoring a version goes through the history hook's `reset`, not `commit`, or Undo brings back the
+unsaved tree the restore replaced.
 
 **Block ids must be unique across the whole page, and for a long time nothing made them so.** The
 builder minted `type-N` from a counter that started at zero on every load, so a block added today took
@@ -876,6 +986,42 @@ gradient background, not to dark sections generally, so choosing it brings the l
 section changes. **The Start Here button is not the mockup's `#3D7FD6`**: white on that blue is 4.0:1,
 which passes only as large text, and the button is the home hero's large one — 17px semibold, still
 short of large text. `#3570B5` (5.1:1) is the nearest blue that passes at that size.
+
+## Custom CSS and heading looks
+
+**Custom CSS is a super administrator's ability (`styles.custom`), and the server compares rather than
+trusts.** A client administrator never sees the box; if they save a page whose block already carries CSS
+the value passes **only if it is byte for byte what is stored** for that block id (draft and published
+both count), and any addition or change is refused with a message. Stripping it silently was considered
+and rejected: an editor's save would quietly delete a super administrator's work. A reusable section
+has no stored tree to compare against, so a non-privileged user is refused when the subtree carries any.
+`app/Content/Css.php` names what is refused — `<` (so the tag can never be closed), `@import`,
+`expression(`, `javascript:`, `behavior:`, `-moz-binding`, and a length ceiling. `url()` is not on the
+list: the content policy already confines what a stylesheet may fetch. `sanitiseBlock()` captures
+`data.customCss` before `strip_tags` and restores it through `Css::safe()`, the capture/restore pattern
+the rich-text body uses.
+
+**Rendering is one `<style>` per block, scoped by block id, and the scoping is done by a small splitter,
+not by CSS nesting.** `splitCss()` in `customCss.jsx` separates top-level declarations from top-level
+rules by brace depth. Declarations become `ROOT { … }`; each rule `sel { … }` becomes
+`ROOT:is(sel), ROOT :is(sel) { … }`, so it matches the block's **own** element as well as anything inside
+it. Nesting alone was tried first and `h2 { color: orange }` on a Heading block did nothing — the block's
+root *is* the h2, and a nested selector only ever reaches descendants. A selector carrying a pseudo-element
+cannot go inside `:is()`, so it is emitted as a plain descendant (and appended to the root when it starts
+with a colon); `&` still means the root. Website sections and blocks
+are wrapped in `div.cms-custom[data-cms-block]` (`display: contents`, so no box) and the rule is
+`[data-cms-block="id"] > * { … }`; rows and columns are grid items that cannot be wrapped, so they take a
+`blockId` prop and set the attribute on their own root, with the rule `[data-cms-block="id"] { … }`. Every
+Section receives `blockId`; only those two read it. `</` is escaped to `<\/` on the way out as a second
+line of defence. The site-wide stylesheet lives on `/cms/settings` under `Site.customCss`, is judged again
+by `Site::customCss()` on the way out, and is printed **raw** with `{!! !!}` on public pages and the
+preview only — entities are not decoded inside `<style>`, so an escaped `>` would break a selector, which
+is exactly why `<` is refused at the save instead.
+
+**"Look like" changes a heading's size, never its tag.** `data.look` on the Heading block and
+`data.titleLook` on a Website section's title add `look-h1|h2|h3`. The rules are written with the tag in
+the selector (`h2.look-h1`) so they tie with `h2.block-heading` on specificity and win by coming later,
+and beat the `h2, .section-head__title` global outright. `ownerOfTheH1` still decides the real h1.
 
 ## Dashboard
 
@@ -1465,6 +1611,14 @@ line: `php artisan serve` forwards a whitelist of variables to the server it sta
 `--env`, so `serve --env=e2e` quietly runs the site against the developer's own database. That is
 how three test enquiries once landed in `database/database.sqlite`.
 
+**`.env.e2e` turns server-side rendering off**, because the suite starts no renderer and Inertia's
+default is on: every public page then paid a failed connection to port 13714 before falling back to the
+browser — a few seconds each, logged as "The server-side render failed" — and the security spec's
+23-screen walk ran out of its 45-second budget on whichever admin screen came after the public ones.
+The symptom was `page.goto: net::ERR_ABORTED; maybe frame was detached?` on a screen that had nothing
+wrong with it. SSR is `SsrScopeTest`'s business, in PHP, where it points Vite at a hot file that does
+not exist and never at a live process.
+
 Its **bucket** is its own too — `spa-media-e2e`, because the upload test generates objects nothing
 prunes and they should not accumulate in the bucket used for development. `global-setup.mjs` runs
 `media:init` **before** the seed, which creates it and applies the CORS rules a presigned PUT needs.
@@ -1536,6 +1690,11 @@ Three things about the builder are worth knowing before touching those tests:
   Contact to a single section made one of them select nothing, and it surfaced two steps later as
   "the selected block's toolbar has no Delete button" — which reads as a broken builder rather than
   a missed click.
+
+**A drag between blocks in the canvas is `dragBlock`, and it pauses between `dragstart` and `dragover`.**
+The drop rules read the dragged type from React state, which a real browser has rendered long before its
+stream of dragover events starts; fired back to back the first dragover sees nothing being dragged, refuses,
+and the drop lands nowhere. That cost an afternoon of "the drag does nothing" against code that worked.
 
 **Dropping a block inside another goes through `support/dragShim.js`.** The canvas uses the native
 HTML5 drag API, which Playwright cannot drive; the shim dispatches the events itself. It works

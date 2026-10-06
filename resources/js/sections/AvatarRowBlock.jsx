@@ -1,6 +1,5 @@
-import { spacingClasses } from './spacing';
+import { spacingClasses, alignClasses } from './spacing';
 
-const ALIGN = { left: '', center: 'block-avatar-row--center', right: 'block-avatar-row--right' };
 
 export default function AvatarRowBlock({ data, anchor }) {
     const avatars = data.avatars || [];
@@ -10,7 +9,7 @@ export default function AvatarRowBlock({ data, anchor }) {
     return (
         <div
             id={anchor}
-            className={`block-avatar-row ${ALIGN[data.align] || ''} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}
+            className={`block-avatar-row ${alignClasses(data, 'block-avatar-row')} ${spacingClasses(data)}`.replace(/ +/g, ' ').trim()}
             aria-hidden="true"
         >
             {avatars.map((src, i) => (

@@ -58,6 +58,54 @@ class PermissionsTest extends TestCase
         $this->post("/cms/pages/{$page->cms_id}/archive")->assertRedirect();
     }
 
+    public function test_only_a_super_administrator_adds_or_changes_custom_css(): void
+    {
+        $page = $this->home();
+        $tree = fn (?string $css) => ['sections' => [[
+            'id' => 'heading-1', 'type' => 'heading', 'label' => 'Heading', 'active' => true,
+            'data' => array_filter(['heading' => 'Hello', 'customCss' => $css]), 'children' => [],
+        ]]];
+
+        $this->post("/cms/pages/{$page->cms_id}/draft", $tree('color: red;'))->assertSessionHasNoErrors();
+
+        $this->asClient();
+
+        $this->post("/cms/pages/{$page->cms_id}/draft", $tree('color: red;'))->assertSessionHasNoErrors();
+        $this->post("/cms/pages/{$page->cms_id}/draft", $tree('color: blue;'))
+            ->assertSessionHasErrors(['sections' => 'Only a super administrator can add or change custom CSS.']);
+        $this->post("/cms/pages/{$page->cms_id}/draft", $tree(null))->assertSessionHasNoErrors();
+
+        $this->post('/cms/reusable-sections', ['name' => 'Styled', 'sections' => $tree('color: red;')['sections']])
+            ->assertSessionHasErrors('sections');
+
+        $this->assertArrayNotHasKey('customCss', $page->refresh()->draft[0]['data']);
+    }
+
+    public function test_a_client_administrator_may_keep_stored_custom_css_under_a_new_id_or_from_a_draft(): void
+    {
+        $page = $this->home();
+        $block = fn (string $id, string $css) => [
+            'id' => $id, 'type' => 'heading', 'label' => 'Heading', 'active' => true,
+            'data' => ['heading' => 'Hello', 'customCss' => $css], 'children' => [],
+        ];
+
+        $this->post("/cms/pages/{$page->cms_id}/publish", ['sections' => [$block('heading-1', 'color: red;')]])->assertSessionHasNoErrors();
+        $this->post("/cms/pages/{$page->cms_id}/draft", ['sections' => [$block('heading-1', 'color: blue;')]])->assertSessionHasNoErrors();
+        $this->post('/cms/reusable-sections', ['name' => 'Styled', 'sections' => [$block('heading-9', 'color: green;')]])->assertSessionHasNoErrors();
+
+        $this->asClient();
+
+        $this->post("/cms/pages/{$page->cms_id}/draft", ['sections' => [
+            $block('heading-1', 'color: blue;'),
+            $block('heading-copy', 'color: blue;'),
+            $block('heading-old', 'color: red;'),
+            $block('heading-reused', 'color: green;'),
+        ]])->assertSessionHasNoErrors();
+
+        $this->post("/cms/pages/{$page->cms_id}/draft", ['sections' => [$block('heading-1', 'color: pink;')]])
+            ->assertSessionHasErrors('sections');
+    }
+
     /**
      * Rolling a page back replaces the current draft, which is the same order of consequence as
      * unarchiving one — so §2 puts both with super administrators. They used to sit either side of

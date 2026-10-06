@@ -12,7 +12,7 @@ export default function SiteFooter({ globals = {}, site = {} }) {
     return (
         <footer>
             <div className="container">
-                <div className="foot-grid">
+                <div className="foot-grid" style={{ '--foot-cols': Math.max(1, (footer.columns || []).length) }}>
                     <div className="foot-brand">
                         <SiteLink href="/" className="brand">
                             <BrandLogo logo={logo} />

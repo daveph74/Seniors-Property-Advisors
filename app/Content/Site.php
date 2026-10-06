@@ -124,6 +124,16 @@ class Site
         ]);
     }
 
+    /**
+     * Printed raw inside a `<style>` on public pages, so it is judged again on the way out: the save
+     * refused anything that could close the tag or import, and a row edited by other means gets the
+     * same treatment rather than the benefit of the doubt.
+     */
+    public static function customCss(): ?string
+    {
+        return Css::safe(self::all()['customCss'] ?? null, Css::SITE_LIMIT);
+    }
+
     private static function matching(?string $value, string $pattern): ?string
     {
         $value = trim((string) $value);

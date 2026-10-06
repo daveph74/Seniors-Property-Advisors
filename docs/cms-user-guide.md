@@ -118,7 +118,11 @@ pages arranged the way the website nests them.
      click their heading.
 3. Click the text you want to change, and edit it in the panel on the right. A **Heading** block has two
    switches for choosing where it wraps: **Highlighted heading starts a new line** and **Text after the
-   highlight starts a new line**. A **Rich text** block's
+   highlight starts a new line**, and a **Look like** row — Automatic, H1, H2 or H3 — that changes only
+   the size, so a heading can wear the H1 look while its **Heading level** stays what search engines and
+   screen readers see. A Website section's title has the same choice as **Title looks like**. A
+   component's Advanced accordion may say *This component carries custom CSS set by a super
+   administrator*; that styling is theirs to change. A **Rich text** block's
    **Text** box has buttons for **B**, **I**, **Bullets**, **Numbers** and **Link** — select some words
    first, then press one.
 4. To add something, drag it from **Components** onto the page. A section's **Layout** accordion has a
@@ -127,11 +131,20 @@ pages arranged the way the website nests them.
    offers a **Background image** from the media library with an **Image position** for which part of
    the picture stays in view, and an **Overlay** to keep the text readable. The overlay chooses the
    colour and direction of the tint; **Overlay strength** beneath it makes that tint lighter or darker,
-   and 100% is the overlay as designed. A column's **Style**
-   accordion has an **Animation** with a **Delay**, which plays once as a reader scrolls to it — set a
-   different delay on each column of a row to bring them in one after another. A row's **Layout**
+   and 100% is the overlay as designed. Every Website section, row
+   and column has the same **Background** swatches, **Background image**, **Image position**, **Overlay**
+   and **Text theme** in its **Style** accordion; the first swatch, **As designed**, keeps the look the
+   component came with. Every component's **Style**
+   accordion has an **Animation** with a **Delay**, which plays once as a reader scrolls to it, and an
+   **Animate** choice: **The whole component**, or **Each part in turn** so the blocks in a section, the
+   columns in a row, or the cards in a component arrive one after another — the heroes and the banner
+   included, whose eyebrow, title, text and buttons come in one by one while the picture stays put. A row's **Layout**
    accordion has a **Gap between columns**, which is also the space between them once they stack on a
-   phone, and **Space above** and **Space below** for the room around the row itself. Under Website sections, **Banner, full bleed** is a photo running edge to edge with words over
+   phone, and **Space above** and **Space below** for the room around the row itself. A column's
+   **Layout** accordion has a **Column width** — Equal share, A quarter, A third, Half, Two thirds, Three
+   quarters or Full width. Columns left on Equal share split whatever the sized ones leave, and on Tablet
+   or Mobile a set width holds instead of stacking, so give every column in the row one to keep them side
+   by side there. A block's **Alignment** follows the screen the same way the Layout accordion does. Under Website sections, **Banner, full bleed** is a photo running edge to edge with words over
    it, and its **Look** group lets you set the **Section height**, **Title size**, **Text size**,
    **Overlay** and its **Overlay strength**, **Image position**, **Text alignment**, **Copy width**, and an **Animation** with a
    **Delay**.
@@ -141,10 +154,11 @@ pages arranged the way the website nests them.
    change what the canvas shows you, and which screen the **Layout** accordion edits. A Layout change
    made on Desktop applies everywhere; one made on Tablet applies to tablets and phones; one made on
    Mobile applies to phones only. Under each Layout field it says **Following Desktop** or **Set for
-   Mobile**, with **Use the Desktop value** (or **Use the Tablet value**, on Mobile) to go back. The
-   order of the columns in a row works the same way: a column's **Layout** accordion has **Position in
-   row**, and on Tablet or Mobile choosing a position, dragging the column within its row, or moving it
-   in **Layers** changes the order for that screen only. Content and Style are the same on every screen.
+   Mobile**, with **Use the Desktop value** (or **Use the Tablet value**, when Tablet has one) to go
+   back. The order of the columns in a row works the same way: a column's **Layout** accordion has
+   **Position in row**, and on Tablet or Mobile choosing a position, dragging the column within its row,
+   or moving it in **Layers** changes the order for that screen only. **Put the row back to its Desktop
+   order** undoes that for the whole row. Content and Style are the same on every screen.
 
 Above the canvas it says **All changes saved** or **Unsaved changes**, so you always know where you are.
 
@@ -380,7 +394,9 @@ Two screens change things that appear on *every* page, so a change here is seen 
 
 - **Header menu** — the links across the top. A link can be set to **Opens a dropdown**, in which case the links
   under it become the dropdown.
-- **Footer columns** — the grouped links at the bottom.
+- **Footer columns** — the grouped links at the bottom. **Add a column** makes another, up to four
+  beside the brand column, and **Remove column** takes one away with its links; the footer lays out
+  whatever number you keep.
 - **Small print** — the row underneath those.
 
 Drag to reorder, then **Save menus**. Nothing changes on the website until you press it.

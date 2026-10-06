@@ -1,4 +1,4 @@
-import { useHeadingLevel } from './headingLevel';
+import { useHeadingLevel, lookClass } from './headingLevel';
 
 export default function WhyListSection({ data, anchor }) {
     const { image = {}, stamp = {} } = data;
@@ -10,7 +10,7 @@ export default function WhyListSection({ data, anchor }) {
                 <div className="why-grid">
                     <div>
                         <div className="eyebrow-line">{data.eyebrow}</div>
-                        <Heading className="section-head__title">
+                        <Heading className={`section-head__title ${lookClass(data.titleLook)}`.trim()}>
                             {data.heading} <em>{data.headingEm}</em>
                         </Heading>
                         <p className="section-lead">{data.lead}</p>

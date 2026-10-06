@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import PendingModule from './PendingModule';
+import { lookClass } from './headingLevel';
 
 export default function FaqListSection({ data, anchor, library = {}, editing = false }) {
     const limit = Number(data.limit) > 0 ? Number(data.limit) : null;
@@ -51,7 +52,7 @@ export default function FaqListSection({ data, anchor, library = {}, editing = f
                             {data.eyebrow ? <div className="eyebrow-line">{data.eyebrow}</div> : null}
 
                             {data.heading || data.headingEm ? (
-                                <h2 className="block-heading block-heading--large">
+                                <h2 className={`block-heading block-heading--large ${lookClass(data.titleLook)}`.trim()}>
                                     {data.heading}
                                     {data.headingEm ? <> <em>{data.headingEm}</em></> : null}
                                 </h2>

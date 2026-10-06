@@ -74,7 +74,7 @@ export default function TestimonialsSection({ data, anchor, library = {}, editin
     return (
         <section className="testimonials" id={anchor}>
             <div className="container">
-                <SectionHead {...data} />
+                <SectionHead {...data} look={data.titleLook} />
 
                 {items.length === 0 ? (
                     <PendingModule

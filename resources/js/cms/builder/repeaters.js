@@ -168,5 +168,12 @@ export function writePath(item, path, value) {
 export function blankItem(fields) {
     if (fields.length === 1 && fields[0].path === '') return '';
 
-    return fields.reduce((item, f) => writePath(item, f.path, f.type === 'toggle' ? false : ''), {});
+    const blank = (f) => {
+        if (f.type === 'toggle') return false;
+        if (f.type === 'select' && Array.isArray(f.options) && f.options.length) return f.options[0];
+
+        return '';
+    };
+
+    return fields.reduce((item, f) => writePath(item, f.path, blank(f)), {});
 }

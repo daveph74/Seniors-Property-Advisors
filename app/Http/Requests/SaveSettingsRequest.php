@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Content\Css;
 use App\Content\Site;
 use App\Content\Text;
 use App\Logging\Delivery;
@@ -37,6 +38,7 @@ class SaveSettingsRequest extends FormRequest
                 'disclaimer' => Text::clean($this->input('legal.disclaimer')),
                 'privacyPage' => $this->input('legal.privacyPage') ?: null,
             ],
+            'customCss' => is_string($this->input('customCss')) ? Css::clean($this->input('customCss')) : null,
             'notifications' => [
                 'enquiryRecipients' => $this->recipientLines(),
             ],
@@ -88,6 +90,17 @@ class SaveSettingsRequest extends FormRequest
                 'integer',
                 Rule::exists('pages', 'id')->where('status', 'published'),
             ],
+            'customCss' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    foreach (Css::problems($value, Css::SITE_LIMIT) as $problem) {
+                        $fail('Custom CSS may not contain '.$problem.'.');
+
+                        return;
+                    }
+                },
+            ],
 
             'notifications.enquiryRecipients' => ['array', 'max:'.self::MAX_RECIPIENTS],
             'notifications.enquiryRecipients.*' => ['email', 'max:190'],
@@ -136,6 +149,7 @@ class SaveSettingsRequest extends FormRequest
                     ? (int) $valid['legal']['privacyPage']
                     : null,
             ],
+            'customCss' => $valid['customCss'] ?? null,
             'notifications' => [
                 'enquiryRecipients' => array_values(array_unique(array_map(
                     'mb_strtolower',
