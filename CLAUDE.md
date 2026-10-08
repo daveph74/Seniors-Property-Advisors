@@ -252,8 +252,8 @@ is scope §5's editor list and nothing more; §17 excludes editing raw HTML, so 
 it should be added. `BlogTest` is what keeps that true — do not widen the allowlist without
 adding a case there.
 
-**A link may leave this site; an image may not.** `img-src` is `'self' data:` and nothing more, so a
-hotlinked picture would be stored, published and drawn for no reader. Handled in three places, and the
+**A link may leave this site; an image may not.** `img-src` is `'self' data:` plus, when tracking is on, the Google
+hosts measurement and Ads need, so a hotlinked picture would be stored, published and drawn for no reader. Handled in three places, and the
 order is the design: `RichTextEditor`'s `transformPastedHTML` drops remote sources **at the paste** and
 toasts how many, `SaveBlogPostRequest` refuses a body that still carries one, and
 `URI.DisableExternalResources` strips it if both are bypassed.
@@ -711,6 +711,13 @@ bar, phone. `app/Content/Site.php` is the row behind `/cms/settings`, **super ad
 GTM's noscript iframe just before `</body>`, never on `/cms/*` or login. `Site::tracking()` re-checks
 the format on the way out; `SecurityHeaders` widens `frame-src` to Tag Manager only when a GTM id is
 saved, because the noscript fallback loads an iframe there — GA4 alone does not need it.
+Any saved tracking id also permits Google Ads by name — `ADS_HOSTS`, `ADS_SCRIPTS` and `ADS_FRAMES`
+in the same file, the hosts Google's own CSP guide lists for conversions and remarketing. Tied to any
+id rather than to GTM alone, because a GA4 tag that Google links to an Ads account starts sending ads
+traffic with no change to the site. The symptom without them is GA4 reporting perfectly while
+conversions read zero, and `Refused to connect … google.com/ccm/collect` in the console. CSP cannot
+wildcard a top-level domain, so the Australian `www.google.com.au` is named on its own; nothing wider —
+no `https:`, no `*.google.com` — is the way to fix the next blocked Google host.
 
 The SEO defaults are the exception and they live on `/cms/seo` under `seo.manage`, so this row has two
 writers. That is only safe because both go through `Site::merge()`; see "The SEO screen" above for

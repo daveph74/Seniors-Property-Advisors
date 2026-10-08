@@ -30,6 +30,28 @@ class SecurityHeaders
         .'encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), '
         .'microphone=(), midi=(), payment=(), usb=()';
 
+    private const ADS_HOSTS = [
+        'https://www.google.com',
+        'https://www.google.com.au',
+        'https://www.googleadservices.com',
+        'https://googleads.g.doubleclick.net',
+        'https://pagead2.googlesyndication.com',
+        'https://*.g.doubleclick.net',
+        'https://ad.doubleclick.net',
+    ];
+
+    private const ADS_SCRIPTS = [
+        'https://www.googleadservices.com',
+        'https://www.google.com',
+    ];
+
+    private const ADS_FRAMES = [
+        'https://td.doubleclick.net',
+        'https://bid.g.doubleclick.net',
+        'https://www.googleadservices.com',
+        'https://www.google.com',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         $nonce = Vite::useCspNonce();
@@ -98,13 +120,22 @@ class SecurityHeaders
                 $connect[] = $origin;
             }
         } else {
-            foreach ($this->tracking() as $host) {
+            $tracking = $this->tracking();
+
+            foreach ($tracking as $host) {
                 $script[] = $host;
                 $connect[] = $host;
                 /* Analytics still measures some things with a pixel rather than a beacon, and these
                    hosts used to be covered by the blanket `https:` that has just gone. Named, so the
                    permission is as narrow as the thing it is for. */
                 $img[] = $host;
+            }
+
+            if ($tracking !== []) {
+                array_push($script, ...self::ADS_SCRIPTS);
+                array_push($img, ...self::ADS_HOSTS);
+                array_push($connect, ...self::ADS_HOSTS);
+                array_push($frame, ...self::ADS_FRAMES);
             }
 
             try {

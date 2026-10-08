@@ -598,6 +598,67 @@ class OwaspTest extends TestCase
         );
     }
 
+    public function test_a05_google_ads_is_permitted_by_name_and_nothing_wider(): void
+    {
+        $this->put('/cms/settings', [
+            'name' => 'Seniors Property Advisors',
+            'tracking' => ['ga4' => null, 'gtm' => 'GTM-5SSLVSPX'],
+        ])->assertRedirect();
+
+        auth()->logout();
+
+        $directives = $this->directives('/contact');
+
+        $ads = [
+            'https://www.google.com',
+            'https://www.google.com.au',
+            'https://www.googleadservices.com',
+            'https://googleads.g.doubleclick.net',
+            'https://pagead2.googlesyndication.com',
+            'https://*.g.doubleclick.net',
+            'https://ad.doubleclick.net',
+        ];
+
+        $expected = [
+            'script-src' => ["'self'", 'https://www.googletagmanager.com', 'https://www.googleadservices.com', 'https://www.google.com'],
+            'img-src' => ["'self'", 'data:', 'https://www.google-analytics.com', ...$ads],
+            'connect-src' => ["'self'", 'https://*.analytics.google.com', ...$ads],
+            'frame-src' => [
+                "'self'",
+                'https://www.googletagmanager.com',
+                'https://td.doubleclick.net',
+                'https://bid.g.doubleclick.net',
+                'https://www.googleadservices.com',
+                'https://www.google.com',
+            ],
+        ];
+
+        foreach ($expected as $directive => $sources) {
+            foreach ($sources as $source) {
+                $this->assertContains($source, $directives[$directive] ?? [], "{$directive} is missing {$source}");
+            }
+        }
+
+        $this->assertNotEmpty(preg_grep("/^'nonce-/", $directives['script-src']));
+        $this->assertNotContains("'unsafe-inline'", $directives['script-src']);
+        $this->assertNotContains("'unsafe-eval'", $directives['script-src']);
+
+        foreach ($directives as $directive => $sources) {
+            foreach (['*', 'https:', 'http:', 'https://*.google.com'] as $broad) {
+                $this->assertNotContains($broad, $sources, "{$directive} permits {$broad}");
+            }
+        }
+    }
+
+    public function test_a05_google_ads_is_not_permitted_on_a_site_without_tracking(): void
+    {
+        $policy = $this->get('/contact')->headers->get('Content-Security-Policy');
+
+        $this->assertStringNotContainsString('doubleclick', $policy);
+        $this->assertStringNotContainsString('googleadservices', $policy);
+        $this->assertStringNotContainsString('https://www.google.com', $policy);
+    }
+
     public function test_a05_the_admin_is_never_offered_to_a_search_engine(): void
     {
         $this->assertStringContainsString('Disallow: /cms', $this->get('/robots.txt')->getContent());
@@ -617,6 +678,18 @@ class OwaspTest extends TestCase
     private function noDevelopmentBuildMarker(): void
     {
         app(Vite::class)->useHotFile(storage_path('framework/testing/absent-hot'));
+    }
+
+    private function directives(string $path): array
+    {
+        $directives = [];
+
+        foreach (explode(';', (string) $this->get($path)->headers->get('Content-Security-Policy')) as $directive) {
+            $sources = preg_split('/\s+/', trim($directive));
+            $directives[array_shift($sources)] = $sources;
+        }
+
+        return $directives;
     }
 
     public function test_a05_the_deployment_check_fails_on_a_production_misconfiguration(): void
