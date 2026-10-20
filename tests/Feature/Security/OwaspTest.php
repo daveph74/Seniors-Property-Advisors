@@ -612,6 +612,7 @@ class OwaspTest extends TestCase
         $ads = [
             'https://www.google.com',
             'https://www.google.com.au',
+            'https://www.google.com.ph',
             'https://www.googleadservices.com',
             'https://googleads.g.doubleclick.net',
             'https://pagead2.googlesyndication.com',
@@ -657,6 +658,43 @@ class OwaspTest extends TestCase
         $this->assertStringNotContainsString('doubleclick', $policy);
         $this->assertStringNotContainsString('googleadservices', $policy);
         $this->assertStringNotContainsString('https://www.google.com', $policy);
+        $this->assertStringNotContainsString('facebook', $policy);
+    }
+
+    public function test_a05_meta_pixel_and_tag_fonts_are_permitted_only_with_tag_manager(): void
+    {
+        $this->put('/cms/settings', [
+            'name' => 'Seniors Property Advisors',
+            'tracking' => ['ga4' => 'G-ABCDE12345', 'gtm' => null],
+        ])->assertRedirect();
+
+        $policy = $this->get('/contact')->headers->get('Content-Security-Policy');
+
+        $this->assertStringNotContainsString('facebook', $policy);
+        $this->assertStringNotContainsString('fonts.googleapis.com', $policy);
+
+        $this->put('/cms/settings', [
+            'name' => 'Seniors Property Advisors',
+            'tracking' => ['ga4' => null, 'gtm' => 'GTM-5SSLVSPX'],
+        ])->assertRedirect();
+
+        auth()->logout();
+
+        $directives = $this->directives('/contact');
+
+        $expected = [
+            'script-src' => ['https://connect.facebook.net'],
+            'connect-src' => ['https://www.facebook.com', 'https://connect.facebook.net'],
+            'img-src' => ['https://www.facebook.com'],
+            'style-src' => ['https://fonts.googleapis.com'],
+            'font-src' => ['https://fonts.gstatic.com'],
+        ];
+
+        foreach ($expected as $directive => $sources) {
+            foreach ($sources as $source) {
+                $this->assertContains($source, $directives[$directive] ?? [], "{$directive} is missing {$source}");
+            }
+        }
     }
 
     public function test_a05_the_admin_is_never_offered_to_a_search_engine(): void

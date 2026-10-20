@@ -716,8 +716,19 @@ in the same file, the hosts Google's own CSP guide lists for conversions and rem
 id rather than to GTM alone, because a GA4 tag that Google links to an Ads account starts sending ads
 traffic with no change to the site. The symptom without them is GA4 reporting perfectly while
 conversions read zero, and `Refused to connect … google.com/ccm/collect` in the console. CSP cannot
-wildcard a top-level domain, so the Australian `www.google.com.au` is named on its own; nothing wider —
-no `https:`, no `*.google.com` — is the way to fix the next blocked Google host.
+wildcard a top-level domain, and Ads pings the **visitor's** regional Google domain, so each one is
+named on its own: `www.google.com.au` is the audience, and `www.google.com.ph` is there because the
+marketing agency tests from the Philippines and its visits were refused. Nothing wider — no `https:`,
+no `*.google.com` — is the way to fix the next blocked Google host.
+
+A **GTM id** additionally permits the Meta Pixel (`META_SCRIPTS`, `META_HOSTS`, `META_IMAGES`) and
+Google Fonts (`fonts.googleapis.com` in `style-src`, `fonts.gstatic.com` in `font-src`) — tied to Tag
+Manager rather than to any id, because only a tag it injects asks for either; the site's own pages
+still bundle DM Sans. The symptom without them is `Refused to load the script
+'https://connect.facebook.net/…/fbevents.js'`. **The policy is this application's, not the web
+server's**: a request to "update the CSP in nginx" means editing `SecurityHeaders`. Should nginx ever
+add a `Content-Security-Policy` of its own, the browser enforces both, and a host must be allowed in
+each — the symptom being a source plainly present in this policy and still refused.
 
 The SEO defaults are the exception and they live on `/cms/seo` under `seo.manage`, so this row has two
 writers. That is only safe because both go through `Site::merge()`; see "The SEO screen" above for

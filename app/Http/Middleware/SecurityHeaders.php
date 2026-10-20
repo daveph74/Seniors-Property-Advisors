@@ -33,6 +33,7 @@ class SecurityHeaders
     private const ADS_HOSTS = [
         'https://www.google.com',
         'https://www.google.com.au',
+        'https://www.google.com.ph',
         'https://www.googleadservices.com',
         'https://googleads.g.doubleclick.net',
         'https://pagead2.googlesyndication.com',
@@ -50,6 +51,19 @@ class SecurityHeaders
         'https://bid.g.doubleclick.net',
         'https://www.googleadservices.com',
         'https://www.google.com',
+    ];
+
+    private const META_SCRIPTS = [
+        'https://connect.facebook.net',
+    ];
+
+    private const META_HOSTS = [
+        'https://www.facebook.com',
+        'https://connect.facebook.net',
+    ];
+
+    private const META_IMAGES = [
+        'https://www.facebook.com',
     ];
 
     public function handle(Request $request, Closure $next): Response
@@ -105,8 +119,8 @@ class SecurityHeaders
            `Html`, rather than being stored and then silently not drawn. */
         $img = ["'self'", 'data:'];
 
-        /* The admin is the only thing that asks Google for a typeface. The public site bundles
-           its own, and says so in the layout. */
+        /* The admin asks Google for a typeface. The public site bundles its own, and says so in
+           the layout; only a tag Tag Manager injects asks there, which is handled below. */
         if ($request->is('cms', 'cms/*', 'login')) {
             $style[] = 'https://fonts.googleapis.com';
             $font[] = 'https://fonts.gstatic.com';
@@ -141,6 +155,11 @@ class SecurityHeaders
             try {
                 if (isset(Site::tracking()['gtm'])) {
                     $frame[] = 'https://www.googletagmanager.com';
+                    array_push($script, ...self::META_SCRIPTS);
+                    array_push($connect, ...self::META_HOSTS);
+                    array_push($img, ...self::META_IMAGES);
+                    $style[] = 'https://fonts.googleapis.com';
+                    $font[] = 'https://fonts.gstatic.com';
                 }
             } catch (\Throwable $e) {
             }
