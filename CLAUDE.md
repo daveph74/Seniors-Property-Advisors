@@ -1293,10 +1293,22 @@ in step, and it leads straight back to a row this CMS can open.
 Every enquiry from **either public form** — the contact form section and Agent Finder (`FindMyAgentModal`)
 — is forwarded to SyncID immediately after it is saved locally. `app/Integrations/SyncId.php` POSTs to
 `SYNCID_API_URL` — the SPA's `/api/website-lead` webhook, not the site root — with `X-Api-Key:
-SYNCID_API_KEY` and `SYNCID_OFFICE_ID`. Blank URL means nothing is sent. Contact-form rows send the shared
-fields only; Agent Finder adds `property_address`, `property_type`, `timeline`, `best_time`, `street`,
-`state` and `postcode` — labels resolved through `FindMyAgentOptions`, the same catalogue the CMS uses,
-while `message` stays the sender's own words from the notes box.
+SYNCID_API_KEY` and `SYNCID_OFFICE_ID`. Blank URL means nothing is sent. The payload is shaped to what that endpoint
+reads, and anything else is discarded on arrival, so a field added here that SyncID does not know is a
+field nobody will see. `source` is a slug (`contact-form`, `agent-finder`), never the CMS label. A number
+starting `04` or `+614` goes as `mobile`, anything else as `phone`. Agent Finder adds
+`property_address` (the street line only, unit included), `property_suburb`, `property_state` and
+`property_postcode`, and repeats the suburb, state and postcode in the plain fields, which SyncID routes
+on — the wizard asks for one address, so it is both. Its three answers are not API fields, so they are
+appended to `message` after the sender's notes as `Property type:`, `Timeline:` and `Best time to
+call:` lines, labels resolved through `FindMyAgentOptions`. `SyncId::LIMITS` cuts each value to
+SyncID's own length, which state, postcode and campaign can otherwise exceed.
+
+**A 202 is never resent**, because a resend is a duplicate lead. `forward()` retries twice, only after
+a network error or a 5xx, and that retry is not on the shared `request()`, so `enquiries:check-delivery
+--send` still makes one attempt. Forwarding happens inside the visitor's request, so a SyncID that hangs
+costs them up to three timeouts before the confirmation. A 401 is logged as the key or office id being
+wrong, a 422 with the names of the fields SyncID refused.
 
 Every path writes to `storage/logs/laravel.log` with `enquiry_id`, `external_id` and `source` so a missing
 CRM row can be traced: skips log `reason` (`url_not_configured`, `office_id_not_configured`), the POST logs
