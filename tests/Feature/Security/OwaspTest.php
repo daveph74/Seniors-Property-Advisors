@@ -672,6 +672,7 @@ class OwaspTest extends TestCase
 
         $this->assertStringNotContainsString('facebook', $policy);
         $this->assertStringNotContainsString('fonts.googleapis.com', $policy);
+        $this->assertStringNotContainsString('sha256-', $policy);
 
         $this->put('/cms/settings', [
             'name' => 'Seniors Property Advisors',
@@ -683,7 +684,11 @@ class OwaspTest extends TestCase
         $directives = $this->directives('/contact');
 
         $expected = [
-            'script-src' => ['https://connect.facebook.net'],
+            'script-src' => [
+                'https://connect.facebook.net',
+                "'sha256-qI7V6rI+HXY57w5u2vc9R4Vxl20Gv1igy5KLw2pcKp8='",
+                "'sha256-Uz0yn00PqpvyPuK+MptaAirzRCPwuCU4Vhj/iAbfJxk='",
+            ],
             'connect-src' => ['https://www.facebook.com', 'https://connect.facebook.net'],
             'img-src' => ['https://www.facebook.com'],
             'style-src' => ['https://fonts.googleapis.com'],

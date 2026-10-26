@@ -725,7 +725,12 @@ A **GTM id** additionally permits the Meta Pixel (`META_SCRIPTS`, `META_HOSTS`, 
 Google Fonts (`fonts.googleapis.com` in `style-src`, `fonts.gstatic.com` in `font-src`) — tied to Tag
 Manager rather than to any id, because only a tag it injects asks for either; the site's own pages
 still bundle DM Sans. The symptom without them is `Refused to load the script
-'https://connect.facebook.net/…/fbevents.js'`. **The policy is this application's, not the web
+'https://connect.facebook.net/…/fbevents.js'`. The pixel's two **inline** bootstrap scripts, which
+the container's Custom HTML tags inject, carry no nonce, so they are allowed by hash (`META_INLINE`,
+values supplied by the marketing agency). A hash is of the exact script text, so **editing that tag in
+GTM — a new pixel id, even changed whitespace — breaks it again with no deploy on this side**; the
+symptom is `Executing inline script violates … script-src` returning in the console, naming a new
+hash, which replaces the old one rather than joining it. **The policy is this application's, not the web
 server's**: a request to "update the CSP in nginx" means editing `SecurityHeaders`. Should nginx ever
 add a `Content-Security-Policy` of its own, the browser enforces both, and a host must be allowed in
 each — the symptom being a source plainly present in this policy and still refused.

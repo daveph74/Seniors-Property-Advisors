@@ -57,6 +57,11 @@ class SecurityHeaders
         'https://connect.facebook.net',
     ];
 
+    private const META_INLINE = [
+        "'sha256-qI7V6rI+HXY57w5u2vc9R4Vxl20Gv1igy5KLw2pcKp8='",
+        "'sha256-Uz0yn00PqpvyPuK+MptaAirzRCPwuCU4Vhj/iAbfJxk='",
+    ];
+
     private const META_HOSTS = [
         'https://www.facebook.com',
         'https://connect.facebook.net',
@@ -155,7 +160,7 @@ class SecurityHeaders
             try {
                 if (isset(Site::tracking()['gtm'])) {
                     $frame[] = 'https://www.googletagmanager.com';
-                    array_push($script, ...self::META_SCRIPTS);
+                    array_push($script, ...self::META_SCRIPTS, ...self::META_INLINE);
                     array_push($connect, ...self::META_HOSTS);
                     array_push($img, ...self::META_IMAGES);
                     $style[] = 'https://fonts.googleapis.com';
